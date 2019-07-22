@@ -1,0 +1,14 @@
+*.o
+*.d
+*.x2p.bak
+*.x2p.user
+flags.compile
+apps/installed_libs
+.elf
+*.elf.*
+flags.assemble
+flags.libs
+flags.link
+flags.preprocess
+flags.strip
+depend

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<project name="earbud" path="">
+<project name="earbud" path="C:/Users/dannywang/Documents/QCC5126.git/EarBuds/apps/applications/earbud/qcc512x_rom_v21/CF376_CG814/">
     <configurations defaultKit="kitres://{078b0a27-7eec-474c-a175-df461ebc5380}">
         <configuration name="debug" kit="kitres://{078b0a27-7eec-474c-a175-df461ebc5380}" options="clean|build|deploy|run|default">
             <deployProject>deploy</deployProject>
@@ -12,7 +12,7 @@
             <property name="CHIP_TYPE">qcc512x_rom_v21</property>
             <property name="DBG_CORE">app/p1</property>
             <property name="DEFAULT_LIBS">usb_early_init</property>
-            <property name="DEFS">AV_DEBUG BLUELAB CF376_CG814 CHIP_LED_BASE_PIO=66 CHIP_NUM_LEDS=6 DEBUG HAVE_1_BUTTON HAVE_1_LED HAVE_32BIT_DATA_WIDTH HAVE_STR_ROM_2_0_1 HAVE_THERMISTOR HYDRA HYDRACORE INCLUDE_AV INCLUDE_CHARGER INCLUDE_DFU INCLUDE_GATT INCLUDE_GATT_BATTERY_SERVER INCLUDE_GATT_GAIA_SERVER INCLUDE_HFP INCLUDE_MICFWD INCLUDE_PROMPTS INCLUDE_SCOFWD INCLUDE_TEMPERATURE INCLUDE_TONES INSTALL_HYDRA_LOG THERMISTOR_ADC=adcsel_led5 THERMISTOR_DATA_FILE=thermistor_lp4549652p3m.h THERMISTOR_ON=THERMISTOR_PIO_UNUSED USE_BDADDR_FOR_LEFT_RIGHT __KALIMBA__</property>
+            <property name="DEFS">AV_DEBUG BLUELAB CF376_CG814 CHIP_LED_BASE_PIO=66 CHIP_NUM_LEDS=6 DEBUG HAVE_1_BUTTON HAVE_1_LED HAVE_32BIT_DATA_WIDTH HAVE_STR_ROM_2_0_1 HYDRA HYDRACORE INCLUDE_AV INCLUDE_CHARGER INCLUDE_DFU INCLUDE_GATT INCLUDE_GATT_BATTERY_SERVER INCLUDE_GATT_GAIA_SERVER INCLUDE_HFP INCLUDE_MICFWD INCLUDE_PROMPTS INCLUDE_SCOFWD INCLUDE_TONES INSTALL_HYDRA_LOG USE_BDADDR_FOR_LEFT_RIGHT __KALIMBA__</property>
             <property name="EXTRA_WARNINGS">FALSE</property>
             <property name="FLASH_CONFIG">..\..\64Mbit_default_flash_config.py</property>
             <property name="HW_VARIANT">CF376_CG814</property>
