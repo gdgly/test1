@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+    <group name="kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}/debug/default">
+        <item name="breakpoints">
+            <item name="number">0</item>
+        </item>
+        <item name="preferredFormats">
+            <item name="number">0</item>
+        </item>
+        <item name="watches">
+            <item name="number">0</item>
+        </item>
+    </group>
+</settings>

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<project>
+    <configurations>
+        <configuration name="prebuilt_image" options="default" kit="kitres://{078b0a27-7eec-474c-a175-df461ebc5380}">
+            <property name="SUBSYSTEM_NAME">btss</property>
+            <devkitConfiguration>prebuilt_image</devkitConfiguration>
+            <devkitGroup>kitres://{885B2E62-D6DE-4472-8989-51ED1537BF28}</devkitGroup>
+            <deployProject>deploy</deployProject>
+        </configuration>
+    </configurations>
+    <file path="patches\subsys1_patch0_fw00003743.hcf"/>
+</project>
