@@ -9,8 +9,9 @@
 #ifdef CONFIG_LIS25BA
 
 /* 器件地址 */
-#define LIS25BA_CHIPID                (0x19)
-#define LIS25BA_I2C_FREQ              (400)
+#define LIS25BA_CHIPADDR              (0x19)
+#define LIS25BA_I2C_FREQ              (400)           // speed
+#define LIS25BA_DEVICE_ID             (0x20)
 
 
 #define LIS25_REG_WHO_AM_I            (0x0f)
@@ -35,12 +36,31 @@ struct{
                 {LIS25_REG_AXES_CTRL_REG, 0xe1},
                 };
 
+static int lis25WriteReg(bitserial_handle handle, uint8 reg, uint8 value)
+{
+    uint8 cmdbuf[4] = {reg, value, 0, 0};
+
+    if(BITSERIAL_HANDLE_ERROR == handle) {
+        handle = hwi2cOpen(LIS25BA_CHIPADDR, LIS25BA_I2C_FREQ);
+        if(BITSERIAL_HANDLE_ERROR == handle) {
+            return -1;
+        }
+        hwi2cWrite(handle, cmdbuf, 2);
+        hwi2cClose(handle);
+    }
+    else {
+        hwi2cWrite(handle, cmdbuf, 2);
+    }
+
+    return 0;
+}
+
 void lis25Init(void)
 {
     uint8 i, reg, value;
-    bitserial_handle handle;
+    bitserial_handle handle = BITSERIAL_HANDLE_ERROR;
 
-    handle = hwi2cOpen(LIS25BA_CHIPID, LIS25BA_I2C_FREQ);
+    handle = hwi2cOpen(LIS25BA_CHIPADDR, LIS25BA_I2C_FREQ);
     if(BITSERIAL_HANDLE_ERROR == handle) {
         return;
     }
@@ -48,7 +68,7 @@ void lis25Init(void)
     reg = LIS25_REG_WHO_AM_I;
     hwi2cRead(handle, &reg, 1,  &value, 1);
     printf("WhoAmI=0x%x\n", value);
-    if(value != 0x20) {
+    if(value != LIS25BA_DEVICE_ID) {
         hwi2cClose(handle);
         printf("Lis25 Read WHOAMI Error=0x%x\n", value);
         return;
@@ -64,8 +84,14 @@ void lis25Init(void)
     return;
 }
 
+int lis25Power(bool isOn)
+{
+    return lis25WriteReg(BITSERIAL_HANDLE_ERROR, LIS25_REG_CTRL_REG, isOn ?  0x20 : 0 );
+}
+
 #else
 void lis25Init(void) { return; }
+int lis25Power(bool isOn) { UNUSED(isOn); return 0; };
 #endif
 
 

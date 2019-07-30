@@ -30,13 +30,33 @@ int8 hwi2cWrite(bitserial_handle handle, uint8 *buffer, uint16 length);
 // 读取操作，按REG 返回
 int8 hwi2cRead(bitserial_handle handle, uint8 *addr, uint16 addrlen, uint8 *buffer, uint16 length);
 
+//==============================================================================================
+//              /* Uart For Debug INIT */
+//==============================================================================================
+#define UART_RX_PIO   (4)
+#define UART_TX_PIO   (6)
+#define CONFIG_HW_UART
+#define CONFIG_SHELL_UART
+typedef signed (*UartRxProc)(const uint8 *ptr, int len);
+void uartInit(void);
+void UartTxData(const uint8 *data, uint16 length);
+void UartSetRecvHandle(UartRxProc func);
+void ShellCmdInit(void);
+
 
 //==============================================================================================
 //              /* Lis25BA I2C AUDIO INIT */
 //==============================================================================================
 #define CONFIG_LIS25BA
 void lis25Init(void);
+int lis25Power(bool isOn);
 
 
+//==============================================================================================
+//              /* I2S AUDIO INIT */
+//==============================================================================================
+void SourceI2SConfigure(Source source);
+void SinkI2SConfigure(Sink sink);
+void SourceSinkI2SMasterClockEnable(void *source_sink, int isSource, int enable);   // 如果有多个source/Sink此处只能调用一次
 
 #endif // PUBLIC_H
