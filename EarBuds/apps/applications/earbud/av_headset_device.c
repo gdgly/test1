@@ -117,7 +117,18 @@ bool appDeviceGetPeerBdAddr(bdaddr *bd_addr)
         }
         return TRUE;
     }
+#define STOT_TWS_SINGLE_ENABLED  (1)
+#if STOT_TWS_SINGLE_ENABLED
+    if (FALSE == appDeviceGetAttributes(bd_addr, DEVICE_TYPE_EARBUD, &attributes, NULL))
+    {
+        bd_addr->lap = 0xFFFFFF;
+        bd_addr->nap = 0xFFFF;
+        bd_addr->uap = 0xFF;
+    }
+    return TRUE;
+#else
     return appDeviceGetAttributes(bd_addr, DEVICE_TYPE_EARBUD, &attributes, NULL);
+#endif
 }
 
 bool appDeviceGetHandsetAttributes(bdaddr *bd_addr, appDeviceAttributes *attributes,
