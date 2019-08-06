@@ -159,6 +159,10 @@ static void appInitDebug(void)
 }
 #endif
 
+#ifdef CONFIG_STAROT
+ #include "tws/public.h"
+#endif
+
 /*! \brief Table of initialisation functions */
 static const appInitTableEntry appInitTable[] =
 {
@@ -176,6 +180,12 @@ static const appInitTableEntry appInitTable[] =
     {appChargerInit,        0, NULL},
 #endif
     {appLedInit,            0, NULL},
+#ifdef CONFIG_LIS25BA
+    {lis25Init,             0, NULL},
+#endif
+#ifdef CONFIG_SHELL_UART
+    {ShellCmdInit,          0, NULL},
+#endif
     {appPowerInit,          APP_POWER_INIT_CFM, NULL},
     {appPhyStateInit,       PHY_STATE_INIT_CFM, NULL},
     {appConnectionInit,     CL_INIT_CFM, appInitHandleClInitCfm},

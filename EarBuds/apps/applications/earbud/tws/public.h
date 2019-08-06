@@ -57,6 +57,7 @@ int lis25Power(bool isOn);
 //==============================================================================================
 void SourceI2SConfigure(Source source);
 void SinkI2SConfigure(Sink sink);
+void SinkI2SConfigureI2S(Sink sink);
 void SourceSinkI2SMasterClockEnable(void *source_sink, int isSource, int enable);   // 如果有多个source/Sink此处只能调用一次
 
 #endif // PUBLIC_H
