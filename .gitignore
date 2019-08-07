@@ -4,6 +4,7 @@
 lib*.a
 *.x2p.bak
 *.x2p.user
+*.log
 flags.compile
 apps/installed_libs
 .elf
@@ -14,6 +15,12 @@ flags.link
 flags.preprocess
 flags.strip
 depend
+output_bundles
+*.x2p.user.*
+*.x2w.bak
+sedrflRmE
+EarBuds/apps/applications/earbud/qcc512x_rom_v21/CF376_CG814/flash_image.xuv
+EarBuds/audio/kalimba/kymera/tools/KCSMaker/*.pyc
 EarBuds/apps/applications/earbud/av_headset_db.c
 EarBuds/apps/applications/earbud/chains/chain_aac_stereo_decoder_left.c
 EarBuds/apps/applications/earbud/chains/chain_aac_stereo_decoder_left.h
@@ -289,3 +296,4 @@ EarBuds/apps/installed_libs/include/profiles/default_qcc512x_rom_v21/vmtypes.h
 EarBuds/apps/installed_libs/include/profiles/default_qcc512x_rom_v21/voice_assistant_audio_manager.h
 EarBuds/apps/libs/hfp/hfp_parse.c
 EarBuds/apps/libs/hfp/hfp_parse.h
+EarBuds/audio/kalimba/kymera/tools/KCSMaker/out/
