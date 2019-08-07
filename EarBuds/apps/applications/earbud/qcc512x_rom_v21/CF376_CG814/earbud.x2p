@@ -167,7 +167,10 @@
     <file path="../../peripherals/thermistor_ncp15xh103.h"/>
     <file path="../../peripherals/vncl3020.c"/>
     <file path="../../peripherals/vncl3020.h"/>
+    <file path="../../tws/cmdprocess.c"/>
     <file path="../../tws/hw_i2c.c"/>
+    <file path="../../tws/hw_i2s.c"/>
+    <file path="../../tws/hw_uart.c"/>
     <file path="../../tws/lis25ba.c"/>
     <file path="../../tws/public.h"/>
     <file path="../common/1_button.pio.buttonxml"/>
