@@ -19,6 +19,11 @@ output_bundles
 *.x2p.user.*
 *.x2w.bak
 sedrflRmE
+EarBuds/audio/kalimba/kymera/capabilities/basic_passthrough/makefile
+EarBuds/apps/applications/earbud/qcc512x_rom_v21/common/deploy_deploy.lst
+EarBuds/audio/kalimba/kymera/tools/KCSMaker/bundle/config/capabilities.cfgc
+EarBuds/audio/kalimba/kymera/tools/KCSMaker/bundle/download_passthrough.bdlc
+EarBuds/audio/kalimba/kymera/tools/KCSMaker/download_passthrough.settings
 EarBuds/apps/applications/earbud/qcc512x_rom_v21/CF376_CG814/flash_image.xuv
 EarBuds/audio/kalimba/kymera/tools/KCSMaker/*.pyc
 EarBuds/apps/applications/earbud/av_headset_db.c
