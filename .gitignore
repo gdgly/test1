@@ -1,5 +1,12 @@
 *.o
 *.d
+*.log
+*.dkcs
+*.elf
+*.sym
+*.kcs
+*.kmap
+*.lst
 *_db.h
 lib*.a
 *.x2p.bak
@@ -9,6 +16,7 @@ flags.compile
 apps/installed_libs
 .elf
 *.elf.*
+EarBuds/audio/kalimba/kymera/tools/KCSMaker/out/*
 flags.assemble
 flags.libs
 flags.link
