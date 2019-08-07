@@ -20,7 +20,13 @@
 #define SCOFWD_BASIC_PASS_BUFFER_SIZE 512
 
 
+#define STAROT_ENABLE (1)
 
+#if STAROT_ENABLE
+#include "audio_route/audio_forward.h"
+#include "cap_id_prim.h"
+#include <vmal.h>
+#endif
 
 
 typedef struct set_bitpool_msg_s
@@ -303,6 +309,27 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
 
     /* Connect chain */
     ChainConnect(sco_chain);
+
+#if STAROT_ENABLE
+    /* STAROT: */
+#define AUDIO_CORE_0             (0)
+#define AUDIO_DATA_FORMAT_16_BIT (0)
+
+	/* 1. load passthrough cap */
+    Operator passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_PASSTHROUGH));
+
+    /* 2. set passthrough data format */
+    uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_CHANGE_OUTPUT_DATA_TYPE, AUDIO_DATA_FORMAT_16_BIT };
+    PanicZero(VmalOperatorMessage(passthrough, set_data_format,
+                                  sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+
+    /* 3. create timestamped endpoint from passthrough */
+    Source capture_output = StreamSourceFromOperatorTerminal(passthrough, 0);
+    PanicFalse(SourceMapInit(capture_output, STREAM_TIMESTAMPED, 9));
+
+    /* 4. setup MORE_DATA message. */
+    indicateFwdDataSource(capture_output);
+#endif
    
     /* Chain connection sets the switch into consume mode,
        select the local Microphone if MIC forward enabled */
@@ -364,12 +391,20 @@ void appKymeraHandleInternalScoStop(void)
     Sink sco_ep_snk    = ChainGetInput(sco_chain, EPR_SCO_FROM_AIR);
     Sink mic_1a_ep_snk = ChainGetInput(sco_chain, EPR_SCO_MIC1);
     Sink mic_1b_ep_snk = (appConfigScoMic2() != NO_MIC) ? ChainGetInput(sco_chain, EPR_SCO_MIC2) : 0;
+#if STAROT_ENABLE
+    Source sco_audfwd_src = ChainGetOutput(sco_chain, EPR_AUDIO_FWD_OUT);
+#endif
 
     /* A tone still playing at this point must be interruptable */
     appKymeraTonePromptStop();
 
     /* Stop chains */
     ChainStop(sco_chain);
+
+#if STAROT_ENABLE
+	/* Disconnect audio forward source */
+    SourceUnmap(sco_audfwd_src);
+#endif
 
     /* Disconnect SCO from chain SCO endpoints */
     StreamDisconnect(sco_ep_src, NULL);

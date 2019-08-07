@@ -64,6 +64,8 @@ const appKymeraScoChainInfo appKymeraScoSlaveChainTable[] =
   { NO_SCO }
 };
 
+#define STAROT_ENABLED	(1)
+
 static const capability_bundle_t capability_bundle[] =
 {
 #ifdef DOWNLOAD_SWITCHED_PASSTHROUGH
@@ -105,6 +107,12 @@ static const capability_bundle_t capability_bundle[] =
         "download_async_wbs.edkcs",
         capability_bundle_available_p0
     },
+#endif
+#if STAROT_ENABLED
+	{
+		"download_passthrough.dkcs",
+		0
+	},
 #endif
     {
         0, 0
