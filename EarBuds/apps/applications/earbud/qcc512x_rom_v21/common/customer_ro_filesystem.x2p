@@ -1,32 +1,35 @@
-<?xml version='1.0' encoding='utf-8'?>
-<project>
-    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_anc_tuning.edkcs"/>
-    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_usb_audio.edkcs"/>
-    <file path="..\..\prompts\power_on.sbc"/>
-    <file path="..\..\prompts\power_off.sbc"/>
-    <file path="..\..\prompts\pairing.sbc"/>
-    <file path="..\..\prompts\pairing_successful.sbc"/>
-    <file path="..\..\prompts\pairing_failed.sbc"/>
-    <file path="..\..\prompts\connected.sbc"/>
-    <file path="..\..\prompts\disconnected.sbc"/>
-    <configurations>
-        <configuration name="filesystem" options="build|deploy|default" kit="kitres://{078b0a27-7eec-474c-a175-df461ebc5380}">
-            <devkitConfiguration>filesystem</devkitConfiguration>
-            <devkitGroup>kitres://{885B2E62-D6DE-4472-8989-51ED1537BF28}</devkitGroup>
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="customer_ro_filesystem" path="">
+    <configurations defaultKit="kitres://{078b0a27-7eec-474c-a175-df461ebc5380}">
+        <configuration name="filesystem" kit="kitres://{078b0a27-7eec-474c-a175-df461ebc5380}" options="build|deploy|default">
             <deployProject>deploy</deployProject>
-            <property name="BUILD_TYPE"/>
-            <property name="DBG_CORE"/>
-            <property name="DEFS"/>
+            <devkitConfiguration>filesystem</devkitConfiguration>
+            <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
+            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30</devkitPath>
+            <devkitRevision>1560973766</devkitRevision>
+            <property name="BUILD_TYPE"></property>
+            <property name="DBG_CORE"></property>
+            <property name="DEFS"></property>
             <property name="FS_ROOT">..\customer_ro_filesystem</property>
-            <property name="INCPATHS"/>
-            <property name="LIBPATHS"/>
-            <property name="LIBS"/>
-            <property name="OUTPUT"/>
-            <property name="OUTPUT_TYPE"/>
-            <property name="PRESERVED_LIBS"/>
-            <property name="STRIP_SYMBOLS"/>
+            <property name="INCPATHS"></property>
+            <property name="LIBPATHS"></property>
+            <property name="LIBS"></property>
+            <property name="OUTPUT"></property>
+            <property name="OUTPUT_TYPE"></property>
+            <property name="PRESERVED_LIBS"></property>
+            <property name="STRIP_SYMBOLS"></property>
             <property name="TYPE">customer_ro</property>
             <property name="system_label">QCC512X_CONFIG</property>
         </configuration>
     </configurations>
+    <file path="../../../../../audio/kalimba/kymera/output_bundles/stre_rom_v21_release/download_passthrough/download_passthrough.dkcs"/>
+    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_anc_tuning.edkcs"/>
+    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_usb_audio.edkcs"/>
+    <file path="../../prompts/connected.sbc"/>
+    <file path="../../prompts/disconnected.sbc"/>
+    <file path="../../prompts/pairing.sbc"/>
+    <file path="../../prompts/pairing_failed.sbc"/>
+    <file path="../../prompts/pairing_successful.sbc"/>
+    <file path="../../prompts/power_off.sbc"/>
+    <file path="../../prompts/power_on.sbc"/>
 </project>
