@@ -2,103 +2,6 @@
 #ifdef INCLUDE_PROXIMITY
 #ifdef HAVE_EM20168
 
-#define PIO2BANK(pio) ((uint16)((pio) / 32))
-/*! \brief Returns the PIO bit position mask within a bank.
-    \param pio The pio.
-*/
-#define PIO2MASK(pio) (1UL << ((pio) % 32))
-
-/*! \brief Read a register from the proximity sensor */
-bool EM20168ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
-{
-    bitserial_result result;
-    /* First write the register address to be read */
-    result = BitserialWrite(handle,
-                            BITSERIAL_NO_MSG,
-                            &reg, 1,
-                            BITSERIAL_FLAG_BLOCK);
-    if (result == BITSERIAL_RESULT_SUCCESS)
-    {
-        /* Now read the actual data in the register */
-        result = BitserialRead(handle,
-                                BITSERIAL_NO_MSG,
-                                value, 1,
-                                BITSERIAL_FLAG_BLOCK);
-    }
-    if(result != BITSERIAL_RESULT_SUCCESS){
-        printf("%s faild,result = %d\n",__func__, result);
-    }
-    return (result == BITSERIAL_RESULT_SUCCESS);
-}
-
-/*! \brief Write to a proximity sensor register */
-bool EM20168WriteRegister(bitserial_handle handle, uint8 reg, uint8 value)
-{
-    bitserial_result result;
-    uint8 command[2] = {reg, value};
-
-    /* Write the write command and register */
-    result = BitserialWrite(handle,
-                            BITSERIAL_NO_MSG,
-                            command, 2,
-                            BITSERIAL_FLAG_BLOCK);
-    if(result != BITSERIAL_RESULT_SUCCESS){
-        printf("%s faild,result = %d\n",__func__, result);
-    }
-    return (result == BITSERIAL_RESULT_SUCCESS);
-}
-
-bitserial_handle EM20168Enable(void)
-{
-    bitserial_config bsconfig;
-    uint32 i;
-    uint16 bank;
-    uint32 mask;
-    struct
-    {
-        uint16 pio;
-        pin_function_id func;
-    } i2c_pios[] = {{EM20168_I2C_CLK_PIN, BITSERIAL_1_CLOCK_OUT},
-                    {EM20168_I2C_CLK_PIN, BITSERIAL_1_CLOCK_IN},
-                    {EM20168_I2C_DATA_PIN, BITSERIAL_1_DATA_OUT},
-                    {EM20168_I2C_DATA_PIN, BITSERIAL_1_DATA_IN}};
-
-    DEBUG_LOG("EM20168Enable");
-#ifndef EM20168_KEY_ITR_TEST
-    bank = PIO2BANK(EM20168_ITR_PIN);
-    mask = PIO2MASK(EM20168_ITR_PIN);
-    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
-    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
-    PanicNotZero(PioSet32Bank(bank, mask, mask));
-#else
-    bank = PIO2BANK(EM20168_KEY_ITR_PIN);
-    mask = PIO2MASK(EM20168_KEY_ITR_PIN);
-    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
-    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
-    PanicNotZero(PioSet32Bank(bank, mask, mask));
-#endif
-    for (i = 0; i < ARRAY_DIM(i2c_pios); i++)
-    {
-        uint16 pio = i2c_pios[i].pio;
-        bank = PIO2BANK(pio);
-        mask = PIO2MASK(pio);
-
-        /* Setup I2C PIOs with strong pull-up */
-        PanicNotZero(PioSetMapPins32Bank(bank, mask, 0));
-        PanicFalse(PioSetFunction(pio, i2c_pios[i].func));
-        PanicNotZero(PioSetDir32Bank(bank, mask, 0));
-        PanicNotZero(PioSet32Bank(bank, mask, mask));
-        PanicNotZero(PioSetStrongBias32Bank(bank, mask, mask));
-    }
-
-    /* Configure Bitserial to work with vncl3020 proximity sensor */
-    memset(&bsconfig, 0, sizeof(bsconfig));
-    bsconfig.mode = BITSERIAL_MODE_I2C_MASTER;
-    bsconfig.clock_frequency_khz = EM20168_I2C_FREQ;
-    bsconfig.u.i2c_cfg.i2c_address = EM20168_I2C_ADDR;
-    return BitserialOpen((bitserial_block_index)BITSERIAL_BLOCK_1, &bsconfig);
-}
-
 em20168_str em20168_init_array[] = {
     {0x01, 0x80},
     {0x0b, 0x80},
@@ -122,6 +25,74 @@ em20168_str em20168_read_array[] = {
     {0x24, 0x0},
 };
 
+/*! \brief Read a register from the proximity sensor */
+bool EM20168ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
+{
+    bitserial_result result;
+    /* First write the register address to be read */
+    result = BitserialWrite(handle,
+                            BITSERIAL_NO_MSG,
+                            &reg, 1,
+                            BITSERIAL_FLAG_BLOCK);
+    if (result == BITSERIAL_RESULT_SUCCESS){
+        /* Now read the actual data in the register */
+        result = BitserialRead(handle,
+                                BITSERIAL_NO_MSG,
+                                value, 1,
+                                BITSERIAL_FLAG_BLOCK);
+    }
+    if(result != BITSERIAL_RESULT_SUCCESS){
+        //printf("%s faild,result = %d\n",__func__, result);
+    }
+    return (result == BITSERIAL_RESULT_SUCCESS);
+}
+
+/*! \brief Write to a proximity sensor register */
+bool EM20168WriteRegister(bitserial_handle handle, uint8 reg, uint8 value)
+{
+    bitserial_result result;
+    uint8 command[2] = {reg, value};
+
+    /* Write the write command and register */
+    result = BitserialWrite(handle,
+                            BITSERIAL_NO_MSG,
+                            command, 2,
+                            BITSERIAL_FLAG_BLOCK);
+    if(result != BITSERIAL_RESULT_SUCCESS){
+        printf("%s faild,result = %d\n",__func__, result);
+    }
+    return (result == BITSERIAL_RESULT_SUCCESS);
+}
+
+bitserial_handle EM20168Enable(void)
+{
+    uint16 bank;
+    uint32 mask;
+
+    //printf("EM20168Enable");
+#ifndef EM20168_KEY_ITR_TEST
+    bank = PIO2BANK(EM20168_ITR_PIN);
+    mask = PIO2MASK(EM20168_ITR_PIN);
+    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
+    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
+    PanicNotZero(PioSet32Bank(bank, mask, mask));
+#else
+    bank = PIO2BANK(EM20168_KEY_ITR_PIN);
+    mask = PIO2MASK(EM20168_KEY_ITR_PIN);
+    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
+    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
+    PanicNotZero(PioSet32Bank(bank, mask, mask));
+#endif
+
+    return hwi2cOpen(EM20168_I2C_ADDR, EM20168_I2C_FREQ);
+}
+
+void EM20168Disable(bitserial_handle handle)
+{
+    //printf("EM20168Disable");
+    hwi2cClose(handle);
+}
+
 void EM20168_init(void)
 {
     bitserial_handle handle;
@@ -142,7 +113,25 @@ void EM20168_init(void)
                 em20168_init_array[i].reg,
                 em20168_init_array[i].value);
     }
+    EM20168Disable(handle);
     return;
+}
+
+int EM20168Power(bool isOn)
+{
+    int ret;
+    uint8 value;
+    bitserial_handle handle;
+    handle = EM20168Enable();
+    EM20168ReadRegister(handle, 0x00, &value);
+    EM20168ReadRegister(handle, 0x00, &value);
+    if(isOn){
+        ret = EM20168WriteRegister(handle, 0x01, 0x80);
+    }else{
+        ret = EM20168WriteRegister(handle, 0x01, 0);
+    }
+    EM20168Disable(handle);
+    return ret;
 }
 
 void EM20168_itr_handler(Task task, MessageId id, Message msg)
@@ -157,9 +146,11 @@ void EM20168_itr_handler(Task task, MessageId id, Message msg)
 #else
     pin = EM20168_KEY_ITR_PIN;
 #endif
-    //printf("in ear\n\n");
     pin = PIO2MASK(pin);
     pio_state = pioMsg->state16to31 << 16 | pioMsg->state;
+    prox->handle = EM20168Enable();
+    EM20168ReadRegister(prox->handle, 0x00, &value);
+    EM20168ReadRegister(prox->handle, 0x00, &value);
     EM20168WriteRegister(prox->handle, 2, 0);
     switch(id) {
         case MESSAGE_PIO_CHANGED:
@@ -193,6 +184,7 @@ void EM20168_itr_handler(Task task, MessageId id, Message msg)
             printf("id=%d(0x%x\n", id, id);
             break;
     }
+    EM20168Disable(prox->handle);
 }
 
 bool appProximityClientRegister(Task task)
@@ -223,6 +215,7 @@ bool appProximityClientRegister(Task task)
             EM20168ReadRegister(prox->handle, em20168_read_array[i].reg, &value);
             printf("reg 0x%x = 0x%x\n", em20168_read_array[i].reg, value);
         }
+        EM20168Disable(prox->handle);
 
         /* Register for interrupt events */
         prox->task.handler = EM20168_itr_handler;
@@ -278,3 +271,4 @@ void appProximityClientUnregister(Task task)
 
 #endif
 #endif
+
