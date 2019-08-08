@@ -101,6 +101,14 @@ static void ShellDoCommand(char *buffer, int len)
         ret = psram_power(what);
         sprintf(outbuf, "Set Psram[%d] ret=%d\n", what, ret);
     }
+    else if(strstr(buffer, "bma400")) {
+        ret = BMA400Power(what);
+        sprintf(outbuf, "Set bma400[%d] ret=%d\n", what, ret);
+    }
+    else if(strstr(buffer, "em20168")) {
+        ret = EM20168Power(what);
+        sprintf(outbuf, "Set em20168[%d] ret=%d\n", what, ret);
+    }
 
     if(outbuf[0] != '\0')
         UartTxData((const uint8*)outbuf, strlen(outbuf));

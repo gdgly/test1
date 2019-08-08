@@ -169,7 +169,11 @@
     <file path="../../peripherals/thermistor_ncp15xh103.h"/>
     <file path="../../peripherals/vncl3020.c"/>
     <file path="../../peripherals/vncl3020.h"/>
+    <file path="../../tws/bma400.c"/>
+    <file path="../../tws/bma400.h"/>
     <file path="../../tws/cmdprocess.c"/>
+    <file path="../../tws/em20168.c"/>
+    <file path="../../tws/em20168.h"/>
     <file path="../../tws/hw_i2c.c"/>
     <file path="../../tws/hw_i2s.c"/>
     <file path="../../tws/hw_uart.c"/>

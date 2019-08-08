@@ -1,6 +1,6 @@
 #ifndef BMA400_H
 #define BMA400_H
-#define HAVE_BMA400
+
 #include <bitserial_api.h>
 #include <panic.h>
 #include <pio.h>
@@ -26,6 +26,6 @@ bool BMA400WriteRegister(bitserial_handle handle, uint8 reg, uint8 value);
 bitserial_handle BMA400Enable(void);
 void BMA400Disable(bitserial_handle handle);
 void BMA400_itr_handler(Task task, MessageId id, Message msg);
-int BMA400Power(bool isOn);
+
 
 #endif // BMA400_H

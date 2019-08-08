@@ -1,5 +1,4 @@
 #include "em20168.h"
-#ifdef INCLUDE_PROXIMITY
 #ifdef HAVE_EM20168
 
 em20168_str em20168_init_array[] = {
@@ -186,7 +185,7 @@ void EM20168_itr_handler(Task task, MessageId id, Message msg)
     }
     EM20168Disable(prox->handle);
 }
-
+#ifdef INCLUDE_PROXIMITY
 bool appProximityClientRegister(Task task)
 {
     uint8 value;
@@ -268,7 +267,7 @@ void appProximityClientUnregister(Task task)
         prox->handle = BITSERIAL_HANDLE_ERROR;
     }
 }
-
 #endif
+
 #endif
 

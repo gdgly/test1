@@ -1,5 +1,4 @@
 #include "bma400.h"
-#ifdef INCLUDE_ACCELEROMETER
 #ifdef HAVE_BMA400
 
 bma400_str bma400_read_array[] = {
@@ -93,6 +92,25 @@ void BMA400Disable(bitserial_handle handle)
     hwi2cClose(handle);
 }
 
+void BMA400_init(void)
+{
+    uint8 value, i;
+    bitserial_handle handle;
+    handle = BMA400Enable();
+    for(i=0; i<ARRAY_DIM(bma400_init_array); i++){
+        BMA400ReadRegister(handle,
+                bma400_init_array[i].reg,
+                &value);
+        value &= ~bma400_init_array[i].mask;
+        value |= bma400_init_array[i].value;
+        BMA400WriteRegister(handle,
+                bma400_init_array[i].reg,
+                value);
+    }
+    BMA400Disable(handle);
+    return;
+}
+
 int BMA400Power(bool isOn)
 {
     int ret;
@@ -130,7 +148,7 @@ void BMA400_itr_handler(Task task, MessageId id, Message msg)
     }
     BMA400Disable(accel->handle);
 }
-
+#ifdef INCLUDE_ACCELEROMETER
 bool appAccelerometerClientRegister(Task task)
 {
     uint8 value, i;
@@ -186,7 +204,7 @@ void appAccelerometerClientUnregister(Task task)
         accel->handle = BITSERIAL_HANDLE_ERROR;
     }
 }
-
+#endif
 bool appAccelerometerGetDormantConfigureKeyValue(dormant_config_key *key, uint32* value)
 {
     (void*)key;
@@ -194,6 +212,5 @@ bool appAccelerometerGetDormantConfigureKeyValue(dormant_config_key *key, uint32
     return TRUE;
 }
 
-#endif
 #endif
 
