@@ -86,7 +86,7 @@ void lis25Init(void)
 
 int lis25Power(bool isOn)
 {
-    return lis25WriteReg(BITSERIAL_HANDLE_ERROR, LIS25_REG_CTRL_REG, isOn ?  0x20 : 0 );
+    return lis25WriteReg(BITSERIAL_HANDLE_ERROR, LIS25_REG_CTRL_REG, isOn ?  0 : 0x20 );
 }
 
 #else

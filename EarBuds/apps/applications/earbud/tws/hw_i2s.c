@@ -29,11 +29,6 @@ void SourceI2SConfigure(Source source)
     AudioMasterClockConfigure(FALSE, 0);
     PanicFalse(SourceConfigure(source, STREAM_PCM_MASTER_MODE, 1));
 
-    PanicFalse(SourceConfigure(source, STREAM_PCM_MASTER_CLK_SOURCE , CLK_SOURCE_TYPE_MCLK));
-    PanicFalse(SourceConfigure(source, STREAM_PCM_MASTER_MCLK_MULT, I2S_MCLK_MULT));
-
-    PanicFalse(SourceConfigure(source, STREAM_PCM_SHORT_SYNC_ENABLE, 1));
-
     /* set the bit clock (BCLK) rate for master mode */
     PanicFalse(SourceConfigure(source, STREAM_PCM_MASTER_CLOCK_RATE, 2048000));
 
@@ -49,6 +44,7 @@ void SourceI2SConfigure(Source source)
 
     /*!< Enable PCM long length sync - Set PCM_SYNC to 8 or 16 PCM_CLK cycles.*/
     // PanicFalse(SourceConfigure(source, STREAM_PCM_LONG_LENGTH_SYNC_ENABLE, 1));
+    PanicFalse(SourceConfigure(source, STREAM_PCM_SHORT_SYNC_ENABLE, 1));
 
     /*!< PCM sample format - Valid values: 0 (13 bits in 16 cycle slot duration),
     1 (16 bits in 16 cycle slot duration), 2 (8 bits in 16 cycle slot duration),
@@ -59,6 +55,10 @@ void SourceI2SConfigure(Source source)
     PanicFalse(SourceConfigure(source, STREAM_PCM_SAMPLE_RISING_EDGE_ENABLE, 1));
 
     PanicFalse(SourceConfigure(source, STREAM_AUDIO_SAMPLE_SIZE, 16));
+    PanicFalse(SourceConfigure(source, STREAM_AUDIO_DISABLE_ENDPOINT_PROCESSING, 1));
+
+    PanicFalse(SourceConfigure(source, STREAM_PCM_MASTER_CLK_SOURCE , CLK_SOURCE_TYPE_MCLK));
+    PanicFalse(SourceConfigure(source, STREAM_PCM_MASTER_MCLK_MULT, I2S_MCLK_MULT));
 }
 
 
@@ -66,11 +66,6 @@ void SinkI2SConfigure(Sink sink)
 {
     AudioMasterClockConfigure(FALSE, 0);
     PanicFalse(SinkConfigure(sink, STREAM_PCM_MASTER_MODE, 1));
-
-    PanicFalse(SinkConfigure(sink, STREAM_PCM_MASTER_CLK_SOURCE , CLK_SOURCE_TYPE_MCLK));
-    PanicFalse(SinkConfigure(sink, STREAM_PCM_MASTER_MCLK_MULT, I2S_MCLK_MULT));
-
-    PanicFalse(SinkConfigure(sink, STREAM_PCM_SHORT_SYNC_ENABLE, 1));
 
     /* set the bit clock (BCLK) rate for master mode */
     PanicFalse(SinkConfigure(sink, STREAM_PCM_MASTER_CLOCK_RATE, 2048000));
@@ -87,6 +82,7 @@ void SinkI2SConfigure(Sink sink)
 
     /*!< Enable PCM long length sync - Set PCM_SYNC to 8 or 16 PCM_CLK cycles.*/
     // PanicFalse(SinkConfigure(sink, STREAM_PCM_LONG_LENGTH_SYNC_ENABLE, 0));
+    PanicFalse(SinkConfigure(sink, STREAM_PCM_SHORT_SYNC_ENABLE, 1));
 
     /*!< PCM sample format - Valid values: 0 (13 bits in 16 cycle slot duration),
     1 (16 bits in 16 cycle slot duration), 2 (8 bits in 16 cycle slot duration),
@@ -99,6 +95,10 @@ void SinkI2SConfigure(Sink sink)
     PanicFalse(SinkConfigure(sink, STREAM_AUDIO_SAMPLE_SIZE, 16));
 
     PanicFalse(SinkConfigure(sink, STREAM_PCM_AUDIO_GAIN, 3));
+    PanicFalse(SinkConfigure(sink, STREAM_AUDIO_DISABLE_ENDPOINT_PROCESSING, 1));
+
+    PanicFalse(SinkConfigure(sink, STREAM_PCM_MASTER_CLK_SOURCE , CLK_SOURCE_TYPE_MCLK));
+    PanicFalse(SinkConfigure(sink, STREAM_PCM_MASTER_MCLK_MULT, I2S_MCLK_MULT));
 }
 
 void SinkI2SConfigureI2S(Sink sink)

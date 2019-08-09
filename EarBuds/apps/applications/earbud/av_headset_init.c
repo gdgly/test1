@@ -182,6 +182,7 @@ static const appInitTableEntry appInitTable[] =
     {appLedInit,            0, NULL},
 #ifdef CONFIG_LIS25BA
     {lis25Init,             0, NULL},
+    {lis25Test,             0, NULL},
 #endif
 #ifdef HAVE_BMA400
     {BMA400_init,             0, NULL},

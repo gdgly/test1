@@ -34,7 +34,7 @@ int8 hwi2cRead(bitserial_handle handle, uint8 *addr, uint16 addrlen, uint8 *buff
 //              /* Uart For Debug INIT */
 //==============================================================================================
 #define UART_RX_PIO   (4)
-#define UART_TX_PIO   (6)
+#define UART_TX_PIO   (3)
 #define CONFIG_HW_UART
 #define CONFIG_SHELL_UART
 typedef signed (*UartRxProc)(const uint8 *ptr, int len);
@@ -48,8 +48,11 @@ void ShellCmdInit(void);
 //              /* Lis25BA I2C AUDIO INIT */
 //==============================================================================================
 #define CONFIG_LIS25BA
+#define CONFIG_LIS25BA_TEST         // 测试
 void lis25Init(void);
 int lis25Power(bool isOn);
+void lis25Test(void);
+int lis25TestPower(bool isOn);
 
 
 //==============================================================================================

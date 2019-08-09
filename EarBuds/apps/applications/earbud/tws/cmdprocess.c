@@ -94,7 +94,8 @@ static void ShellDoCommand(char *buffer, int len)
         what = 1;
 
     if(strstr(buffer, "lis25")) {
-        ret = lis25Power(what);
+        ret  = lis25Power(what);
+        ret |= lis25TestPower(what);
         sprintf(outbuf, "Set Lis25[%d] ret=%d\n", what, ret);
     }
     else if(strstr(buffer, "psram")) {
