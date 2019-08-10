@@ -15,13 +15,13 @@ bool checkWriteInRange(int begin, int end, int pos);
 bool checkReadInRange(int begin, int end, int pos);
 
 
-static const uint16 bufferSize = 1024 * 1;
+static const uint16 bufferSize = 1024 * 4;
 
 static uint16 bufferReadPos = 0;
 static uint16 bufferWritePos = 0;
 static uint16 bufferSendUnit = 200;
 static uint16 bufferTempReadPos = 0;
-static uint8 buffer[1024 * 1];
+static uint8 buffer[1024 * 4];
 
 bool starotAudioBufferInit(void) {
     bufferReadPos = 0;

@@ -13,6 +13,7 @@ This is a minimal implementation that only supports upgrade.
 
 #include "av_headset.h"
 #include "av_headset_log.h"
+#include "av_headset_gaia_starot.h"
 
 #include <panic.h>
 
@@ -278,7 +279,7 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
             break;
 #ifdef GAIA_TEST
         case GAIA_STAROT_COMMAND_IND:
-//            starotGaiaHandleCommand((GAIA_STAROT_IND_T *) message);
+            starotGaiaHandleCommand((GAIA_STAROT_IND_T *) message);
             break;
 
         case GAIA_STAROT_MORE_SPACE: {
