@@ -204,4 +204,5 @@ int lis25TestPower(bool isOn)
 
 #else
 void lis25Test(void) { printf("Please CONFIG_LIS25BA_TEST macro");}
+int lis25TestPower(bool isOn) {(void)isOn; return 0;}
 #endif

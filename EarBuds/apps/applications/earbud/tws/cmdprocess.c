@@ -16,7 +16,7 @@
 
 #include "public.h"
 
-#define PSRAM_POWER_PIO      (2)
+#ifdef CONFIG_PSRAM_TEST
 static int psram_power(bool isOn)
 {
     int ret = 0;
@@ -29,7 +29,7 @@ static int psram_power(bool isOn)
 
     return ret;
 }
-
+#endif
 
 
 #ifdef CONFIG_SHELL_UART
@@ -98,10 +98,12 @@ static void ShellDoCommand(char *buffer, int len)
         ret |= lis25TestPower(what);
         sprintf(outbuf, "Set Lis25[%d] ret=%d\n", what, ret);
     }
+#ifdef CONFIG_PSRAM_TEST
     else if(strstr(buffer, "psram")) {
         ret = psram_power(what);
         sprintf(outbuf, "Set Psram[%d] ret=%d\n", what, ret);
     }
+#endif
     else if(strstr(buffer, "bma400")) {
         ret = BMA400Power(what);
         sprintf(outbuf, "Set bma400[%d] ret=%d\n", what, ret);

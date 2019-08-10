@@ -91,7 +91,7 @@ int lis25Power(bool isOn)
 
 #else
 void lis25Init(void) { return; }
-int lis25Power(bool isOn) { UNUSED(isOn); return 0; };
+int lis25Power(bool isOn) { UNUSED(isOn); return 0; }
 #endif
 
 

@@ -3,6 +3,33 @@
 
 #include <stdio.h>
 
+//==============================================================================================
+// TBR 调试器在DEMO板上使用使用的IO脚列表如下，可能会与我们系统中的冲突，注意不能同时使用
+//==============================================================================================
+//01 PIO-1 	94 	Reset button, RST_N, S2 pin 3 and 4 and TP13, Transaction Bridge, RST_N, J50 pin 14
+//02 PIO-2	186 	Transaction bridge, TBR_TX_D3, J50 pin 11, whenJ49 pin 17-18 is connected
+//03 PIO-3 	158	Transaction bridge, TBR_TX_D2, J50 pin 10, whenJ49 pin 15-16 is connected
+//04 PIO-4 	170	Transaction bridge, TBR_RX_D1, J50 pin 5, whenJ49 pin 7-8 is connected
+//05 PIO-5	166 	Transaction bridge, TBR_TX_D1, J50 pin 9, whenJ49 pin 13-14 is connected
+//06 PIO-6 	178 	Transaction bridge, TBR_RX_D0, J50 pin 6, whenJ49 pin 9-10 is connected
+//07 PIO-7	154 	Transaction bridge, TBR_TX_D0, J50 pin 8, whenJ49 pin 11-12 is connected
+//08 PIO-8 	174	Transaction bridge, TBR_RX_CLK, J50 pin 1, whenJ49 pin 1-2 is connected
+//09 PIO-15  	123	Battery thermistor, BAT_THERM_VDD, J57 pin 1,using jumper J46 pin 21-22 jumper fitted By default
+//10 PIO-16 	73	I2S connector, I2S_CLK, J41 pin 1
+//11 PIO-17 	77	I2S connector, I2S_SYNC, J41 pin 2
+//12 PIO-18 	81	I2S connector, I2S_0_DOUT, J41 pin 3
+//13 PIO-19 	85	I2S connector, I2S_0_DIN, J41 pin 4
+//14 PIO-20 	57 ,	J40, SCL, J40 pin 1 and R26■ Display, SCL, U7 pin7 using J39 pin 3-4 jumpe fitted by default
+//15 PIO-21	59	J40, SDA, J40 pin 3 and R28■Display, SDA, U7 pin6, using J39 pin 5-6 jumpe fitted by default
+//==============================================================================================
+// TBR 调试器在我们自己板上使用使用的IO脚列表如下
+//==============================================================================================
+//06 PIO-6
+//07 PIO-7
+//08 PIO-8
+//==============================================================================================
+
+
 /*! \brief Returns the PIOs bank number.
     \param pio The pio.
 */
@@ -11,6 +38,12 @@
     \param pio The pio.
 */
 #define PIO2MASK(pio) (1UL << ((pio) % 32))
+
+//==============================================================================================
+//              /* PSRAM TEST */
+//==============================================================================================
+#define CONFIG_PSRAM_TEST            // PsRam IO TEST
+#define PSRAM_POWER_PIO    (2)
 
 //==============================================================================================
 //              /* I2C GPIO Select */
