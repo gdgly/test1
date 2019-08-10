@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<project name="hydra_os_qcc512x_rom_v21" path="">
+<project name="hydra_os_qcc512x_rom_v21" path="D:/WorkSpace/QCC5126-master/EarBuds/apps/fw/src/">
     <configurations defaultKit="kitres://{078b0a27-7eec-474c-a175-df461ebc5380}">
         <configuration name="makefile_project" kit="kitres://{078b0a27-7eec-474c-a175-df461ebc5380}" options="clean|build|default">
             <deployProject></deployProject>
             <devkitConfiguration>makefile_project</devkitConfiguration>
             <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
-            <devkitPath>D:/QCC512X/ADK_QCC512X_ROM_V21_WIN_6.4.0.30</devkitPath>
+            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30</devkitPath>
             <devkitRevision>1560973766</devkitRevision>
             <property name="BUILD_ARGUMENTS"></property>
             <property name="BUILD_TYPE">MAKEFILE</property>

@@ -1,3 +1,7 @@
+.idea
+EarBuds/.idea
+CMakeLists.txt
+cmake-build-debug
 *.o
 *.d
 *.log
