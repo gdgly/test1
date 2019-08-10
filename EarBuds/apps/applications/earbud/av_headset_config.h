@@ -766,5 +766,10 @@ bool appConfigBleGetAdvertisingRate(appConfigBleAdvertisingMode rate, uint16 *mi
  */
 #define appConfigBleAddressChangeTime() (BLE_RPA_TIMEOUT_DEFAULT)
 
+#ifdef GAIA_TEST
+#define DISABLE_IN_CASE_PHY_STATE
+#define DISABLE_TWS_PLUS
+#endif
+
 #endif /* _AV_HEADSET_CONFIG_H_ */
 

@@ -39,6 +39,7 @@ Copyright (c) 2010 - 2018 Qualcomm Technologies International, Ltd.
 
 #define GAIA_VENDOR_QTIL (0x000A)
 #define GAIA_VENDOR_NONE (0x7FFE)
+#define GAIA_VENDOR_STAROT (0x000F)
 
 #define GAIA_HEADER_SIZE (8)
 #define GAIA_MAX_PACKET (255)  /* It's theoretically 262, but ... */
@@ -70,6 +71,8 @@ Copyright (c) 2010 - 2018 Qualcomm Technologies International, Ltd.
 #define GAIA_COMMAND_TYPE_VOICE_ASSISTANT (0x1000)
 #define GAIA_COMMAND_TYPE_HOST_RELAY (0x2000)
 #define GAIA_COMMAND_TYPE_NOTIFICATION (0x4000)
+
+#define GAIA_COMMAND_TYPE_STAROT (0x5000)  /// hjs：新添加的命令
 
 #define GAIA_COMMAND_SET_LED_CONFIGURATION (0x0101)
 #define GAIA_COMMAND_GET_LED_CONFIGURATION (0x0181)
@@ -292,6 +295,9 @@ typedef enum
     GAIA_VA_CANCEL_CFM,                 /*!< Confirmation of a Voice Assistant cancellation request to the Host */
     GAIA_VA_CANCEL_IND,                 /*!< Indication of a Voice Assistant cancellation request from the Host */
 
+    GAIA_STAROT_COMMAND_IND,
+    GAIA_STAROT_MORE_SPACE,
+    
     /* Library message limit */
     GAIA_MESSAGE_TOP
 } GaiaMessageId;
@@ -935,5 +941,15 @@ void GaiaRwcpProcessCommand(uint8 *command, uint16 size_command);
 
 /* @brief Process the notification sent from RWCP server */
 void GaiaRwcpSendNotification(uint8 *payload, uint16 payload_length);
+
+typedef struct
+{
+    uint16 command;
+    uint16 payloadLen;
+    uint8 payload[1];
+} GAIA_STAROT_MESSAGE_T;
+
+typedef GAIA_STAROT_MESSAGE_T GAIA_STAROT_IND_T;
+
 
 #endif /* ifndef _GAIA_H_ */

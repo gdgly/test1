@@ -276,7 +276,16 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
         case GAIA_VA_CANCEL_IND:
             DEBUG_LOG("appGaiaMessageHandler GAIA_VA_... Unexpected");
             break;
+#ifdef GAIA_TEST
+        case GAIA_STAROT_COMMAND_IND:
+//            starotGaiaHandleCommand((GAIA_STAROT_IND_T *) message);
+            break;
 
+        case GAIA_STAROT_MORE_SPACE: {
+//            starotGaiaParseMessageMoreSpace();
+        }
+            break;
+#endif
 
         default:
             DEBUG_LOG("appGaiaMessageHandler Unknown GAIA message 0x%x (%d)",id,id);
