@@ -1,0 +1,48 @@
+#ifdef GAIA_TEST
+#ifndef AV_HEADSET_GAIA_STAROT_H
+#define AV_HEADSET_GAIA_STAROT_H
+
+#include <gaia.h>
+
+////////////////////////////EVENT//////////////////////////////
+enum {
+    GAIA_STAROT_AUDIO_INTERVAL = GAIA_MESSAGE_TOP + 1,
+    GAIA_STAROT_RESEND_AUDIO,
+};
+///////////////////////////COMMAND/////////////////////////////
+#define GAIA_COMMAND_STAROT_FIRST_COMMAND (0x5001)
+#define GAIA_COMMAND_STAROT_START_SEND_TIMER (0x5002)
+#define GAIA_COMMAND_STAROT_STOP_SEND_TIMER (0x5003)
+#define GAIA_COMMAND_STAROT_TRANS_AUDIO (0x5004)
+#define GAIA_COMMAND_STAROT_CALL_BEGIN (0x5005)
+#define GAIA_COMMAND_STAROT_CALL_END (0x5006)
+#define GAIA_COMMAND_STAROT_CALL_AUDIO (0x5007)
+
+bool starotGaiaHandleCommand (GAIA_STAROT_IND_T* message);
+
+bool starotGaiaSendAudio(void);
+
+bool starotAudioBufferInit(void);
+
+bool starotAudioBufferWrite(uint16 len, uint8* payload);
+
+bool starotGaiaResend(GAIA_STAROT_IND_T *message);
+
+void starotSwapBufferReadPos(void);
+
+void starotGaiaParseMessageMoreSpace(void);
+
+#define W16(x) (((*(x)) << 8) | (*((x) + 1)))
+#define GAIA_OFFS_VENDOR_ID (4)
+#define GAIA_OFFS_COMMAND_ID (6)
+#define GAIA_OFFS_PAYLOAD_LENGTH (3)
+#define GAIA_OFFS_VERSION (1)
+#define GAIA_OFFS_PAYLOAD (8)
+
+enum GAIA_TRANSFORM_AUDIO_STATUS {
+    GAIA_TRANSFORM_AUDIO_IDLE,
+    GAIA_TRANSFORM_AUDIO_ING,
+    GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE,
+};
+#endif // AV_HEADSET_GAIA_STAROT_H
+#endif

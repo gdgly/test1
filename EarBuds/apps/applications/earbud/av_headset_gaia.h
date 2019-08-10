@@ -38,8 +38,12 @@ typedef struct
         /*! Whether a GAIA connection is allowed, or will be rejected immediately */
     bool            connections_allowed;
         /*! List of tasks to notify of GAIA activity. */
-    TaskList       *client_list;    
+    TaskList       *client_list;
 
+#ifdef GAIA_TEST
+    int needCycleSendAudio;
+    int nowSendAudio;
+#endif GAIA_TEST
 } gaiaTaskData;
 
 /*! Get the transport for the current GAIA connection */
