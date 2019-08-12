@@ -25,7 +25,7 @@ bool checkReadInRange(int begin, int end, int pos);
 //
 //static uint16 bufferReadPos = 0;
 //static uint16 bufferWritePos = 0;
-static uint16 bufferSendUnit = 200;
+uint16 bufferSendUnit = 240;
 //static uint16 bufferTempReadPos = 0;
 //static uint8 buffer[1024 * 1];
 
@@ -243,12 +243,11 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message) {
     if (appGetGaia()->nowSendAudio != GAIA_TRANSFORM_AUDIO_IDLE) {
         return FALSE;
     }
-    static uint8 payload[201];
+    static uint8 payload[500];
     payload[0] = 1;
     audioForwardSource = message->source;
 
     memcpy(payload + 1, message->pos, bufferSendUnit);
-
     bool st = appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_AUDIO_IND, 0xfe,
                                 bufferSendUnit + 1, payload);
 

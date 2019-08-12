@@ -11,6 +11,7 @@
 
 #include "audio_forward.h"
 
+extern uint16 bufferSendUnit;
 
 
 static void msg_handler (Task appTask, MessageId id, Message msg);
@@ -21,7 +22,7 @@ static TaskData audioForwardTaskData = {.handler = msg_handler};
 Task audioForwardTask = &audioForwardTaskData;
 
 static void sendDataMessage(Source source);
-
+Source globalSource;
 void indicateFwdDataSource(Source src)
 {
     MAKE_AUDIO_MESSAGE( AUDIO_VA_INDICATE_DATA_SOURCE, message) ;
@@ -34,6 +35,7 @@ unsigned nowSendStatus = 0;
 
 void sendDataMessage(Source source) {
     int size = SourceSize(source);
+
     const uint16 *ptr = (const uint16*)SourceMap(source);
 
     data_cnt += size;
@@ -45,7 +47,7 @@ void sendDataMessage(Source source) {
 #ifdef GAIA_TEST
     printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND for send nowSendStatus is %d, size is :%d\n",nowSendStatus, size);
 
-    if ((nowSendStatus == 0) & (size > 200)) {
+    if ((nowSendStatus == 0) & (size >= bufferSendUnit)) {
 
         GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));
         starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_IND;
@@ -72,21 +74,29 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
     case MESSAGE_MORE_DATA:
     {
         MessageMoreData * message = (MessageMoreData *)msg;
+        globalSource = message->source;
         sendDataMessage(message->source);
         break;
     }
     case GAIA_STAROT_COMMAND_IND:
     {
         /// 确认发送的消息
-        printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND \n");
+//        printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND \n");
 
         GAIA_STAROT_AUDIO_CFM_T* message = (GAIA_STAROT_AUDIO_CFM_T*)msg;
         nowSendStatus = 0;
         if (NULL != message && message->len > 0 &&
             message->command == GAIA_COMMAND_STAROT_CALL_AUDIO_CFM) {
 
-            SourceDrop(message->source, message->len * 3);
-            sendDataMessage(message->source);
+//            SourceDrop(message->source, message->len * 2.5);
+
+            int size = SourceSize(globalSource);
+            if (size > 3000) {
+                SourceDrop(globalSource, 400);
+            } else {
+                SourceDrop(globalSource, message->len);
+            }
+            sendDataMessage(globalSource);
         }
 
         break;

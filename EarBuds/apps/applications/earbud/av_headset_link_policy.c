@@ -26,9 +26,10 @@
 static const lp_power_table powertable_a2dp[]=
 {
     /* mode,        min_interval, max_interval, attempt, timeout, duration */
-    {lp_active,     0,            0,            0,       0,       5},  /* Active mode for 5 sec */
-    {lp_passive,    0,            0,            0,       0,       1},  /* Passive mode for 1 sec */
-    {lp_sniff,      48,           400,          2,       4,       0}   /* Enter sniff mode*/
+//    {lp_active,     0,            0,            0,       0,       5},  /* Active mode for 5 sec */
+//    {lp_passive,    0,            0,            0,       0,       1},  /* Passive mode for 1 sec */
+//    {lp_sniff,      48,           400,          2,       4,       0}   /* Enter sniff mode*/
+    {lp_active,     0,            0,            0,       0,       0 }
 };
 
 /*! Lower power table for the A2DP with media streaming as source */
@@ -42,35 +43,41 @@ static const lp_power_table powertable_a2dp_streaming_source[]=
 static const lp_power_table powertable_a2dp_streaming_tws_sink[]=
 {
     /* mode,        min_interval, max_interval, attempt, timeout, duration */
-    {lp_active,     0,            0,            0,       0,       5},  /* Active mode for 5 sec */
-    {lp_passive,    0,            0,            0,       0,       1},  /* Passive mode for 1 sec */
-    {lp_sniff,      48,           48,           2,       4,       0}   /* Enter sniff mode*/
+//    {lp_active,     0,            0,            0,       0,       5},  /* Active mode for 5 sec */
+//    {lp_passive,    0,            0,            0,       0,       1},  /* Passive mode for 1 sec */
+//    {lp_sniff,      48,           48,           2,       4,       0}   /* Enter sniff mode*/
+    {lp_active,     0,            0,            0,       0,       0 }
 };
 
 /*! Lower power table for the A2DP with media streaming as sink */
 static const lp_power_table powertable_a2dp_streaming_sink[]=
 {
     /* mode,        min_interval, max_interval, attempt, timeout, duration */
-    {lp_active,     0,            0,            0,       0,       5},  /* Active mode for 5 sec */
-    {lp_passive,    0,            0,            0,       0,       1},  /* Passive mode for 1 sec */
-    {lp_sniff,      48,           48,           2,       4,       0}   /* Enter sniff mode*/
+//    {lp_active,     0,            0,            0,       0,       5},  /* Active mode for 5 sec */
+//    {lp_passive,    0,            0,            0,       0,       1},  /* Passive mode for 1 sec */
+//    {lp_sniff,      48,           48,           2,       4,       0}   /* Enter sniff mode*/
+    {lp_active,     0,            0,            0,       0,       0 }
 };
 
 /*! Lower power table for the HFP. */
 static const lp_power_table powertable_hfp[]=
 {
     /* mode,        min_interval, max_interval, attempt, timeout, duration */
-    {lp_active,     0,            0,            0,       0,       1},  /* Active mode for 1 second */
-    {lp_sniff,      48,           800,          2,       1,       0}   /* Enter sniff mode (30-500ms)*/
+//    {lp_active,     0,            0,            0,       0,       1},  /* Active mode for 1 second */
+//    {lp_sniff,      48,           800,          2,       1,       0}   /* Enter sniff mode (30-500ms)*/
+    {lp_active,     0,            0,            0,       0,       0}
+
 };
 
 /*! Lower power table for the HFP when an audio connection is open 
 */
 static const lp_power_table powertable_hfp_sco[]=
 {
-    /* mode,        min_interval, max_interval, attempt, timeout, duration */
-    {lp_passive,    0,            0,            0,       0,       1},  /* Passive mode */
-    {lp_sniff,      48,           144,          2,       8,       0}   /* Enter sniff mode (30-90ms)*/
+//    /* mode,        min_interval, max_interval, attempt, timeout, duration */
+//    {lp_passive,    0,            0,            0,       0,       1},  /* Passive mode */
+//    {lp_sniff,      48,           144,          2,       8,       0}   /* Enter sniff mode (30-90ms)*/
+    {lp_active,     0,            0,            0,       0,       0}
+
 };
 
 /*! Power table for the peer link when SCO forwarding active
@@ -78,24 +85,29 @@ static const lp_power_table powertable_hfp_sco[]=
 static const lp_power_table powertable_peer_SCO_fwd[]=
 {
     /* mode,        min_interval, max_interval, attempt, timeout, duration */
-    {lp_active,     0,            0,            0,       0,       5},  /* Active mode for 5 seconds */
-    {lp_passive,    0,            0,            0,       0,       10}, /* Passive mode. 10 seconds... redial ? */
-    {lp_sniff,      48,           144,          2,       8,       0}   /* Enter sniff mode (30-90ms)*/
+//    {lp_active,     0,            0,            0,       0,       5},  /* Active mode for 5 seconds */
+//    {lp_passive,    0,            0,            0,       0,       10}, /* Passive mode. 10 seconds... redial ? */
+//    {lp_sniff,      48,           144,          2,       8,       0}   /* Enter sniff mode (30-90ms)*/
+    {lp_active,     0,            0,            0,       0,       0}
+
 };
 
 /*! Lower power table for TWS+ HFP when an audio connection is open */
 static const lp_power_table powertable_twsplus_hfp_sco[]=
 {
     /* mode,        min_interval, max_interval, attempt, timeout, duration */
-    {lp_sniff,      48,           144,          2,       8,       0}   /* Enter sniff mode (30-90ms)*/
+//    {lp_sniff,      48,           144,          2,       8,       0}   /* Enter sniff mode (30-90ms)*/
+    {lp_active,     0,            0,            0,       0,       0}
 };
 
 /*! Lower power table for AVRCP */
 static const lp_power_table powertable_avrcp[]=
 {
     /* mode,        min_interval, max_interval, attempt, timeout, duration */
-    {lp_active,     0,            0,            0,       0,       1},  /* Active mode for 1 second */
-    {lp_sniff,      48,           800,          2,       4,       0}   /* Enter sniff mode*/
+//    {lp_active,     0,            0,            0,       0,       1},  /* Active mode for 1 second */
+//    {lp_sniff,      48,           800,          2,       4,       0}   /* Enter sniff mode*/
+    {lp_active,     0,            0,            0,       0,       0}
+
 };
 
 /*! \cond helper */
