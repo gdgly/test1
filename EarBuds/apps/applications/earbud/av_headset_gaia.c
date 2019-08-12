@@ -30,7 +30,7 @@ static void appGaiaHandleCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *
 static bool appGaiaHandleStatusCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *command);
 void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
                           uint16 payload_length, uint8 *payload);
-void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
+bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                           uint16 payload_length, uint8 *payload);
 
 
@@ -190,7 +190,7 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
 {
     UNUSED(task);
 
-    DEBUG_LOG("appGaiaMessageHandler 0x%X (%d)",id,id);
+    //DEBUG_LOG("appGaiaMessageHandler 0x%X (%d)",id,id);
 
     switch (id)
     {
@@ -232,10 +232,25 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
         case GAIA_SEND_PACKET_CFM:               /* Confirmation that a GaiaSendPacket request has completed */
             {
                 const GAIA_SEND_PACKET_CFM_T *m = (const GAIA_SEND_PACKET_CFM_T *) message;
-                DEBUG_LOG("appGaiaMessageHandler GAIA_SEND_PACKET_CFM");
+            uint8 *packet = m->packet;
+            uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
+            uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
 
-                free(m->packet);
+            if (FALSE == m->success) {
+                DEBUG_LOG("appGaiaMessageHandler GAIA_SEND_PACKET_CFM, status is :%d", m->success);
+                // todo hjs 发送包成功之后，重新检查是否有新数据需要发送
+                if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
+                    appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+                }
+            } else {
+                if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
+                    appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+                    //appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+                    //starotNotifyAudioForward();
+                }
             }
+            free(m->packet);
+        }
             break;
 
         case GAIA_DFU_CFM:                       /* Confirmation of a Device Firmware Upgrade request */
@@ -283,7 +298,19 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
             break;
 
         case GAIA_STAROT_MORE_SPACE: {
-//            starotGaiaParseMessageMoreSpace();
+            starotGaiaParseMessageMoreSpace();
+        }
+            break;
+        case GAIA_STAROT_AUDIO_INTERVAL: {
+            if (appGetGaia()->needCycleSendAudio > 0) {
+                //send, reset timer
+                static uint8 data[201];
+                for (int i = 1; i <= 2; ++i) {
+                    data[0] = i;
+                    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_TRANS_AUDIO, 0xfe, 201, data);
+                }
+                MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 10);
+            }
         }
             break;
 #endif
@@ -372,7 +399,7 @@ void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
 }
 
 /*! Build and Send a Gaia protocol packet */
-void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
+bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                           uint16 payload_length, uint8 *payload)
 {
     GAIA_TRANSPORT *transport = appGetGaiaTransport();
@@ -383,7 +410,7 @@ void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
         uint8 *packet;
         uint8 flags = GaiaTransportGetFlags(transport);
 
-        DEBUG_LOG("appGaiaSendPacket cmd:%d sts:%d len:%d [flags x%x]",command_id,status,payload_length,flags);
+//        DEBUG_LOG("appGaiaSendPacket cmd:%d sts:%d len:%d [flags x%x]",command_id,status,payload_length,flags);
 
         packet_length = GAIA_HEADER_SIZE + payload_length + 2;
         packet = PanicNull(malloc(packet_length));
@@ -395,8 +422,10 @@ void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                                               status, payload_length, payload);
 
             GaiaSendPacket(transport, packet_length, packet);
+            return TRUE;
         }
     }
+    return FALSE;
 }
 
 

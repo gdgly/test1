@@ -5,6 +5,10 @@
 #include <audio.h>
 #include <stdio.h>
 
+#include "../av_headset.h"
+//#include "gaia/gaia.h"
+#include "../av_headset_gaia_starot.h"
+
 #include "audio_forward.h"
 
 
@@ -14,7 +18,9 @@ static void initSetSpeechDataSource(Source src);
 static void sendMessageMoreData(Task task, Source src, uint32 delay);
 
 static TaskData audioForwardTaskData = {.handler = msg_handler};
-static Task audioForwardTask = &audioForwardTaskData;
+Task audioForwardTask = &audioForwardTaskData;
+
+static void sendDataMessage(Source source);
 
 void indicateFwdDataSource(Source src)
 {
@@ -24,6 +30,41 @@ void indicateFwdDataSource(Source src)
 }
 
 unsigned more_loops = 0, data_cnt = 0;
+unsigned nowSendStatus = 0;
+
+void sendDataMessage(Source source) {
+    int size = SourceSize(source);
+    const uint16 *ptr = (const uint16*)SourceMap(source);
+
+    data_cnt += size;
+
+    if(0 == (++more_loops) % 100)
+        printf("get=%d data=%d cnt=%d [%04x %04x %04x %04x %04x %04x\n",
+               more_loops, size, data_cnt, ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
+
+#ifdef GAIA_TEST
+    printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND for send nowSendStatus is %d, size is :%d\n",nowSendStatus, size);
+
+    if ((nowSendStatus == 0) & (size > 200)) {
+
+        GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));
+        starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_IND;
+        starot->source = source;
+        starot->pos = (uint8*)ptr;
+        starot->len = size;
+        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
+        nowSendStatus = 1;
+    }
+#else
+//    SourceDrop(source, size);
+    SourceDrop(source, 200);
+
+#endif
+//    printf("call xxx audio forward msg_handler indicateFwdDataSource \n");
+
+}
+
+
 static void msg_handler (Task appTask, MessageId id, Message msg)
 {
     UNUSED(appTask);
@@ -31,19 +72,26 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
     case MESSAGE_MORE_DATA:
     {
         MessageMoreData * message = (MessageMoreData *)msg;
-        int size = SourceSize(message->source);
-        const uint16 *ptr = (const uint16*)SourceMap(message->source);
+        sendDataMessage(message->source);
+        break;
+    }
+    case GAIA_STAROT_COMMAND_IND:
+    {
+        /// 确认发送的消息
+        printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND \n");
 
-        data_cnt += size;
+        GAIA_STAROT_AUDIO_CFM_T* message = (GAIA_STAROT_AUDIO_CFM_T*)msg;
+        nowSendStatus = 0;
+        if (NULL != message && message->len > 0 &&
+            message->command == GAIA_COMMAND_STAROT_CALL_AUDIO_CFM) {
 
-        if(0 == (++more_loops) % 100)
-            printf("get=%d data=%d cnt=%d [%04x %04x %04x %04x %04x %04x\n",
-                   more_loops, size, data_cnt, ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
-
-        SourceDrop(message->source, size);
+            SourceDrop(message->source, message->len * 3);
+            sendDataMessage(message->source);
+        }
 
         break;
     }
+
     case AUDIO_VA_INDICATE_DATA_SOURCE:
     {
         AUDIO_VA_INDICATE_DATA_SOURCE_T* ind = (AUDIO_VA_INDICATE_DATA_SOURCE_T*)msg;

@@ -25,6 +25,7 @@
 #if STAROT_ENABLE
 #include "audio_route/audio_forward.h"
 #include "cap_id_prim.h"
+#include "av_headset_gaia_starot.h"
 #include <vmal.h>
 #endif
 
@@ -328,6 +329,12 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
     PanicFalse(SourceMapInit(capture_output, STREAM_TIMESTAMPED, 9));
 
     /* 4. setup MORE_DATA message. */
+    {
+        GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
+        starot->command = GAIA_COMMAND_STAROT_CALL_BEGIN;
+        starot->payloadLen = 0;
+        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
+    }
     indicateFwdDataSource(capture_output);
 #endif
    
@@ -404,6 +411,12 @@ void appKymeraHandleInternalScoStop(void)
 #if STAROT_ENABLE
 	/* Disconnect audio forward source */
     SourceUnmap(sco_audfwd_src);
+    {
+        GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
+        starot->command = GAIA_COMMAND_STAROT_CALL_END;
+        starot->payloadLen = 0;
+        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
+    }
 #endif
 
     /* Disconnect SCO from chain SCO endpoints */
