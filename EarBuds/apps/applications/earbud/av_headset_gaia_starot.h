@@ -23,15 +23,6 @@ enum {
 
 bool starotGaiaHandleCommand (GAIA_STAROT_IND_T* message);
 
-
-bool starotAudioBufferInit(void);
-
-bool starotAudioBufferWrite(uint16 len, uint8* payload);
-
-bool starotGaiaResend(GAIA_STAROT_IND_T *message);
-
-void starotSwapBufferReadPos(void);
-
 void starotGaiaParseMessageMoreSpace(void);
 
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))
