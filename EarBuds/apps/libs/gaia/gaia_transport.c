@@ -775,6 +775,10 @@ bool gaiaTransportHandleMessage(Task task, MessageId id, Message message)
                     msg_handled = FALSE;
             }
             break;
+        case TRANSPORT_MGR_MORE_SPACE: {
+            MessageSend(gaia->app_task, GAIA_STAROT_MORE_SPACE, NULL);
+        }
+            break;
 
         case TRANSPORT_MGR_REGISTER_CFM:
             {
