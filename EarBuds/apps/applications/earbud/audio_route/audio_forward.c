@@ -32,6 +32,7 @@ void indicateFwdDataSource(Source src)
 
 unsigned more_loops = 0, data_cnt = 0;
 unsigned nowSendStatus = 0;
+int dissNum = 0;
 
 void sendDataMessage(Source source) {
     int size = SourceSize(source);
@@ -45,7 +46,7 @@ void sendDataMessage(Source source) {
                more_loops, size, data_cnt, ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
 
 #ifdef GAIA_TEST
-    printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND for send nowSendStatus is %d, size is :%d\n",nowSendStatus, size);
+    //printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND for send nowSendStatus is %d, size is :%d\n",nowSendStatus, size);
 
     if ((nowSendStatus == 0) & (size >= bufferSendUnit)) {
 
@@ -85,18 +86,26 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
 
         GAIA_STAROT_AUDIO_CFM_T* message = (GAIA_STAROT_AUDIO_CFM_T*)msg;
         nowSendStatus = 0;
-        if (NULL != message && message->len > 0 &&
-            message->command == GAIA_COMMAND_STAROT_CALL_AUDIO_CFM) {
+        if (NULL != message && message->command == GAIA_COMMAND_STAROT_CALL_AUDIO_CFM) {
 
 //            SourceDrop(message->source, message->len * 2.5);
 
-            int size = SourceSize(globalSource);
+            int size = SourceSize(message->source);
             if (size > 3000) {
-                SourceDrop(globalSource, 400);
+                if (message->len > 0) {
+                    dissNum += (400 - message->len);
+                }
+                SourceDrop(message->source, 400);
             } else {
-                SourceDrop(globalSource, message->len);
+                if (message->len > 0) {
+                    SourceDrop(message->source, message->len);
+                }
             }
-            sendDataMessage(globalSource);
+            sendDataMessage(message->source);
+        } else if (NULL != message && message->command == GAIA_COMMAND_STAROT_CALL_AUDIO_END) {
+            printf("diss audio bytes is : %d\n", dissNum);
+            dissNum = 0;
+            nowSendStatus = 0;
         }
 
         break;

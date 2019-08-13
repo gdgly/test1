@@ -333,6 +333,7 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
         GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
         starot->command = GAIA_COMMAND_STAROT_CALL_BEGIN;
         starot->payloadLen = 0;
+        appGetGaia()->nowSendCallAudio = 1;
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
     }
     indicateFwdDataSource(capture_output);
@@ -410,12 +411,13 @@ void appKymeraHandleInternalScoStop(void)
 
 #if STAROT_ENABLE
 	/* Disconnect audio forward source */
-    SourceUnmap(sco_audfwd_src);
     {
         GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
         starot->command = GAIA_COMMAND_STAROT_CALL_END;
         starot->payloadLen = 0;
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
+        appGetGaia()->nowSendCallAudio = 0;
+        SourceUnmap(sco_audfwd_src);
     }
 #endif
 

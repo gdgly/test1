@@ -125,15 +125,23 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 
         case GAIA_COMMAND_STAROT_CALL_BEGIN: {
                 appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+                appGetGaia()->nowSendCallAudio = 1;
                 DEBUG_LOG("call GAIA_COMMAND_STAROT_CALL_BEGIN");
 //              starotAudioBufferInit();
                 appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_BEGIN, 0xfe, 0, NULL);
             }
             break;
 
-        case GAIA_COMMAND_STAROT_CALL_END:
+        case GAIA_COMMAND_STAROT_CALL_END: {
+            appGetGaia()->nowSendCallAudio = 0;
             DEBUG_LOG("call GAIA_COMMAND_STAROT_CALL_END");
             appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
+
+            GAIA_STAROT_AUDIO_CFM_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_CFM_T));
+            starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_END;
+            MessageSend(audioForwardTask, GAIA_STAROT_COMMAND_IND, starot);
+            audioForwardSource = NULL;
+        }
             break;
 
         case GAIA_COMMAND_STAROT_CALL_AUDIO_IND:
@@ -223,21 +231,28 @@ void starotGaiaParseMessageMoreSpace(void) {
     appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
     /// 尝试使用messagemorespace这唯一的命令去让他发送消息
 //    audioForwardSource = NULL;
-    starotNotifyAudioForward();
+    starotNotifyAudioForward(FALSE);
 }
 
-void starotNotifyAudioForward(void) {
+void starotNotifyAudioForward(bool st) {
+    if (appGetGaia()->nowSendCallAudio <= 0) {
+        return;
+    }
+
 //    printf("call xxx starotNotifyAudioForward \n");
     GAIA_STAROT_AUDIO_CFM_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_CFM_T));
     starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_CFM;
     starot->source = audioForwardSource;
     starot->pos = 0;
-    starot->len = bufferSendUnit;
+    starot->len = (TRUE == st ? bufferSendUnit : 0);
     MessageSend(audioForwardTask, GAIA_STAROT_COMMAND_IND, starot);
     audioForwardSource = NULL;
 }
 
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message) {
+    if (appGetGaia()->nowSendCallAudio <= 0) {
+        return FALSE;
+    }
 //    printf("call xxx starotGaiaSendAudio \n");
 
     if (appGetGaia()->nowSendAudio != GAIA_TRANSFORM_AUDIO_IDLE) {

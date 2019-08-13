@@ -19,6 +19,7 @@ enum {
 #define GAIA_COMMAND_STAROT_CALL_END (0x5006)
 #define GAIA_COMMAND_STAROT_CALL_AUDIO_IND (0x5007)
 #define GAIA_COMMAND_STAROT_CALL_AUDIO_CFM (0x5008)
+#define GAIA_COMMAND_STAROT_CALL_AUDIO_END (0x5009)
 
 bool starotGaiaHandleCommand (GAIA_STAROT_IND_T* message);
 
@@ -58,7 +59,7 @@ typedef GAIA_STAROT_AUDIO_T GAIA_STAROT_AUDIO_IND_T ;
 typedef GAIA_STAROT_AUDIO_T GAIA_STAROT_AUDIO_CFM_T ;
 
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message);
-void starotNotifyAudioForward(void) ;
+void starotNotifyAudioForward(bool st) ;
 
 #endif // AV_HEADSET_GAIA_STAROT_H
 #endif

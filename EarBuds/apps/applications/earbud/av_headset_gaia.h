@@ -43,6 +43,7 @@ typedef struct
 #ifdef GAIA_TEST
     int needCycleSendAudio;
     int nowSendAudio;
+    int nowSendCallAudio;
 #endif GAIA_TEST
 } gaiaTaskData;
 
