@@ -244,7 +244,7 @@ void starotNotifyAudioForward(bool st) {
     starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_CFM;
     starot->source = audioForwardSource;
     starot->pos = 0;
-    starot->len = (TRUE == st ? bufferSendUnit : 0);
+    starot->len = (TRUE == st ? bufferSendUnit * 2 : 0);
     MessageSend(audioForwardTask, GAIA_STAROT_COMMAND_IND, starot);
     audioForwardSource = NULL;
 }
@@ -262,7 +262,12 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message) {
     payload[0] = 1;
     audioForwardSource = message->source;
 
-    memcpy(payload + 1, message->pos, bufferSendUnit);
+    for (int i = 0; i < bufferSendUnit; i += 2) {
+        payload[1 + i] = (message->pos)[i * 2 + 1];
+        payload[1 + i + 1] = (message->pos)[i * 2];
+        /// 如果播放有问题，就将值交换一下
+    }
+//    memcpy(payload + 1, message->pos, bufferSendUnit);
     bool st = appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_AUDIO_IND, 0xfe,
                                 bufferSendUnit + 1, payload);
 

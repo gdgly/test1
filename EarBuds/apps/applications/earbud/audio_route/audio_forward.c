@@ -48,7 +48,7 @@ void sendDataMessage(Source source) {
 #ifdef GAIA_TEST
     //printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND for send nowSendStatus is %d, size is :%d\n",nowSendStatus, size);
 
-    if ((nowSendStatus == 0) & (size >= bufferSendUnit)) {
+    if ((nowSendStatus == 0) & (size >= (bufferSendUnit * 2))) {
 
         GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));
         starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_IND;
