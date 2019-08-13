@@ -11,8 +11,9 @@
 
 #include "audio_forward.h"
 
+#ifdef GAIA_TEST
 extern uint16 bufferSendUnit;
-
+#endif
 
 static void msg_handler (Task appTask, MessageId id, Message msg);
 static void initSetSpeechDataSource(Source src);
@@ -46,10 +47,10 @@ void sendDataMessage(Source source) {
                more_loops, size, data_cnt, ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
 
 #ifdef GAIA_TEST
-    //printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND for send nowSendStatus is %d, size is :%d\n",nowSendStatus, size);
-
-    if ((nowSendStatus == 0) & (size >= (bufferSendUnit * 2))) {
-
+    if (NULL == appGetGaia()->transport) {
+        SourceDrop(source, size);
+    } else if ((nowSendStatus == 0) & (size >= (bufferSendUnit * 2))) {
+        //printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND for send nowSendStatus is %d, size is :%d\n",nowSendStatus, size);
         GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));
         starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_IND;
         starot->source = source;
@@ -59,9 +60,7 @@ void sendDataMessage(Source source) {
         nowSendStatus = 1;
     }
 #else
-//    SourceDrop(source, size);
-    SourceDrop(source, 200);
-
+    SourceDrop(source, size);
 #endif
 //    printf("call xxx audio forward msg_handler indicateFwdDataSource \n");
 
@@ -79,6 +78,8 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
         sendDataMessage(message->source);
         break;
     }
+
+#ifdef GAIA_TEST
     case GAIA_STAROT_COMMAND_IND:
     {
         /// 确认发送的消息
@@ -87,9 +88,6 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
         GAIA_STAROT_AUDIO_CFM_T* message = (GAIA_STAROT_AUDIO_CFM_T*)msg;
         nowSendStatus = 0;
         if (NULL != message && message->command == GAIA_COMMAND_STAROT_CALL_AUDIO_CFM) {
-
-//            SourceDrop(message->source, message->len * 2.5);
-
             int size = SourceSize(message->source);
             if (size > 3000) {
                 if (message->len > 0) {
@@ -110,7 +108,7 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
 
         break;
     }
-
+#endif
     case AUDIO_VA_INDICATE_DATA_SOURCE:
     {
         AUDIO_VA_INDICATE_DATA_SOURCE_T* ind = (AUDIO_VA_INDICATE_DATA_SOURCE_T*)msg;

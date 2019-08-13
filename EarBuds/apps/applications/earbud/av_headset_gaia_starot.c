@@ -16,23 +16,6 @@ extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status
 
 uint16 bufferSendUnit = 240;
 
-bool starotAudioBufferInit(void) {
-    return TRUE;
-}
-
-bool checkWriteInRange(int begin, int end, int pos) {
-    if (begin < pos && pos <= end) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
-bool checkReadInRange(int begin, int end, int pos) {
-    if (begin <= pos && pos < end) {
-        return TRUE;
-    }
-    return FALSE;
-}
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 //    DEBUG_LOG("starotGaiaHandleCommand command: 0x%x", message->command);
@@ -126,6 +109,7 @@ void starotNotifyAudioForward(bool st) {
 }
 
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message) {
+
     if (appGetGaia()->nowSendCallAudio <= 0) {
         return FALSE;
     }

@@ -231,7 +231,8 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
 
         case GAIA_SEND_PACKET_CFM:               /* Confirmation that a GaiaSendPacket request has completed */
             {
-                const GAIA_SEND_PACKET_CFM_T *m = (const GAIA_SEND_PACKET_CFM_T *) message;
+        const GAIA_SEND_PACKET_CFM_T *m = (const GAIA_SEND_PACKET_CFM_T *) message;
+#ifdef GAIA_TEST
             uint8 *packet = m->packet;
             uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
             uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
@@ -249,6 +250,7 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
                     starotNotifyAudioForward(TRUE);
                 }
             }
+#endif
             free(m->packet);
         }
             break;

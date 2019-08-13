@@ -329,13 +329,15 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
     PanicFalse(SourceMapInit(capture_output, STREAM_TIMESTAMPED, 9));
 
     /* 4. setup MORE_DATA message. */
-    {
+#ifdef GAIA_TEST
+    if (NULL != appGetGaia()->transport) {
         GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
         starot->command = GAIA_COMMAND_STAROT_CALL_BEGIN;
         starot->payloadLen = 0;
         appGetGaia()->nowSendCallAudio = 1;
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
     }
+#endif
     indicateFwdDataSource(capture_output);
 #endif
    
@@ -411,14 +413,16 @@ void appKymeraHandleInternalScoStop(void)
 
 #if STAROT_ENABLE
 	/* Disconnect audio forward source */
-    {
+#ifdef GAIA_TEST
+    if (NULL != appGetGaia()->transport) {
         GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
         starot->command = GAIA_COMMAND_STAROT_CALL_END;
         starot->payloadLen = 0;
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
         appGetGaia()->nowSendCallAudio = 0;
-        SourceUnmap(sco_audfwd_src);
     }
+#endif
+    SourceUnmap(sco_audfwd_src);
 #endif
 
     /* Disconnect SCO from chain SCO endpoints */
