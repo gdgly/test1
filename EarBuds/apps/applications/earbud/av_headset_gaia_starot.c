@@ -14,7 +14,7 @@ extern void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 stat
 extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                               uint16 payload_length, uint8 *payload);
 
-uint16 bufferSendUnit = 240;
+uint16 bufferSendUnit = 150;
 
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
@@ -122,14 +122,16 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message) {
     payload[0] = 1;
     audioForwardSource = message->source;
 
-    for (int i = 0; i < bufferSendUnit; i += 2) {
-        payload[1 + i] = (message->pos)[i * 2 + 1];
-        payload[1 + i + 1] = (message->pos)[i * 2];
+    for (int i = 0; i < bufferSendUnit * 2; i += 2) {
+//        payload[1 + i] = (message->pos)[i * 2 + 1];
+//        payload[1 + i + 1] = (message->pos)[i * 2];
         /// 如果播放有问题，就将值交换一下
+        payload[1 + i] = (message->pos)[i + 1];
+        payload[1 + i + 1] = (message->pos)[i];
     }
 //    memcpy(payload + 1, message->pos, bufferSendUnit);
     bool st = appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_AUDIO_IND, 0xfe,
-                                bufferSendUnit + 1, payload);
+                                bufferSendUnit * 2 + 1, payload);
 
     if (TRUE == st) {
         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_ING;

@@ -50,7 +50,7 @@ DESCRIPTION
 
 #include <byte_utils.h>
 
-static bool gaia_handle_starot_command(gaia_transport *transport, uint16 command_id, uint8 payload_length, uint8 *payload);
+static bool gaia_handle_starot_command(gaia_transport *transport, uint16 command_id, uint16 payload_length, uint8 *payload);
 
 #define GAIA_UPGRADE_HEADER_SIZE (0x04)  /*This includes the length of VM opcode, length and more data*/
 
@@ -206,7 +206,7 @@ DESCRIPTION
 */
 static uint16 build_packet(uint8 *buffer, uint8 flags,
                               uint16 vendor_id, uint16 command_id, uint16 status,
-                              uint8 payload_length, uint8 *payload)
+                              uint16 payload_length, uint8 *payload)
 {
     uint8 *data = buffer;
     uint16 packet_length = GAIA_OFFS_PAYLOAD + payload_length;
@@ -225,11 +225,19 @@ static uint16 build_packet(uint8 *buffer, uint8 flags,
      *  +--------+--------+--------+--------+--------+--------+--------+--------+ +--------+--/ /---+ +--------+
      *  |  SOF   |VERSION | FLAGS  | LENGTH |    VENDOR ID    |   COMMAND ID    | | PAYLOAD   ...   | | CHECK  |
      *  +--------+--------+--------+--------+--------+--------+--------+--------+ +--------+--/ /---+ +--------+
-     */
+     *  length长度扩展一个字节 len-2x
+     *  0 bytes  1        2        3        4        5        6        7        8          9        10    len+9      len+10
+     *  +--------+--------+--------+--------+--------+--------+--------+--------+--------+ +--------+--/ /---+ +--------+
+     *  |  SOF   |VERSION | FLAGS  | LENGTH          |    VENDOR ID    |   COMMAND ID    | | PAYLOAD   ...   | | CHECK  |
+     *  +--------+--------+--------+--------+--------+--------+--------+--------+--------+ +--------+--/ /---+ +--------+
+     *  */
     *data++ = GAIA_SOF;
     *data++ = GAIA_VERSION;
     *data++ = flags;
-    *data++ = payload_length;
+    /// len-2x
+//    *data++ = payload_length;
+    *data++ = HIGH(payload_length);
+    *data++ = LOW(payload_length);
     *data++ = HIGH(vendor_id);
     *data++ = LOW(vendor_id);
     *data++ = HIGH(command_id);
@@ -239,7 +247,9 @@ static uint16 build_packet(uint8 *buffer, uint8 flags,
     {
         /*  Insert status-cum-event byte and increment payload length  */
         *data++ = status;
-        ++buffer[GAIA_OFFS_PAYLOAD_LENGTH];
+        uint16 temp = payload_length + 1;
+        buffer[GAIA_OFFS_PAYLOAD_LENGTH] = HIGH(temp);
+        buffer[GAIA_OFFS_PAYLOAD_LENGTH + 1] = LOW(temp);
     }
 
     /*  Copy in the payload  */
@@ -278,7 +288,7 @@ DESCRIPTION
 */
 static uint16 build_packet_16(uint8 *buffer, uint8 flags,
                               uint16 vendor_id, uint16 command_id, uint16 status,
-                              uint8 payload_length, uint16 *payload)
+                              uint16 payload_length, uint16 *payload)
 {
     uint8 *data = buffer;
     uint16 packet_length = GAIA_OFFS_PAYLOAD + 2 * payload_length;
@@ -301,7 +311,11 @@ static uint16 build_packet_16(uint8 *buffer, uint8 flags,
     *data++ = GAIA_SOF;
     *data++ = GAIA_VERSION;
     *data++ = flags;
-    *data++ = 2 * payload_length;
+    /// len-2x
+//    *data++ = 2 * payload_length;
+    uint16 t0 = 2 * payload_length;
+    *data++ = HIGH(t0);
+    *data++ = LOW(t0);
     *data++ = HIGH(vendor_id);
     *data++ = LOW(vendor_id);
     *data++ = HIGH(command_id);
@@ -311,7 +325,9 @@ static uint16 build_packet_16(uint8 *buffer, uint8 flags,
     {
         /*  Insert status-cum-event byte and increment payload length  */
         *data++ = status;
-        ++buffer[GAIA_OFFS_PAYLOAD_LENGTH];
+        uint16 t1 = 2 * payload_length + 1;
+        buffer[GAIA_OFFS_PAYLOAD_LENGTH] = HIGH(t1);
+        buffer[GAIA_OFFS_PAYLOAD_LENGTH + 1] = LOW(t1);
     }
 
     /*  Copy in the payload  */
@@ -1072,7 +1088,7 @@ DESCRIPTION
     Handle a control command or return FALSE if we can't
 */
 static bool gaia_handle_control_command(gaia_transport *transport, uint16 command_id,
-                                        uint8 payload_length, uint8 *payload)
+                                        uint16 payload_length, uint8 *payload)
 {
     switch (command_id)
     {
@@ -1111,7 +1127,7 @@ DESCRIPTION
     Handle a Polled Status command or return FALSE if we can't
 */
 static bool gaia_handle_status_command(gaia_transport *transport, uint16 command_id,
-                                       uint8 payload_length, uint8 *payload)
+                                       uint16 payload_length, uint8 *payload)
 {
     UNUSED(payload_length);
     UNUSED(payload);
@@ -1146,7 +1162,7 @@ DESCRIPTION
     Handle a Feature Control command or return FALSE if we can't
 */
 static bool gaia_handle_feature_command(gaia_transport *transport, uint16 command_id,
-                                        uint8 payload_length, uint8 *payload)
+                                        uint16 payload_length, uint8 *payload)
 {
     switch (command_id)
     {
@@ -1725,7 +1741,7 @@ DESCRIPTION
     Prepare a file for reading
 
 */
-static void open_file(gaia_transport *transport, uint8 *payload, uint8 payload_length)
+static void open_file(gaia_transport *transport, uint8 *payload, uint16 payload_length)
 {
     uint8 status;
 
@@ -1782,7 +1798,7 @@ DESCRIPTION
     +--------+--------+--------+--------+--------+--------+--/ /---+
          0        1        2        3        4        5      ...
 */
-static void read_file(gaia_transport *transport, uint8 *payload, uint8 payload_length)
+static void read_file(gaia_transport *transport, uint8 *payload, uint16 payload_length)
 {
     uint8 status;
 
@@ -2063,7 +2079,7 @@ DESCRIPTION
     Finds out if the upgrade data is larger than the upgrade library's buffer size
 
 */
-static bool isLargeDataUpgrade(gaia_transport *transport, uint8 *payload, uint8 payload_length)
+static bool isLargeDataUpgrade(gaia_transport *transport, uint8 *payload, uint16 payload_length)
 {
     if(transport->type != gaia_transport_spp && transport->type != gaia_transport_gatt)
         return FALSE;
@@ -2085,7 +2101,7 @@ DESCRIPTION
     Tunnel a VM Upgrade Protocol command to the upgrade library
 
 */
-static void upgrade_control(gaia_transport *transport, uint8 *payload, uint8 payload_length)
+static void upgrade_control(gaia_transport *transport, uint8 *payload, uint16 payload_length)
 {
     uint16 gaia_header_bytes;
 
@@ -2122,7 +2138,7 @@ DESCRIPTION
 
 */
 static bool gaia_handle_data_transfer_command(gaia_transport *transport,
-    uint16 command_id, uint8 payload_length, uint8 *payload)
+    uint16 command_id, uint16 payload_length, uint8 *payload)
 {
 #ifdef HAVE_PARTITION_FILESYSTEM
 
@@ -2252,7 +2268,7 @@ DESCRIPTION
     Returns TRUE if so, otherwise responds immediately with
     GAIA_STATUS_INVALID_PARAMETER and returns FALSE
 */
-static bool validate_payload_length(gaia_transport *transport, uint16 command_id, uint8 length, uint8 min, uint8 max)
+static bool validate_payload_length(gaia_transport *transport, uint16 command_id, uint16 length, uint8 min, uint8 max)
 {
     if ((length < min) || (length > max))
     {
@@ -2401,7 +2417,7 @@ DESCRIPTION
     Handle a debugging command or return FALSE if we can't
 */
 static bool gaia_handle_debug_command(gaia_transport *transport, uint16 command_id,
-                                      uint8 payload_length, uint8 *payload)
+                                      uint16 payload_length, uint8 *payload)
 {
     switch (command_id)
     {
@@ -2459,7 +2475,7 @@ DESCRIPTION
     Handle a debugging command or return FALSE if we can't
 */
 static bool gaia_handle_notification_command(gaia_transport *transport, uint16 command_id,
-                                             uint8 payload_length, uint8 *payload)
+                                             uint16 payload_length, uint8 *payload)
 {
     switch (command_id)
     {
@@ -2521,7 +2537,7 @@ NAME
 DESCRIPTION
     Validate SESSION_ENABLE credentials
 */
-static bool check_enable(gaia_transport *transport, uint16 vendor_id, uint16 command_id, uint8 payload_length, uint8 *payload)
+static bool check_enable(gaia_transport *transport, uint16 vendor_id, uint16 command_id, uint16 payload_length, uint8 *payload)
 {
     uint16 usb_vid;
     bool ok;
@@ -3724,7 +3740,7 @@ DESCRIPTION
 */
 uint16 GaiaBuildResponse(uint8 *buffer, uint8 flags,
                          uint16 vendor_id, uint16 command_id,
-                         uint8 status, uint8 size_payload, uint8 *payload)
+                         uint8 status, uint16 size_payload, uint8 *payload)
 {
     return build_packet(buffer, flags, vendor_id, command_id,
                         status, size_payload, payload);
@@ -3741,7 +3757,7 @@ DESCRIPTION
 */
 uint16 GaiaBuildResponse16(uint8 *buffer, uint8 flags,
                             uint16 vendor_id, uint16 command_id,
-                            uint8 status, uint8 size_payload, uint16 *payload)
+                            uint8 status, uint16 size_payload, uint16 *payload)
 {
     return build_packet_16(buffer, flags, vendor_id, command_id,
                         status, size_payload, payload);
@@ -4104,7 +4120,7 @@ uint16 GaiaGetCidOverGattTransport(void)
         return INVALID_CID;
 }
 
-bool gaia_handle_starot_command(gaia_transport *transport, uint16 command_id, uint8 payload_length, uint8 *payload)
+bool gaia_handle_starot_command(gaia_transport *transport, uint16 command_id, uint16 payload_length, uint8 *payload)
 {
     UNUSED(transport);
 //    send_ack(transport, GAIA_VENDOR_STAROT, command_id, GAIA_STATUS_SUCCESS, 0, NULL);

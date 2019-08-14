@@ -27,6 +27,6 @@ void gaiaVoiceAssistantCheckHostVersion(gaia_transport *transport);
  *  @param payload Pointer to the command payload
  */
 bool gaiaHandleVoiceAssistantCommand(gaia_transport *transport, uint16 command_id,
-                                      uint8 payload_length, uint8 *payload);
+                                      uint16 payload_length, uint8 *payload);
 
 #endif /* _GAIA_VOICE_ASSISTANT_H_ */

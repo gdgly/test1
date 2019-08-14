@@ -154,27 +154,38 @@ typedef enum
  *  +--------+--------+--------+--------+--------+--------+--------+--------+ +--------+--/ /---+ +--------+
  *  |  SOF   |VERSION | FLAGS  | LENGTH |    VENDOR ID    |   COMMAND ID    | | PAYLOAD   ...   | | CHECK  |
  *  +--------+--------+--------+--------+--------+--------+--------+--------+ +--------+--/ /---+ +--------+
+     *  length长度扩展一个字节 len-2x
+     *  0 bytes  1        2        3        4        5        6        7        8          9        10    len+9      len+10
+     *  +--------+--------+--------+--------+--------+--------+--------+--------+--------+ +--------+--/ /---+ +--------+
+     *  |  SOF   |VERSION | FLAGS  | LENGTH          |    VENDOR ID    |   COMMAND ID    | | PAYLOAD   ...   | | CHECK  |
+     *  +--------+--------+--------+--------+--------+--------+--------+--------+--------+ +--------+--/ /---+ +--------+
  */
 #define GAIA_OFFS_SOF (0)
 #define GAIA_OFFS_VERSION (1)
 #define GAIA_OFFS_FLAGS (2)
 #define GAIA_OFFS_PAYLOAD_LENGTH (3)
 
-#define GAIA_OFFS_VENDOR_ID (4)
+///len-2x
+//#define GAIA_OFFS_VENDOR_ID (4)
+#define GAIA_OFFS_VENDOR_ID (5)
 #define GAIA_OFFS_VENDOR_ID_H GAIA_OFFS_VENDOR_ID
 #define GAIA_OFFS_VENDOR_ID_L (GAIA_OFFS_VENDOR_ID + 1)
 #define GAIA_GATT_OFFS_VENDOR_ID (0)
 #define GAIA_GATT_OFFS_VENDOR_ID_H GAIA_GATT_OFFS_VENDOR_ID
 #define GAIA_GATT_OFFS_VENDOR_ID_L (GAIA_GATT_OFFS_VENDOR_ID + 1)
 
-#define GAIA_OFFS_COMMAND_ID (6)
+///len-2x
+//#define GAIA_OFFS_COMMAND_ID (6)
+#define GAIA_OFFS_COMMAND_ID (7)
 #define GAIA_OFFS_COMMAND_ID_H GAIA_OFFS_COMMAND_ID
 #define GAIA_OFFS_COMMAND_ID_L (GAIA_OFFS_COMMAND_ID + 1)
 #define GAIA_GATT_OFFS_COMMAND_ID (2)
 #define GAIA_GATT_OFFS_COMMAND_ID_H GAIA_GATT_OFFS_COMMAND_ID
 #define GAIA_GATT_OFFS_COMMAND_ID_L (GAIA_GATT_OFFS_COMMAND_ID + 1)
 
-#define GAIA_OFFS_PAYLOAD (8)
+///len-2x
+//#define GAIA_OFFS_PAYLOAD (8)
+#define GAIA_OFFS_PAYLOAD (9)
 #define GAIA_GATT_OFFS_PAYLOAD (4)
 
 #define GAIA_GATT_HEADER_SIZE ((GAIA_GATT_OFFS_PAYLOAD) - (GAIA_GATT_OFFS_VENDOR_ID))

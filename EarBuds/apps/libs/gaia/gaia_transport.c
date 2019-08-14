@@ -626,7 +626,8 @@ void gaiaTransportProcessPacket(gaia_transport *transport, uint8 *packet) {
      *  +--------+--------+--------+--------+--------+--------+--------+--------+ +--------+--/ /---+ +--------+
      */
     uint8 protocol_version = packet[GAIA_OFFS_VERSION];
-    uint8 payload_length = packet[GAIA_OFFS_PAYLOAD_LENGTH];
+    /// len-2x
+    uint16 payload_length = W16((packet + GAIA_OFFS_PAYLOAD_LENGTH));
     uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
     uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
     uint8 *payload = NULL;
@@ -650,8 +651,7 @@ void gaiaTransportProcessSource(gaia_transport *transport)
     gaia_transport_type type = transport->type;
     uint16 cid = transport->state.spp.rfcomm_channel;
 
-    if (SourceIsValid(source))
-    {
+    if (SourceIsValid(source)) {
         gaia_transport_process_source_data_t *locals = PanicUnlessMalloc(sizeof(*locals));
 
         locals->source = source;
@@ -678,27 +678,27 @@ void gaiaTransportProcessSource(gaia_transport *transport)
         }
 #endif
 
+        ///len-2x
         if (locals->data_length >= GAIA_OFFS_PAYLOAD) {
-            while ((locals->idx < locals->data_length)
-                    && (locals->packet_length < locals->expected)) {
+            while ((locals->idx < locals->data_length) && (locals->packet_length < locals->expected)) {
                 if (locals->packet_length > 0) {
                     if (locals->packet_length == GAIA_OFFS_FLAGS)
                         locals->flags = locals->data[locals->idx];
-
                     else if (locals->packet_length == GAIA_OFFS_PAYLOAD_LENGTH) {
-                        locals->expected = GAIA_OFFS_PAYLOAD
-                                + locals->data[locals->idx]
-                                + ((locals->flags & GAIA_PROTOCOL_FLAG_CHECK) ?
-                                        1 : 0);
+                        locals->expected = GAIA_OFFS_PAYLOAD +
+                                W16((locals->data + locals->idx))
+                                + ((locals->flags & GAIA_PROTOCOL_FLAG_CHECK) ? 1 : 0);
                         GAIA_TRANS_DEBUG(("gaia: expect %d + %d + %d = %d\n",
-                                        GAIA_OFFS_PAYLOAD, locals->data[locals->idx], (locals->flags & GAIA_PROTOCOL_FLAG_CHECK) ? 1 : 0, locals->expected));
+                                        GAIA_OFFS_PAYLOAD, W16((locals->data + locals->idx)),
+                                        (locals->flags & GAIA_PROTOCOL_FLAG_CHECK) ? 1 : 0, locals->expected));
+                        locals->check ^= locals->data[locals->idx]; //// 如何计算这个位的
+                        ++locals->packet_length;
+                        ++locals->idx; ///影响check的计算
                     }
 
-                    locals->check ^= locals->data[locals->idx];
+                    locals->check ^= locals->data[locals->idx]; //// 如何计算这个位的
                     ++locals->packet_length;
-                }
-
-                else if (locals->data[locals->idx] == GAIA_SOF) {
+                } else if (locals->data[locals->idx] == GAIA_SOF) {
                     locals->packet = locals->data + locals->idx;
                     locals->packet_length = 1;
                     locals->check = GAIA_SOF;
@@ -708,22 +708,17 @@ void gaiaTransportProcessSource(gaia_transport *transport)
             }
 
             if (locals->packet_length == locals->expected) {
-                if (((locals->flags & GAIA_PROTOCOL_FLAG_CHECK) == 0)
-                        || (locals->check == 0))
+                if (((locals->flags & GAIA_PROTOCOL_FLAG_CHECK) == 0) || (locals->check == 0))
                     gaiaTransportProcessPacket(transport, locals->packet);
-
                 else {
                     GAIA_TRANS_DEBUG(("gaia: bad chk\n"));
                 }
 
-                if(!gaia->upgrade_large_data.in_progress)
-                {
+                if(!gaia->upgrade_large_data.in_progress) {
                     TransportMgrDataConsumed(type, cid, locals->idx);
                     GAIA_TRANS_DEBUG(("SourceDrop (gaia1): %x", locals->idx));
                 }
-            }
-
-            else if (locals->packet_length == 0) {
+            } else if (locals->packet_length == 0) {
                 /*  No start-of-frame; drop the lot  */
                 GAIA_TRANS_DEBUG(("gaia: no sof\n"));
                 if (!gaia->upgrade_large_data.in_progress) {
@@ -735,8 +730,7 @@ void gaiaTransportProcessSource(gaia_transport *transport)
             if (locals->idx < locals->data_length) {
                 MESSAGE_PMAKE(more, GAIA_INTERNAL_MORE_DATA_T); GAIA_TRANS_DEBUG(("gaia: more: %d < %d\n", locals->idx, locals->data_length));
                 more->transport = transport;
-                MessageSendLater(&gaia->task_data, GAIA_INTERNAL_MORE_DATA, more,
-                        APP_BUSY_WAIT_MILLIS);
+                MessageSendLater(&gaia->task_data, GAIA_INTERNAL_MORE_DATA, more, APP_BUSY_WAIT_MILLIS);
             }
         }
 

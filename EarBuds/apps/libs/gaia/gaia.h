@@ -41,9 +41,9 @@ Copyright (c) 2010 - 2018 Qualcomm Technologies International, Ltd.
 #define GAIA_VENDOR_NONE (0x7FFE)
 #define GAIA_VENDOR_STAROT (0x000F)
 
-#define GAIA_HEADER_SIZE (8)
-#define GAIA_MAX_PACKET (255)  /* It's theoretically 262, but ... */
-#define GAIA_MAX_PAYLOAD (254)
+#define GAIA_HEADER_SIZE (9)
+#define GAIA_MAX_PACKET (1255)  /* It's theoretically 262, but ... */
+#define GAIA_MAX_PAYLOAD (1254)
 
 #define GAIA_MAX_FEATURE_BIT (63)
 #define GAIA_FEATURE_DATA_TRANSFER (25)
@@ -625,7 +625,7 @@ uint16 GaiaBuildPacket16(uint8 *buffer, uint8 flags, uint16 vendor_id, uint16 co
     If the payload length is zero this argument is not accessed and may be NULL
     
 */
-uint16 GaiaBuildResponse(uint8 *buffer, uint8 flags, uint16 vendor_id, uint16 command_id, uint8 status, uint8 size_payload, uint8 *payload);
+uint16 GaiaBuildResponse(uint8 *buffer, uint8 flags, uint16 vendor_id, uint16 command_id, uint8 status, uint16 size_payload, uint8 *payload);
 
 
 /*! 
@@ -649,7 +649,7 @@ uint16 GaiaBuildResponse(uint8 *buffer, uint8 flags, uint16 vendor_id, uint16 co
     If the payload length is zero this argument is not accessed and may be NULL
     
 */
-uint16 GaiaBuildResponse16(uint8 *buffer, uint8 flags, uint16 vendor_id, uint16 command_id, uint8 status, uint8 size_payload, uint16 *payload);
+uint16 GaiaBuildResponse16(uint8 *buffer, uint8 flags, uint16 vendor_id, uint16 command_id, uint8 status, uint16 size_payload, uint16 *payload);
 
 /*!
     @brief Request that the Gaia library transmit a Gaia command over a given transport.
