@@ -64,8 +64,6 @@ const appKymeraScoChainInfo appKymeraScoSlaveChainTable[] =
   { NO_SCO }
 };
 
-#define STAROT_ENABLED	(1)
-
 static const capability_bundle_t capability_bundle[] =
 {
 #ifdef DOWNLOAD_SWITCHED_PASSTHROUGH
@@ -108,11 +106,17 @@ static const capability_bundle_t capability_bundle[] =
         capability_bundle_available_p0
     },
 #endif
-#if STAROT_ENABLED
-	{
-		"download_passthrough.dkcs",
-		0
-	},
+#if defined(DOWNLOAD_PASSSTHROUGH)
+    {
+        "download_passthrough.dkcs",
+        capability_bundle_available_p0
+    },
+#endif
+#if defined(DOWNLOAD_G722_ENCODER)
+    {
+        "download_G722Codec.dkcs",
+        capability_bundle_available_p0
+    },
 #endif
     {
         0, 0
