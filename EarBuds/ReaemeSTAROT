@@ -1,0 +1,286 @@
+debuglog.poll_debug_log()
+
+
+20190815 增加一个CAPABILITY需要提交的记录数(以G722Codec为示例）
+   audio/kalimba/kymera/capabilities/G722Codec         全部提交                                                 多个文件
+   audio/kalimba/kymera/tools/KCSMaker/                目录下对应的工程文件  G722Codec.x2p                       1个文件
+   audio/kalimba/kymera/tools/KCSMaker/bundle/config   目录下对应的配置文件  cap_list_G722Codec.cfg              1个文件
+   audio/kalimba/kymera/tools/KCSMaker/bundle          目录下对应的BDL文件   download_G722Codec.bdl              1个文件
+   audio/kalimba/kymera/build/config                   目录下对应的MOD文件   config.MODIFY_DOWNLOAD_G722CODEC    1个文件
+   代码使用上需要增加：
+   av_headset_kymera.c       -->capability_bundle      增加DKCS文件的调用
+   av_headset_chain_roles.h  -->chain_operator_roles   增加使用定义
+                             -->chain_endpoint_roles   增加使用定义
+
+ 
+   
+
+
+
+20190813 记录设置地址：
+    写ConnectionSmPutAttribute
+    读取：ConnectionSmGetIndexedAttributeNowReq可以存取多个
+
+
+
+20190813 系统配对过程
+  1、首先执行appInitTable中的所有的初始化,结束之后发送INIT_CFM消息 MessageSend(appGetAppTask(), INIT_CFM, NULL);
+       appSmInit会启动(RULE_EVENT_PAGE_SCAN_UPDATE），返回消息：CONN_RULES_PAGE_SCAN_UPDATE->CONN_RULES_PAGE_SCAN_UPDAT-->appScanManagerEnablePageScan
+  2、appHandleMessage(INIT_CFM)-->appHandleInitCfm-->appSmHandleMessage(appGetSmTask(), INIT_CFM, message);
+  3、appSmHandleMessage(INIT_CFM)-->appSmHandleInitConfirm-->appSetState(APP_STATE_DFU_CHECK)-->appEnterDfuCheck-->MessageSend(appGetSmTask(), SM_INTERNAL_NO_DFU, NULL);
+                                       这儿会检查一下DFU,返回消息（CONN_RULES_DFU_ALLOW）
+  4、appSmHandleMessage(SM_INTERNAL_NO_DFU)-->appSmHandleNoDfu-->appSetState(APP_STATE_STARTUP)-->appEnterStartup-->appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_STARTUP);
+  5、RULE_EVENT_STARTUP-->rulePeerPair/rulePeerSync(两个都执行） -->CONN_RULES_PEER_PAIR
+  6、appSmHandleConnRulesPeerPair-->appSetState(APP_STATE_PEER_PAIRING)-->appEnterPeerPairing-->appPairingPeerPair
+  7、appPairingHandleMessage（PAIRING_INTERNAL_PEER_PAIR_REQ）-->appHandleInternalPeerPairRequest-->appConfigIsLeft-->appPairingSetState(PAIRING_STATE_PEER_INQUIRY)
+                                                                                                      左扫描/右广播-->appPairingSetState(PAIRING_STATE_PEER_DISCOVERABLE);
+
+
+
+20190813 系统配对过程之Rules
+    RULE_WITH_FLAGS(RULE_EVENT_PAGE_SCAN_UPDATE,       rulePageScanUpdate,     CONN_RULES_PAGE_SCAN_UPDATE,      RULE_FLAG_ALWAYS_EVALUATE),
+    RULE_WITH_FLAGS(RULE_EVENT_BLE_CONNECTABLE_CHANGE, ruleBleConnectionUpdate,CONN_RULES_BLE_CONNECTION_UPDATE, RULE_FLAG_ALWAYS_EVALUATE),
+    RULE_WITH_FLAGS(RULE_EVENT_CHECK_DFU,              ruleCheckUpgradable,    CONN_RULES_DFU_ALLOW,             RULE_FLAG_ALWAYS_EVALUATE),
+    这三条消息就ALWAYS，任何情况下都会执行其函数，但如果没有对应的接收TASK，不会返回消息。
+
+
+
+
+
+20190805 DSP出错当前测试是运行50S如果出错(经过后面确定应该是有一个50S的定时，没有操作后关闭了DSP）
+tag=0xfff08b1c 40 192
+TTP Gen stall, time = 69760421
+tag=0xfff08b1c 40 192
+tag=0xfff08b1c 40 192
+ssccp_router: submsg rx from 0 CcpId 44 len 4
+Stop operator list (-1 is the last): 0x4140, 0xffffffff, 0xffffffff, 0xffffffff .../
+Stop operators finished, now destroy them
+Destroy operators finished, destroy the endpoints.
+Failed to close audio endpoint (0x237c4), MCLK needs to be released first
+
+@@@@ ERROR: Wrong number of arguments! This could be caused by buffer tear. 
+Buffer tear happens when messages are written too fast to the log buffer
+and the debug interface cannot keep up in reading them. 
+formatter string: Failed to close audio endpoint (0x%x), MCLK needs to be released first
+arguments: [145592, '@@@@ ERROR: Cannot find 0x145000e7 debug string because patch not loaded.', 'ISP', 2]
+ISProute Send CCP id 45 to ss0 len 2 words
+
+
+
+
+20190805
+  I2S固定数据输出，总是在固定位置出现重复数据（0000 ----FFFF）
+    0x0050 0x0071 0x008A 0x00A0 0x00B2 0x00BA 0x00EA
+
+
+
+20190802  SinkMapInit 在TWS master中
+  audio_input_tws.c -->AudioInputTwsConnectHandler-->connectSourceToDecoderChainViaUnpacketiser->TwsPacketiserSlaveInit-->SinkMapInit
+  audio_output_tws.c-->AudioOutputTwsForwardingMessageHandler-->AudioOutputTwsConnect-->AudioOutputTwsPacketiserInit-->TwsPacketiserMasterInit-->SourceMapInit
+
+
+ CHAIN Create
+  ChainCreateWithFilter
+
+
+20190801
+   OperatorsVolumeSetAuxGain来调节对应的输出值.默认为-600
+                       -600     -800     -10   -1000 -2000 -4000   -2400
+  1:对应的输出值       0x28     0x1b     0x7D  0x12  0x2   无       01
+  ff00                                                              01
+
+20190731
+chains/chain_output_volume.c
+
+                                                                                                    set(EPR_VOLUME_AUX) OperatorsVolumeMute
+
+                                                                                                    EPR_VOLUME_AUX-->in1
+   EPR_SINK_MIXER_MAIN_IN-->in0                     OPR_SOURCE_SYNC-->in0                       OPR_VOLUME_CONTROL-->in0
+	                |=====================|                     |=======================|                  |======================|
+                        |   CAP_ID_BASIC_PASS |                     |   CAP_ID_SOURCE_SYNC  |                  |  CAP_ID_VOL_CTRL_VOL |
+                        |_____________________|                     |_______________________|                  |______________________|
+                                          out0-->OPR_LATENCY_BUFFER                     out0-->OPR_SOURCE_SYNC                    out0-->EPR_SOURCE_MIXER_OUT
+
+
+
+20190724
+   appKymeraConfigureDspPowerMode / updateClockForCurrentUseCase 设置DSP频率
+
+   chain_output_voluem.chain 定义一输出的chain文件，这个文件会通过chaingen.py生成对应的C、H文件。
+   提示音：按键 appUiHandleMessage(APP_MFB_BUTTON_HELD_x) -->appUiPlayToneCore ->appKymeraTonePlay(KYMERA_INTERNAL_TONE_PROMPT_PLAY)-->appKymeraHandleInternalTonePromptPlay()
+   appKymeraCreateOutputChain()
+   ”咕“提示间好象不是音频文件, PowerON是音频文件 appUiPowerOn -->appUiPlayPrompt(PROMPT_POWER_ON); -->appUiPlayPromptCore -->appKymeraPromptPlay
+               
+
+
+   kymeraTaskData结构体中 output_vol_handle   chain_tone_handle/chain_input_handle 分别表示两个chain,对应不同的chain文件，在这两个chain分别建立完成之后，
+     就可以将这两个chain联接再一起，从而完成整个chain的建立。
+
+   CHAIN_OUTPUT_VOLUME
+
+20190718
+  Capability理解
+  一、basic_passthrough_get_sched_info函数中 resp->block_size 是有一定的等待关系的。它的值不能大于
+     process_data中每次处理的数理的2倍，否只能接收到几次数据就没有了。
+  二、basic_passthrough_connect中的cbuffer_set_usable_octets是设置BUFFER中每WORD中保存的sample的
+    有效数据数量为2或4，2表示一个WORD中保存两个SAMPLE，4表示一个WROD中只存取一个SAMPLE
+    这个值会影响每次处理的数据传输给APP时调用的函数。
+    buff_metadata_append(opx_data->metadata_op_buffer, newmtag, 0, outsize);
+  三、buff_metadata_append最后一个参数可指定APP每次接收到的数据数量，outsize这个值不能超过1024，
+    也就是说cbuffer_set_usable_octets设置为4时，SAMPLE数不能超过512，设置为2时SAMPLE数不能超过
+    256.
+  四、CAPA所有的输入都调用SourceSynchronise，从而将所有的数据都使用同一个matabuff。这样它的输出数
+    据量就是同步的。而且process_data中只会调用一个通道的，而不是每个通道分别调用。
+  五、每个输入通道的数据默认是32位存取的，我们可以仅取每个通道的16位数据。
+
+
+
+20190715
+  basic_passthrough_buffer_details  b.buffer_size与ip_buffer / op_buffer的关系
+    sink       b.buffer_size  * 4 + 4 =  ip_buffer.size = ip_buffer.matadata.size
+    source     b.buffer_size  * 4 + 4 =  op_buffer.size = op_buffer.matadata.size
+
+
+20190713
+  SourceSynchronise 调用之后，两个通道的ip_buffer.matadata会指向同一个地址，也就是说他们使用相同的数据传输
+
+
+20190712
+  cbuffer_set_usable_octets 来设置buffer->descriptor, 改变存取位宽
+
+
+20190709
+  basic_passthough 工程中，basic_passthrough_connect ip_buffer/op_buffer两个buf的base_addr为同一地址
+    增加 DISABLE_IN_PLACE 定义(basic_passthrough_buffer_details,输入输出BUFFER大小也是这儿提供amples
+  operator_get_timing-->opmgr_get_sched_info 调用function->sched
+    仅当 block_size为0时才能计算 run_period
+
+
+20190708
+  # AUDIO 调试输出  在ACAT窗口输入 debuglog.poll_debug_log()       参考ACAT文档
+  debuglog.poll_debug_log()
+  UsbDebug驱动： TransportUnlock.exe writeunlockkey zero.txt
+  查看operator opmgr.analyse_all_operators()
+     buffers.analyse_transform_buffers()
+     stream.analyse_endpoints()
+
+
+20190703
+  1、stream_connect for ttp
+    audio/kalimba/kymera/components/stream/stream_connect.c
+    stream_connect_endpoints --> connect_transform --> buff_metadata_connect  --> BUFF_METADATA_SET
+
+  2、ttp_passthrough_cap_data编译（连接之后没有）
+      audio/kalimba/kymera/tools/KCSMaker/bundle/self_test_and_passthrough.bdl 增加 dnld_ttp_pass]
+          KDCs["self_test_and_passthrough"] = [download_self_test_cap, download_passthrough_cap, dnld_ttp_pass]
+      pass_through.c 中增加 一个注释行
+        // const CAPABILITY_DATA dnld_ttp_pass] =
+	const CAPABILITY_DATA ttp_passthrough_cap_data =
+
+
+
+
+
+
+    subsys3_patch0_fw0000173F.hcf 这个文件的功能，好多编译都使用到了它, firmware.bin的PATCH文件，我们基本不需要看它。
+    编译过程中的输出，很多显示为???，而看不到结果。
+    MessageSendConditionallyOnTask 与 MessageSend有什么区别，使用上要注意什么
+
+    audio p0/p1 如何调试，如何增加打印,编译参数中有一个DBG_CORE如何使用
+    defaultdict(<type 'str'>, {'BUILD_PATH': 'BUILD_PATH=$(DEVKIT_ROOT)/audio/kalimba_ROM_4786/kymera/output/stre_rom_v02_release/build', 'DBG_CORE': 'app\\p1', 'INCPATHS': '../../../../installed_libs/include/profiles/default_qcc512x_qcc302x D:\\QCC512X\\ADK_QCC512X_QCC302X_WIN_6.3.2.24\\apps/installed_libs/include/firmware_qcc512x_qcc302x D:\\QCC512X\\ADK_QCC512X_QCC302X_WIN_6.3.2.24\\apps/installed_libs/include/firmware_qcc512x_qcc302x/app D:\\QCC512X\\ADK_QCC512X_QCC302X_WIN_6.3.2.24\\apps/installed_libs/include/standard', 'MAKE_JOBS': 'MAKE_JOBS=True', 'KALSIM_MODE': 'false', 'DEFAULT_LIBS': 'usb_early_init pio_common pio', 'KYMERA_SRC_PATH': 'KYMERA_SRC_PATH=../..', 'EXTRA_WARNINGS': 'FALSE', 'SUBSYSTEM_NAME': 'audio', 'PRESERVED_LIBS': 'qcc512x_qcc302x', 'DEFS': '__KALIMBA__ HAVE_32BIT_DATA_WIDTH INSTALL_HYDRA_LOG BLUELAB HYDRACORE', 'BUILD_ROOT': 'BUILD_ROOT=$(DEVKIT_ROOT)/audio/kalimba/kymera/build', 'OSTYPE': 'OSTYPE=Windows_NT', 'BUNDLE_NAME': 'BUNDLE_NAME=self_test_and_passthrough', 'KALSIM_PLATFORM': 'stre', 'BUILD_ID': 'D:\\QCC512X\\ADK_QCC512X_QCC302X_WIN_6.3.2.24\\tools/ubuild/maker/buildid/examples/timestamp.py', 'LIBPATHS': '../../../../installed_libs/lib/default_qcc512x_qcc302x/native D:\\QCC512X\\ADK_QCC512X_QCC302X_WIN_6.3.2.24\\apps/installed_libs/lib/os/qcc512x_qcc302x', 'KALSIM_ENABLE_DEBUGGER': 'false', 'PRIVATE_DEFS': '', 'KALSIM_SCRIPTS': 'script/kalsim/download.py,script/kalsim/self_test_and_passthrough.dkcs', 'CONFIG_MAKE': 'CONFIG=stre_rom_v02_release', 'STRIP_SYMBOLS': 'FALSE', 'CHIP_TYPE': 'qcc512x_qcc302x', 'KALSIM_NAME': 'kalsim_qcc512x_audio.exe', 'KALSIM_KSE_PATH': '../../../../kse', 'KALSIM_CONFIG_MAKE': 'CONFIG=stre_rom_kalsim_kalcmd2_release', 'BUILD_TYPE': 'MAKEFILE', 'BUILD_NAME': 'BUILD_NAME=kymera_stre_audio', 'KALSIM_FIRMWARE': '../../output/stre_rom_kalsim_kalcmd2_release/build/debugbin/kymera_stre_audio.elf', 'MAKEFILE_TO_CALL': 'makefile', 'PRIVATE_INCPATHS': '', 'OUTPUT': '../../output_bundles/stre_rom_v02_release/self_test_and_passthrough/self_test_and_passthrough.elf', 'KALSIM_PATCH_BUNDLE': '../../output/stre_rom_kalsim_kalcmd2_release/build/patchbin/subsys3_patch0_fw00001A84.hcf'})
+
+
+
+
+
+20190623
+  1、AMA的Source打开
+     apps/libs/audio_voice_assistant/audio_voice_assistant_control.c
+        startCaptureAfterVoiceTrigger-->connectCaptureOutput->ChainGetOutput-->chainPathGetOutput-->ChainGetOperatorByRole(获取DSP操作op)
+	                                                                                         -->StreamSourceFromOperatorTerminal (获取Source)
+			                                    -->SourceMapInit
+							    --indicateDataSource-->indicateDataSource(发送消息到ama.c AUDIO_VA_INDICATE_DATA_SOURCE)
+			             -->audioVaStartCaptureChain-->ChainStart-->runFunctionOnMultipleOperators(启动DSP处理）
+				     -->audioVaConfigCommonChainForStartCapture-->OperatorsSplitterXXXXX
+
+     apps/libs/ama/ama.c
+	amaMessageHandler(AUDIO_VA_INDICATE_DATA_SOURCE)   创建完成的Source在这儿进行最后的获取准备：AmaInitSetSpeechDataSource
+
+
+
+20190620
+  1、GPIO的使用
+     PioSetMapPins32Bank 设置为GPIO模式，最后一个参数为GPIO或非GPIO（PioSetFunction来设其复用关系）
+        PioSetDir32Bank  GPIO时设置输入输出方向
+	PioSet32Bank     输出GPIO时设置IO高底
+	PioGet32Bank     读取当前GPIO状态
+     PioSetFunction      IO必须为非GPIO模式时才能设置其复用关系，否则会设置不成功
+        BitserialOpen/BitserialOpen/BitserialClose  BITSERIAL_x_xxx io制作状态
+
+
+
+
+
+https://www.cnblogs.com/fbli/p/5930383.html
+                         SppsHandleComplexMessage                     sppServiceHandler
+SppStartService  -->                                                                         -->      ConnectionRfcommAllocateChannel(CL_INTERNAL_RFCOMM_REGISTER_REQ（传输层）)
+      Restart    <--      SPP_START_SERVICE_CFM(ERR)     <-- error     RfcommRegisterCfm     <--      CL_RFCOMM_REGISTER_CFM
+                                                             succ                            -->      ConnectionRegisterServiceRecord(CL_INTERNAL_SDP_REGISTER_RECORD_REQ)
+                          SPP_START_SERVICE_CFM(stat)    <--           SdpRegisterCfm        <--      CL_SDP_REGISTER_CFM
+    注册完成之后，就是等待对方连接（SppConnectRequest)
+                          SPP_CONNECT_IND                <--          RfcommConnectInd       <--      CL_RFCOMM_CONNECT_IND(对方连接后）
+                          SppConnectResponse             --> 新TASK sppsConnectionHandler    -->      RfcommConnectResponse(CL_INTERNAL_RFCOMM_CONNECT_RES)
+                          SPP_SERVER_CONNECT_CFM         <--                                 <--      CL_RFCOMM_SERVER_CONNECT_CFM(协商）
+		   连接成功，获取sink
+
+    sppsConnectionHandler(会new 一个SPP信息，保存当前的连接，在最后断开时在这个任务中释放)
+
+
+
+
+20190610
+   1、SHIM文件没有被编译，最简单的办法是修改文件名就可以编译了。Mafeile中有DISABLE_SHIM不知道如何使用
+
+
+20190529
+   1、创建自己的DSP工程
+   2、DEEPSHEEP，打开或关闭DSP。enter_shallow_sleep   播放音乐：6MA， 通话：8MA
+   3、stateManagerEnterLimboState     
+
+
+
+20190528
+   系统框图介绍：https://blog.csdn.net/weixin_42415578/article/details/85336280
+   文档："The ADK 6.X Flash Config File Format.pdf" Flash说明 apps/applications/sink/64Mbit_default_flash_config.py
+
+
+20190520
+   1、N_TASKS & N_BG_INTS 定义，是系统中真正的TASK数量，   apps/fw/src/gen/core/sched_oxygen/sched_subsystem.h 定义了多个TASK
+      SCHED_TASK_LIST(m)的定义中， CORE_APPCMD_SCHED_TASK(m) 就是一个真正的TASK，其它的TASK会持载到这个TASK之下, appcmd_background_handler(APPCMD_START_TEST)就会查看所有挂载的TASK
+      比如：LED会调用appcmd_add_test_handler来将其它加载到SCHED之下
+   2、apps/fw/src/core/sched_oxygen/sched_oxygen_private.h 文件中也有一个TASK结构体的的定义
+
+gcc -E apps/applications/sink/sink_gaia.c -DOS_OXYGOS -Iapps/fw/src/core -Iapps/installed_libs/include/standard -Iapps/fw/src/core/include -Iapps/fw/src/core/include_fw -Iapps/fw/src -Iapps/fw/src/gen/core -Iapps/installed_libs/include/firmware_qcc512x_qcc302x -Iapps/libs/gaia -Iapps/libs/library -Iapps/libs/vmtypes -Iapps/libs/bdaddr -Iapps/libs/gatt -Iapps/libs/upgrade -Iapps/libs/transport_manager  -Iapps/libs/pio_common  -Iapps/libs/audio -Iapps/libs/audio_plugin_if -Iapps/libs/power -Iapps/libs/audio_output -Iapps/libs/audio_instance 
+
+
+   3、BLE调用
+      app_handler(...) -->handleHFPMessage(...) -->sinkAppInit(...)-->sinkBleInitialiseDevice
+
+
+   4、白名单的读取
+      XXX-->ConnectionInitEx3(...)-->connectionBluestackHandler(设置）-->connectionBluestackHandlerInitialising(...)-->connectionHandleInternalInit()
+        -->connectionAuthInit()-->connectionInitTrustedDeviceList()-->read_trusted_device_index()-->PsRetrieve
+
+
+
+
+
+
+问题：
+  1、PioSetPowerPin(TRUE)/BootGetMode() 这种IO访问为何底层调用 ipc_send/ipc_recv  ?
+  2、使用的是哪个ARM指令集，自己做算法如何做汇编优化 ？
+  3、读取FLASH是使用 PsRetrieve 是什么操作？
+  4、IDE-->Projects-->Active Project 里面有很多不同的项目，分别对应什么功能 
+
+
+
