@@ -13,7 +13,6 @@ cmake-build-debug
 *.lst
 *_db.h
 lib*.a
-*.x2p.bak
 *.x2p.user
 *.log
 flags.compile
@@ -29,7 +28,8 @@ flags.strip
 depend
 output_bundles
 *.x2p.user.*
-*.x2w.bak
+*.bak
+EarBuds/apps/applications/earbud/qcc512x_rom_v21/CF376_CG814/sed*
 sedrflRmE
 EarBuds/audio/kalimba/kymera/capabilities/basic_passthrough/makefile
 EarBuds/apps/applications/earbud/qcc512x_rom_v21/common/deploy_deploy.lst
