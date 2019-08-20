@@ -41,12 +41,18 @@ enum GAIA_TRANSFORM_AUDIO_STATUS {
     GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE,
 };
 
+enum GAIA_AUDIO_TYPE {
+    GAIA_AUDIO_SPEAKER,
+    GAIA_AUDIO_MIC
+};
+
 typedef struct
 {
     uint16 command;
     Source source;
-    uint8* pos;
+    uint8* data;
     uint16 len;
+    uint16 audioType;
 } GAIA_STAROT_AUDIO_T;
 
 typedef GAIA_STAROT_AUDIO_T GAIA_STAROT_AUDIO_IND_T ;
