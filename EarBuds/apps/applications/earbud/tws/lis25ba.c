@@ -67,10 +67,10 @@ void lis25Init(void)
 
     reg = LIS25_REG_WHO_AM_I;
     hwi2cRead(handle, &reg, 1,  &value, 1);
-    printf("WhoAmI=0x%x\n", value);
+    DEBUG_LOG("WhoAmI=0x%x\n", value);
     if(value != LIS25BA_DEVICE_ID) {
         hwi2cClose(handle);
-        printf("Lis25 Read WHOAMI Error=0x%x\n", value);
+        DEBUG_LOG("Lis25 Read WHOAMI Error=0x%x\n", value);
         return;
     }
 

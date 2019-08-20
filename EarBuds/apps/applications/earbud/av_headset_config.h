@@ -766,7 +766,15 @@ bool appConfigBleGetAdvertisingRate(appConfigBleAdvertisingMode rate, uint16 *mi
  */
 #define appConfigBleAddressChangeTime() (BLE_RPA_TIMEOUT_DEFAULT)
 
-#ifdef GAIA_TEST
+#ifdef CONFIG_STAROT
+/*! CONFIG_STAROT是在工程中定义的(X2P)
+  我们自己的程序基本上只需要包涵 av_headset.h（已经包涵av_headset_config.h）就可以使用绝大部分功能
+  av_headset_kymera.c 定义载入的cap, 它包涵了 av_headset.h 及 av_headset_chain_roles.h（文件中定义了各capability的使能）
+     因此我们也可以直接在public中来定义对应的CAP文件的使能功能。
+  尽可能不要到处找文件来包涵
+*/
+#include "tws/public.h"
+
 #define DISABLE_IN_CASE_PHY_STATE
 #define DISABLE_TWS_PLUS
 #endif
