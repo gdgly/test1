@@ -234,3 +234,7 @@ static void sendMessageMoreData(Task task, Source src, uint32 delay)
     MessageCancelAll(task, MESSAGE_MORE_DATA);
     MessageSendLater(task, MESSAGE_MORE_DATA, message, delay);
 }
+
+Task getAudioForwardTask(void) {
+    return audioForwardTask;
+}

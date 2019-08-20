@@ -1,11 +1,11 @@
-#ifdef GAIA_TEST
 
 #include "av_headset_gaia_starot.h"
 #include "av_headset_log.h"
 #include "av_headset.h"
-#include "pmalloc.h"
+#include "audio_route/audio_forward.h"
 
-extern Task audioForwardTask;
+#ifdef GAIA_TEST
+
 Source audioForwardSource = NULL;
 
 extern void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
@@ -64,7 +64,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 
             GAIA_STAROT_AUDIO_CFM_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_CFM_T));
             starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_END;
-            MessageSend(audioForwardTask, GAIA_STAROT_COMMAND_IND, starot);
+            MessageSend(getAudioForwardTask(), GAIA_STAROT_COMMAND_IND, starot);
             audioForwardSource = NULL;
         }
             break;
@@ -104,7 +104,7 @@ void starotNotifyAudioForward(bool st) {
     starot->source = audioForwardSource;
     starot->pos = 0;
     starot->len = (TRUE == st ? bufferSendUnit * 2 : 0);
-    MessageSend(audioForwardTask, GAIA_STAROT_COMMAND_IND, starot);
+    MessageSend(getAudioForwardTask(), GAIA_STAROT_COMMAND_IND, starot);
     audioForwardSource = NULL;
 }
 

@@ -1,8 +1,11 @@
-#ifdef GAIA_TEST
+
 #ifndef AV_HEADSET_GAIA_STAROT_H
 #define AV_HEADSET_GAIA_STAROT_H
 
 #include <gaia.h>
+#include "av_headset_config.h"
+
+#ifdef GAIA_TEST
 
 ////////////////////////////EVENT//////////////////////////////
 enum {
@@ -52,5 +55,5 @@ typedef GAIA_STAROT_AUDIO_T GAIA_STAROT_AUDIO_CFM_T ;
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message);
 void starotNotifyAudioForward(bool st) ;
 
-#endif // AV_HEADSET_GAIA_STAROT_H
 #endif
+#endif // AV_HEADSET_GAIA_STAROT_H
