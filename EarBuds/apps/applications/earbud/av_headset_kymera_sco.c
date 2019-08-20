@@ -9,8 +9,14 @@
 
 #include <vmal.h>
 #include <packetiser_helper.h>
-
 #include "av_headset_kymera_private.h"
+
+#define STAROT_ENABLE (1)
+
+#if STAROT_ENABLE
+#include "av_headset_gaia_starot.h"
+#include "audio_route/audio_forward.h"
+#endif
 
 #define AWBSDEC_SET_BITPOOL_VALUE    0x0003
 #define AWBSENC_SET_BITPOOL_VALUE    0x0001
@@ -18,17 +24,6 @@
 #define AEC_TX_BUFFER_SIZE_MS 15
 
 #define SCOFWD_BASIC_PASS_BUFFER_SIZE 512
-
-
-#define STAROT_ENABLE (1)
-
-#if STAROT_ENABLE
-#include "audio_route/audio_forward.h"
-#include "cap_id_prim.h"
-#include "av_headset_gaia_starot.h"
-#include <vmal.h>
-#endif
-
 
 typedef struct set_bitpool_msg_s
 {
@@ -311,24 +306,9 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
     /* Connect chain */
     ChainConnect(sco_chain);
 
+	/* Starot: connect audio forward endpoints. */
 #if STAROT_ENABLE
-    /* STAROT: */
-#define AUDIO_CORE_0             (0)
-#define AUDIO_DATA_FORMAT_16_BIT (0)
-
-	/* 1. load passthrough cap */
-    Operator passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_PASSTHROUGH));
-
-    /* 2. set passthrough data format */
-    uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_CHANGE_OUTPUT_DATA_TYPE, AUDIO_DATA_FORMAT_16_BIT };
-    PanicZero(VmalOperatorMessage(passthrough, set_data_format,
-                                  sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
-
-    /* 3. create timestamped endpoint from passthrough */
-    Source capture_output = StreamSourceFromOperatorTerminal(passthrough, 0);
-    PanicFalse(SourceMapInit(capture_output, STREAM_TIMESTAMPED, 9));
-
-    /* 4. setup MORE_DATA message. */
+    forwardAudioAndMic(sco_chain);
 #ifdef GAIA_TEST
     if (NULL != appGetGaia()->transport) {
         GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
@@ -338,9 +318,8 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
     }
 #endif
-    indicateFwdDataSource(capture_output);
 #endif
-   
+
     /* Chain connection sets the switch into consume mode,
        select the local Microphone if MIC forward enabled */
     if (theKymera->sco_info->mic_fwd)
@@ -401,9 +380,6 @@ void appKymeraHandleInternalScoStop(void)
     Sink sco_ep_snk    = ChainGetInput(sco_chain, EPR_SCO_FROM_AIR);
     Sink mic_1a_ep_snk = ChainGetInput(sco_chain, EPR_SCO_MIC1);
     Sink mic_1b_ep_snk = (appConfigScoMic2() != NO_MIC) ? ChainGetInput(sco_chain, EPR_SCO_MIC2) : 0;
-#if STAROT_ENABLE
-    Source sco_audfwd_src = ChainGetOutput(sco_chain, EPR_AUDIO_FWD_OUT);
-#endif
 
     /* A tone still playing at this point must be interruptable */
     appKymeraTonePromptStop();
@@ -411,6 +387,7 @@ void appKymeraHandleInternalScoStop(void)
     /* Stop chains */
     ChainStop(sco_chain);
 
+	/* disconnect audio forward endpoint. */
 #if STAROT_ENABLE
 	/* Disconnect audio forward source */
 #ifdef GAIA_TEST
@@ -422,7 +399,7 @@ void appKymeraHandleInternalScoStop(void)
         appGetGaia()->nowSendCallAudio = 0;
     }
 #endif
-    SourceUnmap(sco_audfwd_src);
+    disconnectAudioForward(sco_chain);
 #endif
 
     /* Disconnect SCO from chain SCO endpoints */

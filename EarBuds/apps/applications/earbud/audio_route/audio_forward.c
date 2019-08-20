@@ -4,34 +4,82 @@
 #include <panic.h>
 #include <audio.h>
 #include <stdio.h>
+#include <vmal.h>
 
 #include "../av_headset.h"
 //#include "gaia/gaia.h"
 #include "../av_headset_gaia_starot.h"
-
+#include "../av_headset_kymera_private.h"
+#include "cap_id_prim.h"
 #include "audio_forward.h"
 
 #ifdef GAIA_TEST
 extern uint16 bufferSendUnit;
 #endif
 
+#define AUDIO_CORE_0             (0)
+#define AUDIO_DATA_FORMAT_16_BIT (0)
+
 static void msg_handler (Task appTask, MessageId id, Message msg);
 static void initSetSpeechDataSource(Source src);
 static void sendMessageMoreData(Task task, Source src, uint32 delay);
+static void indicateFwdDataSource(Source src, source_type_t type);
+static void sendDataMessage(Source source);
 
 static TaskData audioForwardTaskData = {.handler = msg_handler};
-Task audioForwardTask = &audioForwardTaskData;
+static Task audioForwardTask = &audioForwardTaskData;
 
-static void sendDataMessage(Source source);
 Source globalSource;
-void indicateFwdDataSource(Source src)
+
+static Source data_source_sco = NULL;
+static Source data_source_mic = NULL;
+
+void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 {
-    MAKE_AUDIO_MESSAGE( AUDIO_VA_INDICATE_DATA_SOURCE, message) ;
-    message->data_src = src;
-    MessageSend(audioForwardTask, AUDIO_VA_INDICATE_DATA_SOURCE, message);
+    uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_CHANGE_OUTPUT_DATA_TYPE, AUDIO_DATA_FORMAT_16_BIT };
+
+    /** forward sco data  **/
+
+    /* 1. load passthrough cap */
+    Operator scofwd_passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH));
+
+    /* 2. set passthrough data format */
+    PanicZero(VmalOperatorMessage(scofwd_passthrough, set_data_format,
+                                  sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+
+    /* 3. create timestamped endpoint from passthrough */
+    Source scofwd_capture = StreamSourceFromOperatorTerminal(scofwd_passthrough, 0);
+    PanicFalse(SourceMapInit(scofwd_capture, STREAM_TIMESTAMPED, 9));
+
+    /* 4. setup MORE_DATA message. */
+    indicateFwdDataSource(scofwd_capture, STYPE_SCO);
+
+    /** forward mic data  **/
+
+    /* 1. load passthrough cap */
+    Operator micfwd_passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH));
+
+    /* 2. set passthrough data format */
+    PanicZero(VmalOperatorMessage(micfwd_passthrough, set_data_format,
+                                  sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+
+    /* 3. create timestamped endpoint from passthrough */
+    Source micfwd_capture = StreamSourceFromOperatorTerminal(micfwd_passthrough, 0);
+    PanicFalse(SourceMapInit(micfwd_capture, STREAM_TIMESTAMPED, 9));
+
+    /* 4. setup MORE_DATA message. */
+    indicateFwdDataSource(micfwd_capture, STYPE_MIC);
 }
 
-unsigned more_loops = 0, data_cnt = 0;
+void disconnectAudioForward(kymera_chain_handle_t sco_chain) {
+    Source sco_audfwd_src = ChainGetOutput(sco_chain, EPR_AUDIO_SCOFWD_OUT);
+    Source mic_audfwd_src = ChainGetOutput(sco_chain, EPR_AUDIO_MICFWD_OUT);
+
+    /* Disconnect audio forward source */
+    SourceUnmap(sco_audfwd_src);
+    SourceUnmap(mic_audfwd_src);
+}
+
 unsigned nowSendStatus = 0;
 int dissNum = 0;
 
@@ -39,12 +87,6 @@ void sendDataMessage(Source source) {
     int size = SourceSize(source);
 
     const uint16 *ptr = (const uint16*)SourceMap(source);
-
-    data_cnt += size;
-
-    if(0 == (++more_loops) % 100)
-        printf("get=%d data=%d cnt=%d [%04x %04x %04x %04x %04x %04x\n",
-               more_loops, size, data_cnt, ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
 
 #ifdef GAIA_TEST
     if (NULL == appGetGaia()->transport) {
@@ -60,12 +102,11 @@ void sendDataMessage(Source source) {
         nowSendStatus = 1;
     }
 #else
+    UNUSED(ptr);
     SourceDrop(source, size);
 #endif
 //    printf("call xxx audio forward msg_handler indicateFwdDataSource \n");
-
 }
-
 
 static void msg_handler (Task appTask, MessageId id, Message msg)
 {
@@ -74,8 +115,40 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
     case MESSAGE_MORE_DATA:
     {
         MessageMoreData * message = (MessageMoreData *)msg;
-        globalSource = message->source;
-        sendDataMessage(message->source);
+        Source source = message->source;
+        int size = SourceSize(source);
+        const uint16 *ptr = (const uint16*)SourceMap(source);
+
+        if (source == data_source_sco)
+        {
+#if 0
+            static unsigned more_loops_sco = 0, data_cnt_sco = 0;
+
+            data_cnt_sco += size;
+
+            if(0 == (++more_loops_sco) % 100)
+                printf("sco: get=%d data=%d cnt=%d [%04x %04x %04x %04x %04x %04x\n",
+                       more_loops_sco, size, data_cnt_sco, ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
+#endif
+            globalSource = message->source;
+            sendDataMessage(message->source);
+        }
+        else if (source == data_source_mic)
+        {
+#if 0
+            static unsigned more_loops_mic = 0, data_cnt_mic = 0;
+
+            data_cnt_mic += size;
+
+            if(0 == (++more_loops_mic) % 100)
+                printf("mic: get=%d data=%d cnt=%d [%04x %04x %04x %04x %04x %04x\n",
+                       more_loops_mic, size, data_cnt_mic, ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
+#endif
+        }
+        else
+            printf("ERROR: msg_handler: MESSAGE_MORE_DATA: INCORRECT SOURCE!\n");
+
+        SourceDrop(source, size);
         break;
     }
 
@@ -118,9 +191,24 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
         break;
     }
     default:
-        printf("default id=%d== \n", id);
         break;
     }
+}
+
+static void indicateFwdDataSource(Source src, source_type_t type)
+{
+    if (STYPE_SCO == type)
+        data_source_sco = src;
+    else if (STYPE_MIC == type)
+        data_source_mic = src;
+    else {
+        printf("ERROR: indicateFwdDataSource: INCORRECT SOURCE TYPE!\n");
+        return;
+    }
+
+    MAKE_AUDIO_MESSAGE( AUDIO_VA_INDICATE_DATA_SOURCE, message) ;
+    message->data_src = src;
+    MessageSend(audioForwardTask, AUDIO_VA_INDICATE_DATA_SOURCE, message);
 }
 
 static void initSetSpeechDataSource(Source src)
@@ -136,9 +224,7 @@ static void initSetSpeechDataSource(Source src)
     /* If this already contains data we may have missed the message
        so repost it*/
     if(source_size)
-    {
         sendMessageMoreData(audioForwardTask, src, 0);
-    }
 }
 
 static void sendMessageMoreData(Task task, Source src, uint32 delay)
@@ -147,5 +233,4 @@ static void sendMessageMoreData(Task task, Source src, uint32 delay)
     message->source = src;
     MessageCancelAll(task, MESSAGE_MORE_DATA);
     MessageSendLater(task, MESSAGE_MORE_DATA, message, delay);
-
 }

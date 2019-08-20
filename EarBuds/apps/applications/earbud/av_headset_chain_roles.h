@@ -97,10 +97,12 @@ typedef enum chain_operator_roles
     OPR_PROMPT_DECODER,
 
     /*! Customer specified spliter */
-    OPR_CUSTOM_SPLITER,
+    OPR_CUSTOM_SCO_SPLITER,
+    OPR_CUSTOM_MIC_SPLITER,
 
 	/*! Customer specified spliter */
-    OPR_CUSTOM_PASSTHROUGH
+    OPR_CUSTOM_SCO_PASSTHROUGH,
+	OPR_CUSTOM_MIC_PASSTHROUGH
 } chain_operator_role_t;
 
 /*! These names may be used in chain endpoint definitions.
@@ -151,7 +153,8 @@ typedef enum chain_endpoint_roles
     EPR_PROMPT_IN,
 
 	/*! Custom audio forward endpoint */
-	EPR_AUDIO_FWD_OUT
+	EPR_AUDIO_SCOFWD_OUT,
+	EPR_AUDIO_MICFWD_OUT
 } chain_endpoint_role_t;
 
 

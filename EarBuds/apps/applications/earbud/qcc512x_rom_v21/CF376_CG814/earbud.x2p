@@ -65,6 +65,8 @@
     <file path="../../av_headset_device.h"/>
     <file path="../../av_headset_gaia.c"/>
     <file path="../../av_headset_gaia.h"/>
+    <file path="../../av_headset_gaia_starot.c"/>
+    <file path="../../av_headset_gaia_starot.h"/>
     <file path="../../av_headset_gatt.c"/>
     <file path="../../av_headset_gatt.h"/>
     <file path="../../av_headset_handset_signalling.c"/>

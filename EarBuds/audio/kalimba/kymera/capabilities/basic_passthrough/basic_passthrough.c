@@ -967,6 +967,20 @@ static void __metadata_strict_transport(tCbuffer *src, tCbuffer *dst, unsigned t
         METADATA_PACKET_START_SET(ret_mtag);
         while(list_tag->next) list_tag = list_tag->next;
         METADATA_PACKET_END_SET(list_tag);
+    } else {
+        ret_mtag = buff_metadata_new_tag();
+        if (ret_mtag != NULL) {
+            ret_mtag->length = trans_octets;
+            METADATA_PACKET_START_SET(ret_mtag);
+            METADATA_PACKET_END_SET(ret_mtag);
+        }
+        b4idx = 0;
+        afteridx = trans_octets;
+
+        ttp_status status;
+        status.ttp = ret_mtag->timestamp + 10000;
+        status.stream_restart = TRUE;
+        ttp_utils_populate_tag(ret_mtag, &status);
     }
 
     if (dst != NULL)
