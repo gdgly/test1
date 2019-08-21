@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <workspace lastRevision="3210128">
+    <project name="G722Codec" path="../../../../../audio/kalimba/kymera/tools/KCSMaker/G722Codec.x2p" default="no">
+        <dependencies/>
+    </project>
     <project name="apps0_firmware" path="../../../../../images/apps0_firmware/common/apps0_firmware.x2p" default="no">
         <dependencies/>
     </project>

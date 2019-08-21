@@ -31,7 +31,8 @@
  */
 #define SUPPORT_MEMORY_DEC_TABLE
 #define SUPPORT_WORD16to8
-#define SUPPORT_STACK_SHAREMEM
+#define SUPPORT_STACK_SHAREMEM        // 全局静态内存
+  #define SUPPORT_STRUCT_SHAREMEM       // 全局分配内存
 
 /* 8K采样率的音频解码，注意解码出来还是为16K的采样,保持I2S为固定采样率
  * 要求输入的为40字节，解码出来的数据为1280字节
@@ -132,10 +133,16 @@ typedef int Flag;
 #define MAX_BITS_PER_FRAME 960
 
 #ifdef SUPPORT_STACK_SHAREMEM
-extern Word16           share_mem1[];
-extern Word16           share_mem2[];
-extern Word16           share_mem3[];
-extern Word16           *share_mem_inout;       /* 输入输出参数在使用完之后，也可以作为堆栈使用 */
+  #ifdef SUPPORT_STRUCT_SHAREMEM
+  extern Word16           *share_mem1;
+  extern Word16           *share_mem2;
+  extern Word16           *share_mem3;
+  #else
+  extern Word16           share_mem1[];
+  extern Word16           share_mem2[];
+  extern Word16           share_mem3[];
+  #endif
+  extern Word16           *share_mem_inout;       /* 输入输出参数在使用完之后，也可以作为堆栈使用 */
 #endif
 
 

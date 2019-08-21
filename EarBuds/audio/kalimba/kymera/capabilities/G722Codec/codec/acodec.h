@@ -8,17 +8,18 @@
 #ifndef _ACODEC_H_H
 #define _ACODEC_H_H
 
+int acodec_memsize(void);
 
 // 初始化解压缩库
-int acodec_init(void);
+void *acodec_init(void *memaddr, int memlen);
 
-void acodec_reset(void);
+void acodec_reset(void *handle);
 
 // all param is BYTE
 // return 0: Success
-int acodec_decoder(int dec8K, unsigned char *indata, unsigned short insize, unsigned char *outdata, unsigned short *outsize);
+int acodec_decoder(void *handle, int dec8K, unsigned char *indata, unsigned short insize, unsigned char *outdata, unsigned short *outsize);
 
-int acodec_encoder(unsigned char *indata, unsigned short insize, unsigned char *outdata, unsigned short *outsize);
+int acodec_encoder(void *handle, unsigned char *indata, unsigned short insize, unsigned char *outdata, unsigned short *outsize);
 
 #endif
 
