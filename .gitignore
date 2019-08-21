@@ -29,6 +29,9 @@ depend
 output_bundles
 *.x2p.user.*
 *.bak
+G722Codec.settings
+*G722Codec.cfgc
+*G722Codec.bdlc
 EarBuds/apps/applications/earbud/qcc512x_rom_v21/CF376_CG814/sed*
 sedrflRmE
 EarBuds/audio/kalimba/kymera/capabilities/basic_passthrough/makefile
