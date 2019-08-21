@@ -85,26 +85,31 @@ int dissNum = 0;
 
 bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type) {
     int size = SourceSize(source);
-
-    const uint16 *ptr = (const uint16*)SourceMap(source);
+//    const uint16 *ptr = (const uint16*)SourceMap(source);
 
 #ifdef GAIA_TEST
-    if (NULL == appGetGaia()->transport) {
+    /// 丢弃过多的数据，防止数据过多，导致source不可以使用
+    if (size > 5 * bufferSendUnit * 2) {
+        dissNum += 5 * bufferSendUnit * 2;
+        size -= 5 * bufferSendUnit * 2;
+        printf("drop size 5 * 480\n");
+        SourceDrop(source, 5 * bufferSendUnit * 2);
+    }
+
+    if (NULL == appGetGaia()->transport || NULL == data_source_sco || NULL == data_source_mic) {
         SourceDrop(source, size);
-    } else if ((nowSendStatus == 0) && (size >= (bufferSendUnit * 2))) {
-        printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND for send nowSendStatus is %d, size is :%d, ptr is %x\n",nowSendStatus, size, ptr);
+    } else if (size >= (bufferSendUnit * 2)) {
         GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));
         starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_IND;
         starot->source = source;
         starot->audioType = type;
-        starot->data = (uint8*)ptr;
+        starot->data = NULL;
         starot->len = size;
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
         nowSendStatus = 1;
         return TRUE;
     }
 #else
-    UNUSED(ptr);
     SourceDrop(source, size);
 #endif
     return FALSE;
@@ -133,6 +138,8 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
                 printf("sco: get=%d data=%d cnt=%d [%04x %04x %04x %04x %04x %04x\n",
                        more_loops_sco, size, data_cnt_sco, ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
 #endif
+//            int size = SourceSize(source);
+//            SourceDrop(source, size);
             sendDataMessage(message->source, GAIA_AUDIO_SPEAKER);
         }
         else if (source == data_source_mic)
@@ -160,42 +167,13 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
     case GAIA_STAROT_COMMAND_IND:
     {
         /// 确认发送的消息
-//        printf("call xxx audio forward msg_handler GAIA_STAROT_COMMAND_IND \n");
-
         GAIA_STAROT_AUDIO_CFM_T* message = (GAIA_STAROT_AUDIO_CFM_T*)msg;
         nowSendStatus = 0;
-        if (NULL != message && message->command == GAIA_COMMAND_STAROT_CALL_AUDIO_CFM) {
-            int size = SourceSize(message->source);
-            if (size > 3000) {
-                dissNum += 400;
-                SourceDrop(message->source, 400);
-            } else {
-                if (message->len > 0) {
-                    SourceDrop(message->source, message->len);
-                }
-            }
-
-            /// 先发送扬声器、在发送麦克风数据
-
-            if ((data_source_mic == message->source && message->len > 0) ||
-                    (data_source_sco == message->source && message->len == 0)) {
-                if(FALSE == sendDataMessage(data_source_sco, GAIA_AUDIO_SPEAKER)) {
-                    sendDataMessage(data_source_mic, GAIA_AUDIO_MIC);
-                }
-            } else if ((data_source_sco == message->source && message->len > 0) ||
-                    (data_source_mic == message->source && message->len == 0)) {
-                if(FALSE == sendDataMessage(data_source_mic, GAIA_AUDIO_MIC)) {
-                    sendDataMessage(data_source_sco, GAIA_AUDIO_SPEAKER);
-                }
-            } else {
-                if(FALSE == sendDataMessage(data_source_sco, GAIA_AUDIO_SPEAKER)) {
-                    sendDataMessage(data_source_mic, GAIA_AUDIO_MIC);
-                }
-            }
-
-        } else if (NULL != message && message->command == GAIA_COMMAND_STAROT_CALL_AUDIO_END) {
+         if (NULL != message && message->command == GAIA_COMMAND_STAROT_CALL_AUDIO_END) {
             printf("diss audio bytes is : %d\n", dissNum);
             dissNum = 0;
+            data_source_sco = NULL;
+            data_source_mic = NULL;
             nowSendStatus = 0;
         }
 
@@ -229,6 +207,11 @@ static void indicateFwdDataSource(Source src, source_type_t type)
     MAKE_AUDIO_MESSAGE( AUDIO_VA_INDICATE_DATA_SOURCE, message) ;
     message->data_src = src;
     MessageSend(audioForwardTask, AUDIO_VA_INDICATE_DATA_SOURCE, message);
+
+    printf("Source src:%x, source_type_t type:%d\n", src, type);
+    if (NULL != data_source_sco && NULL != data_source_mic) {
+        notifyGaiaDialogSource(data_source_sco, data_source_mic);
+    }
 }
 
 static void initSetSpeechDataSource(Source src)

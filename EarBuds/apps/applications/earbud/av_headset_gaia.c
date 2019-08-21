@@ -247,7 +247,7 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
                 if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
 //                    appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
                     appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
-                    starotNotifyAudioForward(TRUE);
+                    starotNotifyAudioForward(TRUE, packet[GAIA_OFFS_PAYLOAD]);
                 }
             }
 #endif

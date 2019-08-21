@@ -6,6 +6,10 @@
 
 #ifdef GAIA_TEST
 
+
+Source dialogSpeaker = NULL;
+Source dialogMic = NULL;
+
 Source audioForwardSource = NULL;
 
 extern void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
@@ -14,11 +18,11 @@ extern void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 stat
 extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                               uint16 payload_length, uint8 *payload);
 
-uint16 bufferSendUnit = 150;
-
+uint16 bufferSendUnit = 240;
+static int speakerDropNum  = 0;
+static int micDropNum  = 0;
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
-//    DEBUG_LOG("starotGaiaHandleCommand command: 0x%x", message->command);
 
     switch (message->command) {
         case GAIA_COMMAND_STAROT_FIRST_COMMAND: {
@@ -46,7 +50,6 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
                 appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
                 appGetGaia()->nowSendCallAudio = 1;
                 DEBUG_LOG("call GAIA_COMMAND_STAROT_CALL_BEGIN");
-//              starotAudioBufferInit();
                 appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_BEGIN, 0xfe, 0, NULL);
             }
             break;
@@ -54,8 +57,10 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_COMMAND_STAROT_CALL_END: {
             appGetGaia()->nowSendCallAudio = 0;
             DEBUG_LOG("call GAIA_COMMAND_STAROT_CALL_END");
+            DEBUG_LOG("call speakerDropNum :%d micDropNum:%d\n", speakerDropNum, micDropNum);
             appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
-
+            speakerDropNum = 0;
+            micDropNum = 0;
             GAIA_STAROT_AUDIO_CFM_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_CFM_T));
             starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_END;
             MessageSend(getAudioForwardTask(), GAIA_STAROT_COMMAND_IND, starot);
@@ -64,8 +69,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
 
         case GAIA_COMMAND_STAROT_CALL_AUDIO_IND:
-            DEBUG_LOG("call GAIA_COMMAND_STAROT_CALL_AUDIO_IND");
-            starotGaiaSendAudio((GAIA_STAROT_AUDIO_IND_T*)message);
+            starotGaiaSendAudio(NULL);
             break;
     }
     return TRUE;
@@ -75,35 +79,37 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
  * 使用事件去驱动让audio_forward去发送数据
  */
 void starotGaiaParseMessageMoreSpace(void) {
-
-    /// todo 通知audio_forward继续发送
     if (appGetGaia()->nowSendAudio != GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE) {
         return;
     }
-    printf("call xxx starotGaiaParseMessageMoreSpace \n");
 
     appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
     /// 尝试使用messagemorespace这唯一的命令去让他发送消息
-//    audioForwardSource = NULL;
-    starotNotifyAudioForward(FALSE);
+    starotNotifyAudioForward(FALSE, 0);
 }
 
-void starotNotifyAudioForward(bool st) {
+void starotNotifyAudioForward(bool st, uint8 flag) {
+    UNUSED(st);
     if (appGetGaia()->nowSendCallAudio <= 0) {
         return;
     }
 
-//    printf("call xxx starotNotifyAudioForward \n");
-    GAIA_STAROT_AUDIO_CFM_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_CFM_T));
-    starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_CFM;
-    starot->source = audioForwardSource;
-    starot->data = 0;
-    starot->len = (TRUE == st ? bufferSendUnit * 2 : 0);
-    MessageSend(getAudioForwardTask(), GAIA_STAROT_COMMAND_IND, starot);
-    audioForwardSource = NULL;
+    if (TRUE == st && flag > 0) {
+        if ((flag & GAIA_AUDIO_SPEAKER) > 0 && NULL != dialogSpeaker) {
+            speakerDropNum += bufferSendUnit * 2;
+            SourceDrop(dialogSpeaker, bufferSendUnit * 2);
+        }
+        if ((flag & GAIA_AUDIO_MIC) > 0 && NULL != dialogMic) {
+            micDropNum += bufferSendUnit * 2;
+            SourceDrop(dialogMic, bufferSendUnit * 2);
+        }
+    }
+
+    starotGaiaSendAudio(NULL);
 }
 
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message) {
+    UNUSED(message);
 
     if (appGetGaia()->nowSendCallAudio <= 0) {
         return FALSE;
@@ -112,23 +118,50 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message) {
     if (appGetGaia()->nowSendAudio != GAIA_TRANSFORM_AUDIO_IDLE) {
         return FALSE;
     }
+    appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_ING;
 
     static uint8 payload[512];
-    if (GAIA_AUDIO_SPEAKER == message->audioType) {
-        payload[0] = 1;
-    } else if (GAIA_AUDIO_MIC == message->audioType) {
-        payload[0] = 2;
+    uint8 flag = 0;
+    uint16 pos = 1;
+
+    if (NULL != dialogSpeaker) {
+        int size = SourceSize(dialogSpeaker);
+        if ((size >= bufferSendUnit * 2)) {
+            flag |= GAIA_AUDIO_SPEAKER;
+            const uint8 *ptr = (const uint8*)SourceMap(dialogSpeaker);
+
+            for (int i = 0; i < bufferSendUnit; i += 2) {
+                payload[pos + i] = ptr[i * 2 + 1];
+                payload[pos + i + 1] = ptr[i * 2];
+            }
+            pos += bufferSendUnit;
+        }
     }
-    audioForwardSource = message->source;
 
-    for (int i = 0; i < bufferSendUnit; i += 2) {
-        payload[1 + i] = message->data[i * 2 + 1];
-        payload[1 + i + 1] = message->data[i * 2];
+    if (NULL != dialogMic) {
+        int size = SourceSize(dialogMic);
+        if ((size >= bufferSendUnit * 2)) {
+            flag |= GAIA_AUDIO_MIC;
+
+            const uint8 *ptr = SourceMap(dialogMic);
+
+            for (int i = 0; i < bufferSendUnit; i += 2) {
+                payload[pos + i] = ptr[i * 2 + 1];
+                payload[pos + i + 1] = ptr[i * 2];
+            }
+
+            pos += bufferSendUnit;
+        }
     }
 
-    bool st = appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_AUDIO_IND, 0xfe,
-                                bufferSendUnit + 1, payload);
+    payload[0] = flag;
 
+    if (flag <= 0) {
+        appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+        return FALSE;
+    }
+
+    bool st = appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_AUDIO_IND, 0xfe, pos, payload);
     if (TRUE == st) {
         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_ING;
     } else {
@@ -138,6 +171,11 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message) {
     }
 
     return TRUE;
+}
+
+void notifyGaiaDialogSource(Source speaker, Source mic) {
+    dialogSpeaker = speaker;
+    dialogMic = mic;
 }
 
 #endif

@@ -10,7 +10,7 @@
 ////////////////////////////EVENT//////////////////////////////
 enum {
     /// 临时，不能这样定义，会冲突
-    GAIA_STAROT_AUDIO_INTERVAL = GAIA_MESSAGE_TOP + 1,
+            GAIA_STAROT_AUDIO_INTERVAL = GAIA_MESSAGE_TOP + 1,
     GAIA_STAROT_RESEND_AUDIO,
 };
 ///////////////////////////COMMAND/////////////////////////////
@@ -23,8 +23,9 @@ enum {
 #define GAIA_COMMAND_STAROT_CALL_AUDIO_IND (0x5007)
 #define GAIA_COMMAND_STAROT_CALL_AUDIO_CFM (0x5008)
 #define GAIA_COMMAND_STAROT_CALL_AUDIO_END (0x5009)
+#define GAIA_COMMAND_STAROT_CALL_SOURCE_IND (0x500a)
 
-bool starotGaiaHandleCommand (GAIA_STAROT_IND_T* message);
+bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
 
 void starotGaiaParseMessageMoreSpace(void);
 
@@ -42,24 +43,34 @@ enum GAIA_TRANSFORM_AUDIO_STATUS {
 };
 
 enum GAIA_AUDIO_TYPE {
-    GAIA_AUDIO_SPEAKER,
-    GAIA_AUDIO_MIC
+    GAIA_AUDIO_SPEAKER = 1,
+    GAIA_AUDIO_MIC = 2
 };
 
-typedef struct
-{
+typedef struct {
     uint16 command;
     Source source;
-    uint8* data;
+    uint8 *data;
     uint16 len;
     uint16 audioType;
 } GAIA_STAROT_AUDIO_T;
 
-typedef GAIA_STAROT_AUDIO_T GAIA_STAROT_AUDIO_IND_T ;
-typedef GAIA_STAROT_AUDIO_T GAIA_STAROT_AUDIO_CFM_T ;
+typedef GAIA_STAROT_AUDIO_T GAIA_STAROT_AUDIO_IND_T;
+typedef GAIA_STAROT_AUDIO_T GAIA_STAROT_AUDIO_CFM_T;
 
-bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message);
-void starotNotifyAudioForward(bool st) ;
+typedef struct {
+    uint16 command;
+    Source speark;
+    Source mic;
+} GAIA_STAROT_DIALOG_SOURCE;
+
+typedef GAIA_STAROT_DIALOG_SOURCE GAIA_STAROT_DIALOG_SOURCE_T;
+
+bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message);
+
+void starotNotifyAudioForward(bool st, uint8 flag);
+
+void notifyGaiaDialogSource(Source speaker, Source mic);
 
 #endif
 #endif // AV_HEADSET_GAIA_STAROT_H
