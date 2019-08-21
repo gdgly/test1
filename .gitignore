@@ -27,7 +27,7 @@ flags.preprocess
 flags.strip
 depend
 output_bundles
-*.x2p.user.*
+*.x2p.user
 *.bak
 G722Codec.settings
 *G722Codec.cfgc

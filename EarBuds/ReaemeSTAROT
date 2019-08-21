@@ -1,6 +1,24 @@
 debuglog.poll_debug_log()
 
 
+20190819 电话挂断后播放提示音流程,在原来chain基本上插入新的CHAIN
+      hfpSendCommonCfmMessageToApp(HFP_AUDIO_DISCONNECT_IND)
+    1.appHfpHandleHfpAudioDisconnectIndication-->APP_HFP_SCO_DISCONNECTED_IND(消息在本函数执行完，下一循环执行)
+                                              --appUiHfpScoDisconnected-->appUiPlayTone-->appKymeraTonePlay-->KYMERA_INTERNAL_TONE_PROMPT_PLAY
+					      -->appScoFwdHandleHfpAudioDisconnectIndication-->appKymeraScoStop-->KYMERA_INTERNAL_SCO_STOP
+					      -->appHfpCheckEncryptedSco
+					      -->appLinkPolicyUpdatePowerTable
+					      -->appAvStreamingResume-->AV_INTERNAL_A2DP_RESUME_MEDIA_REQ
+    2.APP_HFP_SCO_DISCONNECTED_IND-->appSmHandleHfpScoDisconnectedInd-->appSmSetCoreState-->
+      KYMERA_INTERNAL_TONE_PROMPT_PLAY-->appKymeraHandleInternalTonePromptPlay-->appKymeraHandleInternalTonePromptPlay(插入新的播放chain)-->appKymeraSetToneLock(不要执行STOP)
+      AV_INTERNAL_A2DP_RESUME_MEDIA_REQ-->appA2dpHandleInternalA2dpResumeRequest
+      HFP_CALL_STATE_IND-->appHfpHandleHfpCallStateIndication-->appHfpSetState-->appHfpExitConnectedActive-->appUiHfpCallInactive-->appHfpEnterConnectedIdle
+    3.PROMPT播放完之后，返回KYMERA_OP_MSG_ID_TONE_END,正式执行SCO_STOP
+      appKymeraScoStop-->(在提示音播放完成之后调用的appKymeraHandleInternalScoStop)
+
+
+
+
 20190815 增加一个CAPABILITY需要提交的记录数(以G722Codec为示例）
    audio/kalimba/kymera/capabilities/G722Codec         全部提交                                                 多个文件
    audio/kalimba/kymera/tools/KCSMaker/                目录下对应的工程文件  G722Codec.x2p                       1个文件
@@ -11,6 +29,7 @@ debuglog.poll_debug_log()
    av_headset_kymera.c       -->capability_bundle      增加DKCS文件的调用
    av_headset_chain_roles.h  -->chain_operator_roles   增加使用定义
                              -->chain_endpoint_roles   增加使用定义
+   audio/.../cap_id_prim.h                             增加ID定义
 
  
    
@@ -105,6 +124,7 @@ chains/chain_output_volume.c
 
 20190724
    appKymeraConfigureDspPowerMode / updateClockForCurrentUseCase 设置DSP频率
+   ACAT 查看CPU频率 profiler.run_clks(5)
 
    chain_output_voluem.chain 定义一输出的chain文件，这个文件会通过chaingen.py生成对应的C、H文件。
    提示音：按键 appUiHandleMessage(APP_MFB_BUTTON_HELD_x) -->appUiPlayToneCore ->appKymeraTonePlay(KYMERA_INTERNAL_TONE_PROMPT_PLAY)-->appKymeraHandleInternalTonePromptPlay()
