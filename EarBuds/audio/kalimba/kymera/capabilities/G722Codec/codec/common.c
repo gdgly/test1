@@ -26,9 +26,15 @@
 #include "tables.h"
 
 #ifdef SUPPORT_STACK_SHAREMEM
+  #ifdef SUPPORT_STRUCT_SHAREMEM
+Word16           *share_mem1;
+Word16           *share_mem2;
+Word16           *share_mem3;
+  #else
 Word16           share_mem1[DCT_LENGTH];
 Word16           share_mem2[DCT_LENGTH];
 Word16           share_mem3[DCT_LENGTH];
+  #endif
 Word16           *share_mem_inout;
 #endif
 

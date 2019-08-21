@@ -86,64 +86,87 @@ void acodec_show(unsigned char *ptr, int size)
 
 #define SUPPORT_NO_OLD_MLT_COEFS   /* 代码中如果不出错，是不会用到old_mlt_coefs */
 
-static Word16 enc_old_frame[MAX_SAMPLES_PER_FRAME];
-#ifndef SUPPORT_NO_OLD_MLT_COEFS
-static Word16 old_mlt_coefs[MAX_SAMPLES_PER_FRAME];
+typedef struct tagACODECHANDLER {
+#ifdef SUPPORT_STRUCT_SHAREMEM
+    Word16      share_mem1[DCT_LENGTH];
+    Word16      share_mem2[DCT_LENGTH];
+    Word16      share_mem3[DCT_LENGTH];
 #endif
-static Word16 mlt_coefs[MAX_SAMPLES_PER_FRAME];
-static Word16 dec_old_mag_shift = 0;
-static Rand_Obj dec_randobj = {1,1,1,1};
+
+    Word16      enc_old_frame[MAX_SAMPLES_PER_FRAME];
+#ifndef SUPPORT_NO_OLD_MLT_COEFS
+    Word16      old_mlt_coefs[MAX_SAMPLES_PER_FRAME];
+#endif
+    Word16      mlt_coefs[MAX_SAMPLES_PER_FRAME];
+    Word16      dec_old_mag_shift;
+    Rand_Obj    dec_randobj;
 
 #ifdef SUPPORT_ZERO_DATA_DETECT
-/*检测到两次0数据，将所有数据设置为0 */
-static UWord16 dec_zero_cnt = 0;
+    UWord16     dec_zero_cnt;   /*检测到两次0数据，将所有数据设置为0 */
+#endif
+}AcodecHandler, *AcodecHPtr;
+
+
+#ifdef SUPPORT_ZERO_DATA_DETECT
 /* 特征数据 40 BYTE */
 unsigned int g722_zero_dat[] = {
         0xbd308e0aU, 0x00FF833F,  0x00000000,  0x00000000,  0xFF000000U,
         0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU};
 
-static int acodec_zero_data(unsigned int *src)
+static int acodec_is_zero_data(AcodecHPtr h, unsigned int *src)
 {
         int i;
 
         for(i = 0; i < 10; i++) {
                 if(src[i] != g722_zero_dat[i]) {
-                        dec_zero_cnt = 0;
+                        h->dec_zero_cnt = 0;
                         return -1;
                 }
         }
 
-        dec_zero_cnt += 1;
+        h->dec_zero_cnt += 1;
         return 0;
 }
 #else
-#define acodec_zero_data(...)
+#define acodec_is_zero_data(...)
 #endif
 
-// 初始化解压缩库
-int acodec_init(void)
+int acodec_memsize(void)
 {
-        dec_old_mag_shift = 0;
-        dec_randobj.seed0 = 1;
-        dec_randobj.seed1 = 1;
-        dec_randobj.seed2 = 1;
-        dec_randobj.seed3 = 1;
-
-        memset(mlt_coefs, 0, sizeof(mlt_coefs));
-        memset(enc_old_frame, 0, sizeof(enc_old_frame));
-#ifndef SUPPORT_NO_OLD_MLT_COEFS
-        memset(old_mlt_coefs, 0, sizeof(old_mlt_coefs));
-#endif
-
-#ifdef SUPPORT_ZERO_DATA_DETECT
-        dec_zero_cnt = 0;
-#endif
-        return 0;
+    return (sizeof(AcodecHandler));
 }
 
-void acodec_reset(void)
+// 初始化解压缩库
+void *acodec_init(void *memaddr, int memlen)
 {
-        acodec_init();
+    if(memlen < sizeof(AcodecHandler))
+        return NULL;
+
+    acodec_reset(memaddr);
+    return memaddr;
+}
+
+void acodec_reset(void *handle)
+{
+    AcodecHPtr h = (AcodecHPtr)handle;
+
+    memset(h, 0, sizeof(AcodecHandler));
+
+    h->dec_old_mag_shift = 0;
+    h->dec_randobj.seed0 = 1;
+    h->dec_randobj.seed1 = 1;
+    h->dec_randobj.seed2 = 1;
+    h->dec_randobj.seed3 = 1;
+
+#ifdef SUPPORT_ZERO_DATA_DETECT
+    h->dec_zero_cnt      = 0;
+#endif
+
+#ifdef SUPPORT_STRUCT_SHAREMEM
+    share_mem1    = h->share_mem1;
+    share_mem2    = h->share_mem2;
+    share_mem3    = h->share_mem3;
+#endif
 }
 
 static void acodec_swap_bytes(unsigned short *buf, unsigned count)
@@ -157,44 +180,45 @@ static void acodec_swap_bytes(unsigned short *buf, unsigned count)
 
 // all param is BYTE
 // return 0: Success
-int acodec_decoder(int dec8K, unsigned char *indata, unsigned short insize, unsigned char *outdata, unsigned short *outsize)
+int acodec_decoder(void *handle, int dec8K, unsigned char *indata, unsigned short insize, unsigned char *outdata, unsigned short *outsize)
 {
        Word16 mag_shift;
        Bit_Obj bitobj;
+       AcodecHPtr h = (AcodecHPtr)handle;
 
        bitobj.code_word_ptr = (Word16*)indata;
        bitobj.current_word =  *bitobj.code_word_ptr;
        bitobj.code_bit_count = 0;
        bitobj.number_of_bits_left = MAX_SAMPLES_PER_FRAME;
        
-       acodec_zero_data((unsigned int*)indata);
+       acodec_is_zero_data(h, (unsigned int*)indata);
 
        acodec_swap_bytes((unsigned short*)indata, REGION_SIZE);
 
 
        /* Process the input frame to get mlt coefs */
        decoder(&bitobj,
-               &dec_randobj,
+               &h->dec_randobj,
                NUMBER_OF_REGIONS,// codec_data->number_of_regions,
-               mlt_coefs,
+               h->mlt_coefs,
                &mag_shift,
-               &dec_old_mag_shift,
+               &h->dec_old_mag_shift,
   #ifdef SUPPORT_NO_OLD_MLT_COEFS
                (Word16*)outdata,
   #else
-               old_mlt_coefs,
+               h->old_mlt_coefs,
   #endif
                0/*frame_error_flag*/);
 
        /* Convert the mlt_coefs to PCM samples */
-       rmlt_coefs_to_samples(mlt_coefs,
-               enc_old_frame, //codec_data->dec_old_frame,
+       rmlt_coefs_to_samples(h->mlt_coefs,
+               h->enc_old_frame, //codec_data->dec_old_frame,
                (Word16*)outdata,
                MAX_SAMPLES_PER_FRAME, //codec_data->samples_per_frame,
                mag_shift);
 
 #ifdef SUPPORT_ZERO_DATA_DETECT
-       if(dec_zero_cnt >= 2) {
+       if(h->dec_zero_cnt >= 2) {
                memset(outdata, 0, MAX_SAMPLES_PER_FRAME*BYTES_PER_SAMPLE);
        }
 #endif
@@ -247,19 +271,21 @@ int acodec_decoder(int dec8K, unsigned char *indata, unsigned short insize, unsi
 	return 0;
 }
 
-int acodec_encoder(unsigned char *indata, unsigned short insize, unsigned char *outdata, unsigned short *outsize)
+int acodec_encoder(void *handle, unsigned char *indata, unsigned short insize, unsigned char *outdata, unsigned short *outsize)
 {
         Word16 mag_shift;
+        AcodecHPtr h = (AcodecHPtr)handle;
 
 	/* Convert input samples to rmlt coefs */
-	mag_shift = samples_to_rmlt_coefs((Word16*)indata, enc_old_frame,
-		mlt_coefs, MAX_SAMPLES_PER_FRAME);
+        mag_shift = samples_to_rmlt_coefs((Word16*)indata, h->enc_old_frame,
+                h->mlt_coefs, MAX_SAMPLES_PER_FRAME);
 
 	/* Encode the mlt coefs. Note that encoder output stream is
 	 * 16 bit array, so we need to take care about endianness.
 	 */
-	encoder(MAX_SAMPLES_PER_FRAME, NUMBER_OF_REGIONS,// codec_data->number_of_regions
-		mlt_coefs, mag_shift, (Word16*)outdata);
+        (void)mag_shift;
+        encoder(MAX_SAMPLES_PER_FRAME, NUMBER_OF_REGIONS,// codec_data->number_of_regions
+                h->mlt_coefs, mag_shift, (Word16*)outdata);
 
 	/* Encoder output are in native host byte order, while ITU says
 	 * it must be in network byte order (MSB first).

@@ -55,7 +55,7 @@ typedef struct G722CODEC_OP_DATA{
     unsigned *out_buffer;
 
     CPS_PARAM_DEF parms_def;
-    unsigned my_data;
+    void     *g722Handle;
 } G722CODEC_OP_DATA;
 
 
