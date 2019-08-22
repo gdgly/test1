@@ -13,6 +13,7 @@
 #include <pmalloc.h>
 #include <panic.h>
 #include <app/message/system_message.h>
+#include <../av_headset.h>
 
 #include "public.h"
 
@@ -83,17 +84,66 @@ static signed UartRxCallback(const uint8 *ptr, int len)
     return len;
 }
 
+extern void connectionAuthDeleteDeviceFromTdl(const TYPED_BD_ADDR_T *addrt);
+void DoBdAddr(int type);
+
+// type:0,showaddr, 1:clearaddr
+void DoBdAddr(int type)
+{
+    char outbuf[64] = {'\0'};
+    uint16 i, count = ConnectionTrustedDeviceListSize();
+
+    if(0 == type) {
+        if(0 == count) {
+            sprintf(outbuf, "No TrustedDevice\n");
+        }
+        else {
+            typed_bdaddr taddr;
+            for(i = 0; i < count; i++ ) {
+                if(ConnectionSmGetIndexedAttributeNowReq(0, i, 0, NULL, &taddr) == TRUE) {
+                    sprintf(outbuf, "addr=%d/%d t=%x lun=%06x:%02x:%04x\n", i, count, taddr.type,
+                            taddr.addr.lap, taddr.addr.uap, taddr.addr.uap);
+                    sprintf("%s", outbuf);
+                    outbuf[0] = '\0';
+                }
+                else {
+                    sprintf(outbuf, "addr=%d/%d Error\n", i, count);
+                    break;
+                }
+            }
+        }
+    }
+    else if(1 == type) {
+        if(0 == count) {
+            sprintf(outbuf, "No TrustedDevice Clear\n");
+        }
+        else {
+            typed_bdaddr taddr;
+            for(i = 0; i < count; i++ ) {
+                if(ConnectionSmGetIndexedAttributeNowReq(0, i, 0, NULL, &taddr) == TRUE) {
+                    connectionAuthDeleteDeviceFromTdl((TYPED_BD_ADDR_T *)&taddr);
+                }
+                sprintf(outbuf, "Clear TrustedDevice %d/%d\n", i, count);
+            }
+        }
+    }
+    if(outbuf[0] != '\0') {
+        sprintf("%s", outbuf);
+    }
+}
+
+
 static void ShellDoCommand(char *buffer, int len)
 {
     int ret, what = 0;     // 0:close/off  1:open/on
-    char outbuf[32] = {'\0'};
+    char outbuf[64] = {'\0'};
 
     UNUSED(len);
 
     if(strstr(buffer, " on") || strstr(buffer, " open") || strstr(buffer, " yes"))
         what = 1;
 
-    if(strstr(buffer, "lis25")) {
+    if(strstr(buffer, "lis25")) {          /* LIS25 开关测试命令 */
         ret  = lis25Power(what);
         ret |= lis25TestPower(what);
         sprintf(outbuf, "Set Lis25[%d] ret=%d\n", what, ret);
@@ -111,6 +161,42 @@ static void ShellDoCommand(char *buffer, int len)
     else if(strstr(buffer, "em20168")) {
         ret = EM20168Power(what);
         sprintf(outbuf, "Set em20168[%d] ret=%d\n", what, ret);
+    }
+    else if(strstr(buffer, "showaddr")) {
+        uint16 i, count = ConnectionTrustedDeviceListSize();
+        if(0 == count) {
+            sprintf(outbuf, "No TrustedDevice\n");
+        }
+        else {
+            typed_bdaddr taddr;
+            for(i = 0; i < count; i++ ) {
+                if(ConnectionSmGetIndexedAttributeNowReq(0, i, 0, NULL, &taddr) == TRUE) {
+                    sprintf(outbuf, "addr=%d/%d t=%x lun=%06x:%02x:%04x\n", i, count, taddr.type,
+                            taddr.addr.lap, taddr.addr.uap, taddr.addr.uap);
+                    UartTxData((const uint8*)outbuf, strlen(outbuf));
+                    outbuf[0] = '\0';
+                }
+                else {
+                    sprintf(outbuf, "addr=%d/%d Error\n", i, count);
+                    break;
+                }
+            }
+        }
+    }
+    else if(strstr(buffer, "clearaddr")) {
+        uint16 i, count = ConnectionTrustedDeviceListSize();
+        if(0 == count) {
+            sprintf(outbuf, "No TrustedDevice Clear\n");
+        }
+        else {
+            typed_bdaddr taddr;
+            for(i = 0; i < count; i++ ) {
+                if(ConnectionSmGetIndexedAttributeNowReq(0, i, 0, NULL, &taddr) == TRUE) {
+                    connectionAuthDeleteDeviceFromTdl((TYPED_BD_ADDR_T *)&taddr);
+                }
+                sprintf(outbuf, "Clear TrustedDevice %d/%d\n", i, count);
+            }
+        }
     }
 
     if(outbuf[0] != '\0')
