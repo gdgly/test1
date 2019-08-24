@@ -40,6 +40,8 @@ static void basic_passthrough_processing_ex(BASIC_PASSTHROUGH_OP_DATA *op_data, 
 #define DISABLE_IN_PLACE
 #define CONFIG_STAROT
 
+bool disable_audio_fwd = FALSE;
+
 /*****************************************************************************
 Private Constant Declarations
 */
@@ -65,6 +67,7 @@ const opmsg_handler_lookup_table_entry basic_passthrough_opmsg_handler_table[] =
     {OPMSG_COMMON_ID_FADEOUT_DISABLE,            basic_passthrough_opmsg_disable_fadeout},
     {OPMSG_PASSTHROUGH_ID_CHANGE_INPUT_DATA_TYPE,     basic_passthrough_change_input_data_type},
     {OPMSG_PASSTHROUGH_ID_CHANGE_OUTPUT_DATA_TYPE,    basic_passthrough_change_output_data_type},
+    {OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD,      basic_passthrough_disable_audio_forward},
     {OPMSG_COMMON_SET_DATA_STREAM_BASED,         basic_passthrough_data_stream_based},
     {OPMSG_COMMON_ID_SET_BUFFER_SIZE,            basic_passthrough_opmsg_set_buffer_size},
     {OPMSG_COMMON_ID_SET_CONTROL,                  basic_passthrough_opmsg_obpm_set_control},
@@ -248,6 +251,9 @@ bool basic_passthrough_create(OPERATOR_DATA *op_data, void *message_data, unsign
     opx_data->active_chans = 0;
     /* Unless the host says otherwise assume incoming channels are not a stream */
     opx_data->simple_data_test_safe = FALSE;
+
+    /* forward audio data by default. */
+    disable_audio_fwd = FALSE;
 
     switch (base_op_get_cap_id(op_data))
     {
@@ -1110,6 +1116,13 @@ void basic_passthrough_process_data(OPERATOR_DATA *op_data, TOUCHED_TERMINALS *t
         output_space = MIN(output_space,amount);
     }
 
+    if (disable_audio_fwd) {
+        for (i = 0; i < num_active_chans; i++)
+            cbuffer_empty_buffer_and_metadata(channels[i]->ip_buffer);
+        touched->sources = opx_data->active_chans;
+        return;
+    }
+
     /* We have got this far, so we have something to do on every output */
     touched->sources = opx_data->active_chans;
 
@@ -1148,6 +1161,7 @@ void basic_passthrough_process_data(OPERATOR_DATA *op_data, TOUCHED_TERMINALS *t
             common_send_simple_unsolicited_message(op_data, OPMSG_REPLY_ID_FADEOUT_DONE);
         }
     }
+
 #ifdef INSTALL_OPERATOR_TTP_PASS
     if (base_op_get_cap_id(op_data) == TTP_PASS_CAP_ID)
     {
@@ -1507,6 +1521,17 @@ bool basic_passthrough_change_output_data_type(OPERATOR_DATA *op_data, void *mes
 {
     /* Call with source terminal ID 0 */
     return common_change_terminal_data_type(op_data, FALSE, message_data);
+}
+
+/*
+ * basic_passthrough_disable_audio_forward
+ */
+bool basic_passthrough_disable_audio_forward(OPERATOR_DATA *op_data, void *message_data,
+                                             unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data)
+{
+   disable_audio_fwd = (bool)OPMSG_FIELD_GET(message_data, OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD, DISABLE);
+
+   return TRUE;
 }
 
 /*

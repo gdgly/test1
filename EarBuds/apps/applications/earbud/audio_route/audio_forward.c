@@ -34,6 +34,24 @@ static Task audioForwardTask = &audioForwardTaskData;
 static Source data_source_sco = NULL;
 static Source data_source_mic = NULL;
 
+
+#define  OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD (0x000C)
+
+bool disable_audio_forward(bool disable) {
+    uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD, disable };
+
+    kymera_chain_handle_t sco_chain = appKymeraGetScoChain();
+
+    if (soc_chain) {
+        Operator passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH));
+        PanicZero(VmalOperatorMessage(passthrough, set_data_format,
+                                      sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 {
     uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_CHANGE_OUTPUT_DATA_TYPE, AUDIO_DATA_FORMAT_16_BIT };
