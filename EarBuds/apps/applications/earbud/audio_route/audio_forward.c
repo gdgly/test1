@@ -42,7 +42,7 @@ bool disable_audio_forward(bool disable) {
 
     kymera_chain_handle_t sco_chain = appKymeraGetScoChain();
 
-    if (soc_chain) {
+    if (sco_chain) {
         Operator passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH));
         PanicZero(VmalOperatorMessage(passthrough, set_data_format,
                                       sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
