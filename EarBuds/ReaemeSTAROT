@@ -1,4 +1,17 @@
 debuglog.poll_debug_log()
+stream.create_live_graph_img()
+
+
+20190827 ACAT graphviz 画Chain连接图
+    1、 命令行下安装 (在ACAT中输入 stream.create_graph_img()    ）根据提示安装
+	    D:\QCC512X\ADK_QCC512X_ROM_V21_WIN_6.4.0.30\tools\python27\python.exe -m pip install graphviz==0.8.4
+    2、可能要升级 PIP
+	    C:\Users\dannywang>python.exe -m pip install --upgrade pip
+    3、安装graphviz-2.38
+	    把安装目录的bin文件夹加到系统目录中去。
+    4、ACAT中使用命令	stream.create_live_graph_img()
+	    生成的文件在SDK目录下： ADK_QCC512X_ROM_V21_WIN_6.4.0.30\audio\acat\temp\graph
+    5、使用GVEDIT打开这个文件
 
 
 20190819 电话挂断后播放提示音流程,在原来chain基本上插入新的CHAIN
@@ -31,8 +44,22 @@ debuglog.poll_debug_log()
                              -->chain_endpoint_roles   增加使用定义
    audio/.../cap_id_prim.h                             增加ID定义
 
- 
-   
+
+
+20190814白名单的读取
+      appConnectionInit-->ConnectionInitEx3(...)-->CL_INTERNAL_INIT_REQ
+      connectionBluestackHandler(CL_INTERNAL_INIT_REQ）-->connectionBluestackHandlerUninitialised-->connectionHandleInternalInit-->CL_INTERNAL_INIT_TIMEOUT_IND/connectionDmInit
+      connectionBluestackHandlerInitialising(CL_INTERNAL_INIT_TIMEOUT_IND)->connectionSendInitCfm-->CL_INIT_CFM
+      appInitHandleClInitCfm-->CL_INTERNAL_DM_WRITE_CLASS_OF_DEVICE_REQ/CL_INTERNAL_SM_SET_SSP_SECURITY_LEVEL_REQ/CL_INTERNAL_SM_SEC_MODE_CONFIG_REQ
+
+      ->connectionBluestackHandlerInitialising(...)-->connectionHandleInternalInit()
+        -->connectionAuthInit()-->connectionInitTrustedDeviceList()-->read_trusted_device_index()-->PsRetrieve
+
+      read_trusted_device_index(读取索引，每半字节（4BiT)表示索引的位置序号  tdi_cache.tdi.element[i].order = (ps_tdi[i / 4] >> (4 * (i % 4))) & 0x0F;
+      connectionInitTrustedDeviceList,根据序号来读取实际的值， PsRetrieve(TRUSTED_DEVICE_LIST + pos, td, PS_SIZE_ADJ(SIZE_TD_DATA_T)))
+         GET_TDI_CACHE.element[i].hash = TDI_HASH(tempAddr); 这儿仅保存地址中的LAP中的12BIT，why?
+
+	 connectionAuthGetIndexedAttributeNow/ConnectionGattTdlBootSequence 读取
 
 
 
@@ -40,19 +67,66 @@ debuglog.poll_debug_log()
     写ConnectionSmPutAttribute
     读取：ConnectionSmGetIndexedAttributeNowReq可以存取多个
 
+    appPairingSetState（状切换）0->1->2->13->2
+    启动(PAIRING_STATE_NULL)-->appPairingInit(PAIRING_STATE_INITIALISING) -->(发送CL_INTERNAL_SDP_REGISTER_RECORD_REQ)
+    返回：appHandleClSdpRegisterCfm(CL_SDP_REGISTER_CFM)-->appPairingSetState(PAIRING_STATE_IDLE) -->appPairingExitInitialising()-->appPairingTransmitHandsetLinkKeysReq(发送PAIRING_INTERNAL_CHECK_HANDSET_LINKKEYS）-->appHandleInternalCheckHandsetLinkkeys()-->appPairingSetState(PAIRING_STATE_CHECKING_HANDSET_LINKKEYS)-->appPairingEnterCheckingHandsetLinkkeys()-->appPairingSetState(thePairing, PAIRING_STATE_IDLE)
+
+
+
+    appPairingEnterCheckingHandsetLinkkeys-->appPairingSetState(thePairing, PAIRING_STATE_IDLE);
 
 
 20190813 系统配对过程
+  0、系统启动时，appPairingInit()-->appPairingSetState()-->appPairingEnterInitialising()-->appPairingRegisterServiceRecord()-->appDeviceGetPeerAttributes()
+        获取保存的对方蓝牙地址及attributes信息。
+        发送-->CL_INTERNAL_SDP_REGISTER_RECORD_REQ
+	返回<--CL_SDP_REGISTER_CFM-->appPairingSetState(PAIRING_STATE_IDLE)
+
   1、首先执行appInitTable中的所有的初始化,结束之后发送INIT_CFM消息 MessageSend(appGetAppTask(), INIT_CFM, NULL);
-       appSmInit会启动(RULE_EVENT_PAGE_SCAN_UPDATE），返回消息：CONN_RULES_PAGE_SCAN_UPDATE->CONN_RULES_PAGE_SCAN_UPDAT-->appScanManagerEnablePageScan
+       appSmInit会启动(RULE_EVENT_PAGE_SCAN_UPDATE），返回消息：CONN_RULES_PAGE_SCAN_UPDATE->appScanManagerEnablePageScan-->CL_INTERNAL_DM_WRITE_SCAN_ENABLE_REQ
   2、appHandleMessage(INIT_CFM)-->appHandleInitCfm-->appSmHandleMessage(appGetSmTask(), INIT_CFM, message);
-  3、appSmHandleMessage(INIT_CFM)-->appSmHandleInitConfirm-->appSetState(APP_STATE_DFU_CHECK)-->appEnterDfuCheck-->MessageSend(appGetSmTask(), SM_INTERNAL_NO_DFU, NULL);
+  3、appSmHandleMessage(INIT_CFM)-->appSmHandlppPairingSetState(thePairing, PAIRING_STATE_IDLE)eInitConfirm-->appSetState(APP_STATE_DFU_CHECK)-->appEnterDfuCheck-->MessageSend(appGetSmTask(), SM_INTERNAL_NO_DFU, NULL);
                                        这儿会检查一下DFU,返回消息（CONN_RULES_DFU_ALLOW）
   4、appSmHandleMessage(SM_INTERNAL_NO_DFU)-->appSmHandleNoDfu-->appSetState(APP_STATE_STARTUP)-->appEnterStartup-->appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_STARTUP);
-  5、RULE_EVENT_STARTUP-->rulePeerPair/rulePeerSync(两个都执行） -->CONN_RULES_PEER_PAIR
+  5、RULE_EVENT_STARTUP-->rulePeerPair/rulePeerSync(两个都执行） -->CONN_RULES_PEER_PAIR(没配对，开始配对)/CONN_RULES_SEND_PEER_SYNC
   6、appSmHandleConnRulesPeerPair-->appSetState(APP_STATE_PEER_PAIRING)-->appEnterPeerPairing-->appPairingPeerPair
   7、appPairingHandleMessage（PAIRING_INTERNAL_PEER_PAIR_REQ）-->appHandleInternalPeerPairRequest-->appConfigIsLeft-->appPairingSetState(PAIRING_STATE_PEER_INQUIRY)
                                                                                                       左扫描/右广播-->appPairingSetState(PAIRING_STATE_PEER_DISCOVERABLE);
+左右没配对时：CONN_RULES_PEER_PAIR
+  5、appSmHandleConnRulesPeerPair()-->appSetState(APP_STATE_PEER_PAIRING)-->appEnterPeerPairing()-->PAIRING_INTERNAL_PEER_PAIR_REQ(PairingTask)
+  6、appHandleInternalPeerPairRequest()-->
+  L-->appPairingSetState(PAIRING_STATE_PEER_INQUIRY)-->appPairingEnterPeerInquiry-->ConnectionWriteInquiryMode(CL_INTERNAL_DM_WRITE_INQUIRY_MODE_REQ/CL_INTERNAL_DM_INQUIRY_REQ)
+  R-->appPairingSetState()->appPairingEnterPeerDiscoverable()-->CL_INTERNAL_DM_WRITE_IAC_LAP_REQ-->appScanManagerEnableInquiryScan
+
+左 查找配对
+  1、DM_HCI_INQUIRY_RESULT_WITH_RSSI_IND-->connectionHandleInquiryResultWithRssi()-->inquirySendResult()-->CL_DM_INQUIRE_RESULT
+  2、appHandleClDmInquireResult()-->比较信号强度(inquiry_status_result)
+  1、DM_HCI_INQUIRY_CFM-->connectionHandleInquiryComplete-->inquirySendResult()-->CL_DM_INQUIRE_RESULT(inquiry_status_ready)
+  2、appHandleClDmInquireResult-->要求两次读取的信号强度差别比较小（10以内)，否则认为多个耳机在连接，而不能正常工作)-->appPairingSetState(PAIRING_STATE_PEER_SDP_SEARCH)
+	-->CL_INTERNAL_SDP_SERVICE_SEARCH_ATTRIBUTE_REQ(开始SDP协商), 然后获取下面的连接信息(返回：SDC_SERVICE_SEARCH_ATTRIBUTE_CFM)
+  3、SDC_SERVICE_SEARCH_ATTRIBUTE_CFM->appHandleClSdpServiceSearchAttributeCfm()-->CL_SDP_SERVICE_SEARCH_ATTRIBUTE_CFM-->appHandleClSdpServiceSearchAttributeCfm()
+        -->appPairingSetState(PAIRING_STATE_PEER_AUTHENTICATE)-->appPairingEnterPeerAuthenticate-->CL_INTERNAL_SM_AUTHENTICATION_REQ(返回:CL_SDP_REGISTER_CFM)
+  4、CL_SDP_REGISTER_CFM-->appHandleClSdpRegisterCfm()-->appConfigScoForwardingEnabled()=TRUE-->appPairingSetState(PAIRING_STATE_PEER_SCO_FWD_SDP_SEARCH)-->appPairingEnterPeerScoFwdSdpSearch()-->CL_INTERNAL_SDP_SERVICE_SEARCH_ATTRIBUTE_REQ
+  5、回到appHandleClSdpServiceSearchAttributeCfm(PAIRING_STATE_PEER_SCO_FWD_SDP_SEARCH)-->appDeviceSetScoForwardFeatures()-->appPairingPeerComplete()出错时播放提示音-->
+     sendMessage(sm,PAIRING_PEER_PAIR_CFM)-->重新设定定时器-->appPairingSetState(PAIRING_STATE_IDLE)
+  6、sm接收到PAIRING_PEER_PAIR_CFM，重新进入到appSetState(APP_STATE_STARTUP),也就是进入了正常启动时的appSmHandleNoDfu之后的过程
+
+
+
+左 已经保存过对方的蓝牙地址的连接：
+  1、DM_ACL_OPENED_IND-->connectionHandleDmAclOpenInd()-->sendAclOpenedIndToClient()-->CL_DM_ACL_OPENED_IND
+  2、appConManagerHandleConnectionLibraryMessages(CL_DM_ACL_OPENED_IND)-->appConManagerHandleClDmAclOpenedIndication()-->appConManagerAddDevice()->CON_MANAGER_CONNECTION_IND(多个接收
+  3、appSmHandleMessage(CON_MANAGER_CONNECTION_IND)-->appSmHandleConManagerConnectionInd()-->SM_INTERNAL_BREDR_CONNECTED-->appSmHandleInternalBredrConnected()-->Rules(DFU)
+  3、appDeviceHandleMessage(CON_MANAGER_CONNECTION_IND)-->appDeviceHandleConManagerConnectionInd()
+  4、SM_INTERNAL_BREDR_CONNECTED-->appSmHandleInternalBredrConnected()-->Rules(DFU)
+
+
+UI按键广播：
+  1、UI KeyPress, 没有配对则-->appSmIsPairing()-->appSmPairHandset->SM_INTERNAL_PAIR_HANDSET
+  2、appSmHandleInternalPairHandset()-->appSmSetUserPairing-->appSetState(APP_STATE_HANDSET_PAIRING);
+  3、appEnterHandsetPairing()-->appSmInitiateLinkDisconnection-->SM_INTERNAL_LINK_DISCONNECTION_COMPLETE
+                             -->appPeerSyncSend(appGattSetAdvertisingMode)
+
 
 
 
@@ -77,9 +151,9 @@ Stop operators finished, now destroy them
 Destroy operators finished, destroy the endpoints.
 Failed to close audio endpoint (0x237c4), MCLK needs to be released first
 
-@@@@ ERROR: Wrong number of arguments! This could be caused by buffer tear. 
+@@@@ ERROR: Wrong number of arguments! This could be caused by buffer tear.
 Buffer tear happens when messages are written too fast to the log buffer
-and the debug interface cannot keep up in reading them. 
+and the debug interface cannot keep up in reading them.
 formatter string: Failed to close audio endpoint (0x%x), MCLK needs to be released first
 arguments: [145592, '@@@@ ERROR: Cannot find 0x145000e7 debug string because patch not loaded.', 'ISP', 2]
 ISProute Send CCP id 45 to ss0 len 2 words
@@ -94,7 +168,7 @@ ISProute Send CCP id 45 to ss0 len 2 words
 
 
 20190802  SinkMapInit 在TWS master中
-  audio_input_tws.c -->AudioInputTwsConnectHandler-->connectSourceToDecoderChainViaUnpacketiser->TwsPacketiserSlaveInit-->SinkMapInit
+  audio_input_tws.c(setUpStateHandlers) -->AudioInputTwsConnectHandler-->connectSourceToDecoderChainViaUnpacketiser->TwsPacketiserSlaveInit-->SinkMapInit
   audio_output_tws.c-->AudioOutputTwsForwardingMessageHandler-->AudioOutputTwsConnect-->AudioOutputTwsPacketiserInit-->TwsPacketiserMasterInit-->SourceMapInit
 
 
@@ -108,9 +182,19 @@ ISProute Send CCP id 45 to ss0 len 2 words
   1:对应的输出值       0x28     0x1b     0x7D  0x12  0x2   无       01
   ff00                                                              01
 
+
+20190828
+chains/chain_aptx_mono_no_autosync_decoder 为TWS，RIGHT耳机的输入CHAIN ( appKymeraA2dpStartSlave() )
+
+
+          EPR_SINK_MEDIA-->in0                          -->DECODER_NO_AUTOSYNC.IN-->in0
+	                |=====================|         ^           |=======================|
+                        |EB_CAP_ID_SWITCH_PT  |         |           |CPA_ID_APTX_CLASSI_MONO|
+                        |_____________________|         |           |_______________________|
+                                        out0-->OPR_AP--->                              out0-->EPR_SOURCE_DECODED_PC--->连接到output_volume的EPR_SINK_MIXER_MAIN_IN
+
 20190731
 chains/chain_output_volume.c
-
                                                                                                     set(EPR_VOLUME_AUX) OperatorsVolumeMute
 
                                                                                                     EPR_VOLUME_AUX-->in1
@@ -125,12 +209,13 @@ chains/chain_output_volume.c
 20190724
    appKymeraConfigureDspPowerMode / updateClockForCurrentUseCase 设置DSP频率
    ACAT 查看CPU频率 profiler.run_clks(5)
+   pydbg 中执行程序中的函数：apps1.core.fw.call.function(param...)
 
    chain_output_voluem.chain 定义一输出的chain文件，这个文件会通过chaingen.py生成对应的C、H文件。
    提示音：按键 appUiHandleMessage(APP_MFB_BUTTON_HELD_x) -->appUiPlayToneCore ->appKymeraTonePlay(KYMERA_INTERNAL_TONE_PROMPT_PLAY)-->appKymeraHandleInternalTonePromptPlay()
    appKymeraCreateOutputChain()
    ”咕“提示间好象不是音频文件, PowerON是音频文件 appUiPowerOn -->appUiPlayPrompt(PROMPT_POWER_ON); -->appUiPlayPromptCore -->appKymeraPromptPlay
-               
+
 
 
    kymeraTaskData结构体中 output_vol_handle   chain_tone_handle/chain_input_handle 分别表示两个chain,对应不同的chain文件，在这两个chain分别建立完成之后，
@@ -265,7 +350,7 @@ SppStartService  -->                                                            
 20190529
    1、创建自己的DSP工程
    2、DEEPSHEEP，打开或关闭DSP。enter_shallow_sleep   播放音乐：6MA， 通话：8MA
-   3、stateManagerEnterLimboState     
+   3、stateManagerEnterLimboState
 
 
 
@@ -280,16 +365,11 @@ SppStartService  -->                                                            
       比如：LED会调用appcmd_add_test_handler来将其它加载到SCHED之下
    2、apps/fw/src/core/sched_oxygen/sched_oxygen_private.h 文件中也有一个TASK结构体的的定义
 
-gcc -E apps/applications/sink/sink_gaia.c -DOS_OXYGOS -Iapps/fw/src/core -Iapps/installed_libs/include/standard -Iapps/fw/src/core/include -Iapps/fw/src/core/include_fw -Iapps/fw/src -Iapps/fw/src/gen/core -Iapps/installed_libs/include/firmware_qcc512x_qcc302x -Iapps/libs/gaia -Iapps/libs/library -Iapps/libs/vmtypes -Iapps/libs/bdaddr -Iapps/libs/gatt -Iapps/libs/upgrade -Iapps/libs/transport_manager  -Iapps/libs/pio_common  -Iapps/libs/audio -Iapps/libs/audio_plugin_if -Iapps/libs/power -Iapps/libs/audio_output -Iapps/libs/audio_instance 
+gcc -E apps/applications/sink/sink_gaia.c -DOS_OXYGOS -Iapps/fw/src/core -Iapps/installed_libs/include/standard -Iapps/fw/src/core/include -Iapps/fw/src/core/include_fw -Iapps/fw/src -Iapps/fw/src/gen/core -Iapps/installed_libs/include/firmware_qcc512x_qcc302x -Iapps/libs/gaia -Iapps/libs/library -Iapps/libs/vmtypes -Iapps/libs/bdaddr -Iapps/libs/gatt -Iapps/libs/upgrade -Iapps/libs/transport_manager  -Iapps/libs/pio_common  -Iapps/libs/audio -Iapps/libs/audio_plugin_if -Iapps/libs/power -Iapps/libs/audio_output -Iapps/libs/audio_instance
 
 
    3、BLE调用
       app_handler(...) -->handleHFPMessage(...) -->sinkAppInit(...)-->sinkBleInitialiseDevice
-
-
-   4、白名单的读取
-      XXX-->ConnectionInitEx3(...)-->connectionBluestackHandler(设置）-->connectionBluestackHandlerInitialising(...)-->connectionHandleInternalInit()
-        -->connectionAuthInit()-->connectionInitTrustedDeviceList()-->read_trusted_device_index()-->PsRetrieve
 
 
 
@@ -300,7 +380,7 @@ gcc -E apps/applications/sink/sink_gaia.c -DOS_OXYGOS -Iapps/fw/src/core -Iapps/
   1、PioSetPowerPin(TRUE)/BootGetMode() 这种IO访问为何底层调用 ipc_send/ipc_recv  ?
   2、使用的是哪个ARM指令集，自己做算法如何做汇编优化 ？
   3、读取FLASH是使用 PsRetrieve 是什么操作？
-  4、IDE-->Projects-->Active Project 里面有很多不同的项目，分别对应什么功能 
+  4、IDE-->Projects-->Active Project 里面有很多不同的项目，分别对应什么功能
 
 
 
