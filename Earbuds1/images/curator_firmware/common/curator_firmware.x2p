@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="curator_firmware" path="">
+    <configurations defaultKit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}">
+        <configuration name="prebuilt_image" kit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}" options="default">
+            <deployProject>deploy</deployProject>
+            <devkitConfiguration>prebuilt_image</devkitConfiguration>
+            <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
+            <devkitPath>D:/QCC512X/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
+            <devkitRevision>1565343019</devkitRevision>
+            <property name="BUILD_TYPE">DO_NOT_BUILD</property>
+            <property name="OUTPUT_TYPE">NONE</property>
+            <property name="SUBSYSTEM_NAME">curator</property>
+        </configuration>
+    </configurations>
+    <file path="config/subsys0_config1.hcf"/>
+    <file path="patches/subsys0_patch0_fw000005DC.hcf"/>
+    <file path="patches/subsys6_patch0_fw000005DC.hcf"/>
+</project>

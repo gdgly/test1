@@ -1,0 +1,3 @@
+Download Capability BUILD ID = 7987
+ELF File ID = 0xADAAADDF
+Base Build ID = 7977
