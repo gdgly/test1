@@ -1,0 +1,16 @@
+
+
+
+一、工程设置
+    0、将tws目录考备到app/application/Earbud目录
+    1、去掉几个温度相关的宏，增加CONFIG_STAROT， 并将tws目录增加到系统中去
+    2、修改LED IO66 为 IO67
+    3、增加包涵目录 ../..   ../../tws
+
+二、代码
+     1、修改av_headset_config.h 最后几行
+     2、修改av_headset_init.c  增加我们自己的初始化涵数
+     3、av_headset_chain_roles.h 增加我们定义的role.  CONFIG_STAROT
+     4、apps/installed_libs/include/profiles/default_qcc512x_rom_v21/gaia.h 最后几行
+     5、av_headset_gaia.h         GAIA_TEST 宏
+     6、av_headset_gaia.c      appGaiaSendResponse/appGaiaSendPacket 函数的static去掉

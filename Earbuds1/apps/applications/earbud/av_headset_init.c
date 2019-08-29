@@ -176,6 +176,19 @@ static const appInitTableEntry appInitTable[] =
     {appChargerInit,        0, NULL},
 #endif
     {appLedInit,            0, NULL},
+#ifdef CONFIG_LIS25BA
+    {lis25Init,             0, NULL},
+    {lis25Test,             0, NULL},
+#endif
+#ifdef HAVE_BMA400
+    {BMA400_init,             0, NULL},
+#endif
+#ifdef HAVE_EM20168
+    {EM20168_init,             0, NULL},
+#endif
+#ifdef CONFIG_SHELL_UART
+    {ShellCmdInit,          0, NULL},
+#endif
     {appPowerInit,          APP_POWER_INIT_CFM, NULL},
     {appPhyStateInit,       PHY_STATE_INIT_CFM, NULL},
     {appConnectionInit,     CL_INIT_CFM, appInitHandleClInitCfm},

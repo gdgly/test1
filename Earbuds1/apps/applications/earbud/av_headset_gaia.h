@@ -40,6 +40,11 @@ typedef struct
         /*! List of tasks to notify of GAIA activity. */
     TaskList       *client_list;    
 
+#ifdef GAIA_TEST
+    int needCycleSendAudio;
+    int nowSendAudio;
+    int nowSendCallAudio;
+#endif GAIA_TEST
 } gaiaTaskData;
 
 /*! Get the transport for the current GAIA connection */

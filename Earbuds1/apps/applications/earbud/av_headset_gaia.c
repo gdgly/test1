@@ -27,9 +27,9 @@ typedef enum av_headset_gaia_internal_messages
 static void appGaiaMessageHandler(Task task, MessageId id, Message message);
 static void appGaiaHandleCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *command);
 static bool appGaiaHandleStatusCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *command);
-static void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
+void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
                           uint16 payload_length, uint8 *payload);
-static void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
+void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                           uint16 payload_length, uint8 *payload);
 
 
@@ -354,7 +354,7 @@ static bool appGaiaHandleStatusCommand(Task task, const GAIA_UNHANDLED_COMMAND_I
 }
 
 /*! Build and Send a Gaia acknowledgement packet */
-static void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
+void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
                           uint16 payload_length, uint8 *payload)
 {
     appGaiaSendPacket(vendor_id, command_id | GAIA_ACK_MASK, status,
@@ -362,7 +362,7 @@ static void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 stat
 }
 
 /*! Build and Send a Gaia protocol packet */
-static void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
+void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                           uint16 payload_length, uint8 *payload)
 {
     GAIA_TRANSPORT *transport = appGetGaiaTransport();
