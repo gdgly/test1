@@ -16,7 +16,7 @@
             <property name="EXTRA_WARNINGS">FALSE</property>
             <property name="FLASH_CONFIG">..\..\64Mbit_default_flash_config.py</property>
             <property name="HW_VARIANT">CF376_CG814</property>
-            <property name="INCPATHS">../../../../installed_libs/include/firmware_qcc512x_rom_v21 ../../../../installed_libs/include/firmware_qcc512x_rom_v21/app ../../../../installed_libs/include/profiles/default_qcc512x_rom_v21 ../../../../installed_libs/include/standard ../../chains sdk://apps/installed_libs/include/firmware_qcc512x_rom_v21 sdk://apps/installed_libs/include/firmware_qcc512x_rom_v21/app sdk://apps/installed_libs/include/standard sdk://audio/kalimba/kymera/common/interface/gen/k32</property>
+            <property name="INCPATHS">../../../../installed_libs/include/firmware_qcc512x_rom_v21 ../../../../installed_libs/include/firmware_qcc512x_rom_v21/app ../../../../installed_libs/include/profiles/default_qcc512x_rom_v21 ../../../../installed_libs/include/standard ../../chains ../.. ../../tws sdk://apps/installed_libs/include/firmware_qcc512x_rom_v21 sdk://apps/installed_libs/include/firmware_qcc512x_rom_v21/app sdk://apps/installed_libs/include/standard sdk://audio/kalimba/kymera/common/interface/gen/k32</property>
             <property name="LIBPATHS">../../../../installed_libs/lib/default_qcc512x_rom_v21/native ../../../../installed_libs/lib/os/qcc512x_rom_v21 sdk://apps/installed_libs/lib/os/qcc512x_rom_v21</property>
             <property name="LIBS">a2dp anc audio_plugin_common audio_processor avrcp bdaddr byte_utils chain connection cryptovm custom_operator file_list gaia gain_utils gatt gatt_battery_server gatt_gap_server gatt_manager gatt_server hfp input_event_manager logging operators_audio_32bit_data packetiser_helper pio_common region rsa_decrypt rsa_pss_constants rtime rwcp_server sdp_parse service system_clock transport_adaptation transport_manager upgrade usb_device_class vmal</property>
             <property name="OUTPUT">earbud</property>
@@ -167,5 +167,20 @@
     <file path="../../peripherals/thermistor_ncp15xh103.h"/>
     <file path="../../peripherals/vncl3020.c"/>
     <file path="../../peripherals/vncl3020.h"/>
+    <file path="../../tws/audio_forward.c"/>
+    <file path="../../tws/audio_forward.h"/>
+    <file path="../../tws/av_headset_gaia_starot.c"/>
+    <file path="../../tws/av_headset_gaia_starot.h"/>
+    <file path="../../tws/bma400.c"/>
+    <file path="../../tws/bma400.h"/>
+    <file path="../../tws/cmdprocess.c"/>
+    <file path="../../tws/em20168.c"/>
+    <file path="../../tws/em20168.h"/>
+    <file path="../../tws/hw_i2c.c"/>
+    <file path="../../tws/hw_i2s.c"/>
+    <file path="../../tws/hw_uart.c"/>
+    <file path="../../tws/lis25ba.c"/>
+    <file path="../../tws/lis25ba_test.c"/>
+    <file path="../../tws/public.h"/>
     <file path="../common/1_button.pio.buttonxml"/>
 </project>
