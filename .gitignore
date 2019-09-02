@@ -63,5 +63,6 @@ EarBuds*/apps/applications/earbud/qcc512x_rom_v21/common/*.xuv
 !EarBuds*/apps/installed_libs/include/profiles/default_qcc512x_rom_v21/cryptoalgo.h
 !EarBuds*/apps/installed_libs/include/profiles/default_qcc512x_rom_v21/erasure_coding.h
 !EarBuds*/apps/installed_libs/include/profiles/default_qcc512x_rom_v21/sport_health_algorithms.h
+!EarBuds*/apps/installed_libs/include/profiles/default_qcc512x_rom_v21/gaia.h
 
 !Earbuds*/audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_*.elf

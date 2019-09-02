@@ -14,3 +14,13 @@
      4、apps/installed_libs/include/profiles/default_qcc512x_rom_v21/gaia.h 最后几行
      5、av_headset_gaia.h         GAIA_TEST 宏
      6、av_headset_gaia.c      appGaiaSendResponse/appGaiaSendPacket 函数的static去掉
+
+
+三、自定义CAPA文件
+    1、G722
+      audio/kalimba/kymera/capabilities/G722Codec              全部提交                                                                                多个文件
+      audio/kalimba/kymera/tools/KCSMaker/                        目录下对应的工程文件  G722Codec.x2p                                  1个文件
+      audio/kalimba/kymera/tools/KCSMaker/bundle/config   目录下对应的配置文件  cap_list_G722Codec.cfg                      1个文件
+      audio/kalimba/kymera/tools/KCSMaker/bundle              目录下对应的BDL文件   download_G722Codec.bdl                 1个文件
+      audio/kalimba/kymera/build/config                                目录下对应的MOD文件   config.MODIFY_DOWNLOAD_G722CODEC    1个文件
+     

@@ -1,0 +1,7 @@
+import imp
+import os
+cap_list = imp.load_source("mod", os.path.abspath(os.path.join(os.path.curdir,"bundle/config/cap_list_G722Codec.cfg")))
+
+# List of capabilites to be bundled up in KDCs
+KDCs = {}
+KDCs["download_G722Codec"] = [download_G722Codec_cap]
