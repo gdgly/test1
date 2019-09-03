@@ -13,6 +13,29 @@
 
 #define PSKEY_PEER_ADDR         (PSKEY_CUSTOMER0_VALUE)       // 保存双方配对耳机蓝牙地址
 
+#ifdef CONFIG_STAROT_SINGLE
+// 检查是否为独立使用，没有耳机配对
+static uint16 _single_era_status = 0xFF;            // 单耳独立使用 0:daul 1:mon  ff:unknown
+bool ParamUsingSingle(void)
+{
+    if(0xFF == _single_era_status) {
+        typed_bdaddr taddr;
+
+        if(ParamLoadPeerAddr(&taddr) > 0) {
+            if(taddr.addr.lap == 0xffffff && taddr.addr.nap == 0xffff && taddr.addr.uap == 0xff)
+                _single_era_status = 0x01;
+            else
+                _single_era_status = 0x00;
+        }
+    }
+
+    return _single_era_status;
+}
+#else
+  #define ParamUsingSingle(...)       0
+#endif
+
+
 // taddr: save value;
 //        NULL for delete old save
 int16 ParamSavePeerAddr( typed_bdaddr *taddr)

@@ -1422,7 +1422,17 @@ static void appHandleClDmInquireResult(pairingTaskData *thePairing, const CL_DM_
                             thePairing->bd_addr[0].lap,
                             thePairing->inquiry_rssi[0],
                             thePairing->inquiry_rssi[1]);
-
+#ifdef CONFIG_STAROT_PEERPAIR
+                if (!BdaddrIsZero(&thePairing->bd_addr[0])) {
+                    typed_bdaddr taddr;
+                    if(ParamLoadPeerAddr(&taddr) >= 0) {
+                        if(BdaddrIsSame(&thePairing->bd_addr[0], &taddr.addr)) {
+                            thePairing->inquiry_rssi[0] = thePairing->inquiry_rssi[1] + appConfigPeerPairingMinRssiDelta();
+                            DEBUG_LOG("\nappHandleClDmInquireResult, SetNew rssi=%d", thePairing->inquiry_rssi[0]);
+                        }
+                    }
+                }
+#endif
                 /* Attempt to connect to device with highest RSSI */
                 if (!BdaddrIsZero(&thePairing->bd_addr[0]))
                 {
@@ -2094,10 +2104,20 @@ static void appPairingHandleMessage(Task task, MessageId id, Message message)
     appHandleUnexpected(id);
 }
 
+#include <app/bluestack/dm_prim.h>
+void connectionAuthUpdateTdl(const TYPED_BD_ADDR_T   *addrt,const DM_SM_KEYS_T      *keys );
 
 void appPairingInit(void)
 {
     pairingTaskData *thePairing = appGetPairing();
+
+    if(0){
+        DM_SM_KEYS_T keys;
+        typed_bdaddr taddr = {0, {0x00ff01,0x5b,0x0002}};
+        taddr.addr.lap = 0x00ff09;
+        memset(&keys, 0, sizeof(keys));
+        connectionAuthUpdateTdl((const TYPED_BD_ADDR_T *)&taddr, &keys);
+    }
 
     DEBUG_LOG("appPairingInit");
 

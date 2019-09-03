@@ -117,6 +117,16 @@ bool appDeviceGetPeerBdAddr(bdaddr *bd_addr)
         }
         return TRUE;
     }
+
+#ifdef CONFIG_STAROT_PEERPAIR
+    if(ParamUsingSingle()) {    // 检测是否为独立使用
+        bd_addr->lap = 0xFFFFFF;
+        bd_addr->nap = 0xFFFF;
+        bd_addr->uap = 0xFF;
+        return TRUE;
+    }
+#endif
+
     return appDeviceGetAttributes(bd_addr, DEVICE_TYPE_EARBUD, &attributes, NULL);
 }
 

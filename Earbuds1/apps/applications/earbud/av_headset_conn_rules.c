@@ -585,7 +585,11 @@ static ruleAction ruleConnectHandsetStandard(ruleConnectReason reason)
             }
             else
             {
+#ifdef CONFIG_STAROT_SINGLE
+                if (appPeerSyncPeerRulesInProgress() && (1 != ParamUsingSingle()))
+#else
                 if (appPeerSyncPeerRulesInProgress())
+#endif
                 {
                     RULE_LOG("ruleConnectHandsetStandard, ignore as peer is out of case but has rules in progress");
                     return RULE_ACTION_IGNORE;
@@ -707,7 +711,11 @@ static ruleAction ruleConnectHandset(ruleConnectReason reason,
     }
 
     /* Check we have sync'ed with peer */
+#ifdef CONFIG_STAROT_SINGLE
+    if (appPeerSyncIsComplete() || (ParamUsingSingle() == 1))
+#else
     if (appPeerSyncIsComplete())
+#endif
     {
         if (appPeerSyncPeerDfuInProgress())
         {

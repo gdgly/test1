@@ -86,10 +86,83 @@ static signed UartRxCallback(const uint8 *ptr, int len)
 
 #include <bluestack/dm_prim.h>
 static void ShellDoCommand(char *buffer, int len);
-extern void connectionAuthDeleteDeviceFromTdl(const TYPED_BD_ADDR_T *addrt);
+//extern void connectionAuthDeleteDeviceFromTdl(const TYPED_BD_ADDR_T *addrt);
 extern void connectionAuthUpdateTdl(const TYPED_BD_ADDR_T  *addrt, const DM_SM_KEYS_T *keys );
 //extern ConnectionSmPutAttribute(0, bd_addr, sizeof(*attributes), (uint8 *)attributes);
+void BtAddrChange(int type);
 
+
+// type: 0:显示当前保存的BtAddr
+//       1:清除当前保存的ADDR
+//       2:增加一个ADDR
+void BtAddrChange(int type)
+{
+    DM_SM_KEYS_T keys;
+    appDeviceAttributes attributes;
+    typed_bdaddr taddr = {0, {0x00ff01,0x5b,0x0002}};
+    uint16 i, count = ConnectionTrustedDeviceListSize();
+
+    (void)attributes;
+    switch(type) {
+    case 0:          // SHOW
+        if(0 == count)
+            DEBUG_LOG("No TrustedDevice");
+
+        for(i = 0; i < count; i++ ) {
+            if(ConnectionSmGetIndexedAttributeNowReq(0, i, 0, (uint8 *)&attributes, &taddr) == TRUE) {
+                DEBUG_LOG("addr=%d/%d t=%x lun=%06x:%02x:%04x", i, count, taddr.type,
+                    taddr.addr.lap, taddr.addr.uap, taddr.addr.uap);
+            }
+            else {
+                DEBUG_LOG("addr=%d/%d Error", i, count);
+                break;
+            }
+        }
+
+        memset(&taddr, 0, sizeof(taddr));
+        ParamLoadPeerAddr(&taddr);
+        DEBUG_LOG("OurSav t=%x lun=%06x:%02x:%04x", taddr.type, taddr.addr.lap, taddr.addr.uap, taddr.addr.nap);
+        break;
+
+   case 1:          // CLEAR
+        if(0 == count) {
+            DEBUG_LOG("No TrustedDevice Clear");
+        }
+
+//        ParamSavePeerAddr(NULL);
+        appSmFactoryReset();
+        DEBUG_LOG("Clear TrustedDevice End");
+        break;
+
+    case 2:            // 左耳机调用设置配对耳机
+        taddr.addr.lap = 0x00ff0a;
+        memset(&keys, 0, sizeof(keys));
+        connectionAuthUpdateTdl((const TYPED_BD_ADDR_T *)&taddr, &keys);
+        ConnectionSmPutAttribute(0, &taddr.addr, sizeof(attributes), (uint8 *)&attributes);
+        ParamSavePeerAddr(&taddr);
+        DEBUG_LOG("Add AddrL\n");
+        break;
+    case 3:           // 右耳机调用设置配对耳机
+        taddr.addr.lap = 0x00ff09;
+     //   memset(&keys, 0, sizeof(keys));
+     //   connectionAuthUpdateTdl((const TYPED_BD_ADDR_T *)&taddr, &keys);
+
+        DEBUG_LOG("Add AddrR");
+        ParamSavePeerAddr(&taddr);
+        break;
+    case 4:           // 左右耳机调用，设置配单耳机使用
+        taddr.addr.lap = 0xffffff;
+        taddr.addr.nap = 0xffff;
+        taddr.addr.uap = 0xff;
+        ParamSavePeerAddr(&taddr);
+        DEBUG_LOG("Add Addr Single");
+        break;
+   case 99:
+        appSmFactoryReset();
+        DEBUG_LOG("Reset Factory,appstate=0x%x, only for(0x2|0x8)", appGetState());
+        break;
+    }
+}
 
 // type: 0:显示当前保存的BtAddr
 //       1:清除当前保存的ADDR
@@ -106,21 +179,25 @@ static void DoBtAddrFunc(int type, char *outbuf, char *param)
     case 0:          // SHOW
         if(0 == count) {
             sprintf(outbuf, "No TrustedDevice\n");
-            break;
         }
 
         for(i = 0; i < count; i++ ) {
             if(ConnectionSmGetIndexedAttributeNowReq(0, i, 0, (uint8 *)&attributes, &taddr) == TRUE) {
                 sprintf(outbuf, "addr=%d/%d t=%x lun=%06x:%02x:%04x\n", i, count, taddr.type,
                     taddr.addr.lap, taddr.addr.uap, taddr.addr.uap);
-                UartTxData((const uint8*)outbuf, strlen(outbuf));
-                outbuf[0] = '\0';
+                UartTxData((const uint8*)outbuf, strlen(outbuf)); outbuf[0] = '\0';
             }
             else {
                 sprintf(outbuf, "addr=%d/%d Error\n", i, count);
                 break;
             }
         }
+
+        memset(&taddr, 0, sizeof(taddr));
+        ParamLoadPeerAddr(&taddr);
+        sprintf(outbuf, "OurSav t=%x lun=%06x:%02x:%04x\n", taddr.type,
+            taddr.addr.lap, taddr.addr.uap, taddr.addr.nap);
+        UartTxData((const uint8*)outbuf, strlen(outbuf)); outbuf[0] = '\0';
         break;
 
    case 1:          // CLEAR
@@ -129,6 +206,9 @@ static void DoBtAddrFunc(int type, char *outbuf, char *param)
             break;
         }
 
+//        ParamSavePeerAddr(NULL);
+        appSmFactoryReset();
+#if 0
         for(i = 0; i < count; i++ ) {
             if(ConnectionSmGetIndexedAttributeNowReq(0, i, 0, NULL, &taddr) == TRUE) {
                 connectionAuthDeleteDeviceFromTdl((TYPED_BD_ADDR_T *)&taddr);
@@ -139,13 +219,16 @@ static void DoBtAddrFunc(int type, char *outbuf, char *param)
             UartTxData((const uint8*)outbuf, strlen(outbuf));
             outbuf[0] = '\0';
         }
+#else
+        sprintf(outbuf, "Clear TrustedDevice End\n");
+#endif
         break;
 
-    case 2:
+    case 2:            // 左耳机调用设置配对耳机
+#if 0
         appDeviceInitAttributes(&attributes);
         attributes.type             = DEVICE_TYPE_EARBUD;
         attributes.tws_version      = DEVICE_TWS_STANDARD;
-#if 0
         attributes.a2dp_num_seids   = 0x00;
         attributes.a2dp_volume      = 0x62;
         attributes.hfp_profile      = 0x04;
@@ -158,16 +241,30 @@ static void DoBtAddrFunc(int type, char *outbuf, char *param)
         memset(&keys, 0, sizeof(keys));
         connectionAuthUpdateTdl((const TYPED_BD_ADDR_T *)&taddr, &keys);
         ConnectionSmPutAttribute(0, &taddr.addr, sizeof(attributes), (uint8 *)&attributes);
+        ParamSavePeerAddr(&taddr);
         UartTxData((const uint8*)"Add AddrL\n", 9);
         DoBtAddrFunc(0, outbuf, NULL);
         break;
-    case 3:
+    case 3:           // 右耳机调用设置配对耳机
         taddr.addr.lap = 0x00ff09;
         memset(&keys, 0, sizeof(keys));
         connectionAuthUpdateTdl((const TYPED_BD_ADDR_T *)&taddr, &keys);
 
         UartTxData((const uint8*)"Add AddrR\n", 9);
+        ParamSavePeerAddr(&taddr);
         DoBtAddrFunc(0, outbuf, NULL);
+        break;
+    case 4:           // 左右耳机调用，设置配单耳机使用
+        taddr.addr.lap = 0xffffff;
+        taddr.addr.nap = 0xffff;
+        taddr.addr.uap = 0xff;
+        ParamSavePeerAddr(&taddr);
+        UartTxData((const uint8*)"Add Addr Single\n", 9);
+        DoBtAddrFunc(0, outbuf, NULL);
+        break;
+   case 99:
+        appSmFactoryReset();
+        sprintf(outbuf, "Reset Factory,appstate=0x%x, only for(0x2|0x8)\n", appGetState());
         break;
     }
 }
@@ -176,7 +273,7 @@ static void DoBtAddrFunc(int type, char *outbuf, char *param)
 static void ShellDoCommand(char *buffer, int len)
 {
     int ret, what = 0;     // 0:close/off  1:open/on
-    char outbuf[64] = {'\0'}, *param = NULL;
+    char outbuf[128] = {'\0'}, *param = NULL;
 
     UNUSED(len);
 
@@ -199,14 +296,18 @@ static void ShellDoCommand(char *buffer, int len)
         sprintf(outbuf, "Set Psram[%d] ret=%d\n", what, ret);
     }
 #endif
+#ifdef HAVE_BMA400
     else if(strstr(buffer, "bma400")) {
         ret = BMA400Power(what);
         sprintf(outbuf, "Set bma400[%d] ret=%d\n", what, ret);
     }
+#endif
+#ifdef HAVE_EM20168
     else if(strstr(buffer, "em20168")) {
         ret = EM20168Power(what);
         sprintf(outbuf, "Set em20168[%d] ret=%d\n", what, ret);
     }
+#endif
     else if(strstr(buffer, "addrshow"))
         DoBtAddrFunc(0, outbuf, param);
     else if(strstr(buffer, "addrclear"))
@@ -215,6 +316,14 @@ static void ShellDoCommand(char *buffer, int len)
         DoBtAddrFunc(2, outbuf, param);
     else if(strstr(buffer, "addraddr"))
         DoBtAddrFunc(3, outbuf, param);
+    else if(strstr(buffer, "addrsingle"))
+        DoBtAddrFunc(4, outbuf, param);
+    else if(strstr(buffer, "reset"))          // reset factory
+        DoBtAddrFunc(99, outbuf, param);
+    else if(strstr(buffer, "reboot")) {
+        appSmReboot();
+        sprintf(outbuf, "reboot System\n");
+    }
     else
         sprintf(outbuf, "Unknown %s\n", buffer);
 
