@@ -42,6 +42,7 @@ EarBuds/audio/kalimba/kymera/tools/KCSMaker/download_passthrough.settings
 EarBuds/apps/applications/earbud/qcc512x_rom_v21/CF376_CG814/flash_image.xuv
 EarBuds/audio/kalimba/kymera/tools/KCSMaker/*.pyc
 
+*.pyc
 *autosave
 EarBuds*/apps/applications/earbud/chains/chain*.c
 EarBuds*/apps/applications/earbud/chains/chain*.h

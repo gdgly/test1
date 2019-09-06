@@ -124,6 +124,13 @@ int BMA400Power(bool isOn);
 #define CONFIG_STAROT_PEERPAIR              // 左右耳相互保存BT地址用于配对
 #define CONFIG_STAROT_SINGLE                // 独立使用
 
+// BLE 功能使用
+#undef  appConfigBleAllowedOutOfCase()
+#define appConfigBleAllowedOutOfCase()          (TRUE)
+#undef  appConfigBleNewConnectionsWhenBusy()
+#define appConfigBleNewConnectionsWhenBusy()    (TRUE)
+#undef  appConfigBleUseResolvablePrivateAddress()
+#define appConfigBleUseResolvablePrivateAddress() (FALSE)
 
 //==============================================================================================
 //            Flash参数读取与保存
