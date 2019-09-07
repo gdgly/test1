@@ -205,6 +205,12 @@ static void appGattDeleteCurrentAdvert(void)
     }
 }
 
+#ifdef CONFIG_STAROT
+static void appGattHandleExchangeMtuCfm(const GATT_EXCHANGE_MTU_CFM_T* cfm)
+{
+    DEBUG_LOG("appGattHandleExchangeMtuCfm. cid=%d,st=%d mtu=%d",cfm->cid, cfm->status, cfm->mtu);
+}
+#endif
 
 static void appGattHandleGattManRemoteClientConnectCfm(GATT_MANAGER_REMOTE_CLIENT_CONNECT_CFM_T *cfm)
 {
@@ -219,6 +225,11 @@ static void appGattHandleGattManRemoteClientConnectCfm(GATT_MANAGER_REMOTE_CLIEN
             GaiaConnectGatt(cfm->cid);
 
             appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
+
+#ifdef CONFIG_STAROT
+            DEBUG_LOG("appGattClientConnectCfm. cid=%d,st=%d mtu=%d",cfm->cid, cfm->status, cfm->mtu);
+            GattExchangeMtuRequest(appGetGattTask(), cfm->cid, appConfigBleGattMtuMin());
+#endif
 
 //          sinkBleSlaveConnIndEvent(cfm->cid);
 //          gattClientAdd(cfm->cid,ble_gap_role_peripheral);  Does discovery. Not obvs useful.
@@ -448,6 +459,11 @@ static void appGattMessageHandler(Task task, MessageId id, Message message)
         case GATT_EXCHANGE_MTU_IND:
             appGattHandleGattExchangeMtuInd((GATT_EXCHANGE_MTU_IND_T*)message);
             break;
+#ifdef CONFIG_STAROT
+        case GATT_EXCHANGE_MTU_CFM:
+            appGattHandleExchangeMtuCfm((const GATT_EXCHANGE_MTU_CFM_T*)message);
+            break;
+#endif
 
         /************ GATT MANAGER LIB MESSAGES ******************/
         case GATT_MANAGER_REGISTER_WITH_GATT_CFM:
