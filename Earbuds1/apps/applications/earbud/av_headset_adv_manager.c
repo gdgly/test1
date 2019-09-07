@@ -16,7 +16,9 @@
 #include "av_headset_log.h"
 #include "av_headset_test.h"
 #include "hydra_macros.h"
-
+#ifdef CONFIG_STAROT
+#include "tws/adv_manager.h"
+#endif
 static struct _advManagerAdvert  advertData[1];
 
 
@@ -73,7 +75,7 @@ static bool appAdvManagerSetAdvertisingData(uint8 size_ad_data, const uint8 *ad_
     return TRUE;
 }
 
-
+#ifndef CONFIG_STAROT
 /* If the advert has space for the full local device name, or at least
    MIN_LOCAL_NAME_LENGTH, then reduce the space available by that much.
 
@@ -96,6 +98,7 @@ static void restoreSpaceForLocalName(uint8* space, uint8 reserved_space)
 {
     *space += reserved_space;
 }
+#endif
 
 
 static void saveLocalName(const CL_DM_LOCAL_NAME_COMPLETE_T *name)
@@ -161,7 +164,7 @@ static void appAdvManagerSendBlockingResponse(connection_lib_status sts)
     }
 }
 
-
+#ifndef CONFIG_STAROT
 static uint8* appAdvManagerAdvertdataAddName(uint8 *ad_data, uint8* space, uint16 size_local_name, const uint8 * local_name, bool shortened)
 {
     uint8 name_field_length;
@@ -192,6 +195,7 @@ static uint8* appAdvManagerAdvertdataAddName(uint8 *ad_data, uint8* space, uint1
 
     return ad_data;
 }
+#endif
 
 
 static uint8* appAdvManagerAdvertdataAddFlags(uint8* ad_data, uint8* space, uint8 flags)
@@ -254,8 +258,10 @@ static void appAdvManagerSetupAdvert(advManagerAdvert *advert)
     uint8 space = MAX_AD_DATA_SIZE_IN_OCTETS * sizeof(uint8);
     uint8 *ad_start = (uint8*)PanicNull(malloc(space));
     uint8 *ad_head = ad_start;
+#ifndef CONFIG_STAROT
     unsigned name_len = 0;
     uint8 space_reserved_for_name = 0;
+#endif
 
     PanicFalse(VALID_ADVERT_POINTER(advert));
     PanicFalse(advert->content.parameters);
@@ -265,11 +271,13 @@ static void appAdvManagerSetupAdvert(advManagerAdvert *advert)
         ad_head = appAdvManagerAdvertdataAddFlags(ad_head, &space, advert->flags);
     }
 
+#ifndef CONFIG_STAROT
     if (advert->content.local_name)
     {
         name_len = strlen((char *)advert->local_name);
         space_reserved_for_name = reserveSpaceForLocalName(&space, name_len);
     }
+#endif
 
     if (advert->content.services)
     {
@@ -277,13 +285,18 @@ static void appAdvManagerSetupAdvert(advManagerAdvert *advert)
                                                      advert->services_uuid16, 
                                                      advert->num_services);
     }
-
+#ifndef CONFIG_STAROT
     if (advert->content.local_name)
     {
         restoreSpaceForLocalName(&space, space_reserved_for_name);
 
         ad_head = appAdvManagerAdvertdataAddName(ad_head, &space, name_len, advert->local_name, advert->content.local_name_shortened);
     }
+#endif
+
+#ifdef CONFIG_STAROT
+    ad_head = appAdvManagerAdvertdataAddManufacturerSpecificData(ad_head, &space);
+#endif
 
     if (appAdvManagerSetAdvertisingData(ad_head - ad_start, ad_start))
     {

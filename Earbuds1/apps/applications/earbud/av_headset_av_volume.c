@@ -16,6 +16,9 @@
 #include "av_headset.h"
 #include "av_headset_av.h"
 #include "av_headset_log.h"
+#ifdef CONFIG_STAROT
+#include "tws/adv_manager.h"
+#endif
 
 /*! Macro for creating messages */
 #define MAKE_AV_MESSAGE(TYPE) \
@@ -169,8 +172,19 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
 {
     DEBUG_LOGF("appAvVolumeSet, volume %u", volume);
 
+
     /* Set local volume, never set a unset volume. */
     PanicFalse(appAvApplyVolume(volume));
+
+#ifdef CONFIG_STAROT
+    /// todo notify ble need start scanable, random code is volume,通过规则去触发
+    appAdvManagerAdvertdataUpdateRandomCode(volume);
+    /// 如果ble没有设备已连接，则开始
+    if ((volume + 1) % 8 != 0) {
+        GattManagerCancelWaitForRemoteClient(); // todo 后期深入理解规则，使用事件机制发送消息
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
+    }
+#endif
 
     /* Look in table to find connected instance */
     for (int instance = 0; instance < AV_MAX_NUM_INSTANCES; instance++)
