@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<project name="kymera_audio" path="">
+<project name="kymera_audio" path="D:/WorkSpace/QCC5126Headset/Earbuds1/audio/kalimba/kymera/build/">
     <configurations defaultKit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}">
         <configuration name="kse" kit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}" options="deploy">
             <deployProject></deployProject>
             <devkitConfiguration>prebuilt_image</devkitConfiguration>
             <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
-            <devkitPath>D:/QCC512X/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
+            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
             <devkitRevision>1565343019</devkitRevision>
             <property name="BUILD_ARGUMENTS">CONFIG=stre_rom_v21_release OSTYPE=Windows_NT</property>
             <property name="BUILD_TYPE">MAKEFILE</property>
@@ -25,7 +25,7 @@
             <deployProject>deploy</deployProject>
             <devkitConfiguration>prebuilt_image</devkitConfiguration>
             <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
-            <devkitPath>D:/QCC512X/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
+            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
             <devkitRevision>1565343019</devkitRevision>
             <property name="BUILD_ARGUMENTS">CONFIG=stre_rom_v21_release OSTYPE=Windows_NT</property>
             <property name="BUILD_TYPE">MAKEFILE</property>
