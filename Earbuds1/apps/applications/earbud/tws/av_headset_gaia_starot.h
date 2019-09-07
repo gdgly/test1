@@ -30,11 +30,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
 void starotGaiaParseMessageMoreSpace(void);
 
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))
-#define GAIA_OFFS_VENDOR_ID (5)
-#define GAIA_OFFS_COMMAND_ID (7)
+#define GAIA_OFFS_VENDOR_ID (4)
+#define GAIA_OFFS_COMMAND_ID (6)
 #define GAIA_OFFS_PAYLOAD_LENGTH (3)
 #define GAIA_OFFS_VERSION (1)
-#define GAIA_OFFS_PAYLOAD (9)
+#define GAIA_OFFS_PAYLOAD (8)
 
 enum GAIA_TRANSFORM_AUDIO_STATUS {
     GAIA_TRANSFORM_AUDIO_IDLE,

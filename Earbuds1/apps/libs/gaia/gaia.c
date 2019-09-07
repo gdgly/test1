@@ -50,6 +50,10 @@ DESCRIPTION
 
 #include <byte_utils.h>
 
+#ifdef GAIA_EXT
+static bool gaia_handle_starot_command(gaia_transport *transport, uint16 command_id, uint16 payload_length, uint8 *payload);
+#endif
+
 
 #define GAIA_UPGRADE_HEADER_SIZE (0x04)  /*This includes the length of VM opcode, length and more data*/
 
@@ -3347,7 +3351,11 @@ void gaiaProcessCommand(gaia_transport *transport, uint16 vendor_id, uint16 comm
             }
         }
 
+#ifdef GAIA_EXT
+        if (vendor_id == GAIA_VENDOR_QTIL || GAIA_VENDOR_STAROT == vendor_id)
+#else
         if (vendor_id == GAIA_VENDOR_QTIL)
+#endif
         {
             handled = !app_will_handle_command(command_id);
         }
@@ -3390,7 +3398,11 @@ void gaiaProcessCommand(gaia_transport *transport, uint16 vendor_id, uint16 comm
             case GAIA_COMMAND_TYPE_NOTIFICATION:
                 handled = gaia_handle_notification_command(transport, command_id, size_payload, payload);
                 break;
-
+#ifdef  GAIA_EXT
+            case GAIA_COMMAND_TYPE_STAROT:
+                 handled = gaia_handle_starot_command(transport, command_id, size_payload, payload);
+                 break;
+#endif
             default:
                 handled = FALSE;
                 break;
@@ -4099,3 +4111,20 @@ uint16 GaiaGetCidOverGattTransport(void)
         return INVALID_CID;
 }
 
+#ifdef GAIA_EXT
+bool gaia_handle_starot_command(gaia_transport *transport, uint16 command_id, uint16 payload_length, uint8 *payload)
+{
+    UNUSED(transport);
+//    send_ack(transport, GAIA_VENDOR_STAROT, command_id, GAIA_STATUS_SUCCESS, 0, NULL);
+    GAIA_STAROT_IND_T* cfm = (GAIA_STAROT_IND_T*)PanicUnlessMalloc(sizeof(GAIA_STAROT_IND_T)
+                                                                   + (payload_length > 1 ? (payload_length - 1) : 0));
+    cfm->command = command_id;
+    cfm->payloadLen = payload_length;
+    if (cfm->payloadLen > 0) {
+        memcpy(cfm->payload, payload, payload_length);
+    }
+    MessageSend(gaia->app_task, GAIA_STAROT_COMMAND_IND, cfm);
+
+    return TRUE;
+}
+#endif

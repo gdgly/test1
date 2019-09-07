@@ -15,6 +15,9 @@ This is a minimal implementation that only supports upgrade.
 #include "av_headset_log.h"
 
 #include <panic.h>
+#ifdef GAIA_TEST
+#include "tws/av_headset_gaia_starot.h"
+#endif
 
 /*! Enumerated type of internal message IDs used by this module */
 typedef enum av_headset_gaia_internal_messages
@@ -228,14 +231,36 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
             appGaiaHandleCommand(task, (const GAIA_UNHANDLED_COMMAND_IND_T *) message);
             break;
 
-        case GAIA_SEND_PACKET_CFM:               /* Confirmation that a GaiaSendPacket request has completed */
-            {
-                const GAIA_SEND_PACKET_CFM_T *m = (const GAIA_SEND_PACKET_CFM_T *) message;
-                DEBUG_LOG("appGaiaMessageHandler GAIA_SEND_PACKET_CFM");
+    case GAIA_SEND_PACKET_CFM:               /* Confirmation that a GaiaSendPacket request has completed */
+        {
+    const GAIA_SEND_PACKET_CFM_T *m = (const GAIA_SEND_PACKET_CFM_T *) message;
+#ifdef GAIA_TEST
+        uint8 *packet = m->packet;
+        uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
+        uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
 
-                free(m->packet);
+        if (FALSE == m->success) {
+            DEBUG_LOG("appGaiaMessageHandler GAIA_SEND_PACKET_CFM, status is :%d", m->success);
+            // todo hjs 发送包成功之后，重新检查是否有新数据需要发送
+            if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
+                appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+            } else if (GAIA_COMMAND_STAROT_CALL_END == command_id && vendor_id == GAIA_VENDOR_STAROT) {
+                appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
             }
-            break;
+        } else {
+            if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
+//                    appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+                appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+                starotNotifyAudioForward(TRUE, packet[GAIA_OFFS_PAYLOAD]);
+            } else if (command_id == GAIA_COMMAND_STAROT_CALL_END) {
+                printf("end send to app success\n");
+            }
+        }
+#endif
+        free(m->packet);
+    }
+        break;
+
 
         case GAIA_DFU_CFM:                       /* Confirmation of a Device Firmware Upgrade request */
             /* If the confirm is a fail, then we can raise an error, but
@@ -277,6 +302,28 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
             DEBUG_LOG("appGaiaMessageHandler GAIA_VA_... Unexpected");
             break;
 
+#ifdef GAIA_TEST
+        case GAIA_STAROT_COMMAND_IND:
+            starotGaiaHandleCommand((GAIA_STAROT_IND_T *) message);
+            break;
+
+        case GAIA_STAROT_MORE_SPACE: {
+            starotGaiaParseMessageMoreSpace();
+        }
+            break;
+        case GAIA_STAROT_AUDIO_INTERVAL: {
+            if (appGetGaia()->needCycleSendAudio > 0) {
+                //send, reset timer
+                static uint8 data[201];
+                for (int i = 1; i <= 2; ++i) {
+                    data[0] = i;
+                    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_TRANS_AUDIO, 0xfe, 201, data);
+                }
+                MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 1);
+            }
+        }
+            break;
+#endif
 
         default:
             DEBUG_LOG("appGaiaMessageHandler Unknown GAIA message 0x%x (%d)",id,id);

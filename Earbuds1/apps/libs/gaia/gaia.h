@@ -23,6 +23,7 @@ Copyright (c) 2010 - 2018 Qualcomm Technologies International, Ltd.
 #include <gatt.h>
 #include <upgrade.h>
 
+
 #include "transport_manager.h"
 
 
@@ -291,6 +292,9 @@ typedef enum
     GAIA_VA_ANSWER_END_IND,             /*!< Indication of end of voice response by the Host */
     GAIA_VA_CANCEL_CFM,                 /*!< Confirmation of a Voice Assistant cancellation request to the Host */
     GAIA_VA_CANCEL_IND,                 /*!< Indication of a Voice Assistant cancellation request from the Host */
+
+    GAIA_STAROT_COMMAND_IND,
+    GAIA_STAROT_MORE_SPACE,
 
     /* Library message limit */
     GAIA_MESSAGE_TOP
@@ -935,5 +939,23 @@ void GaiaRwcpProcessCommand(uint8 *command, uint16 size_command);
 
 /* @brief Process the notification sent from RWCP server */
 void GaiaRwcpSendNotification(uint8 *payload, uint16 payload_length);
+
+//// starot 自定义添加
+#define GAIA_EXT 1
+
+#ifdef GAIA_EXT
+
+#define GAIA_COMMAND_TYPE_STAROT (0x5000)  /// hjs：新添加的命令
+#define GAIA_VENDOR_STAROT (0x000F)
+
+typedef struct
+{
+    uint16 command;
+    uint16 payloadLen;
+    uint8 payload[1];
+} GAIA_STAROT_MESSAGE_T;
+typedef GAIA_STAROT_MESSAGE_T GAIA_STAROT_IND_T;
+
+#endif
 
 #endif /* ifndef _GAIA_H_ */

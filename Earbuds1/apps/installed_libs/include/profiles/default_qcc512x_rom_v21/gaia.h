@@ -23,6 +23,7 @@ Copyright (c) 2010 - 2018 Qualcomm Technologies International, Ltd.
 #include <gatt.h>
 #include <upgrade.h>
 
+
 #include "transport_manager.h"
 
 
@@ -939,10 +940,14 @@ void GaiaRwcpProcessCommand(uint8 *command, uint16 size_command);
 /* @brief Process the notification sent from RWCP server */
 void GaiaRwcpSendNotification(uint8 *payload, uint16 payload_length);
 
+//// starot 自定义添加
+#define GAIA_EXT 1
 
+#ifdef GAIA_EXT
 
 #define GAIA_COMMAND_TYPE_STAROT (0x5000)  /// hjs：新添加的命令
 #define GAIA_VENDOR_STAROT (0x000F)
+
 typedef struct
 {
     uint16 command;
@@ -950,5 +955,7 @@ typedef struct
     uint8 payload[1];
 } GAIA_STAROT_MESSAGE_T;
 typedef GAIA_STAROT_MESSAGE_T GAIA_STAROT_IND_T;
+
+#endif
 
 #endif /* ifndef _GAIA_H_ */
