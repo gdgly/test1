@@ -35,6 +35,10 @@ enum sm_internal_message_ids
     SM_INTERNAL_TIMEOUT_OUT_OF_EAR_SCO,            /*!< Timeout to transfer SCO to AG when earbud removed from ear while call active. */
     SM_INTERNAL_TIMEOUT_IN_EAR_A2DP_START,         /*!< Timeout within which restart audio if earbud put back in ear. */
     SM_INTERNAL_TIMEOUT_IDLE,                      /*!< Timeout when idle. */
+#ifdef CONFIG_STAROT
+    SM_INTERNAL_BLE_SCANABLE_START,
+    SM_INTERNAL_BLE_SCANABLE_TIMEOUT,
+#endif
 };
 
 /*! \brief Actions that may be performed after a link disconnect has completed */

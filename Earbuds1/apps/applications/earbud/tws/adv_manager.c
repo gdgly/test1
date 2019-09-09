@@ -56,6 +56,8 @@ uint8 *appAdvManagerAdvertdataAddManufacturerSpecificData(uint8 *ad_data, uint8 
     return addManufacturerSpecificData(ad_data, space, sizeof(advManufacturerSpecificData), (const uint8 *)&advManufacturerSpecificData);
 }
 
-void appAdvManagerAdvertdataUpdateRandomCode(uint8 randomCode) {
+bool appAdvManagerAdvertdataUpdateRandomCode(uint8 randomCode) {
+    uint8 beforeRandCode = advManufacturerSpecificData.randomCode;
     advManufacturerSpecificData.randomCode = randomCode;
+    return (beforeRandCode == randomCode);
 }

@@ -18,6 +18,7 @@
 #include "av_headset_log.h"
 #ifdef CONFIG_STAROT
 #include "tws/adv_manager.h"
+#include "av_headset_sm_private.h"
 #endif
 
 /*! Macro for creating messages */
@@ -178,11 +179,17 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
 
 #ifdef CONFIG_STAROT
     /// todo notify ble need start scanable, random code is volume,通过规则去触发
-    appAdvManagerAdvertdataUpdateRandomCode(volume);
     /// 如果ble没有设备已连接，则开始
-    if ((volume + 1) % 8 != 0) {
-        GattManagerCancelWaitForRemoteClient(); // todo 后期深入理解规则，使用事件机制发送消息
-        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
+    if ((volume) % 8 != 0) {
+        //设置定时器  0.2秒之后再开始
+        bool st = appAdvManagerAdvertdataUpdateRandomCode(volume);
+        /// 在这里判断广播状态
+        if (!(TRUE == st && appSmIsBleAdvertising())) {
+            GattManagerCancelWaitForRemoteClient(); // todo 后期深入理解规则，使用事件机制发送消息
+            MessageSendLater(appGetSmTask(), SM_INTERNAL_BLE_SCANABLE_START, NULL, 200);
+        }
+        MessageCancelAll(appGetSmTask(), SM_INTERNAL_BLE_SCANABLE_TIMEOUT);
+        MessageSendLater(appGetSmTask(), SM_INTERNAL_BLE_SCANABLE_TIMEOUT, NULL, 10000);
     }
 #endif
 
