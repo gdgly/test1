@@ -21,7 +21,7 @@
 
 
 
-#if CONFIG_STAROTENABLE
+#ifdef CONFIG_STAROT
 #include "av_headset_gaia_starot.h"
 #include "tws/audio_forward.h"
 #endif
