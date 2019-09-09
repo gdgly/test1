@@ -131,6 +131,8 @@ int BMA400Power(bool isOn);
 #define appConfigBleNewConnectionsWhenBusy()    (TRUE)
 #undef  appConfigBleUseResolvablePrivateAddress()
 #define appConfigBleUseResolvablePrivateAddress() (FALSE)
+#undef  appConfigBleGattMtuMin()
+#define appConfigBleGattMtuMin()                (88)     // 加上协议头每次可传输80个字节
 
 //==============================================================================================
 //            Flash参数读取与保存
@@ -143,6 +145,6 @@ int16 ParamLoadPeerAddr( typed_bdaddr *taddr);
 //         CAPABILITY 使用定义
 //==============================================================================================
 #define DOWNLOAD_PASSSTHROUGH                // PASSThrough 取数据
-//#define DOWNLOAD_G722_ENCODER                // G722压缩将取数据
+#define DOWNLOAD_G722_ENCODER                // G722压缩将取数据
 
 #endif // PUBLIC_H

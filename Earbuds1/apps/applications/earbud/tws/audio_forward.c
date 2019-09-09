@@ -14,7 +14,6 @@
 
 #ifdef GAIA_TEST
 extern uint16 bufferSendUnit;
-#endif
 
 #define AUDIO_CORE_0             (0)
 #define AUDIO_DATA_FORMAT_16_BIT (0)
@@ -100,7 +99,7 @@ void disconnectAudioForward(kymera_chain_handle_t sco_chain) {
 unsigned nowSendStatus = 0;
 int dissNum = 0;
 
-bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type) {
+static bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type) {
     int size = SourceSize(source);
 //    const uint16 *ptr = (const uint16*)SourceMap(source);
 
@@ -114,6 +113,7 @@ bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type) {
     }
 
     if (NULL == appGetGaia()->transport || NULL == data_source_sco || NULL == data_source_mic) {
+        DEBUG_LOG("sendDataMessage,type=%d Drop:%d no cnnect", type, size);
         SourceDrop(source, size);
     } else if (size >= (bufferSendUnit * 2)) {
         GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));
@@ -127,6 +127,8 @@ bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type) {
         return TRUE;
     }
 #else
+    (void)bufferSendUnit;
+    DEBUG_LOG("sendDataMessage,type=%d Drop:%d", type, size);
     SourceDrop(source, size);
 #endif
     return FALSE;
@@ -258,3 +260,5 @@ static void sendMessageMoreData(Task task, Source src, uint32 delay)
 Task getAudioForwardTask(void) {
     return audioForwardTask;
 }
+
+#endif

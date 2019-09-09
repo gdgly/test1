@@ -106,6 +106,18 @@ static const capability_bundle_t capability_bundle[] =
         capability_bundle_available_p0
     },
 #endif
+#if defined(DOWNLOAD_PASSSTHROUGH)
+		{
+			"download_passthrough.dkcs",
+			capability_bundle_available_p0
+		},
+#endif
+#if defined(DOWNLOAD_G722_ENCODER)
+		{
+			"download_G722Codec.dkcs",
+			capability_bundle_available_p0
+		},
+#endif
     {
         0, 0
     }
@@ -231,6 +243,7 @@ kymera_chain_handle_t appKymeraScoCreateChain(const appKymeraScoChainInfo *info)
     appKymeraConfigureDspPowerMode(FALSE);
 
     /* Create chain and return handle */
+    DEBUG_LOG("appKymeraScoCreateChain chain=%p\n", info->chain);
     theKymera->chainu.sco_handle = ChainCreate(info->chain);
 
     /* Now chain is created, we can decrement reference count */

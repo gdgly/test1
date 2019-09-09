@@ -229,5 +229,6 @@ typedef enum chain_endpoint_roles
 #define EB_CAP_ID_ASYNC_WBS_ENC          CAP_ID_ASYNC_WBS_ENC
 #endif
 
+#define CAP_ID_DOWNLOAD_G722CODEC          (0xC010)       // G722压缩将取数据
 
 #endif // AV_HEADSET_CHAIN_ROLES_H
