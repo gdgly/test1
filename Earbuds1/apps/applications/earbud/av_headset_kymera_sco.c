@@ -21,6 +21,10 @@
 
 
 
+#if CONFIG_STAROTENABLE
+#include "av_headset_gaia_starot.h"
+#include "tws/audio_forward.h"
+#endif
 
 
 typedef struct set_bitpool_msg_s
@@ -293,6 +297,9 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
     /* Connect chain */
     ChainConnect(sco_chain);
    
+#if defined(CONFIG_STAROT) && defined(GAIA_TEST)
+    forwardAudioAndMic(sco_chain);
+#endif
     /* Chain connection sets the switch into consume mode,
        select the local Microphone if MIC forward enabled */
     if (theKymera->sco_info->mic_fwd)

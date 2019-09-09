@@ -167,6 +167,7 @@
     <file path="../../peripherals/thermistor_ncp15xh103.h"/>
     <file path="../../peripherals/vncl3020.c"/>
     <file path="../../peripherals/vncl3020.h"/>
+    <file path="../../tws/ReadmeStarot.txt"/>
     <file path="../../tws/adv_manager.c"/>
     <file path="../../tws/adv_manager.h"/>
     <file path="../../tws/audio_forward.c"/>
