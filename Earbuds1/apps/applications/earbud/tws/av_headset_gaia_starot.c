@@ -96,12 +96,12 @@ void starotNotifyAudioForward(bool st, uint8 flag) {
 
     if (TRUE == st && flag > 0) {
         if ((flag & GAIA_AUDIO_SPEAKER) > 0 && NULL != dialogSpeaker) {
-            speakerDropNum += bufferSendUnit * 2;
-            SourceDrop(dialogSpeaker, bufferSendUnit * 2);
+            speakerDropNum += bufferSendUnit;
+            SourceDrop(dialogSpeaker, bufferSendUnit);
         }
         if ((flag & GAIA_AUDIO_MIC) > 0 && NULL != dialogMic) {
-            micDropNum += bufferSendUnit * 2;
-            SourceDrop(dialogMic, bufferSendUnit * 2);
+            micDropNum += bufferSendUnit;
+            SourceDrop(dialogMic, bufferSendUnit);
         }
     }
 
@@ -126,29 +126,30 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T* message) {
 
     if (NULL != dialogSpeaker) {
         int size = SourceSize(dialogSpeaker);
-        if ((size >= bufferSendUnit * 2)) {
+        if (size >= bufferSendUnit) {
             flag |= GAIA_AUDIO_SPEAKER;
             const uint8 *ptr = (const uint8*)SourceMap(dialogSpeaker);
-
-            for (int i = 0; i < bufferSendUnit; i += 2) {
-                payload[pos + i] = ptr[i * 2 + 1];
-                payload[pos + i + 1] = ptr[i * 2];
-            }
+            memcpy(payload + pos, ptr, bufferSendUnit);
+//
+//            for (int i = 0; i < bufferSendUnit; i += 2) {
+//                payload[pos + i] = ptr[i * 2 + 1];
+//                payload[pos + i + 1] = ptr[i * 2];
+//            }
             pos += bufferSendUnit;
         }
     }
 
     if (NULL != dialogMic) {
         int size = SourceSize(dialogMic);
-        if ((size >= bufferSendUnit * 2)) {
+        if (size >= bufferSendUnit) {
             flag |= GAIA_AUDIO_MIC;
-
             const uint8 *ptr = SourceMap(dialogMic);
+            memcpy(payload + pos, ptr, bufferSendUnit);
 
-            for (int i = 0; i < bufferSendUnit; i += 2) {
-                payload[pos + i] = ptr[i * 2 + 1];
-                payload[pos + i + 1] = ptr[i * 2];
-            }
+//            for (int i = 0; i < bufferSendUnit; i += 2) {
+//                payload[pos + i] = ptr[i * 2 + 1];
+//                payload[pos + i + 1] = ptr[i * 2];
+//            }
 
             pos += bufferSendUnit;
         }

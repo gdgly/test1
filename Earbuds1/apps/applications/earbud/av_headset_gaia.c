@@ -32,8 +32,13 @@ static void appGaiaHandleCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *
 static bool appGaiaHandleStatusCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *command);
 void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
                           uint16 payload_length, uint8 *payload);
+#ifdef GAIA_TEST
+bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
+                          uint16 payload_length, uint8 *payload);
+#else
 void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                           uint16 payload_length, uint8 *payload);
+#endif
 
 
 /********************  PUBLIC FUNCTIONS  **************************/
@@ -409,8 +414,11 @@ void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
 }
 
 /*! Build and Send a Gaia protocol packet */
-void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
-                          uint16 payload_length, uint8 *payload)
+#ifdef GAIA_TEST
+bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status, uint16 payload_length, uint8 *payload)
+#else
+void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status, uint16 payload_length, uint8 *payload)
+#endif
 {
     GAIA_TRANSPORT *transport = appGetGaiaTransport();
     
@@ -432,8 +440,14 @@ void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                                               status, payload_length, payload);
 
             GaiaSendPacket(transport, packet_length, packet);
+#ifdef GAIA_TEST
+            return TRUE;
+#endif
         }
     }
+#ifdef GAIA_TEST
+    return FALSE;
+#endif
 }
 
 

@@ -85,6 +85,15 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 
     /* 4. setup MORE_DATA message. */
     indicateFwdDataSource(micfwd_capture, STYPE_MIC);
+
+    /* 5. notify gaia dialog have start*/
+    if (NULL != appGetGaia()->transport) {
+        GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
+        starot->command = GAIA_COMMAND_STAROT_CALL_BEGIN;
+        starot->payloadLen = 0;
+        appGetGaia()->nowSendCallAudio = 1;
+        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
+    }
 }
 
 void disconnectAudioForward(kymera_chain_handle_t sco_chain) {
@@ -105,17 +114,17 @@ static bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type) {
 
 #ifdef GAIA_TEST
     /// 丢弃过多的数据，防止数据过多，导致source不可以使用
-    if (size > 5 * bufferSendUnit * 2) {
-        dissNum += 5 * bufferSendUnit * 2;
-        size -= 5 * bufferSendUnit * 2;
-        printf("drop size 5 * 480\n");
-        SourceDrop(source, 5 * bufferSendUnit * 2);
+    if (size > 5 * bufferSendUnit) {
+        dissNum += 5 * bufferSendUnit;
+        size -= 5 * bufferSendUnit;
+        printf("drop size 5 * %d\n", bufferSendUnit);
+        SourceDrop(source, 5 * bufferSendUnit);
     }
 
     if (NULL == appGetGaia()->transport || NULL == data_source_sco || NULL == data_source_mic) {
         DEBUG_LOG("sendDataMessage,type=%d Drop:%d no cnnect", type, size);
         SourceDrop(source, size);
-    } else if (size >= (bufferSendUnit * 2)) {
+    } else if (size >= bufferSendUnit) {
         GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));
         starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_IND;
         starot->source = source;
