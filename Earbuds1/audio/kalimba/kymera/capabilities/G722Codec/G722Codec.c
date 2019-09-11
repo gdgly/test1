@@ -98,26 +98,30 @@ static signed G722Codec_metadata_strict_transport(G722CODEC_OP_DATA *opx_data, t
         return -1;
     }
 
-    ret_mtag = buff_metadata_remove(src, octets*OCTETS_PER_SAMPLE, &b4idx, &afteridx);
+    ret_mtag = buff_metadata_remove(src, octets*OCTETS_PER_SAMPLE, &b4idx, &afteridx);    
+//    G722_DEBUG3("get ret_mtag=%p %d %d", ret_mtag, b4idx, afteridx);
 
-    if (ret_mtag) {
-        new_mtag = buff_metadata_new_tag();
-        if(new_mtag) {
-    #ifdef TEST_NO_ENC
-            new_mtag->length = octets * OCTETS_PER_SAMPLE;
-    #else
-            new_mtag->length = opx_data->out_samples * G722_BYTE_PER_SAMPLE;        // bytePERsample = 2
+    new_mtag = buff_metadata_new_tag();
+    if(!new_mtag) {
+        G722_DEBUG("Fail No Enough memory for newtag");
+    }
+    else {
+        METADATA_PACKET_START_SET(new_mtag);
+        METADATA_PACKET_END_SET(new_mtag);
+#ifdef TEST_NO_ENC
+        new_mtag->length = octets * OCTETS_PER_SAMPLE;
+#else
+        new_mtag->length = opx_data->out_samples * G722_BYTE_PER_SAMPLE;        // bytePERsample = 2
+#endif
+
+        if (ret_mtag)  {            // 有metadata_tag的情况
             new_mtag->timestamp = ret_mtag->timestamp;
             new_mtag->sp_adjust = ret_mtag->sp_adjust;
-    #endif
-            METADATA_PACKET_START_SET(new_mtag);
-            METADATA_PACKET_END_SET(new_mtag);
+        }
+        else {                      // 无metadata_tag的情况
+        }
 
-            buff_metadata_append(dst, new_mtag, 0, new_mtag->length);
-        }
-        else {
-            G722_DEBUG("Fail No Enough memory for newtag");
-        }
+        buff_metadata_append(dst, new_mtag, 0, new_mtag->length);
     }
 
     buff_metadata_tag_list_delete(ret_mtag);

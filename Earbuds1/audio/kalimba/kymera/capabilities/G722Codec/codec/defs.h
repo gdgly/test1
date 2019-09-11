@@ -32,7 +32,7 @@
 #define SUPPORT_MEMORY_DEC_TABLE
 #define SUPPORT_WORD16to8
 #define SUPPORT_STACK_SHAREMEM        // 全局静态内存
-  #define SUPPORT_STRUCT_SHAREMEM       // 全局分配内存
+//  #define SUPPORT_STRUCT_SHAREMEM       // 全局分配内存
 
 /* 8K采样率的音频解码，注意解码出来还是为16K的采样,保持I2S为固定采样率
  * 要求输入的为40字节，解码出来的数据为1280字节

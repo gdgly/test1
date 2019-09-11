@@ -36,6 +36,12 @@ static void basic_passthrough_processing_ex(BASIC_PASSTHROUGH_OP_DATA *op_data, 
 #define TTP_PASS_CAP_ID CAP_ID_TTP_PASS
 
 #endif
+
+#define DISABLE_IN_PLACE
+#define CONFIG_STAROT
+
+bool disable_audio_fwd = FALSE;
+
 /*****************************************************************************
 Private Constant Declarations
 */
@@ -61,6 +67,7 @@ const opmsg_handler_lookup_table_entry basic_passthrough_opmsg_handler_table[] =
     {OPMSG_COMMON_ID_FADEOUT_DISABLE,            basic_passthrough_opmsg_disable_fadeout},
     {OPMSG_PASSTHROUGH_ID_CHANGE_INPUT_DATA_TYPE,     basic_passthrough_change_input_data_type},
     {OPMSG_PASSTHROUGH_ID_CHANGE_OUTPUT_DATA_TYPE,    basic_passthrough_change_output_data_type},
+    {OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD,      basic_passthrough_disable_audio_forward},
     {OPMSG_COMMON_SET_DATA_STREAM_BASED,         basic_passthrough_data_stream_based},
     {OPMSG_COMMON_ID_SET_BUFFER_SIZE,            basic_passthrough_opmsg_set_buffer_size},
     {OPMSG_COMMON_ID_SET_CONTROL,                  basic_passthrough_opmsg_obpm_set_control},
@@ -244,6 +251,9 @@ bool basic_passthrough_create(OPERATOR_DATA *op_data, void *message_data, unsign
     opx_data->active_chans = 0;
     /* Unless the host says otherwise assume incoming channels are not a stream */
     opx_data->simple_data_test_safe = FALSE;
+
+    /* forward audio data by default. */
+    disable_audio_fwd = FALSE;
 
     switch (base_op_get_cap_id(op_data))
     {
@@ -892,12 +902,20 @@ static void metadata_transport_with_ttp(BASIC_PASSTHROUGH_OP_DATA *opx_data, uns
          */
         list_tag = mtag->next;
         list_octets = mtag->length;
+#ifdef CONFIG_STAROT
+        METADATA_PACKET_START_SET(mtag);
+        METADATA_PACKET_END_SET(mtag);
+#endif
         while (list_tag != NULL)
         {
             status.ttp = ttp_get_next_timestamp(mtag->timestamp, list_octets / OCTETS_PER_SAMPLE, opx_data->sample_rate, status.sp_adjustment);
             METADATA_TIME_OF_ARRIVAL_UNSET(list_tag);
             ttp_utils_populate_tag(list_tag, &status);
             list_octets += list_tag->length;
+#ifdef CONFIG_STAROT
+            METADATA_PACKET_START_SET(list_tag);
+            METADATA_PACKET_END_SET(list_tag);
+#endif
             list_tag = list_tag->next;
         }
 
@@ -915,6 +933,79 @@ static void metadata_transport_with_ttp(BASIC_PASSTHROUGH_OP_DATA *opx_data, uns
 }
 
 #endif /* INSTALL_OPERATOR_TTP_PASS */
+
+
+static void __metadata_strict_transport(tCbuffer *src, tCbuffer *dst, unsigned trans_octets)
+{
+#ifdef METADATA_DEBUG_TRANSPORT
+    unsigned return_addr = pl_get_return_addr();
+#endif /* METADATA_DEBUG_TRANSPORT */
+    metadata_tag *ret_mtag;
+    unsigned b4idx, afteridx;
+
+    patch_fn_shared(buff_metadata);
+
+    if (trans_octets == 0)
+    {
+        L2_DBG_MSG("metadata_strict_transport: ignoring zero transfer");
+        return;
+    }
+
+    if (src != NULL)
+    {
+        /* transport metadata, first (attempt to) consume tag associated with src */
+#ifdef METADATA_DEBUG_TRANSPORT
+        ret_mtag = buff_metadata_remove_dbg(src, trans_octets, &b4idx,
+                                            &afteridx, return_addr);
+#else /* METADATA_DEBUG_TRANSPORT */
+        ret_mtag = buff_metadata_remove(src, trans_octets, &b4idx, &afteridx);
+#endif /* METADATA_DEBUG_TRANSPORT */
+    }
+    else
+    {
+        b4idx = 0;
+        afteridx = trans_octets;
+        ret_mtag = NULL;
+    }
+
+    if (ret_mtag) {
+        metadata_tag *list_tag = ret_mtag;
+        METADATA_PACKET_START_SET(ret_mtag);
+        while(list_tag->next) list_tag = list_tag->next;
+        METADATA_PACKET_END_SET(list_tag);
+    } else {
+        ret_mtag = buff_metadata_new_tag();
+        if (ret_mtag != NULL) {
+            ret_mtag->length = trans_octets;
+            METADATA_PACKET_START_SET(ret_mtag);
+            METADATA_PACKET_END_SET(ret_mtag);
+        }
+        b4idx = 0;
+        afteridx = trans_octets;
+
+        ttp_status status;
+        status.ttp = ret_mtag->timestamp + 10000;
+        status.stream_restart = TRUE;
+        ttp_utils_populate_tag(ret_mtag, &status);
+    }
+
+    if (dst != NULL)
+    {
+        /* Even if the src is a NULL buffer we append to dst. It makes no sense
+         * for the current configuration. However if another connection is made
+         * later to the src which does support metadata the dst metadata write
+         * pointer needs to be at the right offset. */
+#ifdef METADATA_DEBUG_TRANSPORT
+        buff_metadata_append_dbg(dst, ret_mtag, b4idx, afteridx, return_addr);
+#else /* METADATA_DEBUG_TRANSPORT */
+        buff_metadata_append(dst, ret_mtag, b4idx, afteridx);
+#endif /* METADATA_DEBUG_TRANSPORT */
+    }
+    else
+    {
+        buff_metadata_tag_list_delete(ret_mtag);
+    }
+}
 
 
 RUN_FROM_PM_RAM
@@ -956,7 +1047,17 @@ void basic_passthrough_process_data(OPERATOR_DATA *op_data, TOUCHED_TERMINALS *t
 #if defined(INSTALL_CBUFFER_EX)
     if (opx_data->ip_format != opx_data->op_format)
     {
-        fault_diatribe(FAULT_AUDIO_PASSTHROUGH_FORMAT_MISMATCH, base_op_get_int_op_id(op_data));
+        if ((AUDIO_DATA_FORMAT_16_BIT == opx_data->op_format)
+            && (AUDIO_DATA_FORMAT_FIXP == opx_data->ip_format))
+        {
+            buffers_ex = TRUE;
+            input_samples_fn = cbuffer_calc_amount_data_ex;
+            output_space_fn = cbuffer_calc_amount_space_ex;
+        }
+        else
+        {
+            fault_diatribe(FAULT_AUDIO_PASSTHROUGH_FORMAT_MISMATCH, base_op_get_int_op_id(op_data));
+        }
     }
     else
     {
@@ -1015,6 +1116,13 @@ void basic_passthrough_process_data(OPERATOR_DATA *op_data, TOUCHED_TERMINALS *t
         output_space = MIN(output_space,amount);
     }
 
+    if (disable_audio_fwd) {
+        for (i = 0; i < num_active_chans; i++)
+            cbuffer_empty_buffer_and_metadata(channels[i]->ip_buffer);
+        touched->sources = opx_data->active_chans;
+        return;
+    }
+
     /* We have got this far, so we have something to do on every output */
     touched->sources = opx_data->active_chans;
 
@@ -1053,10 +1161,14 @@ void basic_passthrough_process_data(OPERATOR_DATA *op_data, TOUCHED_TERMINALS *t
             common_send_simple_unsolicited_message(op_data, OPMSG_REPLY_ID_FADEOUT_DONE);
         }
     }
+
 #ifdef INSTALL_OPERATOR_TTP_PASS
     if (base_op_get_cap_id(op_data) == TTP_PASS_CAP_ID)
     {
-        metadata_transport_with_ttp(opx_data, data_to_process);
+        if (buffers_ex)
+            metadata_transport_with_ttp(opx_data, data_to_process / OCTETS_PER_SAMPLE);
+        else
+            metadata_transport_with_ttp(opx_data, data_to_process);
     }
     else
 #endif /* INSTALL_OPERATOR_TTP_PASS */
@@ -1068,7 +1180,7 @@ void basic_passthrough_process_data(OPERATOR_DATA *op_data, TOUCHED_TERMINALS *t
         unsigned data_size = buffers_ex ? 1 /* octets */
                                : cbuffer_get_usable_octets(channels[0]->ip_buffer);
 
-        metadata_strict_transport(opx_data->metadata_ip_buffer, opx_data->metadata_op_buffer,
+        __metadata_strict_transport(opx_data->metadata_ip_buffer, opx_data->metadata_op_buffer,
                                   data_to_process * data_size);
     }
 #endif  /* INSTALL_METADATA */
@@ -1409,6 +1521,17 @@ bool basic_passthrough_change_output_data_type(OPERATOR_DATA *op_data, void *mes
 {
     /* Call with source terminal ID 0 */
     return common_change_terminal_data_type(op_data, FALSE, message_data);
+}
+
+/*
+ * basic_passthrough_disable_audio_forward
+ */
+bool basic_passthrough_disable_audio_forward(OPERATOR_DATA *op_data, void *message_data,
+                                             unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data)
+{
+   disable_audio_fwd = (bool)OPMSG_FIELD_GET(message_data, OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD, DISABLE);
+
+   return TRUE;
 }
 
 /*
