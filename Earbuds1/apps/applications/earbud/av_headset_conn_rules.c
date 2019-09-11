@@ -2339,7 +2339,12 @@ static ruleAction ruleBleConnectionUpdate(void)
     bool peer_dfu = appPeerSyncPeerDfuInProgress();
     bool in_case = appSmIsInCase();
     bool peer_in_case = appPeerSyncIsPeerInCase();
+#ifdef CONFIG_STAROT
+    /// note： todo 当前没有盒子，如果想在配对的时候，也能开启ble广播，只能临时修改这里
+    bool ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState()) | (APP_STATE_HANDSET_PAIRING == appGetState());
+#else
     bool ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
+#endif
     bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
     bool paired_with_handset = appDeviceGetHandsetBdAddr(NULL);
 
@@ -2348,6 +2353,8 @@ static ruleAction ruleBleConnectionUpdate(void)
 
     bool connectable;
 
+    printf("paired_with_peer %d && paired_with_handset %d && ble_connectable %d && has_ble_connection %d\n",
+           paired_with_peer, paired_with_handset, ble_connectable, has_ble_connection);
         /* Use our own status to decide if we should be connectable */
     connectable = paired_with_peer && paired_with_handset && ble_connectable && !has_ble_connection;
 #ifdef CONFIG_STAROT

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <logging.h>
+#include "tws/adv_manager.h"
 
 //==============================================================================================
 // TBR 调试器在DEMO板上使用使用的IO脚列表如下，可能会与我们系统中的冲突，注意不能同时使用
@@ -140,6 +141,8 @@ int BMA400Power(bool isOn);
 bool ParamUsingSingle(void);     // 独立使用
 int16 ParamSavePeerAddr( typed_bdaddr *taddr);
 int16 ParamLoadPeerAddr( typed_bdaddr *taddr);
+int16 ParamLoadBlePair(BlePairInfo *blePairInfo);
+int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
 
 //==============================================================================================
 //         CAPABILITY 使用定义

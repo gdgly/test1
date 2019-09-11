@@ -320,11 +320,14 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
             if (appGetGaia()->needCycleSendAudio > 0) {
                 //send, reset timer
                 static uint8 data[201];
+                static uint8 temp = 0;
+                temp += 1;
                 for (int i = 1; i <= 2; ++i) {
                     data[0] = i;
-                    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_TRANS_AUDIO, 0xfe, 201, data);
+                    data[1] = temp;
+                    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_TRANS_AUDIO, 0xfe, 41, data);
                 }
-                MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 1);
+                MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 10);
             }
         }
             break;

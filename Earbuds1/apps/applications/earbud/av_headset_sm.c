@@ -347,6 +347,8 @@ static void appEnterHandsetPairing(void)
     appPeerSyncSend(FALSE);
 
     appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
+
+    appBleClearBond();
 }
 
 /*! \brief Exit actions when handset pairing completed.

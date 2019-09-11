@@ -725,7 +725,7 @@ extern const promptConfig prompt_config[];
 #define appConfigBleGetGattServerInstances()    (1)
 
 /*! Minimum value of MTU for use with GATT over BLE */
-#define appConfigBleGattMtuMin()                (64)
+#define appConfigBleGattMtuMin()                (128)
 
 
 /*! Minimum interval between adverts when advertising at a slow rate */
@@ -734,9 +734,9 @@ extern const promptConfig prompt_config[];
 #define appConfigBleSlowAdvertisingRateMax()    0x190
 
 /*! Minimum interval between adverts when advertising at a fast rate */
-#define appConfigBleFastAdvertisingRateMin()    0xA0
+#define appConfigBleFastAdvertisingRateMin()    0x30
 /*! Maximum interval between adverts when advertising at a fast rate */
-#define appConfigBleFastAdvertisingRateMax()    0xC0
+#define appConfigBleFastAdvertisingRateMax()    0x50
 
 
 /*! Enumerated type to select pre-defined advertising rate settings */
