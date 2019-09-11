@@ -953,7 +953,8 @@ typedef enum
 {
     OPMSG_PASSTHROUGH_ID_SET_WORKING_DATA = 0x0002,
     OPMSG_PASSTHROUGH_ID_CHANGE_INPUT_DATA_TYPE = 0x000A,
-    OPMSG_PASSTHROUGH_ID_CHANGE_OUTPUT_DATA_TYPE = 0x000B
+    OPMSG_PASSTHROUGH_ID_CHANGE_OUTPUT_DATA_TYPE = 0x000B,
+    OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD = 0x000C
 } OPMSG_PASSTHROUGH_ID;
 /*******************************************************************************
 
@@ -5553,6 +5554,43 @@ typedef struct
         (opmsg_passthrough_change_input_data_type_ptr)->_data[0] = (uint16)((uint16)(message_id)); \
         (opmsg_passthrough_change_input_data_type_ptr)->_data[1] = (uint16)((uint16)(data_type)); \
     } while (0)
+
+
+/*******************************************************************************
+
+	  NAME
+		Opmsg_Passthrough_Disable_Audio_Forward
+	
+	  DESCRIPTION
+		Basic Passthrough operator message for DISABLE_AUDIO_FORWARD.
+	
+	  MEMBERS
+		message_id - message id
+		data_type  - data type
+	
+*******************************************************************************/
+typedef struct
+{
+	uint16 _data[2];
+} OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD;
+	
+	/* The following macros take OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD *opmsg_passthrough_disable_audio_forward_ptr */
+#define OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD_MESSAGE_ID_WORD_OFFSET (0)
+#define OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD_MESSAGE_ID_GET(opmsg_passthrough_disable_audio_forward_ptr) ((OPMSG_PASSTHROUGH_ID)(opmsg_passthrough_disable_audio_forward_ptr)->_data[0])
+#define OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD_MESSAGE_ID_SET(opmsg_passthrough_disable_audio_forward_ptr, message_id) ((opmsg_passthrough_disable_audio_forward_ptr)->_data[0] = (uint16)(message_id))
+#define OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD_DISABLE_WORD_OFFSET (1)
+#define OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD_DISABLE_GET(opmsg_passthrough_disable_audio_forward_ptr) ((opmsg_passthrough_disable_audio_forward_ptr)->_data[1])
+#define OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD_DISABLE_SET(opmsg_passthrough_disable_audio_forward_ptr, disable) ((opmsg_passthrough_disable_audio_forward_ptr)->_data[1] = (uint16)(disable))
+#define OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD_WORD_SIZE (2)
+	/*lint -e(773) allow unparenthesized*/
+#define OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD_CREATE(message_id, disable) \
+		(uint16)(message_id), \
+		(uint16)(disable)
+#define OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD_PACK(opmsg_passthrough_disable_audio_forward_ptr, message_id, disable) \
+		do { \
+			(opmsg_passthrough_disable_audio_forward_ptr)->_data[0] = (uint16)((uint16)(message_id)); \
+			(opmsg_passthrough_disable_audio_forward_ptr)->_data[1] = (uint16)((uint16)(disable)); \
+		} while (0)
 
 
 /*******************************************************************************
