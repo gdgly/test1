@@ -8,6 +8,8 @@ extern int16 ParamLoadBlePair(BlePairInfo *blePairInfo);
 
 extern int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
 
+static void appPrivateBleSetRandomCode(uint16 advCode);
+
 static uint8 *addManufacturerSpecificData(uint8 *ad_data, uint8 *space, uint16 size_specific_data, const uint8 *specific_data) {
     uint8 field_length;
     uint8 data_length = size_specific_data;
@@ -69,9 +71,8 @@ uint8 *appAdvManagerAdvertdataAddManufacturerSpecificData(uint8 *ad_data, uint8 
 
 bool appAdvManagerAdvertdataUpdateRandomCode(uint16 randomCode) {
     uint16 beforeRandCode = advTaskData.advManufacturerSpecificData.randomCodeHigh;
-    beforeRandCode = beforeRandCode << 8 + advTaskData.advManufacturerSpecificData.randomCodeLow;
-    advTaskData.advManufacturerSpecificData.randomCodeHigh = (randomCode & 0XFF00) >> 8;
-    advTaskData.advManufacturerSpecificData.randomCodeLow = (randomCode & 0X00FF);
+    beforeRandCode = (beforeRandCode << 8) + advTaskData.advManufacturerSpecificData.randomCodeLow;
+    appPrivateBleSetRandomCode(randomCode);
     return (beforeRandCode == randomCode);
 }
 
@@ -86,12 +87,10 @@ bool appAdvParamInit(void) {
         advTaskData.bleBondInfo.advCode = 0X00;
         advTaskData.bleBondInfo.bondCode = 0X00;
     }
-    advTaskData.advManufacturerSpecificData.randomCodeHigh = advTaskData.bleBondInfo.advCode & 0XFF00 >> 8;
-    advTaskData.advManufacturerSpecificData.randomCodeLow = advTaskData.bleBondInfo.advCode & 0X00FF;
+    appPrivateBleSetRandomCode(advTaskData.bleBondInfo.advCode);
 
     return TRUE;
 }
-
 
 void appAdvParamSave(void) {
     int res = ParamSaveBlePair(&advTaskData.bleBondInfo);
@@ -105,8 +104,7 @@ void appBleClearBond(void) {
     advTaskData.bleBondInfo.advCode = 0X00;
     advTaskData.bleBondInfo.bondCode = 0X00;
     appAdvParamSave();
-    advTaskData.advManufacturerSpecificData.randomCodeHigh = 0X00;
-    advTaskData.advManufacturerSpecificData.randomCodeLow = 0X00;
+    appPrivateBleSetRandomCode(0X00);
 }
 
 void appBleSetPond(uint16 advCode, uint32 bondCode) {
@@ -115,10 +113,14 @@ void appBleSetPond(uint16 advCode, uint32 bondCode) {
     advTaskData.bleBondInfo.advCode = advCode;
     advTaskData.bleBondInfo.bondCode = bondCode;
     appAdvParamSave();
-    advTaskData.advManufacturerSpecificData.randomCodeHigh = (advTaskData.bleBondInfo.advCode & 0XFF00) >> 8;
-    advTaskData.advManufacturerSpecificData.randomCodeLow = advTaskData.bleBondInfo.advCode & 0X00FF;
+    appPrivateBleSetRandomCode(advCode);
 }
 
 uint32 appBleGetBondCode(void) {
     return advTaskData.bleBondInfo.bondCode;
+}
+
+void appPrivateBleSetRandomCode(uint16 advCode) {
+    advTaskData.advManufacturerSpecificData.randomCodeHigh = (advCode & 0XFF00) >> 8;
+    advTaskData.advManufacturerSpecificData.randomCodeLow = advCode & 0X00FF;
 }
