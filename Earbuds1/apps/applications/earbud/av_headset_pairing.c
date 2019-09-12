@@ -2131,7 +2131,12 @@ void appPairingInit(void)
     thePairing->pairing_lock = 1;    
     thePairing->handset_pairing_attempts = 0;
     appPairingSetState(thePairing, PAIRING_STATE_INITIALISING);
+#ifdef CONFIG_STAROT
+    //apps/libs/gaia/gaia_db.dbi
+    thePairing->ble_permission = pairingBleDisallowed;
+#else
     thePairing->ble_permission = pairingBleOnlyPairedHandsets;
+#endif
 
     /* Get device name so that we can initialise EIR response */
     ConnectionReadLocalName(&thePairing->task);

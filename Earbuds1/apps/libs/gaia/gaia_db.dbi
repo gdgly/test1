@@ -9,7 +9,7 @@ primary_service {
     characteristic {
         uuid        : UUID_GAIA_COMMAND_ENDPOINT,
         name        : "GAIA_COMMAND_ENDPOINT",
-        flags       : [ FLAG_IRQ, FLAG_DYNLEN, FLAG_ENCR_W ],
+        flags       : [ FLAG_IRQ, FLAG_DYNLEN/*, FLAG_ENCR_W*/ ],
         properties  : [ write ],
         value       : 0x0
     },
@@ -28,7 +28,7 @@ primary_service {
 	characteristic {
         uuid        : UUID_GAIA_DATA_ENDPOINT,
         name        : "GAIA_DATA_ENDPOINT",
-        flags       : [ FLAG_IRQ, FLAG_DYNLEN, FLAG_ENCR_W, FLAG_ENCR_R ],
+        flags       : [ FLAG_IRQ, FLAG_DYNLEN/*, FLAG_ENCR_W, FLAG_ENCR_R*/ ],
         properties  : [ write_cmd, notify, read ],
         value       : 0x0,
         client_config
