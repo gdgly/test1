@@ -375,7 +375,6 @@ void appKymeraHandleInternalScoStop(void)
         starot->command = GAIA_COMMAND_STAROT_CALL_END;
         starot->payloadLen = 0;
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
-        appGetGaia()->nowSendCallAudio = 0;
     }
 //    disconnectAudioForward(sco_chain);
 #endif

@@ -91,7 +91,6 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
         GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
         starot->command = GAIA_COMMAND_STAROT_CALL_BEGIN;
         starot->payloadLen = 0;
-        appGetGaia()->nowSendCallAudio = 1;
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
     }
 }
