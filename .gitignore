@@ -69,3 +69,9 @@ EarBuds*/apps/applications/earbud/qcc512x_rom_v21/common/*.xuv
 !Earbuds*/audio/kalimba/kymera/output/stre_rom_kalsim_kalcmd2_release/build/debugbin/*
 
 !Earbuds*/audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_*.elf
+
+Earbuds1/audio/kalimba/kymera/capabilities/basic_passthrough/makefile
+Earbuds1/audio/kalimba/kymera/tools/KCSMaker/bundle/config/capabilities.cfgc
+Earbuds1/audio/kalimba/kymera/tools/KCSMaker/bundle/download_passthrough.bdlc
+Earbuds1/audio/kalimba/kymera/tools/KCSMaker/download_passthrough.settings
+

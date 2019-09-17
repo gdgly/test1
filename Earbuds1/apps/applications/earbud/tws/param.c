@@ -8,10 +8,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <vm.h>
+#include <adv_manager.h>
 
 #define PSKEY_CUSTOMER0_VALUE   (200)                         // ID, from trap_api/ps.h
 
 #define PSKEY_PEER_ADDR         (PSKEY_CUSTOMER0_VALUE)       // 保存双方配对耳机蓝牙地址
+#define PSKEY_BLE_PAIR          (PSKEY_CUSTOMER0_VALUE + 1)       // 保存ble配对信息adv广播，bind码
 
 #ifdef CONFIG_STAROT_SINGLE
 // 检查是否为独立使用，没有耳机配对
@@ -64,8 +66,31 @@ int16 ParamLoadPeerAddr( typed_bdaddr *taddr)
     return size;
 }
 
+int16 ParamSaveBlePair(BlePairInfo *blePairInfo)
+{
+    uint16 ret, size = sizeof(BlePairInfo)/2;      // PsRetrieve的第二个参数为words,因此长度应该除2
+    if(!blePairInfo)
+        return -1;
 
+    ret = PsStore(PSKEY_BLE_PAIR, blePairInfo, size);
+    if(ret != size)
+        return -2;
 
+    return (int16)size;
+}
+
+int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
+{
+    uint16 ret, size = sizeof(BlePairInfo)/2;      // PsRetrieve的第二个参数为words,因此长度应该除2
+    if(!blePairInfo)
+        return -1;
+
+    ret = PsRetrieve(PSKEY_BLE_PAIR, blePairInfo, size);
+    if(ret != size)
+        return -2;
+
+    return (int16)size;
+}
 
 
 

@@ -30,7 +30,9 @@ typedef struct G722CODEC_OP_DATA{
     AUDIO_DATA_FORMAT op_format;
 
     /** 1 is Encode, 0 is Decoder */
-    unsigned  is_encoder;
+    unsigned char  is_encoder;
+    unsigned char  rev;
+    unsigned short rd_samples;                   // 需要分多次读取数据
     unsigned short in_samples, out_samples;
 
     /** The input buffer with metadata to transport from */
@@ -50,6 +52,7 @@ typedef struct G722CODEC_OP_DATA{
     unsigned timestamp;       // ttp test
     unsigned sample_rate;
     ttp_context *time_to_play;
+    unsigned disable_audforward;   // 0:enable, 1:disable
 
     unsigned *in_buffer;
     unsigned *out_buffer;
@@ -75,5 +78,6 @@ bool G722Codec_opmsg_set_sample_rate(OPERATOR_DATA *op_data, void *message_data,
 bool G722Codec_opmsg_input_data_type(OPERATOR_DATA *op_data, void *message_data, unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data);
 bool G722Codec_opmsg_output_data_type(OPERATOR_DATA *op_data, void *message_data, unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data);
 bool G722Codec_opmsg_set_buffer_size(OPERATOR_DATA *op_data, void *message_data, unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data);
+bool G722Codec_opmsg_disable_audio_forward(OPERATOR_DATA *op_data, void *message_data, unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data);
 
 #endif /* G722CODEC_H */

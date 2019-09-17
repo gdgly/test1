@@ -2,7 +2,7 @@
 \copyright  Copyright (c) 2008 - 2018 Qualcomm Technologies International, Ltd.\n
             All Rights Reserved.\n
             Qualcomm Technologies International, Ltd. Confidential and Proprietary.
-\version    
+\version
 \file       av_headset_config.h
 \brief      Application configuration file
 */
@@ -27,7 +27,7 @@
 #define appConfigDfuAllowBredrUpgradeOutOfCase()    FALSE
 
 
-/*! Only allow upgrades when the request has been made by the user (through the UI) 
+/*! Only allow upgrades when the request has been made by the user (through the UI)
     and the device is in the case.
   */
 #define appConfigDfuOnlyFromUiInCase()              FALSE
@@ -38,21 +38,21 @@
 
 /*! Timeout for starting DFU mode after a restart caused by an
     upgrade completing. The timeout will only apply if the device
-    is out of the case. 
+    is out of the case.
 
     The timeout can be set to 0, in which case there is no limit. */
 #define appConfigDfuTimeoutToStartAfterRestartMs()  (D_SEC(30))
 
-/*! Timeout for DFU mode, entered after a reboot in DFU mode. 
+/*! Timeout for DFU mode, entered after a reboot in DFU mode.
 
     This is the timeout for an abnormal restart. Restarts that occur
-    as part of the normal upgrade process use 
+    as part of the normal upgrade process use
     appConfigDfuTimeoutToStartAfterRestartMs()
 
     The timeout can be set to 0, in which case there is no limit. */
 #define appConfigDfuTimeoutToStartAfterRebootMs()   (D_SEC(15))
 
-/*! Timeout for DFU mode, entered from UI 
+/*! Timeout for DFU mode, entered from UI
 
     This is the timeout for starting an upgrade when the user has
     requested DFU and then placed the device into the case.
@@ -62,7 +62,7 @@
 
 /*! Timeout for DFU mode, requested from GAIA
 
-    This is the timeout for starting an upgrade after the GAIA 
+    This is the timeout for starting an upgrade after the GAIA
     upgrade protocol has been connected. Only applicable in the
     in case DFU mode.
 
@@ -121,7 +121,7 @@
 /*! Number of paired devices that are remembered */
 #define appConfigMaxPairedDevices() (4)
 
-#ifdef CF133_BATT 
+#ifdef CF133_BATT
 /*! Minimum RSSI to pair with a device */
 #define appConfigPeerPairingMinRssi() (-60)
 #else
@@ -129,7 +129,7 @@
 #define appConfigPeerPairingMinRssi() (-50)
 #endif
 
-/*! Minimum difference in RSSI between devices discovered 
+/*! Minimum difference in RSSI between devices discovered
     with the highest RSSI in order to pair */
 #define appConfigPeerPairingMinRssiDelta() (10)
 
@@ -255,11 +255,11 @@
 /*! The volume setting to use for no gain, when volume is specifed on range of 0-127 */
 #define appConfigVolumeNoGain127Step()  (127)
 
-/*! Number of volume steps to use per AV UI volume event. 
+/*! Number of volume steps to use per AV UI volume event.
  The full volume range is 0-127 */
 #define appConfigGetAvVolumeStep()  (8)
 
-/*! Number of volume steps to use per HFP UI volume event. 
+/*! Number of volume steps to use per HFP UI volume event.
  The full volume range is 0-15 */
  #define appConfigGetHfpVolumeStep() (1)
 
@@ -313,9 +313,9 @@
 //!@}
 
 /*! @{ Which microphones to use for SCO */
-    /*! microphone to use for the first SCO mic */    
+    /*! microphone to use for the first SCO mic */
 #define appConfigScoMic1()                      (0)
-    /*! microphone to use for the second SCO mic. This should be defined as 
+    /*! microphone to use for the second SCO mic. This should be defined as
         NO_MIC if using 1-mic CVC */
 #define appConfigScoMic2()                      (NO_MIC)     /* Don't use microphone for SCO 2nd mic (CVC 1-mic) */
 /*! @} */
@@ -361,9 +361,9 @@
 //!@}
 
 /*! @{ Which microphones to use for SCO */
-    /*! microphone to use for the first SCO mic */    
+    /*! microphone to use for the first SCO mic */
 #define appConfigScoMic1()                      (0)          /* Use microphone 0 for SCO 1st mic */
-    /*! microphone to use for the second SCO mic. This should be defined as 
+    /*! microphone to use for the second SCO mic. This should be defined as
         NO_MIC if using 1-mic CVC */
 #define appConfigScoMic2()                      (NO_MIC)     /* Don't use microphone for SCO 2nd mic (CVC 1-mic) */
 /*! @} */
@@ -395,8 +395,8 @@
 #define appConfigScoFwdRingMs()                 (1000)
 
 
-/*! The minimum time to play to be added on incoming SCO connections 
-    to allow synchronisation. This should represent the total propagation 
+/*! The minimum time to play to be added on incoming SCO connections
+    to allow synchronisation. This should represent the total propagation
     delay in the chain */
 #define appConfigScoChainBaseTTP()      (15000)
 
@@ -434,7 +434,7 @@
 
 /*! Charger configuration */
 
-/*! The time to debounce charger state changes (ms).  
+/*! The time to debounce charger state changes (ms).
     The charger hardware will have a more limited range. */
 #define appConfigChargerStateChangeDebounce()          (128)
 
@@ -504,7 +504,7 @@
 /*! The interval at which the battery voltage is read. */
 #define appConfigBatteryReadPeriodMs() D_SEC(2)
 
-/*! Margin to apply on battery readings before accepting that 
+/*! Margin to apply on battery readings before accepting that
     the level has changed. Units of milli-volts */
 #define appConfigSmBatteryHysteresisMargin() (50)
 
@@ -674,13 +674,13 @@ extern const thermistorConfig thermistor_config;
 #endif /* INCLUDE_TEMPERATURE */
 
 
-/*! The time to play delay added in the SCO receive path.  
+/*! The time to play delay added in the SCO receive path.
 
     A value of 40 will cause some missing / delayed packets in
-    good test conditions. 
+    good test conditions.
     It is estimated that 60 is the lowest value that may be
     used in the real world, with random 2.4GHz interference.
-    It is recommended that the final value used should be selected 
+    It is recommended that the final value used should be selected
     based on expected useage, and tolerance for delays vs. errors
     introduced by Packet Loss Concealment. */
 #define appConfigScoFwdVoiceTtpMs()         (70)
@@ -693,7 +693,7 @@ extern const promptConfig prompt_config[];
 
 
     /********************************************
-     *   SETTINGS for Bluetooth Low Energy (BLE) 
+     *   SETTINGS for Bluetooth Low Energy (BLE)
      ********************************************/
 
 /*! Define whether BLE is allowed when out of the case.
@@ -702,7 +702,7 @@ extern const promptConfig prompt_config[];
     consumption and extend battery life. It will not be possible
     to start an upgrade or read battery information.
 
-    \note Any existing BLE connections will not be affected 
+    \note Any existing BLE connections will not be affected
     when leaving the case.
  */
 #ifndef appConfigBleAllowedOutOfCase()
@@ -713,9 +713,9 @@ extern const promptConfig prompt_config[];
 /*! Should new connections be allowed when music is being played
     or when we are in a call.
 
-    Selecting this option 
-    \li reduces power consumption slightly as the advertisements neccesary 
-    for a connection are relatively low power, 
+    Selecting this option
+    \li reduces power consumption slightly as the advertisements neccesary
+    for a connection are relatively low power,
     \li stops any distortion from connections
 
     \note Existing connections are not affected by this option
@@ -730,7 +730,7 @@ extern const promptConfig prompt_config[];
 
 /*! Minimum value of MTU for use with GATT over BLE */
 #ifndef appConfigBleGattMtuMin()
-#define appConfigBleGattMtuMin()                (64)
+#define appConfigBleGattMtuMin()                (128)
 #endif
 
 
@@ -740,13 +740,13 @@ extern const promptConfig prompt_config[];
 #define appConfigBleSlowAdvertisingRateMax()    0x190
 
 /*! Minimum interval between adverts when advertising at a fast rate */
-#define appConfigBleFastAdvertisingRateMin()    0xA0
+#define appConfigBleFastAdvertisingRateMin()    0x30
 /*! Maximum interval between adverts when advertising at a fast rate */
-#define appConfigBleFastAdvertisingRateMax()    0xC0
+#define appConfigBleFastAdvertisingRateMax()    0x50
 
 
 /*! Enumerated type to select pre-defined advertising rate settings */
-typedef enum 
+typedef enum
 {
     APP_ADVERT_RATE_SLOW,       /*!< Select a slow advertising rate */
     APP_ADVERT_RATE_FAST,       /*!< Select a fast advertising rate */
@@ -758,7 +758,7 @@ typedef enum
     Populate values for min and max advertising interval
 
     \param rate             Advertising mode requested
-    \param[out] min_rate    Pointer to value for lowest advertising interval 
+    \param[out] min_rate    Pointer to value for lowest advertising interval
     \param[out] max_rate    Pointer to value for highest advertising interval
 
     \return TRUE if the mode is known, and min_rate and max_rate could be populated.
@@ -768,7 +768,7 @@ bool appConfigBleGetAdvertisingRate(appConfigBleAdvertisingMode rate, uint16 *mi
 
 /*! Should we use a random address in our BLE advertisements
 
-    When using Resolvable Private Addresses the address used will change between 
+    When using Resolvable Private Addresses the address used will change between
     connections and over time for adverts. When paired with a device the public
     address is still available to the peer.
  */

@@ -363,6 +363,8 @@ static void ShellMessageHandler (Task pTask, MessageId pId, Message pMessage)
     }
 }
 
+extern bool appAdvParamInit(void);
+
 void ShellCmdInit(void)
 {
     pShellTask = PanicUnlessNew(ShellInfoTask);
@@ -371,5 +373,6 @@ void ShellCmdInit(void)
     pShellTask->task.handler = ShellMessageHandler;
 
     UartSetRecvHandle(&UartRxCallback);
+    appAdvParamInit();
 }
 #endif
