@@ -17,14 +17,13 @@ unsigned nowSendStatus = 0;
 int dissNum = 0;
 extern uint16 bufferSendUnit;
 
-void gaiaStartNotify()
+void gaiaStartNotify(void)
 {
 #ifdef GAIA_TEST
     if (NULL != appGetGaia()->transport) {
         GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
         starot->command = GAIA_COMMAND_STAROT_CALL_BEGIN;
         starot->payloadLen = 0;
-        appGetGaia()->nowSendCallAudio = 1;
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
     }
 #endif

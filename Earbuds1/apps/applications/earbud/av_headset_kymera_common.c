@@ -148,6 +148,7 @@ void appKymeraConfigureDspPowerMode(bool tone_playing)
                     {
                         /* Always jump up to normal clock (80Mhz) for NB or WB CVC */
                         cconfig.active_mode = AUDIO_DSP_BASE_CLOCK;
+                        cconfig.active_mode = AUDIO_DSP_TURBO_CLOCK;
                         mode = AUDIO_POWER_SAVE_MODE_1;
                     }
                     break;

@@ -5,7 +5,7 @@
 #include "audio_forward.h"
 
 
-uint16 bufferSendUnit = 240;
+uint16 bufferSendUnit = 40;
 
 #ifdef GAIA_TEST
 
@@ -20,7 +20,6 @@ extern void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 stat
 extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                               uint16 payload_length, uint8 *payload);
 
-uint16 bufferSendUnit = 40;
 static int speakerDropNum = 0;
 static int micDropNum = 0;
 
