@@ -705,7 +705,9 @@ extern const promptConfig prompt_config[];
     \note Any existing BLE connections will not be affected 
     when leaving the case.
  */
+#ifndef appConfigBleAllowedOutOfCase()
 #define appConfigBleAllowedOutOfCase()          (FALSE)
+#endif
 
 
 /*! Should new connections be allowed when music is being played
@@ -718,14 +720,18 @@ extern const promptConfig prompt_config[];
 
     \note Existing connections are not affected by this option
  */
+#ifndef appConfigBleNewConnectionsWhenBusy()
 #define appConfigBleNewConnectionsWhenBusy()   (FALSE)
+#endif
 
 
 /*! Number of simultaneous GATT connections allowed */
 #define appConfigBleGetGattServerInstances()    (1)
 
 /*! Minimum value of MTU for use with GATT over BLE */
+#ifndef appConfigBleGattMtuMin()
 #define appConfigBleGattMtuMin()                (64)
+#endif
 
 
 /*! Minimum interval between adverts when advertising at a slow rate */
@@ -766,7 +772,9 @@ bool appConfigBleGetAdvertisingRate(appConfigBleAdvertisingMode rate, uint16 *mi
     connections and over time for adverts. When paired with a device the public
     address is still available to the peer.
  */
+#ifndef appConfigBleUseResolvablePrivateAddress()
 #define appConfigBleUseResolvablePrivateAddress()   (TRUE)
+#endif
 
 
 /*! The time before changing the address used for Bluetooth Low Energy adverts and connections

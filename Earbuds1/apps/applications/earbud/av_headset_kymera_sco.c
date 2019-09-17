@@ -297,7 +297,7 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
     /* Connect chain */
     ChainConnect(sco_chain);
    
-#if defined(CONFIG_STAROT) && defined(GAIA_TEST)
+#ifdef CONFIG_STAROT
     forwardAudioAndMic(sco_chain);
 #endif
     /* Chain connection sets the switch into consume mode,

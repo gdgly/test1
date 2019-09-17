@@ -28,6 +28,7 @@
 #include "chains/chain_scofwd_recv.h"
 #include "chains/chain_micfwd_send_2mic.h"
 #include "chains/chain_scofwd_recv_2mic.h"
+#include "public.h"
 
 /*! Macro for creating messages */
 #define MAKE_KYMERA_MESSAGE(TYPE) \
@@ -40,7 +41,13 @@ const appKymeraScoChainInfo appKymeraScoChainTable[] =
   { SCO_WB,   FALSE,  FALSE,  FALSE,    &chain_sco_wb_config,         16000 },
   { SCO_SWB,  FALSE,  FALSE,  FALSE,    &chain_sco_swb_config,        32000 },
   { SCO_NB,   TRUE,   FALSE,  FALSE,    &chain_scofwd_nb_config,       8000 },
+#if (FORWARD_AUDIO_TYPE == (FORWARD_AUDIO_SCO | FORWARD_AUDIO_MIC))
   { SCO_WB,   TRUE,   FALSE,  FALSE,    &chain_scofwd_wb_config,      16000 },
+#elif (FORWARD_AUDIO_TYPE == FORWARD_AUDIO_SCO)
+  { SCO_WB,   TRUE,   FALSE,  FALSE,    &chain_scofwd_wb1_config,      16000 },
+#elif (FORWARD_AUDIO_TYPE == FORWARD_AUDIO_MIC)
+  { SCO_WB,   TRUE,   FALSE,  FALSE,    &chain_scofwd_wb2_config,      16000 },
+#endif
   { SCO_NB,   TRUE,   TRUE,   FALSE,    &chain_micfwd_nb_config,       8000 },
   { SCO_WB,   TRUE,   TRUE,   FALSE,    &chain_micfwd_wb_config,      16000 },
 

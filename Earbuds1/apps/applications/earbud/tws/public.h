@@ -120,7 +120,7 @@ int BMA400Power(bool isOn);
 //==============================================================================================
 //            系统功能定义
 //==============================================================================================
-#define GAIA_TEST                           // 电话数据传输到APP
+// #define GAIA_TEST                           // 电话数据传输到APP
 #define CONFIG_STAROT_PEERPAIR              // 左右耳相互保存BT地址用于配对
 #define CONFIG_STAROT_SINGLE                // 独立使用
 
@@ -133,6 +133,14 @@ int BMA400Power(bool isOn);
 #define appConfigBleUseResolvablePrivateAddress() (FALSE)
 #undef  appConfigBleGattMtuMin()
 #define appConfigBleGattMtuMin()                (88)     // 加上协议头每次可传输80个字节
+
+// ================================================
+//              audio forward 开关
+// ================================================
+
+#define FORWARD_AUDIO_SCO  (1<<0)
+#define FORWARD_AUDIO_MIC  (1<<1)
+#define FORWARD_AUDIO_TYPE  (FORWARD_AUDIO_SCO | FORWARD_AUDIO_MIC)
 
 //==============================================================================================
 //            Flash参数读取与保存

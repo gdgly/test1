@@ -5,7 +5,11 @@
 #include <gaia.h>
 #include <../av_headset.h>
 
-#ifdef GAIA_TEST
+enum GAIA_AUDIO_TYPE {
+    GAIA_AUDIO_SPEAKER = 1,
+    GAIA_AUDIO_MIC = 2
+};
+
 
 ////////////////////////////EVENT//////////////////////////////
 enum {
@@ -42,11 +46,6 @@ enum GAIA_TRANSFORM_AUDIO_STATUS {
     GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE,
 };
 
-enum GAIA_AUDIO_TYPE {
-    GAIA_AUDIO_SPEAKER = 1,
-    GAIA_AUDIO_MIC = 2
-};
-
 typedef struct {
     uint16 command;
     Source source;
@@ -72,5 +71,4 @@ void starotNotifyAudioForward(bool st, uint8 flag);
 
 void notifyGaiaDialogSource(Source speaker, Source mic);
 
-#endif
 #endif // AV_HEADSET_GAIA_STAROT_H
