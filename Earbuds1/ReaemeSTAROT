@@ -1,12 +1,38 @@
 debuglog.poll_debug_log()
 stream.create_live_graph_img()
 
+appKymeraHandleInternalScoStart
+
+20190916 CHAIN
+
+
+20190911 G722调试好了之后，打电话出现第二次没有声音的情况
+    1. appKymeraScoStartHelper中busy为1，好象是断开电话后，快速拨号，系统没反应过来。
+    2. appKymeraSetState(...)中会设置busy位置。
+    3. 再次调试发现是没有接收到挂断后的提示音的消息 KYMERA_OP_MSG_ID_TONE_END
+    4. 可能与G722有关系
+
+
+
+20190909 电话加载CHAIN
+    0. appHfpHandleHfpAudioConnectConfirmation-->appScoFwdHandleHfpAudioConnectConfirmation()/appUiHfpScoConnected()-->
+    1. appKymeraScoStart()-->appKymeraScoStartHelper()-->KYMERA_INTERNAL_SCO_START 
+    2. kymera_msg_handler(KYMERA_INTERNAL_SCO_START)-->appKymeraHandleInternalScoStart()-->appKymeraGetScoChain()获取已经设定好的chain
+    3. appKymeraScoCreateChain()-->appKymeraConfigureDspPowerMode(设定DSP频率）-->appKymeraMicSetup()加载MIC&Speaker
+    4. forwardAudioAndMic()加载我们自己的音频数据获取
+    5. ChainStartAttempt()-->启动成功调用：appKymeraHandleInternalScoSetVolume()
+    6. 实际测试中在chain启动之后，会立即启动一个提示音，因此会增加一个提示音的CHAIN到当前CHAIN中去
+
+
+
 20190905 MTU 相关
     1. apps/applications/earbud/av_headset_config.h           appConfigBleGattMtuMin()=64
     2. GattExchangeMtuRequest() GATT_DEFAULT_MTU=23
     3. apps/libs/avrcp/avrcp_private.h      AVRCP_MTU_MINIMUM=48 AVRCP_MTU_DEFAULT=672
     4. apps/applications/earbud/av_headset_gatt.c   appGattHandleGattExchangeMtuInd(...)  反馈
-       gattHandleInternalExchangeMtuReq
+    5. 主动修改MCU GattExchangeMtuRequest-->GATT_INTERNAL_EXCHANGE_MTU_REQ-->gattHandleInternalExchangeMtuReq 可以指定 appGetGattTask()/GattExchangeMtuRequest
+       可以在 appGattHandleGattManRemoteClientConnectCfm 中进行修改请求调用GattExchangeMtuRequest
+       增加 appGattMessageHandler-->appGattMessageHandler-->appGattHandleExchangeMtuCfm
 
 
 20190904 BLE启动
@@ -34,6 +60,10 @@ stream.create_live_graph_img()
     4、ACAT中使用命令	stream.create_live_graph_img()
 	    生成的文件在SDK目录下： ADK_QCC512X_ROM_V21_WIN_6.4.0.30\audio\acat\temp\graph
     5、使用GVEDIT打开这个文件
+  ACAT在6.4.0.39版本出现acat_tab.py "AttributeError: 'NoneType' object hans no attribute 'startswith'错误
+    修改：ADK_QCC512X_ROM_V21_WIN_6.4.0.39\extensions\acat_tab\py\acat_tab.py 107行,也许可以解决
+          if project_path.startswith("sdk://"):  ---->>>> if project_path is None or project_path.startswith("sdk://"):
+
 
 
 20190819 电话挂断后播放提示音流程,在原来chain基本上插入新的CHAIN
