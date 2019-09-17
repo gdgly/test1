@@ -281,6 +281,9 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
 
     /* Configure chain specific operators */
     appKymeraScoConfigureChain(wesco);
+#ifdef CONFIG_STAROT
+    forwardAudioAndMic(sco_chain);
+#endif
 
     /* Connect SCO to chain SCO endpoints */
     StreamConnect(sco_ep_src, sco_snk);
@@ -297,9 +300,6 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
     /* Connect chain */
     ChainConnect(sco_chain);
    
-#ifdef CONFIG_STAROT
-    forwardAudioAndMic(sco_chain);
-#endif
     /* Chain connection sets the switch into consume mode,
        select the local Microphone if MIC forward enabled */
     if (theKymera->sco_info->mic_fwd)
@@ -367,9 +367,12 @@ void appKymeraHandleInternalScoStop(void)
     /* Stop chains */
     ChainStop(sco_chain);
 
-#if defined(CONFIG_STAROT) && defined(GAIA_TEST)
-    /* disconnect audio forward endpoint. */
-    /* Disconnect audio forward source */
+#if defined(CONFIG_STAROT)
+    /* disconnect audio forward endpoint && source */
+    disconnectAudioForward(sco_chain);
+#endif
+
+#if defined(GAIA_TEST)
     if (NULL != appGetGaia()->transport) {
         GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
         starot->command = GAIA_COMMAND_STAROT_CALL_END;
@@ -377,7 +380,6 @@ void appKymeraHandleInternalScoStop(void)
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
         appGetGaia()->nowSendCallAudio = 0;
     }
-//    disconnectAudioForward(sco_chain);
 #endif
 
     /* Disconnect SCO from chain SCO endpoints */

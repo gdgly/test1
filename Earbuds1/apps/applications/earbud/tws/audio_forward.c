@@ -24,10 +24,10 @@
 #else
 #define handle_sco_msg() do {show_msg(source, 0);}while(0)
 #define handle_mic_msg() do {show_msg(source, 1);}while(0)
-#endif
-
 static void show_msg(Source source, int source_type);
 static void print_msg(int msg_count, const uint16 *data, int msg_source);
+#endif
+
 static void msg_handler (Task appTask, MessageId id, Message msg);
 static void initSetSpeechDataSource(Source src);
 static void sendMessageMoreData(Task task, Source src, uint32 delay);
@@ -123,10 +123,6 @@ Task getAudioForwardTask(void)
 /*
  * Static Functions
 */
-
-static unsigned int msg_cnt_sco = 0;
-static unsigned int msg_cnt_mic = 0;
-
 static void msg_handler (Task appTask, MessageId id, Message msg)
 {
     UNUSED(appTask);
@@ -213,6 +209,10 @@ static void initSetSpeechDataSource(Source src)
         sendMessageMoreData(audioForwardTask, src, 0);
 }
 
+#ifndef GAIA_TEST
+static unsigned int msg_cnt_sco = 0;
+static unsigned int msg_cnt_mic = 0;
+
 static void show_msg(Source source, int source_type)
 {
     int size = SourceSize(source);
@@ -240,3 +240,4 @@ static void print_msg(int msg_count, const uint16 *data, int msg_source)
                msg_count, data[0],data[1],data[2],data[3],data[4],data[5]);
     }
 }
+#endif
