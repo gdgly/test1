@@ -4,8 +4,10 @@
 #include "av_headset_gaia_starot.h"
 #include "audio_forward.h"
 
-#ifdef GAIA_TEST
 
+uint16 bufferSendUnit = 240;
+
+#ifdef GAIA_TEST
 
 Source dialogSpeaker = NULL;
 Source dialogMic = NULL;
