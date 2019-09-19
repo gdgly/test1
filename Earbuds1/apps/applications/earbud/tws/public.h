@@ -146,11 +146,7 @@ int BMA400Power(bool isOn);
 //==============================================================================================
 //            Flash参数读取与保存
 //==============================================================================================
-bool ParamUsingSingle(void);     // 独立使用
-int16 ParamSavePeerAddr( typed_bdaddr *taddr);
-int16 ParamLoadPeerAddr( typed_bdaddr *taddr);
-int16 ParamLoadBlePair(BlePairInfo *blePairInfo);
-int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
+#include "param.h"
 
 //==============================================================================================
 //         CAPABILITY 使用定义

@@ -16,6 +16,7 @@
 #include <../av_headset.h>
 
 #include "public.h"
+#include "param.h"
 
 #ifdef CONFIG_PSRAM_TEST
 static int psram_power(bool isOn)
@@ -119,8 +120,8 @@ void BtAddrChange(int type)
             }
         }
 
-        memset(&taddr, 0, sizeof(taddr));
-        ParamLoadPeerAddr(&taddr);
+        ParamLoadBtAddrPrm(&gBtAddrParam);
+        memcpy(&taddr, &gBtAddrParam.peer_addr, sizeof(typed_bdaddr));
         DEBUG_LOG("OurSav t=%x lun=%06x:%02x:%04x", taddr.type, taddr.addr.lap, taddr.addr.uap, taddr.addr.nap);
         break;
 
@@ -139,7 +140,8 @@ void BtAddrChange(int type)
         memset(&keys, 0, sizeof(keys));
         connectionAuthUpdateTdl((const TYPED_BD_ADDR_T *)&taddr, &keys);
         ConnectionSmPutAttribute(0, &taddr.addr, sizeof(attributes), (uint8 *)&attributes);
-        ParamSavePeerAddr(&taddr);
+        memcpy(&gBtAddrParam.peer_addr, &taddr, sizeof(typed_bdaddr));
+        ParamSaveBtAddrPrm(&gBtAddrParam);
         DEBUG_LOG("Add AddrL\n");
         break;
     case 3:           // 右耳机调用设置配对耳机
@@ -148,13 +150,15 @@ void BtAddrChange(int type)
      //   connectionAuthUpdateTdl((const TYPED_BD_ADDR_T *)&taddr, &keys);
 
         DEBUG_LOG("Add AddrR");
-        ParamSavePeerAddr(&taddr);
+        memcpy(&gBtAddrParam.peer_addr, &taddr, sizeof(typed_bdaddr));
+        ParamSaveBtAddrPrm(&gBtAddrParam);
         break;
     case 4:           // 左右耳机调用，设置配单耳机使用
         taddr.addr.lap = 0xffffff;
         taddr.addr.nap = 0xffff;
         taddr.addr.uap = 0xff;
-        ParamSavePeerAddr(&taddr);
+        memcpy(&gBtAddrParam.peer_addr, &taddr, sizeof(typed_bdaddr));
+        ParamSaveBtAddrPrm(&gBtAddrParam);
         DEBUG_LOG("Add Addr Single");
         break;
    case 99:
@@ -193,8 +197,8 @@ static void DoBtAddrFunc(int type, char *outbuf, char *param)
             }
         }
 
-        memset(&taddr, 0, sizeof(taddr));
-        ParamLoadPeerAddr(&taddr);
+        ParamLoadBtAddrPrm(&gBtAddrParam);
+        memcpy(&taddr, &gBtAddrParam.peer_addr, sizeof(typed_bdaddr));
         sprintf(outbuf, "OurSav t=%x lun=%06x:%02x:%04x\n", taddr.type,
             taddr.addr.lap, taddr.addr.uap, taddr.addr.nap);
         UartTxData((const uint8*)outbuf, strlen(outbuf)); outbuf[0] = '\0';
@@ -241,7 +245,8 @@ static void DoBtAddrFunc(int type, char *outbuf, char *param)
         memset(&keys, 0, sizeof(keys));
         connectionAuthUpdateTdl((const TYPED_BD_ADDR_T *)&taddr, &keys);
         ConnectionSmPutAttribute(0, &taddr.addr, sizeof(attributes), (uint8 *)&attributes);
-        ParamSavePeerAddr(&taddr);
+        memcpy(&gBtAddrParam.peer_addr, &taddr, sizeof(typed_bdaddr));
+        ParamSaveBtAddrPrm(&gBtAddrParam);
         UartTxData((const uint8*)"Add AddrL\n", 9);
         DoBtAddrFunc(0, outbuf, NULL);
         break;
@@ -251,14 +256,17 @@ static void DoBtAddrFunc(int type, char *outbuf, char *param)
         connectionAuthUpdateTdl((const TYPED_BD_ADDR_T *)&taddr, &keys);
 
         UartTxData((const uint8*)"Add AddrR\n", 9);
-        ParamSavePeerAddr(&taddr);
+        memcpy(&gBtAddrParam.peer_addr, &taddr, sizeof(typed_bdaddr));
+        ParamSaveBtAddrPrm(&gBtAddrParam);
         DoBtAddrFunc(0, outbuf, NULL);
         break;
     case 4:           // 左右耳机调用，设置配单耳机使用
         taddr.addr.lap = 0xffffff;
         taddr.addr.nap = 0xffff;
         taddr.addr.uap = 0xff;
-        ParamSavePeerAddr(&taddr);
+        gBtAddrParam.single_era = 1;
+        memcpy(&gBtAddrParam.peer_addr, &taddr, sizeof(typed_bdaddr));
+        ParamSaveBtAddrPrm(&gBtAddrParam);
         UartTxData((const uint8*)"Add Addr Single\n", 9);
         DoBtAddrFunc(0, outbuf, NULL);
         break;

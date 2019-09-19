@@ -51,6 +51,10 @@ bool disable_audio_forward(bool disable)
         Operator passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH));
         PanicZero(VmalOperatorMessage(passthrough, set_data_format,
                                       sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+
+        passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH));
+        PanicZero(VmalOperatorMessage(passthrough, set_data_format,
+                                      sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
         return TRUE;
     }
 #endif

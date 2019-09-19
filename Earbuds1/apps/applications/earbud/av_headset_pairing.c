@@ -1425,7 +1425,7 @@ static void appHandleClDmInquireResult(pairingTaskData *thePairing, const CL_DM_
 #ifdef CONFIG_STAROT_PEERPAIR
                 if (!BdaddrIsZero(&thePairing->bd_addr[0])) {
                     typed_bdaddr taddr;
-                    if(ParamLoadPeerAddr(&taddr) >= 0) {
+                    if(ParamGetPeerAddr(&taddr) >= 0) {
                         if(BdaddrIsSame(&thePairing->bd_addr[0], &taddr.addr)) {
                             thePairing->inquiry_rssi[0] = thePairing->inquiry_rssi[1] + appConfigPeerPairingMinRssiDelta();
                             DEBUG_LOG("\nappHandleClDmInquireResult, SetNew rssi=%d", thePairing->inquiry_rssi[0]);
