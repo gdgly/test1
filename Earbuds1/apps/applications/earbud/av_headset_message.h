@@ -32,6 +32,7 @@
 #define EB_BATTERY_MESSAGE_BASE     (0xc00)     /*!< Battery module messages. See #battery_messages */
 #define ADV_MANAGER_MESSAGE_BASE    (0xd00)     /*!< Messages sent by advertising manager. See #av_headset_advertising_messages */
 #define SFWD_MESSAGE_BASE           (0xe00)     /*!< SCO Forwarding management module. See #av_headset_scofwd_messages */
+#define AUDIO_FWD_MESSAGE_BASE		(0xe80)     /*!< Audio Forwarding management module. See #audio_forward_messages */
 #define PROXIMITY_MESSAGE_BASE      (0xf00)     /*!< Proximity module messages. Note limited range. See #proximity_messages */
 #define ACCELEROMETER_MESSAGE_BASE  (0xf10)     /*!< Accelerometer module messages. Note limited range. See #accelerometer_messages */
 #define CHARGER_MESSAGE_BASE        (0xf20)     /*!< Charger module messages. Note limited range. See #chargerMessages */

@@ -179,6 +179,8 @@
     <file path="../../tws/cmdprocess.c"/>
     <file path="../../tws/em20168.c"/>
     <file path="../../tws/em20168.h"/>
+    <file path="../../tws/gaia_test.c"/>
+    <file path="../../tws/gaia_test.h"/>
     <file path="../../tws/hw_i2c.c"/>
     <file path="../../tws/hw_i2s.c"/>
     <file path="../../tws/hw_uart.c"/>

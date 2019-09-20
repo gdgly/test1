@@ -18,12 +18,16 @@
 #define AUDIO_DATA_FORMAT_16_BIT (0)
 #define OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD (0x000C)
 
+
+#define MAKE_FWD_MESSAGE(TYPE) TYPE##_T *message = PanicUnlessNew(TYPE##_T)
+
+
 #ifdef GAIA_TEST
-#define handle_sco_msg() do {sendDataMessage(message->source, GAIA_AUDIO_SPEAKER, data_source_sco, data_source_mic); }while(0)
-#define handle_mic_msg() do {sendDataMessage(message->source, GAIA_AUDIO_MIC, data_source_sco, data_source_mic); }while(0)
+#define sco_msg_handler() do {sendDataMessage(message->source, GAIA_AUDIO_SPEAKER, audioFwdTaskData.data_source_sco, audioFwdTaskData.data_source_mic); }while(0)
+#define mic_msg_handler() do {sendDataMessage(message->source, GAIA_AUDIO_MIC, audioFwdTaskData.data_source_sco, audioFwdTaskData.data_source_mic); }while(0)
 #else
-#define handle_sco_msg() do {show_msg(source, 0);}while(0)
-#define handle_mic_msg() do {show_msg(source, 1);}while(0)
+#define sco_msg_handler() do {show_msg(source, 0);}while(0)
+#define mic_msg_handler() do {show_msg(source, 1);}while(0)
 static void show_msg(Source source, int source_type);
 static void print_msg(int msg_count, const uint16 *data, int msg_source);
 #endif
@@ -32,34 +36,21 @@ static void msg_handler (Task appTask, MessageId id, Message msg);
 static void initSetSpeechDataSource(Source src);
 static void sendMessageMoreData(Task task, Source src, uint32 delay);
 static void indicateFwdDataSource(Source src, source_type_t type);
-
-static TaskData audioForwardTaskData = {.handler = msg_handler};
-static Task audioForwardTask = &audioForwardTaskData;
-
-static Source data_source_sco = NULL;
-static Source data_source_mic = NULL;
+static bool __disable_audio_forward(bool disable);
 
 
-bool disable_audio_forward(bool disable)
+static AudioForwardTaskData audioFwdTaskData =
 {
-#if (FORWARD_AUDIO_TYPE & (FORWARD_AUDIO_MIC | FORWARD_AUDIO_SCO))
-    uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD, disable };
-
-    kymera_chain_handle_t sco_chain = appKymeraGetScoChain();
-
-    if (sco_chain) {
-        Operator passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH));
-        PanicZero(VmalOperatorMessage(passthrough, set_data_format,
-                                      sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
-
-        passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH));
-        PanicZero(VmalOperatorMessage(passthrough, set_data_format,
-                                      sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
-        return TRUE;
-    }
+    .data = {.handler = msg_handler},
+    .data_source_sco = NULL,
+    .data_source_mic = NULL,
+#ifndef GAIA_TEST
+    .msg_cnt_sco = 0,
+    .msg_cnt_mic = 0
 #endif
-    return FALSE;
-}
+};
+
+static Task audioForwardTask = &(audioFwdTaskData.data);
 
 void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 {
@@ -105,6 +96,12 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 #endif
 }
 
+void disable_audio_forward(bool disable) {
+    MAKE_FWD_MESSAGE(AUDIO_FWD_DISABLE);
+	message->disable = disable;
+	MessageSendLater(audioForwardTask, AUDIO_FWD_DISABLE, message, 0);
+}
+
 void disconnectAudioForward(kymera_chain_handle_t sco_chain) {
     /* Disconnect audio forward source */
 #if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_SCO )
@@ -117,7 +114,6 @@ void disconnectAudioForward(kymera_chain_handle_t sco_chain) {
     SourceUnmap(mic_audfwd_src);
 #endif
 }
-
 
 Task getAudioForwardTask(void)
 {
@@ -136,11 +132,11 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
             MessageMoreData * message = (MessageMoreData *)msg;
             Source source = message->source;
 
-            if (source == data_source_sco) {
-                handle_sco_msg();
+            if (source == audioFwdTaskData.data_source_sco) {
+                sco_msg_handler();
             }
-            else if (source == data_source_mic) {
-                handle_mic_msg();
+            else if (source == audioFwdTaskData.data_source_mic) {
+                mic_msg_handler();
             }
             else {
                 printf("ERROR: msg_handler: MESSAGE_MORE_DATA: INCORRECT SOURCE!\n");
@@ -156,10 +152,16 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
 
             break;
         }
+        case AUDIO_FWD_DISABLE:
+       	{
+            AUDIO_FWD_DISABLE_T* dis = (AUDIO_FWD_DISABLE_T*)msg;
+            __disable_audio_forward(dis->disable);
+        	break;
+		}
         default:
         {
 #ifdef GAIA_TEST
-            handle_starot_gaia_msg(id, msg, &data_source_sco, &data_source_mic);
+            handle_starot_gaia_msg(id, msg, &(audioFwdTaskData.data_source_sco), &(audioFwdTaskData.data_source_mic));
 #endif
             break;
         }
@@ -171,11 +173,11 @@ static void indicateFwdDataSource(Source src, source_type_t type)
     if (type > STYPE_MIC) return;
 
 #if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_SCO )
-    if (STYPE_SCO == type) data_source_sco = src;
+    if (STYPE_SCO == type) audioFwdTaskData.data_source_sco = src;
 #endif
 
 #if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_MIC )
-    if (STYPE_MIC == type) data_source_mic = src;
+    if (STYPE_MIC == type) audioFwdTaskData.data_source_mic = src;
 #endif
 
     MAKE_AUDIO_MESSAGE( AUDIO_VA_INDICATE_DATA_SOURCE, message) ;
@@ -184,7 +186,7 @@ static void indicateFwdDataSource(Source src, source_type_t type)
 
 #ifdef GAIA_TEST
     printf("Source src:%x, source_type_t type:%d\n", src, type);
-	notifyGaiaDialogSource(data_source_sco, data_source_mic);
+    notifyGaiaDialogSource(audioFwdTaskData.data_source_sco, audioFwdTaskData.data_source_mic);
 #endif
 
 }
@@ -213,9 +215,28 @@ static void initSetSpeechDataSource(Source src)
         sendMessageMoreData(audioForwardTask, src, 0);
 }
 
+static bool __disable_audio_forward(bool disable)
+{
+#if (FORWARD_AUDIO_TYPE & (FORWARD_AUDIO_MIC | FORWARD_AUDIO_SCO))
+    uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD, disable };
+
+    kymera_chain_handle_t sco_chain = appKymeraGetScoChain();
+
+    if (sco_chain) {
+        Operator passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH));
+        PanicZero(VmalOperatorMessage(passthrough, set_data_format,
+                                      sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+
+        passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH));
+        PanicZero(VmalOperatorMessage(passthrough, set_data_format,
+                                      sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+        return TRUE;
+    }
+#endif
+    return FALSE;
+}
+
 #ifndef GAIA_TEST
-static unsigned int msg_cnt_sco = 0;
-static unsigned int msg_cnt_mic = 0;
 
 static void show_msg(Source source, int source_type)
 {
@@ -223,12 +244,12 @@ static void show_msg(Source source, int source_type)
     const uint16 *ptr = (const uint16*)SourceMap(source);
 
     if (0 == source_type) {
-        msg_cnt_sco ++;
-        print_msg(msg_cnt_sco, ptr, source_type);
+        audioFwdTaskData.msg_cnt_sco ++;
+        print_msg(audioFwdTaskData.msg_cnt_sco, ptr, source_type);
     }
     else if (1 == source_type) {
-        msg_cnt_mic ++;
-        print_msg(msg_cnt_mic, ptr, source_type);
+        audioFwdTaskData.msg_cnt_mic ++;
+        print_msg(audioFwdTaskData.msg_cnt_mic, ptr, source_type);
     }
 
     SourceDrop(source, size);
