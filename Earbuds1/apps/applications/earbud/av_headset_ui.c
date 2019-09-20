@@ -855,6 +855,8 @@ static void appUiHandleMessage(Task task, MessageId id, Message message)
                     appAvPlayToggle(TRUE);
                 else if (appDeviceIsHandsetHfpConnected() && appDeviceIsHandsetA2dpConnected())
                     appUiError();
+                else if(!appSmIsPairing())
+                    appSmPairHandset();
                 else
                 {
                     appSmConnectHandset();
@@ -1174,6 +1176,14 @@ static void appUiHandleMessage(Task task, MessageId id, Message message)
                 appUiButtonFactoryReset();
         }
         break;
+#ifdef CONFIG_STAROT
+    // 盒子发送相关的命令操作
+    case APP_CASE_REPORT_VERSION:           // 盒子硬件版本信息等
+    case APP_CASE_REPORT_INFO:              // 盒子报告当前信息
+    case APP_CASE_SET_BLEINFO:              // 设置BLE信息
+    case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
+        break;
+#endif
     }
 }
 
@@ -1195,3 +1205,7 @@ void appUiInit(void)
 
     theUi->prompt_last = PROMPT_NONE;
 }
+
+#ifdef CONFIG_STAROT
+ProgRunInfo gProgRunInfo;
+#endif

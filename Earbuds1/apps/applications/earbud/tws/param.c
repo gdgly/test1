@@ -52,6 +52,7 @@ void FixParamDefault(void)
     FixPrmPtr prm = &gFixParam;
 
     prm->aud_adj      = 0;
+    prm->hw_ver       = 0xFFFF;
 }
 
 // taddr: save value;
@@ -122,6 +123,9 @@ int16 ParamLoadUserPrm(UserPrmPtr pParam)
 }
 
 
+/////////////////////////////////////////////////////////////////////////////////
+//////// 其它外部参数
+/////////////////////////////////////////////////////////////////////////////////
 #ifdef CONFIG_STAROT_SINGLE
 // 检查是否为独立使用，没有耳机配对
 // 单耳独立使用 0:daul 1:mon  ff:unknown
@@ -175,7 +179,33 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
     return sizeof(BlePairInfo);
 }
 
+// hwVer[short]+swVer[short]
+int16 SystemGetVersion(uint8 *buffer)              // 获取软硬件版本信息
+{
+    uint16 *ptr = (uint16*)buffer;
+
+    ptr[0] = gFixParam.hw_ver;
+    ptr[1] = SYSTEM_SW_VERSION;
+
+    return 4;       // BYTE
+}
 
 
 
+void ParamConfigInit(void)
+{
+    ParamLoadAll();
 
+    /* Get local device address */
+    ConnectionReadLocalAddr(appGetAppTask());
+}
+
+void ParamInitHandleClDmLocalBdAddrCfm(Message message)
+{
+    CL_DM_LOCAL_BD_ADDR_CFM_T *cfm = (CL_DM_LOCAL_BD_ADDR_CFM_T *)message;
+    if (cfm->status != success)
+        Panic();
+
+    memcpy(&gProgRunInfo.addr, &cfm->bd_addr, sizeof(bdaddr));
+    DEBUG_LOG("ParamInit addr %04x:%02x:%06x", cfm->bd_addr.nap, cfm->bd_addr.uap, cfm->bd_addr.lap);
+}

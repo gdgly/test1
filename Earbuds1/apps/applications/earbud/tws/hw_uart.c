@@ -17,6 +17,7 @@
 
 
 #ifdef CONFIG_HW_UART
+#define CONFIG_BAUDRATE_115200          // 115200用来测试命令使用,不定义则使用3M波特率
 
 
 #define SEND_ONE_LEN     (500)      /* 单次最大发送长度 */
@@ -207,7 +208,11 @@ void uartInit(void)
     //    StreamUartConfigure(VM_UART_RATE_460K8, VM_UART_STOP_ONE, VM_UART_PARITY_NONE);
     //    StreamUartConfigure(VM_UART_RATE_921K6, VM_UART_STOP_ONE, VM_UART_PARITY_NONE);
     //    StreamUartConfigure(VM_UART_RATE_921K6*2+850, VM_UART_STOP_ONE, VM_UART_PARITY_NONE);    // 2M实际输出
+#ifndef CONFIG_BAUDRATE_115200
     StreamUartConfigure(12168+400, VM_UART_STOP_ONE, VM_UART_PARITY_NONE);    // 3M实际输出 ((3000000/9600) *39 + X)
+#else
+    StreamUartConfigure(VM_UART_RATE_115K2, VM_UART_STOP_ONE, VM_UART_PARITY_NONE);
+#endif
 
     /* Get the sink for the uart */
     theTask->uart_sink = StreamUartSink();

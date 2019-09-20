@@ -332,6 +332,19 @@ static void ShellDoCommand(char *buffer, int len)
         appSmReboot();
         sprintf(outbuf, "reboot System\n");
     }
+    else if(strstr(buffer, "getver")) {       // 获取版本信息
+        uint16 ver[4];
+        SystemGetVersion((uint8 *)ver);
+        sprintf(outbuf, "HWver:%04x SWver:0x%4x\n", ver[0], ver[1]);
+    }
+    else if(strstr(buffer, "getbt")) {        // 盒子获取耳机经典蓝牙地址
+   //     uint8 addr[8];
+   //     SystemGet
+    }
+    else if(strstr(buffer, "getble")) {       // 获取BLE信息
+    }
+    else if(strstr(buffer, "getstat")) {      // 获取当前状态(充电满)
+    }
     else
         sprintf(outbuf, "Unknown %s\n", buffer);
 

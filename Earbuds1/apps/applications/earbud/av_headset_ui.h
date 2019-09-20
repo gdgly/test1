@@ -530,4 +530,27 @@ extern void appUiSleep(void);
      is interrupted, or if it is not played at all. */
 #define appUiPlayPromptInterruptibleClearLock(prompt, lock, mask) appUiPlayPromptCore(prompt, TRUE, TRUE, lock, mask)
 
+
+#ifdef CONFIG_STAROT
+// 盒子发送相关的命令操作
+#define APP_CASE_REPORT_VERSION    (1100)           // 盒子硬件版本信息等
+#define APP_CASE_REPORT_INFO       (1101)           // 盒子报告当前信息
+#define APP_CASE_SET_BLEINFO       (1105)           // 设置BLE信息
+#define APP_CASE_SET_BTINFO        (1106)           // 盒子设置耳机经典蓝牙配对地址
+//#define APP_CASE_GET_INFO          (1110)           // 获取版本信息
+//#define APP_CASE_GET_BTINFO        (1111)           // 盒子获取耳机经典蓝牙地址
+//#define APP_CASE_GET_BLEINFO       (1113)           // 获取BLE信息
+//#define APP_CASE_GET_STATUS        (1115)           // 获取当前状态(充电满)
+
+// 系统运行中的一些动态数据
+typedef struct tagPROGRUNINFO {
+    bdaddr         addr;                    // 本机蓝牙地址
+
+}ProgRunInfo, *ProgRIPtr;
+extern ProgRunInfo gProgRunInfo;
+
+
+#endif
+
+
 #endif

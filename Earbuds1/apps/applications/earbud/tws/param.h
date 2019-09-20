@@ -1,10 +1,13 @@
 #ifndef PARAM_H
 #define PARAM_H
 
+#define SYSTEM_SW_VERSION         (0x8001)                   // 每次发布版本修改这儿的值
+
 //////////////////////////////////////////////////////////////////////////////////
 /////        出厂固定不变的参数
 //////////////////////////////////////////////////////////////////////////////////
 typedef struct tagFIXPARAM {
+    uint16         hw_ver;                     // 硬件版本
     int16          aud_adj;                    // 音频微调
 
     uint8          rev[8];
@@ -51,5 +54,9 @@ int16 ParamGetPeerAddr( typed_bdaddr *taddr);       // 从内存中获取
 int16 ParamLoadBlePair( BlePairInfo *blePairInfo);
 int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
 
+int16 SystemGetVersion(uint8 *buffer);              // 获取软硬件版本信息
+
+void ParamConfigInit(void);
+void ParamInitHandleClDmLocalBdAddrCfm(Message message);
 
 #endif // PARAM_H

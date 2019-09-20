@@ -195,6 +195,9 @@ static const appInitTableEntry appInitTable[] =
 #ifdef USE_BDADDR_FOR_LEFT_RIGHT
     {appConfigInit,         CL_DM_LOCAL_BD_ADDR_CFM, appInitHandleClDmLocalBdAddrCfm},
 #endif
+#ifdef CONFIG_STAROT
+    {ParamConfigInit,       CL_DM_LOCAL_BD_ADDR_CFM, ParamInitHandleClDmLocalBdAddrCfm},
+#endif
     {appLinkPolicyInit,     0, NULL},
     {appConManagerInit,     0, NULL},
     {appConnRulesInit,      0, NULL},
