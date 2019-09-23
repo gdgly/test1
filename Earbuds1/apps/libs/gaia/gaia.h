@@ -945,7 +945,8 @@ void GaiaRwcpSendNotification(uint8 *payload, uint16 payload_length);
 
 #ifdef GAIA_EXT
 
-#define GAIA_COMMAND_TYPE_STAROT (0x5000)  /// hjs：新添加的命令
+#define GAIA_COMMAND_TYPE_STAROT_DIALOG (0x5000)  /// hjs：新添加的命令
+#define GAIA_COMMAND_TYPE_STAROT_BOND_CODE (0x5100)
 #define GAIA_VENDOR_STAROT (0x000F)
 
 typedef struct
