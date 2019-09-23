@@ -247,9 +247,11 @@ extern const ringtone_note app_tone_av_link_loss[];
 #define appUiHfpRing(caller_id) \
     appUiPlayTone(app_tone_hfp_ring)
 
+#ifndef CONFIG_STAROT
 /*! \brief Handle caller ID */
 #define appUiHfpCallerId(caller_number, size_caller_number, caller_name, size_caller_name)
     /* Add text to speech call here */
+#endif
 
 /*! \brief Play HFP SCO connected tone */
 #define appUiHfpScoConnected() \
@@ -259,6 +261,7 @@ extern const ringtone_note app_tone_av_link_loss[];
 #define appUiHfpScoDisconnected() \
     appUiPlayTone(app_tone_hfp_sco_disconnected)
 
+#ifndef CONFIG_STAROT
 /*! \brief Show HFP incoming call LED pattern */
 #define appUiHfpCallIncomingActive() \
     appLedSetPattern(app_led_pattern_call_incoming, LED_PRI_HIGH)
@@ -274,6 +277,7 @@ extern const ringtone_note app_tone_av_link_loss[];
 /*! \brief Show HFP call imactive LED pattern */
 #define appUiHfpCallInactive() \
     appLedStopPattern(LED_PRI_HIGH)
+#endif
 
 /*! \brief Play HFP mute active tone */
 #define appUiHfpMuteActive() \
@@ -532,25 +536,8 @@ extern void appUiSleep(void);
 
 
 #ifdef CONFIG_STAROT
-// 盒子发送相关的命令操作
-#define APP_CASE_REPORT_VERSION    (1100)           // 盒子硬件版本信息等
-#define APP_CASE_REPORT_INFO       (1101)           // 盒子报告当前信息
-#define APP_CASE_SET_BLEINFO       (1105)           // 设置BLE信息
-#define APP_CASE_SET_BTINFO        (1106)           // 盒子设置耳机经典蓝牙配对地址
-//#define APP_CASE_GET_INFO          (1110)           // 获取版本信息
-//#define APP_CASE_GET_BTINFO        (1111)           // 盒子获取耳机经典蓝牙地址
-//#define APP_CASE_GET_BLEINFO       (1113)           // 获取BLE信息
-//#define APP_CASE_GET_STATUS        (1115)           // 获取当前状态(充电满)
-
-// 系统运行中的一些动态数据
-typedef struct tagPROGRUNINFO {
-    bdaddr         addr;                    // 本机蓝牙地址
-
-}ProgRunInfo, *ProgRIPtr;
-extern ProgRunInfo gProgRunInfo;
-
-
-#endif
+#include "tws/sub_ui.h"
+#endif  /* CONFIG_STAROT */
 
 
 #endif

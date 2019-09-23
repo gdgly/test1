@@ -101,6 +101,9 @@ static void appHfpEnterInitialisingHfp(void)
                             HFP_REMOTE_VOL_CONTROL |
                             HFP_CODEC_NEGOTIATION |
                             HFP_HF_INDICATORS |
+#ifdef CONFIG_STAROT
+                            HFP_CLI_PRESENTATION |          // 获取拨入手机号
+#endif
                             HFP_ESCO_S4_SUPPORTED);
 
     /* Initialise an HFP profile instance */
@@ -784,6 +787,10 @@ static void appHfpHandleHfpSlcConnectConfirm(const HFP_SLC_CONNECT_CFM_T *cfm)
                 /* inform clients */
                 appHfpSendSlcStatus(TRUE, cfm->priority, &cfm->bd_addr);
 
+#ifdef CONFIG_STAROT
+                HfpCallerIdEnableRequest(cfm->priority, TRUE);      // 获取拨入手机号
+#endif
+
                 return;        
             }
 
@@ -1322,7 +1329,7 @@ static void appHfpHandleHfpCallerIdIndication(const HFP_CALLER_ID_IND_T *ind)
             if (!appGetHfp()->call_accepted)                
             {
                 /* Queue prompt & number */
-                appUiHfpCallerId(ind->caller_number, ind->size_caller_number, NULL, 0);
+                appUiHfpCallerId(ind->caller_number, ind->size_number, NULL, 0);
             }
         }
         return;

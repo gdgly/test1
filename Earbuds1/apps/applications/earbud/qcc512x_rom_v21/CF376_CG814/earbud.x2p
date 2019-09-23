@@ -187,6 +187,9 @@
     <file path="../../tws/lis25ba.c"/>
     <file path="../../tws/lis25ba_test.c"/>
     <file path="../../tws/param.c"/>
+    <file path="../../tws/param.h"/>
     <file path="../../tws/public.h"/>
+    <file path="../../tws/sub_ui.c"/>
+    <file path="../../tws/sub_ui.h"/>
     <file path="../common/1_button.pio.buttonxml"/>
 </project>

@@ -1177,13 +1177,11 @@ static void appUiHandleMessage(Task task, MessageId id, Message message)
         }
         break;
 #ifdef CONFIG_STAROT
-    // 盒子发送相关的命令操作
-    case APP_CASE_REPORT_VERSION:           // 盒子硬件版本信息等
-    case APP_CASE_REPORT_INFO:              // 盒子报告当前信息
-    case APP_CASE_SET_BLEINFO:              // 设置BLE信息
-    case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
+    default:
+        appSubUiHandleMessage(task, id, message);
         break;
 #endif
+
     }
 }
 
@@ -1204,8 +1202,9 @@ void appUiInit(void)
     memset(theUi->prompt_file_indexes, FILE_NONE, sizeof(theUi->prompt_file_indexes));
 
     theUi->prompt_last = PROMPT_NONE;
-}
 
 #ifdef CONFIG_STAROT
-ProgRunInfo gProgRunInfo;
+    memset(&gProgRunInfo, 0, sizeof(ProgRunInfo));
 #endif
+}
+
