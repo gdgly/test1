@@ -80,6 +80,7 @@ void BtAddrParamDefault(void)
     BtAddrPrmPtr prm = &gBtAddrParam;
 
     memset(prm, 0, sizeof(BtAddrParam));
+    prm->single_era      = TRUE;
 }
 
 int16 ParamSaveBtAddrPrm(BtAddrPrmPtr pParam)
