@@ -359,15 +359,22 @@ static void appHfpEnterConnectedOutgoing(void)
     /* We should suspend AV streaming */
     appAvStreamingSuspend(AV_SUSPEND_REASON_HFP);
 #endif
+
+#ifdef CONFIG_STAROT
+    appUiHfpCallOutcomingActive();
+#endif
 }
 
 /*! \brief Exit 'connected outgoing' state
 
     The HFP state machine has exited 'connected outgoing' state.
 */    
-static void appHfpExitConnectedOutgoing(void)
+static void appHfpExitConnectedOutgoing(hfpState state)
 {
     DEBUG_LOG("appHfpExitConnectedOutgoing");
+#ifdef CONFIG_STAROT
+    appUiHfpCallOutcomingInactive((HFP_STATE_CONNECTED_ACTIVE == state) ? 0 : 1);
+#endif
 }
 
 /*! \brief Enter 'connected incoming' state
@@ -392,7 +399,7 @@ static void appHfpEnterConnectedIncoming(void)
     that the incoming call has either been accepted or rejected.  Make sure
     any ring tone is cancelled.
 */    
-static void appHfpExitConnectedIncoming(void)
+static void appHfpExitConnectedIncoming(hfpState state)
 {
     DEBUG_LOG("appHfpExitConnectedIncoming");
     
@@ -408,7 +415,7 @@ static void appHfpExitConnectedIncoming(void)
     MessageCancelFirst(appGetHfpTask(), HFP_INTERNAL_HSP_INCOMING_TIMEOUT);
 
     /* Stop incoming call indication */
-    appUiHfpCallIncomingInactive();
+    appUiHfpCallIncomingInactive((HFP_STATE_CONNECTED_ACTIVE == state) ? 0 : 1);
 
     appScoFwdRingCancel();
 }
@@ -553,12 +560,12 @@ static void appHfpSetState(hfpState state)
                 appHfpExitConnected();
             break;
         case HFP_STATE_CONNECTED_INCOMING:
-            appHfpExitConnectedIncoming();
+            appHfpExitConnectedIncoming(state);
             if (state < HFP_STATE_CONNECTED_IDLE || state > HFP_STATE_CONNECTED_ACTIVE)
                 appHfpExitConnected();
             break;
         case HFP_STATE_CONNECTED_OUTGOING:
-            appHfpExitConnectedOutgoing();
+            appHfpExitConnectedOutgoing(state);
             if (state < HFP_STATE_CONNECTED_IDLE || state > HFP_STATE_CONNECTED_ACTIVE)
                 appHfpExitConnected();
             break;
