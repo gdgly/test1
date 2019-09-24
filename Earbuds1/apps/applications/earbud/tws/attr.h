@@ -22,9 +22,11 @@ struct Starot_Attr_t {
 
 typedef struct Starot_Attr_t StarotAttr;
 
-uint8 *attrEncode(StarotAttr *list);
+uint8 *attrEncode(StarotAttr *list, int* outLen);
 
 StarotAttr *attrDecode(uint8 *data, int len);
+
+StarotAttr *attrMalloc(StarotAttr* parent, uint8 payloadSize);
 
 void attrFree(StarotAttr *attr);
 

@@ -91,8 +91,8 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 #endif
 
 #ifdef GAIA_TEST
-    /* 5. notify gaia dialog have start*/
-    gaiaStartNotify();
+    /* 5. notify gaia dialog have start 现在在hfp和ui层处理开始消息*/
+//    gaiaStartNotify();
 #endif
 }
 

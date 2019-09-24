@@ -3,12 +3,13 @@
 
 #define MAKE_ATTR_WITH_LEN(TYPE, LEN) TYPE##_T *message = (TYPE *) malloc(sizeof(TYPE) + LEN);
 
-static StarotAttr *attrMalloc(uint8 payloadSize);
 
-StarotAttr *attrMalloc(uint8 payloadSize) {
+StarotAttr *attrMalloc(StarotAttr** parent, uint8 payloadSize) {
     int size = sizeof(StarotAttr) + ((payloadSize > 1) ? (payloadSize - 1) : 0);
     MAKE_ATTR_WITH_LEN(StarotAttr, (payloadSize > 1) ? (payloadSize - 1) : 0);
     memset(message, 0x00, size);
+    message->next = *parent;
+    *parent = message;
     return message;
 }
 
@@ -20,7 +21,7 @@ void attrFree(StarotAttr *attr) {
     }
 }
 
-uint8 *attrEncode(StarotAttr *list) {
+uint8 *attrEncode(StarotAttr *list, int* outLen) {
     /// 其实application核，类似单线程运行，考虑使用此特点，减少内存分配
     int all = 0;
     StarotAttr* begin = list;
@@ -45,6 +46,7 @@ uint8 *attrEncode(StarotAttr *list) {
         begin = next;
     }
 
+    *outLen = all;
     return data;
 }
 

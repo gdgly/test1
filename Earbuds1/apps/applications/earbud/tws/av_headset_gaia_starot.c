@@ -3,7 +3,7 @@
 #include "av_headset.h"
 #include "av_headset_gaia_starot.h"
 #include "audio_forward.h"
-
+#include "tws/attr.h"
 
 uint16 bufferSendUnit = 40;
 
@@ -47,11 +47,54 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         }
             break;
 
-        case GAIA_COMMAND_STAROT_CALL_BEGIN: {
-            appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
-            appGetGaia()->nowSendCallAudio = DIALOG_COMING;
-            DEBUG_LOG("call GAIA_COMMAND_STAROT_CALL_BEGIN");
-            appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_BEGIN, 0xfe, 0, NULL);
+        case STAROT_DIALOG_STATUS: {
+//        case GAIA_COMMAND_STAROT_CALL_BEGIN:
+            uint8 status = message->payload[0];
+            uint8 dialogIn = 0X01, dialogOut = 0X02, dialogActive = 0X04, dialogInActive = 0X08;
+
+            StarotAttr *head = NULL;
+
+            /// 电话接入
+            if ((((status & dialogIn) > 0) && ((appGetGaia()->status & dialogIn) < 1))
+                || (((status & dialogOut) > 0) && ((appGetGaia()->status & dialogOut) < 1))) {
+                appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_BEGIN, 0xfe, 0, NULL);
+
+                StarotAttr *attr = attrMalloc(&head, 1);
+                attr->attr = 0X02;
+                attr->payload[0] = ((status & dialogOut) > 0) ? 0X02 : 0X01;
+
+                appGetGaia()->status = appGetGaia()->status | dialogIn | dialogOut;
+            }
+
+            /// 电话接通
+            if ((status & dialogActive) > 0) {
+                StarotAttr *attr = attrMalloc(&head, 1);
+                attr->attr = 0X05;
+                attr->payload[0] = 0x02;
+            }
+
+            /// 电话挂断
+            if ((status & dialogInActive) > 0) {
+                appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
+                appGetGaia()->status = 0;
+            }
+
+            /// 电话号码
+            if (message->payloadLen > 2) {
+                uint8 *phone = message->payload + 2;
+                int len = message->payloadLen - 2;
+                StarotAttr *attr = attrMalloc(&head, len);
+                attr->attr = 0X01;
+                memcpy(attr->payload, phone, len);
+            }
+
+            /// 发送通话属性
+            if (NULL != head) {
+                int len = 0;
+                uint8* data = attrEncode(head, len);
+                appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
+                attrFree(head);
+            }
         }
             break;
 
@@ -194,7 +237,7 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
         }
     }
 
-    payload[0] = (uint8)flag;
+    payload[0] = (uint8) flag;
 
     if (flag <= 0) {
         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
