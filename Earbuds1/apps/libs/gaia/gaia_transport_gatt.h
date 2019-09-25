@@ -55,6 +55,10 @@ bool gaiaTransportGattProcessSource(void);
  */
 void gaiaHandleGattManagerAccessInd(GATT_MANAGER_SERVER_ACCESS_IND_T *ind);
 
+#ifdef GAIA_EXT
+void gaiaHandleGattSendPacketCfm(GATT_MANAGER_REMOTE_CLIENT_NOTIFICATION_CFM_T *cfm);
+#endif
+
 #endif /* GAIA_TRANSPORT_Gatt */
 
 #endif /* _GAIA_TRANSPORT_GATT_H_ */

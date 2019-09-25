@@ -413,6 +413,7 @@ DESCRIPTION
     Convert internal (long) format to GATT (short) format response
     If <task> is not NULL, send a confirmation message
 */
+#ifndef GAIA_EXT
 void gaiaTransportGattSendPacket(Task task, gaia_transport *transport, uint16 length, uint8 *data)
 {
     uint16 size_response = length - GAIA_OFFS_PAYLOAD + GAIA_GATT_OFFS_PAYLOAD;
@@ -429,6 +430,30 @@ void gaiaTransportGattSendPacket(Task task, gaia_transport *transport, uint16 le
         free(data);
     }
 }
+
+#else
+void gaiaTransportGattSendPacket(Task task, gaia_transport *transport, uint16 length, uint8 *data)
+{
+    uint16 size_response = length - GAIA_OFFS_PAYLOAD + GAIA_GATT_OFFS_PAYLOAD;
+    uint8 *response = data + GAIA_OFFS_PAYLOAD - GAIA_GATT_OFFS_PAYLOAD;
+
+    if(transport)
+        memcpy(transport->state.gatt.response, data, GAIA_OFFS_PAYLOAD);    // 备份数据头信息
+    gaiaTransportGattRes(transport, size_response, response, HANDLE_GAIA_RESPONSE_ENDPOINT);
+    (void)task;
+    free(data);
+}
+
+void gaiaHandleGattSendPacketCfm(GATT_MANAGER_REMOTE_CLIENT_NOTIFICATION_CFM_T *cfm)
+{
+    gaia_transport *transport = gaiaTransportFromCid(cfm->cid);
+    uint8 *data = PanicNull(calloc(1, GAIA_OFFS_PAYLOAD));
+
+    if(transport)
+        memcpy(data, transport->state.gatt.response, GAIA_OFFS_PAYLOAD);
+    gaiaTransportCommonSendGaiaSendPacketCfm(transport, data, cfm->status);
+}
+#endif
 
 /*************************************************************************
 NAME

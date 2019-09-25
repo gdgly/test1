@@ -780,6 +780,10 @@ bool gaiaTransportHandleMessage(Task task, MessageId id, Message message)
             MessageSend(gaia->app_task, GAIA_STAROT_MORE_SPACE, NULL);
         }
             break;
+
+        case GATT_MANAGER_REMOTE_CLIENT_NOTIFICATION_CFM:
+            gaiaHandleGattSendPacketCfm((GATT_MANAGER_REMOTE_CLIENT_NOTIFICATION_CFM_T*) message);
+            break;
 #endif
         case TRANSPORT_MGR_REGISTER_CFM:
             {
