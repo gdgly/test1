@@ -26,7 +26,7 @@ uint8 *attrEncode(StarotAttr *list, int* outLen);
 
 StarotAttr *attrDecode(uint8 *data, int len);
 
-StarotAttr *attrMalloc(StarotAttr* parent, uint8 payloadSize);
+StarotAttr *attrMalloc(StarotAttr** parent, uint8 payloadSize);
 
 void attrFree(StarotAttr *attr);
 

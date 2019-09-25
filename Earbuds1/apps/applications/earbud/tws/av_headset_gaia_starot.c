@@ -52,6 +52,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             uint8 status = message->payload[0];
             uint8 dialogIn = 0X01, dialogOut = 0X02, dialogActive = 0X04, dialogInActive = 0X08;
 
+            DEBUG_LOG("call STAROT_DIALOG_STATUS STATUS IS %02x", status);
             StarotAttr *head = NULL;
 
             /// 电话接入
@@ -62,7 +63,8 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
                 StarotAttr *attr = attrMalloc(&head, 1);
                 attr->attr = 0X02;
                 attr->payload[0] = ((status & dialogOut) > 0) ? 0X02 : 0X01;
-
+                
+                appGetGaia()->nowSendCallAudio = DIALOG_COMING;
                 appGetGaia()->status = appGetGaia()->status | dialogIn | dialogOut;
             }
 
@@ -77,6 +79,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             if ((status & dialogInActive) > 0) {
                 appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
                 appGetGaia()->status = 0;
+                appGetGaia()->nowSendCallAudio = DIALOG_NONE;
             }
 
             /// 电话号码
@@ -91,27 +94,27 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             /// 发送通话属性
             if (NULL != head) {
                 int len = 0;
-                uint8* data = attrEncode(head, len);
+                uint8 *data = attrEncode(head, &len);
                 appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
                 attrFree(head);
             }
         }
             break;
 
-        case GAIA_COMMAND_STAROT_CALL_END: {
-            DEBUG_LOG("call speakerDropNum :%d micDropNum:%d\n", speakerDropNum, micDropNum);
-            if (appGetGaia()->nowSendCallAudio > DIALOG_NONE) {
-                appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
-            }
-            appGetGaia()->nowSendCallAudio = DIALOG_NONE;
-            speakerDropNum = 0, micDropNum = 0;
-
-            GAIA_STAROT_AUDIO_CFM_T *starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_CFM_T));
-            starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_END;
-            MessageSend(getAudioForwardTask(), GAIA_STAROT_COMMAND_IND, starot);
-            audioForwardSource = NULL;
-        }
-            break;
+//        case GAIA_COMMAND_STAROT_CALL_END: {
+//            DEBUG_LOG("call speakerDropNum :%d micDropNum:%d\n", speakerDropNum, micDropNum);
+//            if (appGetGaia()->nowSendCallAudio > DIALOG_NONE) {
+//                appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
+//            }
+//            appGetGaia()->nowSendCallAudio = DIALOG_NONE;
+//            speakerDropNum = 0, micDropNum = 0;
+//
+//            GAIA_STAROT_AUDIO_CFM_T *starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_CFM_T));
+//            starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_END;
+//            MessageSend(getAudioForwardTask(), GAIA_STAROT_COMMAND_IND, starot);
+//            audioForwardSource = NULL;
+//        }
+//            break;
 
         case GAIA_COMMAND_STAROT_CALL_AUDIO_IND:
             starotGaiaSendAudio(NULL);
@@ -121,6 +124,10 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_COMMAND_STAROT_START_TRANS_AUDIO_IND:
             if (appGetGaia()->nowSendCallAudio == DIALOG_COMING) {
                 appGetGaia()->nowSendCallAudio |= DIALOG_CAN_TRANSFORM;
+                GAIA_STAROT_IND_T *starot = PanicUnlessNew(GAIA_STAROT_IND_T);
+                starot->command = STAROT_DIALOG_USER_ACCEPT_RECORD;
+                starot->payloadLen = 0;
+                MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
             }
             appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
                                 ((appGetGaia()->nowSendCallAudio & DIALOG_CAN_TRANSFORM) > 0 ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE), 0, NULL);

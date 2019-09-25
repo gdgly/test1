@@ -372,14 +372,14 @@ void appKymeraHandleInternalScoStop(void)
     disconnectAudioForward(sco_chain);
 #endif
 
-#if defined(GAIA_TEST)
-    if (NULL != appGetGaia()->transport) {
-        GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
-        starot->command = GAIA_COMMAND_STAROT_CALL_END;
-        starot->payloadLen = 0;
-        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
-    }
-#endif
+//#if defined(GAIA_TEST)
+//    if (NULL != appGetGaia()->transport) {
+//        GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
+//        starot->command = GAIA_COMMAND_STAROT_CALL_END;
+//        starot->payloadLen = 0;
+//        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
+//    }
+//#endif
 
     /* Disconnect SCO from chain SCO endpoints */
     StreamDisconnect(sco_ep_src, NULL);

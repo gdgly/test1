@@ -1,7 +1,7 @@
-
+#include <stdlib.h>
 #include "tws/attr.h"
 
-#define MAKE_ATTR_WITH_LEN(TYPE, LEN) TYPE##_T *message = (TYPE *) malloc(sizeof(TYPE) + LEN);
+#define MAKE_ATTR_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) malloc(sizeof(TYPE) + LEN);
 
 
 StarotAttr *attrMalloc(StarotAttr** parent, uint8 payloadSize) {
@@ -9,6 +9,7 @@ StarotAttr *attrMalloc(StarotAttr** parent, uint8 payloadSize) {
     MAKE_ATTR_WITH_LEN(StarotAttr, (payloadSize > 1) ? (payloadSize - 1) : 0);
     memset(message, 0x00, size);
     message->next = *parent;
+    message->len = 1 + payloadSize;
     *parent = message;
     return message;
 }
@@ -39,10 +40,10 @@ uint8 *attrEncode(StarotAttr *list, int* outLen) {
         StarotAttr* next = begin->next;
         data[pos] = begin->len;
         data[pos + 1] = begin->attr;
-        if (next->len > 1) {
-            memcpy(pos + 2, begin->payload, len - 1);
+        if (begin->len > 1) {
+            memcpy(data + pos + 2, begin->payload, begin->len - 1);
         }
-        pos += 1 + begin->len;
+        pos += (1 + begin->len);
         begin = next;
     }
 
@@ -52,7 +53,6 @@ uint8 *attrEncode(StarotAttr *list, int* outLen) {
 
 StarotAttr *attrDecode(uint8 *data, int len) {
     StarotAttr* res = NULL;
-    StarotAttr* next = NULL;
     int pos = 0;
     while (pos < len) {
         if ((len - pos) < 2) {
@@ -64,19 +64,13 @@ StarotAttr *attrDecode(uint8 *data, int len) {
             break;
         }
 
-        StarotAttr* ptr = attrMalloc(l - 1);
+        StarotAttr* ptr = attrMalloc(&res, l - 1);
         ptr->len = l;
         ptr->attr = a;
         if (l > 2) {
-            memcpy(ptr->payload, data[pos + 2], l - 1);
+            memcpy(ptr->payload, data + pos + 2, l - 1);
         }
-        if (NULL == res) {
-            res = ptr;
-            next = ptr;
-        } else {
-            next->next = ptr;
-            next = ptr;
-        }
+
         pos += l + 1;
     }
 
