@@ -37,8 +37,8 @@ typedef struct tagCALLINFO {
 #define MAX_CALLIN_INFO       (2)
 
 /* 使用BIT位表示当前实时状态 */
-enum {DIAL_ST_IN=0, DIAL_ST_OUT,                    // 电话拨入/出
-      DIAL_ST_ACT, DIAL_ST_INACT,                   // 电话拨入接听中
+enum {DIAL_ST_IN=1, DIAL_ST_OUT=2,                    // 电话拨入/出
+      DIAL_ST_ACT=4, DIAL_ST_INACT=8,                 // 电话拨入接听中
      };
 
 // 系统运行中的一些动态数据
