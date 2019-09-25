@@ -17,40 +17,6 @@ unsigned nowSendStatus = 0;
 int dissNum = 0;
 extern uint16 bufferSendUnit;
 
-void gaiaStartNotify(void)
-{
-#ifdef GAIA_TEST
-    if (NULL != appGetGaia()->transport) {
-        GAIA_STAROT_IND_T* starot = PanicUnlessNew(GAIA_STAROT_IND_T);
-        starot->command = GAIA_COMMAND_STAROT_CALL_BEGIN;
-        starot->payloadLen = 0;
-        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
-    }
-#endif
-}
-
-void handle_starot_gaia_msg(MessageId id, Message msg,
-                            Source* data_source_sco, Source* data_source_mic)
-{
-    switch (id) {
-        case GAIA_STAROT_COMMAND_IND:
-        {
-            /// 确认发送的消息
-            GAIA_STAROT_AUDIO_CFM_T* message = (GAIA_STAROT_AUDIO_CFM_T*)msg;
-            nowSendStatus = 0;
-             if (NULL != message && message->command == GAIA_COMMAND_STAROT_CALL_AUDIO_END) {
-                printf("diss audio bytes is : %d\n", dissNum);
-                dissNum = 0;
-                *data_source_sco = NULL;
-                *data_source_mic = NULL;
-                nowSendStatus = 0;
-            }
-
-            break;
-        }
-    }
-}
-
 /// true：发送数据到GAIA的TASK
 /// false：没有发送消息到GAIA的TASK
 bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
@@ -70,7 +36,7 @@ bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
         SourceDrop(source, size);
     } else if (size >= bufferSendUnit) {
         GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));
-        starot->command = GAIA_COMMAND_STAROT_CALL_AUDIO_IND;
+        starot->command = STAROT_DIALOG_AUDIO_DATA;
         starot->source = source;
         starot->audioType = type;
         starot->data = NULL;

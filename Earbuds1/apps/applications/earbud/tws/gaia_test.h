@@ -12,8 +12,8 @@
 #include "av_headset_gaia_starot.h"
 
 void gaiaStartNotify(void);
-void handle_starot_gaia_msg(MessageId id, Message msg,
-                            Source* data_source_sco, Source* data_source_mic);
+//void handle_starot_gaia_msg(MessageId id, Message msg,
+//                            Source* data_source_sco, Source* data_source_mic);
 bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
                      Source data_source_sco, Source data_source_mic);
 

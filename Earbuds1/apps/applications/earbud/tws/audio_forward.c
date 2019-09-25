@@ -93,7 +93,7 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 #ifdef GAIA_TEST
     /* 5. notify gaia dialog have start 现在在hfp和ui层处理开始消息*/
 //    gaiaStartNotify();
-//    disable_audio_forward(FALSE);
+    __disable_audio_forward(TRUE);
 #endif
 }
 
@@ -162,7 +162,7 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
         default:
         {
 #ifdef GAIA_TEST
-            handle_starot_gaia_msg(id, msg, &(audioFwdTaskData.data_source_sco), &(audioFwdTaskData.data_source_mic));
+//            handle_starot_gaia_msg(id, msg, &(audioFwdTaskData.data_source_sco), &(audioFwdTaskData.data_source_mic));
 #endif
             break;
         }

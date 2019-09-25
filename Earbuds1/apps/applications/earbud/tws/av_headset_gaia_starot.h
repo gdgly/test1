@@ -102,7 +102,7 @@ void notifyGaiaDialogSource(Source speaker, Source mic);
 #define STAROT_DIALOG_USER_ACCEPT_RECORD 0x1002              // gaia -> (ui & dsp) 用户请求录音
 #define STAROT_DIALOG_AUDIO_DATA 0x1003                      // dsp -> gaia 请求传输数据
 #define STAROT_DIALOG_USER_REJECT_RECORD 0x1004              // gaia -> (ui & dsp) 用户请求录音
-#define STAROT_DIALOG_DEVICE_REQUEST__RECORD 0x1005          // ui -> gaia 设备请求用户开始录音
+#define STAROT_DIALOG_DEVICE_REQUEST_RECORD 0x1005          // ui -> gaia 设备请求用户开始录音
 #define STAROT_DIALOG_DEVICE_REQUEST_REJECT_RECORD 0x1007    // ui -> gaia 设备请求用户停止录音
 #define STAROT_DIALOG_AUDIO_DEVICE_PAUSE 0x1009              // ui -> gaia 音频设备发生切换 暂停
 #define STAROT_DIALOG_AUDIO_DEVICE_CONTINUE 0x100b           // ui -> gaia 音频设备发生切换 继续
