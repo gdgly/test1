@@ -32,7 +32,7 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
     message->payload[0]   = progRun->dial_stat;
     message->payload[1]   = 0;
 
-    if(progRun->callIndex != MAX_CALLIN_INFO) {
+    if(progRun->callIndex < MAX_CALLIN_INFO) {
         CallIPtr   pCall;
 
         pCall = progRun->callInfo[progRun->callIndex];
@@ -105,6 +105,9 @@ static bool HfpCallerIsSame(uint8 *number, uint16 size_number)
 {
     ProgRIPtr  progRun = &gProgRunInfo;
     CallIPtr   pCall;
+
+    if(progRun->callIndex >= MAX_CALLIN_INFO)
+        return FALSE;
 
     if(NULL == (pCall = progRun->callInfo[progRun->callIndex]))
         return FALSE;
