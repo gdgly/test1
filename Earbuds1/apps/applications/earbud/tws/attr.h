@@ -22,12 +22,12 @@ struct Starot_Attr_t {
 
 typedef struct Starot_Attr_t StarotAttr;
 
-uint8 *attrEncode(StarotAttr *list, int* outLen);
+uint8 *attrEncode(StarotAttr *list, uint16* outLen);
 
 StarotAttr *attrDecode(uint8 *data, int len);
 
 StarotAttr *attrMalloc(StarotAttr** parent, uint8 payloadSize);
 
-void attrFree(StarotAttr *attr);
+void attrFree(StarotAttr *attr, void* data);
 
 #endif //EARBUDS1_ATTR_H

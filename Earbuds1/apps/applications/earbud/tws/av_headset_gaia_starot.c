@@ -1,3 +1,4 @@
+#include <pmalloc.h>
 
 #include "av_headset_log.h"
 #include "av_headset.h"
@@ -76,7 +77,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             }
 
             /// 电话挂断
-            if ((status & dialogInActive) > 0) {
+            if ((0 == status) || (status & dialogInActive) > 0) {
                 appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
                 appGetGaia()->status = 0;
                 appGetGaia()->nowSendCallAudio = DIALOG_NONE;
@@ -93,10 +94,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 
             /// 发送通话属性
             if (NULL != head) {
-                int len = 0;
+                uint16 len = 0;
                 uint8 *data = attrEncode(head, &len);
+                DEBUG_LOG("len is :%d %p", len, data);
                 appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
-                attrFree(head);
+                attrFree(head, data);
             }
         }
             break;
@@ -115,8 +117,8 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 //            audioForwardSource = NULL;
 //        }
 //            break;
-
-        case GAIA_COMMAND_STAROT_CALL_AUDIO_IND:
+    case 0X100002:
+//        case GAIA_COMMAND_STAROT_CALL_AUDIO_IND:
             starotGaiaSendAudio(NULL);
             break;
 

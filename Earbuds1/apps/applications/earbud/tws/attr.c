@@ -1,38 +1,47 @@
-#include <stdlib.h>
+#include <pmalloc.h>
+#include "av_headset.h"
 #include "tws/attr.h"
 
-#define MAKE_ATTR_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) malloc(sizeof(TYPE) + LEN);
+#define MAKE_ATTR_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) PanicUnlessMalloc(((sizeof(TYPE) + LEN) / 4 * 4) + ((sizeof(TYPE) + LEN) % 4 > 0 ? 4 : 0));
 
+//#define MAKE_ATTR_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) PanicUnlessMalloc(sizeof(TYPE) + LEN);
 
 StarotAttr *attrMalloc(StarotAttr** parent, uint8 payloadSize) {
-    int size = sizeof(StarotAttr) + ((payloadSize > 1) ? (payloadSize - 1) : 0);
-    MAKE_ATTR_WITH_LEN(StarotAttr, (payloadSize > 1) ? (payloadSize - 1) : 0);
+    int payLoadLen = ((payloadSize > 1) ? (payloadSize - 1) : 0);
+    int size = sizeof(StarotAttr) + payLoadLen;
+    MAKE_ATTR_WITH_LEN(StarotAttr, payLoadLen);
     memset(message, 0x00, size);
     message->next = *parent;
     message->len = 1 + payloadSize;
     *parent = message;
+    DEBUG_LOG("attr new address is : %x", message);
     return message;
 }
 
-void attrFree(StarotAttr *attr) {
+void attrFree(StarotAttr *attr, void* data) {
+    if (NULL != data) {
+        DEBUG_LOG("data free address is : %x", data);
+        pfree(data);
+    }
     while (NULL != attr) {
         StarotAttr* next = attr->next;
-        free(attr);
+        DEBUG_LOG("attr free address is : %x", attr);
+        pfree(attr);
         attr = next;
     }
 }
 
-uint8 *attrEncode(StarotAttr *list, int* outLen) {
+uint8 *attrEncode(StarotAttr *list, uint16* outLen) {
     /// 其实application核，类似单线程运行，考虑使用此特点，减少内存分配
-    int all = 0;
+    uint16 all = 0;
     StarotAttr* begin = list;
     while (NULL != begin) {
         StarotAttr* next = begin->next;
         all += (begin->len + 1);
         begin = next;
     }
-
-    uint8* data = (uint8*)malloc(all);
+    int s = all / 4 * 4 + (all % 4 > 0 ? 4 : 0);
+    uint8* data = (uint8*)PanicUnlessMalloc(s);
 
     begin = list;
     int pos = 0;
