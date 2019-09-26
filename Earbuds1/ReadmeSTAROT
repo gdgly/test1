@@ -2,15 +2,41 @@ debuglog.poll_debug_log()
 stream.create_live_graph_img()
 
 appKymeraHandleInternalScoStart
+appSmHandleInternalBredrConnected
 
-20190916 CHAIN
+20190927 BLE几台IPHONE速度测试(仅BLE运行)
+               PACKET41            PACKET81
+IPHONE7          8.2KBps            14KBps
+IPHONE8          8.4KBps            16KBps
+IPHONE6S         3.9KBps            4.1KBps
+
+
+20190926 BLE数据发送GAIA
+    1. appGaiaSendPacket-->GaiaSendPacket-->send_packet-->GAIA_INTERNAL_SEND_REQ(gaia)-->gaiaTransportSendPacket
+       -->gaiaTransportGattSendPacket-->gaiaTransportGattRes(反馈给上层：gaiaTransportCommonSendGaiaSendPacketCfm)-->GattManagerRemoteClientNotify
+       -->GattNotificationRequest-->MessageSendConditionallyOnTask-->GATT_INTERNAL_HANDLE_VALUE_NTF-->gattHandleInternalHandleValueNtf-->ATT_HANDLE_VALUE_NTF
+    2.返回 ATT_HANDLE_VALUE_NTF_CFM-->gattHandleAttHandleValueNtfCfm-->gattSendCfm-->GATT_NOTIFICATION_CFM-->gattManagerServerNotificationCfm
+       -->GATT_MANAGER_REMOTE_CLIENT_NOTIFICATION_CFM-->(gaia[message_handler])-->gaiaTransportHandleMessage
+      我们增加： gaiaHandleGattSendPacketCfm-->gaiaTransportCommonSendGaiaSendPacketCfm-->GAIA_SEND_PACKET_CFM(appGaiaMessageHandler)
+    3.   测试中gattHandleAttHandleValueNtfCfm可能会返回出错信(status=257)
+
+
+
+20190923 来电号码
+    1. 需要在av_headset_hfp.c 中设置 HFP_CLI_PRESENTATION & HfpCallerIdEnableRequest(cfm->priority, TRUE);
+    hfpHandleCallerId/hfpHandleCallerIdWithName -->sendCallerIdMsgToApp-->HFP_CALLER_ID_IND
+    appHfpHandleMessage(HFP_CALLER_ID_IND)-->appHfpHandleHfpCallerIdIndication-->
+    2. 拨入及接听:appHfpHandleHfpCallStateIndication-->appHfpSetState-->appUiHfpState/appUiHfpCallActive/appUiHfpCallIncomingActive
+
 
 
 20190911 G722调试好了之后，打电话出现第二次没有声音的情况
     1. appKymeraScoStartHelper中busy为1，好象是断开电话后，快速拨号，系统没反应过来。
     2. appKymeraSetState(...)中会设置busy位置。
     3. 再次调试发现是没有接收到挂断后的提示音的消息 KYMERA_OP_MSG_ID_TONE_END
-    4. 可能与G722有关系
+    4. 可能与G722有关系,进一步测试一些非正常打印时，声音也不对。去掉编码还是不能解决。
+    5. 使用passthrough增加一次处理多个数据，也会出现。确定与一次得多个数据有关系。
+    6. 修改G722每次都读取数据
 
 
 
