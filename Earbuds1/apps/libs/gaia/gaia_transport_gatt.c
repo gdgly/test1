@@ -451,7 +451,7 @@ void gaiaHandleGattSendPacketCfm(GATT_MANAGER_REMOTE_CLIENT_NOTIFICATION_CFM_T *
 
     if(transport)
         memcpy(data, transport->state.gatt.response, GAIA_OFFS_PAYLOAD);
-    gaiaTransportCommonSendGaiaSendPacketCfm(transport, data, cfm->status);
+    gaiaTransportCommonSendGaiaSendPacketCfm(transport, data, (cfm->status == gatt_status_success) ? TRUE : FALSE);
 }
 #endif
 
