@@ -18,6 +18,8 @@ all ADK libraries.
 
 #include <vmtypes.h>
 
+#define CONFIG_STAROT_LIB
+
 /*!
     @brief Qualcomm Codec Extension (QCE) Mode IDs
 */
