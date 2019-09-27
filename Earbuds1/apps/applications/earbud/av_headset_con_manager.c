@@ -570,7 +570,14 @@ bool appConManagerHandleConnectionLibraryMessages(MessageId id,Message message, 
                                                              ind->supervision_timeout);
             return TRUE;
         }
-
+#ifdef CONFIG_STAROT
+        case CL_DM_BLE_CONNECTION_UPDATE_COMPLETE_IND:
+        {
+            CL_DM_BLE_CONNECTION_UPDATE_COMPLETE_IND_T *ind = (CL_DM_BLE_CONNECTION_UPDATE_COMPLETE_IND_T*)message;
+            DEBUG_LOG("UpdateParamInd: interv=%d latency=%d", ind->conn_interval, ind->conn_latency);
+            return TRUE;
+        }
+#endif
     }
     return already_handled;
 }
