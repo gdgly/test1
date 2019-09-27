@@ -15,29 +15,43 @@ This is a minimal implementation that only supports upgrade.
 #include "av_headset_log.h"
 
 #include <panic.h>
+
 #ifdef GAIA_TEST
+
 #include "tws/av_headset_gaia_starot.h"
+
 #endif
 
+uint8 testSpeedIndex = 0;
+
 /*! Enumerated type of internal message IDs used by this module */
-typedef enum av_headset_gaia_internal_messages
-{
-        /*! Disconnect GAIA */
-    APP_GAIA_INTERNAL_DISCONNECT = INTERNAL_MESSAGE_BASE,
+typedef enum av_headset_gaia_internal_messages {
+    /*! Disconnect GAIA */
+            APP_GAIA_INTERNAL_DISCONNECT = INTERNAL_MESSAGE_BASE,
 };
 
 
 static void appGaiaMessageHandler(Task task, MessageId id, Message message);
+
 static void appGaiaHandleCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *command);
+
 static bool appGaiaHandleStatusCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *command);
+
 void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
-                          uint16 payload_length, uint8 *payload);
+                         uint16 payload_length, uint8 *payload);
+
 #ifdef GAIA_TEST
+
 bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
-                          uint16 payload_length, uint8 *payload);
+                       uint16 payload_length, uint8 *payload);
+
+
+static void appGaiaPraseCfm(const GAIA_SEND_PACKET_CFM_T *m);
 #else
+
 void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
-                          uint16 payload_length, uint8 *payload);
+                       uint16 payload_length, uint8 *payload);
+
 #endif
 
 
@@ -46,8 +60,7 @@ void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
 
 
 /*! Initialise the GAIA Module */
-void appGaiaInit(void)
-{
+void appGaiaInit(void) {
     gaiaTaskData *this = appGetGaia();
 
     this->gaia_task.handler = appGaiaMessageHandler;
@@ -60,53 +73,45 @@ void appGaiaInit(void)
 }
 
 
-void appGaiaClientRegister(Task task)
-{
-    gaiaTaskData* app_gaia = appGetGaia();
+void appGaiaClientRegister(Task task) {
+    gaiaTaskData *app_gaia = appGetGaia();
     appTaskListAddTask(app_gaia->client_list, task);
 }
 
 
-static void appGaiaSendInitCfm(void)
-{
+static void appGaiaSendInitCfm(void) {
     MessageSend(appGetAppTask(), APP_GAIA_INIT_CFM, NULL);
 }
 
 
-static void appGaiaNotifyGaiaConnected(void)
-{
+static void appGaiaNotifyGaiaConnected(void) {
     appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_CONNECTED);
 }
 
 
-static void appGaiaNotifyGaiaDisconnected(void)
-{
+static void appGaiaNotifyGaiaDisconnected(void) {
     appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_DISCONNECTED);
 }
 
 
-static void appGaiaNotifyUpgradeActivity(void)
-{
+static void appGaiaNotifyUpgradeActivity(void) {
     appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_UPGRADE_ACTIVITY);
 }
 
 
-static void appGaiaNotifyUpgradeConnection(void)
-{
+static void appGaiaNotifyUpgradeConnection(void) {
     appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_UPGRADE_CONNECTED);
 }
 
 
-static void appGaiaNotifyUpgradeDisconnection(void)
-{
+static void appGaiaNotifyUpgradeDisconnection(void) {
     appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_UPGRADE_DISCONNECTED);
 }
 
 
-static void appGaiaHandleInitConfirm(const GAIA_INIT_CFM_T *init_cfm)
-{
+static void appGaiaHandleInitConfirm(const GAIA_INIT_CFM_T *init_cfm) {
 
-    DEBUG_LOG("appGaiaHandleInitConfirm GAIA_INIT_CFM: %d (succ)",init_cfm->success);
+    DEBUG_LOG("appGaiaHandleInitConfirm GAIA_INIT_CFM: %d (succ)", init_cfm->success);
 
     PanicFalse(init_cfm->success);
 
@@ -128,34 +133,30 @@ static void appGaiaHandleInitConfirm(const GAIA_INIT_CFM_T *init_cfm)
 
 /*  Accept the GAIA connection if they are allowed, and inform any clients.
  */
-static void appGaiaHandleConnectInd(const GAIA_CONNECT_IND_T *ind)
-{
+static void appGaiaHandleConnectInd(const GAIA_CONNECT_IND_T *ind) {
     GAIA_TRANSPORT *transport;
 
-    if (!ind || !ind->success)
-    {
+    if (!ind || !ind->success) {
         DEBUG_LOG("appGaiaHandleConnectInd Success = FAILED");
         return;
     }
 
     transport = ind->transport;
 
-    if (!transport)
-    {
+    if (!transport) {
         DEBUG_LOG("appGaiaHandleConnectInd No transport");
 
         /* Can't disconnect nothing so just return */
         return;
     }
 
-    if (!appGetGaia()->connections_allowed)
-    {
+    if (!appGetGaia()->connections_allowed) {
         DEBUG_LOG("appGaiaHandleConnectInd GAIA not allowed");
         GaiaDisconnectRequest(transport);
         return;
     }
 
-    DEBUG_LOG("appGaiaHandleConnectInd Success. Transport:%p",transport);
+    DEBUG_LOG("appGaiaHandleConnectInd Success. Transport:%p", transport);
 
     appSetGaiaTransport(transport);
 
@@ -166,14 +167,12 @@ static void appGaiaHandleConnectInd(const GAIA_CONNECT_IND_T *ind)
 }
 
 
-static void appGaiaHandleDisconnectInd(const GAIA_DISCONNECT_IND_T *ind)
-{
-    DEBUG_LOG("appGaiaHandleDisconnectInd. Transport %p",ind->transport);
+static void appGaiaHandleDisconnectInd(const GAIA_DISCONNECT_IND_T *ind) {
+    DEBUG_LOG("appGaiaHandleDisconnectInd. Transport %p", ind->transport);
 
-        /* GAIA can send IND with a NULL transport. Seemingly after we 
-           requested a disconnect (?) */
-    if (ind->transport)
-    {
+    /* GAIA can send IND with a NULL transport. Seemingly after we
+       requested a disconnect (?) */
+    if (ind->transport) {
         GaiaDisconnectResponse(ind->transport);
         appSetGaiaTransport(NULL);
     }
@@ -181,36 +180,32 @@ static void appGaiaHandleDisconnectInd(const GAIA_DISCONNECT_IND_T *ind)
 }
 
 
-static void appGaiaHandleInternalDisconnect(void)
-{
+static void appGaiaHandleInternalDisconnect(void) {
     GAIA_TRANSPORT *transport = appGetGaiaTransport();
 
-    if (transport)
-    {
+    if (transport) {
         GaiaDisconnectRequest(transport);
         appSetGaiaTransport(NULL);
     }
 }
 
 
-static void appGaiaMessageHandler(Task task, MessageId id, Message message)
-{
+static void appGaiaMessageHandler(Task task, MessageId id, Message message) {
     UNUSED(task);
 
-    DEBUG_LOG("appGaiaMessageHandler 0x%X (%d)",id,id);
+//    DEBUG_LOG("appGaiaMessageHandler 0x%X (%d)", id, id);
 
-    switch (id)
-    {
+    switch (id) {
         case APP_GAIA_INTERNAL_DISCONNECT:
             appGaiaHandleInternalDisconnect();
             break;
 
         case GAIA_INIT_CFM:
-            appGaiaHandleInitConfirm((const GAIA_INIT_CFM_T*)message);
+            appGaiaHandleInitConfirm((const GAIA_INIT_CFM_T *) message);
             break;
 
         case GAIA_CONNECT_IND:                   /* Indication of an inbound connection */
-            appGaiaHandleConnectInd((const GAIA_CONNECT_IND_T *)message);
+            appGaiaHandleConnectInd((const GAIA_CONNECT_IND_T *) message);
 #ifdef GAIA_TEST
             /// GAIA连接成功，检测是否在通话中
             if (appGetGaia()->nowSendCallAudio == DIALOG_COMING) {
@@ -221,9 +216,9 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
             break;
 
         case GAIA_DISCONNECT_IND:                /* Indication that the connection has closed */
-            appGaiaHandleDisconnectInd((const GAIA_DISCONNECT_IND_T *)message);
+            appGaiaHandleDisconnectInd((const GAIA_DISCONNECT_IND_T *) message);
             break;
-            
+
         case GAIA_DISCONNECT_CFM:                /* Confirmation that a requested disconnection has completed */
             /* We probably want to take note of this to send an event to the state
                machine, but it is mainly upgrade we care about. Not gaia connections. */
@@ -243,35 +238,17 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
             appGaiaHandleCommand(task, (const GAIA_UNHANDLED_COMMAND_IND_T *) message);
             break;
 
-    case GAIA_SEND_PACKET_CFM:               /* Confirmation that a GaiaSendPacket request has completed */
+        case GAIA_SEND_PACKET_CFM:               /* Confirmation that a GaiaSendPacket request has completed */
         {
-    const GAIA_SEND_PACKET_CFM_T *m = (const GAIA_SEND_PACKET_CFM_T *) message;
+            const GAIA_SEND_PACKET_CFM_T *m = (const GAIA_SEND_PACKET_CFM_T *) message;
 #ifdef GAIA_TEST
-        uint8 *packet = m->packet;
-        uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
-        uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
-
-        if (FALSE == m->success) {
-            DEBUG_LOG("appGaiaMessageHandler GAIA_SEND_PACKET_CFM, status is :%d", m->success);
-            // todo hjs 发送包成功之后，重新检查是否有新数据需要发送
-            if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
-                appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
-            } else if (GAIA_COMMAND_STAROT_CALL_END == command_id && vendor_id == GAIA_VENDOR_STAROT) {
-                appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
-            }
-        } else {
-            if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
-//                    appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
-                appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
-                starotNotifyAudioForward(TRUE, packet[GAIA_OFFS_PAYLOAD]);
-            } else if (command_id == GAIA_COMMAND_STAROT_CALL_END) {
-                printf("end send to app success\n");
+            appGaiaPraseCfm(m);
+#endif
+            if (NULL != m->packet) {
+                free(m->packet);
             }
         }
-#endif
-        free(m->packet);
-    }
-        break;
+            break;
 
 
         case GAIA_DFU_CFM:                       /* Confirmation of a Device Firmware Upgrade request */
@@ -320,78 +297,70 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message)
             break;
 
         case GAIA_STAROT_MORE_SPACE: {
-            starotGaiaParseMessageMoreSpace();
+//            starotGaiaParseMessageMoreSpace();
         }
             break;
         case GAIA_STAROT_AUDIO_INTERVAL: {
             if (appGetGaia()->needCycleSendAudio > 0) {
                 //send, reset timer
                 static uint8 data[201];
-                static uint8 temp = 0;
-                temp += 1;
-                for (int i = 1; i <= 2; ++i) {
+                for (int i = 1; i <= 1; ++i) {
                     data[0] = i;
-                    data[1] = temp;
-                    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_TRANS_AUDIO, 0xfe, 41, data);
+                    data[1] = testSpeedIndex;
+                    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_AUDIO_IND, 0xfe, 81, data);
+                    DEBUG_LOG("now send speed index is %02x", testSpeedIndex);
                 }
-                MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 10);
+//                MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 10);
             }
         }
             break;
 #endif
 
         default:
-            DEBUG_LOG("appGaiaMessageHandler Unknown GAIA message 0x%x (%d)",id,id);
+            DEBUG_LOG("appGaiaMessageHandler Unknown GAIA message 0x%x (%d)", id, id);
             break;
     }
 }
 
 /*! Handle a GAIA_UNHANDLED_COMMAND_IND from the Gaia library */
-static void appGaiaHandleCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *command)
-{
+static void appGaiaHandleCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *command) {
     bool handled = FALSE;
 
     DEBUG_LOG("appGaiaHandleCommand GAIA Vendor ID %d , Id:0x%04x Len:%d",
-                command->vendor_id, command->command_id, command->size_payload);
+              command->vendor_id, command->command_id, command->size_payload);
 
-    if (command->vendor_id == GAIA_VENDOR_QTIL)
-    {
+    if (command->vendor_id == GAIA_VENDOR_QTIL) {
         appGaiaNotifyUpgradeActivity();
 
-        switch (command->command_id & GAIA_COMMAND_TYPE_MASK)
-        {
-        case GAIA_COMMAND_TYPE_CONFIGURATION:
-            DEBUG_LOG("appGaiaHandleCommand GAIA_COMMAND_TYPE_CONFIGURATION");
-            break;
+        switch (command->command_id & GAIA_COMMAND_TYPE_MASK) {
+            case GAIA_COMMAND_TYPE_CONFIGURATION:
+                DEBUG_LOG("appGaiaHandleCommand GAIA_COMMAND_TYPE_CONFIGURATION");
+                break;
 
-        case GAIA_COMMAND_TYPE_CONTROL:
-            DEBUG_LOG("appGaiaHandleCommand GAIA_COMMAND_TYPE_CONTROL");
-            break;
+            case GAIA_COMMAND_TYPE_CONTROL:
+                DEBUG_LOG("appGaiaHandleCommand GAIA_COMMAND_TYPE_CONTROL");
+                break;
 
-        case GAIA_COMMAND_TYPE_STATUS :
-            handled = appGaiaHandleStatusCommand(task, command);
-            break;
+            case GAIA_COMMAND_TYPE_STATUS :
+                handled = appGaiaHandleStatusCommand(task, command);
+                break;
 
-        case GAIA_COMMAND_TYPE_NOTIFICATION:
-            if (command->command_id & GAIA_ACK_MASK)
-            {
-                DEBUG_LOG("appGaiaHandleCommand NOTIFICATION ACK");
-                handled = TRUE;
-            }
-            else
-            {
-                DEBUG_LOG("appGaiaHandleCommand NOTIFICATION");
-            }
-            break;
+            case GAIA_COMMAND_TYPE_NOTIFICATION:
+                if (command->command_id & GAIA_ACK_MASK) {
+                    DEBUG_LOG("appGaiaHandleCommand NOTIFICATION ACK");
+                    handled = TRUE;
+                } else {
+                    DEBUG_LOG("appGaiaHandleCommand NOTIFICATION");
+                }
+                break;
 
-        default:
-            DEBUG_LOG("appGaiaHandleCommand Unexpected GAIA command 0x%x",command->command_id & GAIA_COMMAND_TYPE_MASK);
-            break;
+            default:
+                DEBUG_LOG("appGaiaHandleCommand Unexpected GAIA command 0x%x", command->command_id & GAIA_COMMAND_TYPE_MASK);
+                break;
         }
     }
 
-    if (!handled)
-    {
+    if (!handled) {
         appGaiaSendResponse(command->vendor_id, command->command_id, GAIA_STATUS_NOT_SUPPORTED, 0, NULL);
     }
 }
@@ -399,52 +368,49 @@ static void appGaiaHandleCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *
 /*! Handle a Gaia polled status command 
 
     \return TRUE if handled or FALSE if not */
-static bool appGaiaHandleStatusCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *command)
-{
+static bool appGaiaHandleStatusCommand(Task task, const GAIA_UNHANDLED_COMMAND_IND_T *command) {
     UNUSED(task);
-    
-    switch (command->command_id)
-    {
-    case GAIA_COMMAND_GET_APPLICATION_VERSION:
-        DEBUG_LOG("appGaiaHandleStatusCommand GAIA_COMMAND_GET_APPLICATION_VERSION");
-        return FALSE;
 
-    default:
-        DEBUG_LOG("appGaiaHandleStatusCommand Unhandled GAIA_COMMAND 0x%x (%d)",command->command_id,command->command_id);
-        return FALSE;
+    switch (command->command_id) {
+        case GAIA_COMMAND_GET_APPLICATION_VERSION:
+            DEBUG_LOG("appGaiaHandleStatusCommand GAIA_COMMAND_GET_APPLICATION_VERSION");
+            return FALSE;
+
+        default:
+            DEBUG_LOG("appGaiaHandleStatusCommand Unhandled GAIA_COMMAND 0x%x (%d)", command->command_id, command->command_id);
+            return FALSE;
     }
 }
 
 /*! Build and Send a Gaia acknowledgement packet */
 void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
-                          uint16 payload_length, uint8 *payload)
-{
+                         uint16 payload_length, uint8 *payload) {
     appGaiaSendPacket(vendor_id, command_id | GAIA_ACK_MASK, status,
-                     payload_length, payload);
+                      payload_length, payload);
 }
 
 /*! Build and Send a Gaia protocol packet */
 #ifdef GAIA_TEST
+
 bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status, uint16 payload_length, uint8 *payload)
 #else
 void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status, uint16 payload_length, uint8 *payload)
 #endif
 {
     GAIA_TRANSPORT *transport = appGetGaiaTransport();
-    
-    if(transport) /* Only attempt to send when transport up */
+
+    if (transport) /* Only attempt to send when transport up */
     {
         uint16 packet_length;
         uint8 *packet;
         uint8 flags = GaiaTransportGetFlags(transport);
 
-        DEBUG_LOG("appGaiaSendPacket cmd:%d sts:%d len:%d [flags x%x]",command_id,status,payload_length,flags);
+        DEBUG_LOG("appGaiaSendPacket cmd:%04X sts:%d len:%d [flags x%x]", command_id, status, payload_length, flags);
 
         packet_length = GAIA_HEADER_SIZE + payload_length + 2;
         packet = PanicNull(malloc(packet_length));
 
-        if (packet)
-        {
+        if (packet) {
             packet_length = GaiaBuildResponse(packet, flags,
                                               vendor_id, command_id,
                                               status, payload_length, payload);
@@ -463,16 +429,56 @@ void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status, uint1
 
 /*! \brief Disconnect any active gaia connection
  */
-void appGaiaDisconnect(void)
-{
+void appGaiaDisconnect(void) {
     MessageSend(appGetGaiaTask(), APP_GAIA_INTERNAL_DISCONNECT, NULL);
 }
 
 
-void appGaiaAllowNewConnections(bool allow)
-{
+void appGaiaAllowNewConnections(bool allow) {
     appGetGaia()->connections_allowed = allow;
 }
 
+void appGaiaPraseCfm(const GAIA_SEND_PACKET_CFM_T *m) {
+    uint8 *packet = m->packet;
+    if (NULL != packet) {
+        uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
+        uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
+
+        if (appGetGaia()->needCycleSendAudio > 0) {
+            if (FALSE == m->success) {
+                DEBUG_LOG("appGaiaMessageHandler GAIA_SEND_PACKET_CFM, command:%4X status is :%d", command_id, m->success);
+                // todo hjs 发送包成功之后，重新检查是否有新数据需要发送
+                if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
+                    MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 1);
+                }
+            } else {
+                if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
+                    MessageSend(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL);
+                    testSpeedIndex += 1;
+                }
+            }
+        } else {
+            if (FALSE == m->success) {
+                DEBUG_LOG("appGaiaMessageHandler GAIA_SEND_PACKET_CFM, command:%4X status is :%d", command_id, m->success);
+                // todo hjs 发送包成功之后，重新检查是否有新数据需要发送
+                if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
+                    appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+                    starotNotifyAudioForward(FALSE, 0);
+//                        appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+                } else if (GAIA_COMMAND_STAROT_CALL_END == command_id && vendor_id == GAIA_VENDOR_STAROT) {
+                    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
+                }
+            } else {
+                if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
+                    //appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+                    appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+                    starotNotifyAudioForward(TRUE, starotGaiaTransGetAudioType());
+                } else if (command_id == GAIA_COMMAND_STAROT_CALL_END) {
+                    printf("end send to app success\n");
+                }
+            }
+        }
+    }
+}
 
 #endif /* INCLUDE_DFU */

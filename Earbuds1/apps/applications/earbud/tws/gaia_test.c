@@ -24,15 +24,15 @@ bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
     int size = SourceSize(source);
 
     /// 丢弃过多的数据，防止数据过多，导致source不可以使用
-    if (size > 5 * bufferSendUnit) {
-        dissNum += 5 * bufferSendUnit;
-        size -= 5 * bufferSendUnit;
-        printf("drop size 5 * %d\n", bufferSendUnit);
-        SourceDrop(source, 5 * bufferSendUnit);
+    if (size > 20 * bufferSendUnit) {
+        dissNum += 20 * bufferSendUnit;
+        size -= 20 * bufferSendUnit;
+        DEBUG_LOG("drop size 20 * %d", bufferSendUnit);
+        SourceDrop(source, 20 * bufferSendUnit);
     }
 
     if (NULL == appGetGaia()->transport || NULL == data_source_sco || NULL == data_source_mic) {
-        DEBUG_LOG("sendDataMessage,type=%d Drop:%d no cnnect", type, size);
+        DEBUG_LOG("sendDataMessage,type=%d Drop:%d no connect", type, size);
         SourceDrop(source, size);
     } else if (size >= bufferSendUnit) {
         GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));

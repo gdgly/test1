@@ -94,6 +94,7 @@ void starotNotifyAudioForward(bool st, uint8 flag);
 
 void notifyGaiaDialogSource(Source speaker, Source mic);
 
+uint8 starotGaiaTransGetAudioType(void);
 
 //-----------------------------------------------------
 // 定义GAIA与UI、DSP关于电话时的消息

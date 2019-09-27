@@ -15,6 +15,7 @@ Source dialogSpeaker = NULL;
 Source dialogMic = NULL;
 
 Source audioForwardSource = NULL;
+int audioTransType = 0;
 
 extern void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
                                 uint16 payload_length, uint8 *payload);
@@ -27,6 +28,7 @@ static void gaiaNotifyAudioAcceptStatus(Task task, int command);
 
 static int speakerDropNum = 0;
 static int micDropNum = 0;
+extern uint8 testSpeedIndex;
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 
@@ -38,6 +40,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
 
         case GAIA_COMMAND_STAROT_START_SEND_TIMER: {
+            testSpeedIndex = 0;
             appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
             DEBUG_LOG("call GAIA_COMMAND_STAROT_START_SEND_TIMER");
             appGetGaia()->needCycleSendAudio = 1;
@@ -66,9 +69,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
                 appGetGaia()->nowSendCallAudio |= DIALOG_CAN_TRANSFORM;
                 gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_ACCEPT_RECORD);
                 disable_audio_forward(FALSE);
+                audioTransType = 0;
             }
             appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
-                                ((appGetGaia()->nowSendCallAudio & DIALOG_CAN_TRANSFORM) > 0 ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE), 0, NULL);
+                                ((appGetGaia()->nowSendCallAudio & DIALOG_CAN_TRANSFORM) > 0 ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE),
+                                0, NULL);
             break;
 
             /// APP希望停止接受音频或压根从头不想要音频数据
@@ -145,7 +150,12 @@ void starotNotifyAudioForward(bool st, uint8 flag) {
         }
     }
 
-    starotGaiaSendAudio(NULL);
+    {
+        GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));
+        starot->command = STAROT_DIALOG_AUDIO_DATA;
+        starot->data = NULL;
+        MessageSendLater(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot, (TRUE == st ? 0 : 1));
+    }
 }
 
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
@@ -185,6 +195,7 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
     }
 
     payload[0] = (uint8) flag;
+    audioTransType = flag;
 
     if (flag <= 0) {
         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
@@ -208,6 +219,10 @@ void notifyGaiaDialogSource(Source speaker, Source mic) {
     dialogMic = mic;
 }
 
+uint8 starotGaiaTransGetAudioType(void) {
+    return audioTransType;
+}
+
 void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
     uint8 status = message->payload[0];
     uint8 dialogIn = 0X01, dialogOut = 0X02, dialogActive = 0X04, dialogInActive = 0X08;
@@ -218,6 +233,7 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
     /// 电话接入
     if ((((status & dialogIn) > 0) && ((appGetGaia()->status & dialogIn) < 1))
         || (((status & dialogOut) > 0) && ((appGetGaia()->status & dialogOut) < 1))) {
+        DEBUG_LOG("Send GAIA_COMMAND_STAROT_CALL_BEGIN");
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_BEGIN, 0xfe, 0, NULL);
 
         StarotAttr *attr = attrMalloc(&head, 1);
@@ -237,6 +253,7 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
 
     /// 电话挂断
     if ((0 == status) || (status & dialogInActive) > 0) {
+        DEBUG_LOG("Send GAIA_COMMAND_STAROT_CALL_END");
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
         appGetGaia()->status = 0;
         appGetGaia()->nowSendCallAudio = DIALOG_NONE;
@@ -256,7 +273,7 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
         DEBUG_LOG("len is :%d %p", len, data);
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
+//        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
         attrFree(head, data);
     }
 }
