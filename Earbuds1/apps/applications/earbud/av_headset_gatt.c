@@ -228,6 +228,9 @@ static void appGattHandleGattManRemoteClientConnectCfm(GATT_MANAGER_REMOTE_CLIEN
 
 #ifdef CONFIG_STAROT
             DEBUG_LOG("appGattClientConnectCfm. cid=%d,st=%d mtu=%d",cfm->cid, cfm->status, cfm->mtu);
+            ConnectionDmBleConnectionParametersUpdateReq(appGetGattTask(), &cfm->taddr, 6, 6, 0, 400, 0, 160);
+
+            DEBUG_LOG("appGattClientConnectCfm. cid=%d,st=%d mtu=%d",cfm->cid, cfm->status, cfm->mtu);
             GattExchangeMtuRequest(appGetGattTask(), cfm->cid, appConfigBleGattMtuMin());
 #endif
 
