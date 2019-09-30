@@ -50,11 +50,14 @@ typedef struct tagPROGRUNINFO {
     uint16         caseLidOpen:1;           // 盒子盖状态 0:close 1:opened
     uint16         caseKeyDown:1;           // 按键按下   0:up 1:down
     uint16         caseKeyLong:1;           // 按键按下长按键
+    uint16         stopBle:1;              // BLE更新广播内容时，需要先停止广播
 
     uint16         recStat:1;               // 当前是否正在录音
+    uint16         chargeStat:3;            // 当前充电状态0:disconnect 1:connect 2:chargeLow, 3:chargeOK, 4:finish
 
 
-    uint8          peerElectrity;           // 对方耳机电量 0...100
+    uint8          peerElectrity;           // 对方耳机电量 0...100    
+    uint8          iElectrity;              // 自己耳机电量 0...100
 
     uint8          dial_stat;               // 当前拨号情况
     //保存手机拨入的信息
@@ -64,6 +67,9 @@ typedef struct tagPROGRUNINFO {
 
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;
+void appSubUIInit(void);
+ProgRIPtr appSubGetProgRun(void);
+bdaddr* SystemGetEarAddr(uint8 *addrbuf); //获取蓝牙地址
 
 /* Get Call number */
 int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 size_name);
@@ -83,5 +89,16 @@ void appUiHfpCallInactive(void);
 ///////////////////////////////////////////////////////////////////////////////
 void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectrity);
 void appUiCaseVersion(uint16 hwVer, uint16 swVer);
+bool appUiIsStopBle(void);
+void appUiRestartBle(void);
+
+///////////////////////////////////////////////////////////////////////////////
+///  充电模块反馈的信息
+///////////////////////////////////////////////////////////////////////////////
+void appUiChargerConnected(void);
+void appUiChargerDisconnected(void);
+void appUiChargerChargingLow(void);
+void appUiChargerChargingOk(void);
+void appUiChargerComplete(void);
 
 #endif // SUB_UI_H

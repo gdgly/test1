@@ -135,7 +135,7 @@ bool ParamUsingSingle(void)
     return (bool)gBtAddrParam.single_era;
 }
 #else
-  #define ParamUsingSingle(...)       0
+bool ParamUsingSingle(void) { return TRUE; }
 #endif
 
 int16 ParamLoadAll(void)
@@ -203,10 +203,11 @@ void ParamConfigInit(void)
 
 void ParamInitHandleClDmLocalBdAddrCfm(Message message)
 {
+    ProgRIPtr  progRun = appSubGetProgRun();
     CL_DM_LOCAL_BD_ADDR_CFM_T *cfm = (CL_DM_LOCAL_BD_ADDR_CFM_T *)message;
     if (cfm->status != success)
         Panic();
 
-    memcpy(&gProgRunInfo.addr, &cfm->bd_addr, sizeof(bdaddr));
+    memcpy(&progRun->addr, &cfm->bd_addr, sizeof(bdaddr));
     DEBUG_LOG("ParamInit addr %04x:%02x:%06x", cfm->bd_addr.nap, cfm->bd_addr.uap, cfm->bd_addr.lap);
 }

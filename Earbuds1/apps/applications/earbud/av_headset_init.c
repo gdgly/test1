@@ -196,6 +196,7 @@ static const appInitTableEntry appInitTable[] =
     {appConfigInit,         CL_DM_LOCAL_BD_ADDR_CFM, appInitHandleClDmLocalBdAddrCfm},
 #endif
 #ifdef CONFIG_STAROT
+    {appSubUIInit,          0, NULL},      // 必须在ParamConfigInit之前
     {ParamConfigInit,       CL_DM_LOCAL_BD_ADDR_CFM, ParamInitHandleClDmLocalBdAddrCfm},
 #endif
     {appLinkPolicyInit,     0, NULL},

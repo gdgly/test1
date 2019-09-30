@@ -1202,9 +1202,5 @@ void appUiInit(void)
     memset(theUi->prompt_file_indexes, FILE_NONE, sizeof(theUi->prompt_file_indexes));
 
     theUi->prompt_last = PROMPT_NONE;
-
-#ifdef CONFIG_STAROT
-    memset(&gProgRunInfo, 0, sizeof(ProgRunInfo));
-#endif
 }
 

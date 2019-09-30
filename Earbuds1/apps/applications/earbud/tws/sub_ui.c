@@ -43,10 +43,44 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
     }
     message->payloadLen    = count;
 
-
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
-    DEBUG_LOG("\nHFP CALL Status=0x%x", progRun->dial_stat);
+    DEBUG_LOG("\nHFP CALL Status=0x%x LEN=%d", progRun->dial_stat, count);
+    return 0;
+}
+
+//盒子状态的信息
+// payload=[盒盖[1]+ 按键[1] + 长按键[1] + 电量[]]
+static int16 subUiCasestat2Gaia(MessageId id, ProgRIPtr  progRun)
+{
+    (void)id;
+    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
+
+    message->command = STAROT_DIALOG_CASE_VER;
+    message->payload[0] = (uint8)progRun->caseLidOpen;
+    message->payload[1] = (uint8)progRun->caseKeyDown;
+    message->payload[2] = (uint8)progRun->caseKeyLong;
+    message->payload[3] = (uint8)progRun->caseElectrity;
+
+    message->payloadLen = 4;
+    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+    return 0;
+}
+
+//盒子版本的信息
+// payload=[HwVer[2] + SwVer[2]]
+static int16 subUiCasever2Gaia(MessageId id, ProgRIPtr  progRun)
+{
+    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
+    (void)id;
+
+    message->command = STAROT_DIALOG_CASE_STAT;
+    memcpy(&message->payload[0], &progRun->caseHWver, 2);
+    memcpy(&message->payload[2], &progRun->caseSWver, 2);
+//    message->payload[0] = progRun->caseHWver;
+//    message->payload[2] = progRun->caseSWver;
+    message->payloadLen = 4;
+    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
     return 0;
 }
 
@@ -71,10 +105,15 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
 // UI 自定义的相关消息
 void appSubUiHandleMessage(Task task, MessageId id, Message message)
 {
-    ProgRIPtr  progRun = &gProgRunInfo;
+    ProgRIPtr  progRun = appSubGetProgRun();
     (void)task, (void)message;
 
     switch(id) {
+    case MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT:
+        progRun->iElectrity = ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent;
+        DEBUG_LOG("appSubUiHandleMessage iElectrity=%d", progRun->iElectrity);
+        break;
+
     // 拨号、电话相关的消息
     case HFP_CALLER_ID_IND:
         subUiCaller2Gaia(id, progRun);
@@ -94,16 +133,55 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     // 盒子发送相关的命令操作
     case APP_CASE_REPORT_VERSION:           // 盒子硬件版本信息等
+        subUiCasever2Gaia(id, progRun);
+        break;
     case APP_CASE_REPORT_INFO:              // 盒子报告当前信息
+        subUiCasestat2Gaia(id, progRun);
+        break;
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
     }
 }
 
+void appSubUIInit(void)
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+    batteryRegistrationForm battery_from;
+
+    memset(progRun, 0, sizeof(ProgRunInfo));
+
+    /* 获取底层的电量信息 */
+    battery_from.task            = &appGetUi()->task;
+    battery_from.representation  = battery_level_repres_percent;
+    battery_from.hysteresis      = 1;
+    appBatteryRegister(&battery_from);
+}
+
+ProgRIPtr appSubGetProgRun(void)
+{
+   return &gProgRunInfo;
+}
+
+bdaddr* SystemGetEarAddr(uint8 *addrbuf) //获取蓝牙地址
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    if(addrbuf) {
+        addrbuf[0] = (progRun->addr.nap >> 8) & 0xFF;
+        addrbuf[1] = (progRun->addr.nap & 0xFF);
+        addrbuf[2] = progRun->addr.uap;
+        addrbuf[3] = (progRun->addr.lap >> 16) & 0xFF;
+        addrbuf[4] = (progRun->addr.lap >> 8) & 0xFF;
+        addrbuf[5] = (progRun->addr.lap & 0xFF);
+    }
+
+    return &progRun->addr;
+}
+
 static bool HfpCallerIsSame(uint8 *number, uint16 size_number)
 {
-    ProgRIPtr  progRun = &gProgRunInfo;
+    ProgRIPtr  progRun = appSubGetProgRun();
     CallIPtr   pCall;
 
     if(progRun->callIndex >= MAX_CALLIN_INFO)
@@ -126,7 +204,7 @@ static bool HfpCallerIsSame(uint8 *number, uint16 size_number)
 // HFP TASK调用，新的号码拨入
 int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 size_name)
 {
-    ProgRIPtr  progRun = &gProgRunInfo;
+    ProgRIPtr  progRun = appSubGetProgRun();
     CallIPtr   pCall;
 
     if(HfpCallerIsSame(number, size_number) == TRUE)
@@ -187,7 +265,7 @@ int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 si
 /* Show HFP incoming call */
 void appUiHfpCallIncomingActive(void)
 {
-    ProgRIPtr  progRun = &gProgRunInfo;
+    ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
 
@@ -200,7 +278,7 @@ void appUiHfpCallIncomingActive(void)
 /* Show HFP outcoming call */
 void appUiHfpCallOutcomingActive(void)
 {
-    ProgRIPtr  progRun = &gProgRunInfo;
+    ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->dial_stat  &= ~DIAL_ST_INACT;
     progRun->dial_stat  |= DIAL_ST_OUT;
@@ -211,7 +289,7 @@ void appUiHfpCallOutcomingActive(void)
 /* Cancel HFP incoming call */
 void appUiHfpCallIncomingInactive(int16 isEnd)
 {
-    ProgRIPtr  progRun = &gProgRunInfo;
+    ProgRIPtr  progRun = appSubGetProgRun();
 
     if(isEnd)
         progRun->dial_stat  &= ~(DIAL_ST_IN | DIAL_ST_ACT);
@@ -222,7 +300,7 @@ void appUiHfpCallIncomingInactive(int16 isEnd)
 /* Cancel HFP outcoming call */
 void appUiHfpCallOutcomingInactive(int16 isEnd)
 {
-    ProgRIPtr  progRun = &gProgRunInfo;
+    ProgRIPtr  progRun = appSubGetProgRun();
 
     if(isEnd)
         progRun->dial_stat  &= ~(DIAL_ST_OUT | DIAL_ST_ACT);
@@ -233,7 +311,7 @@ void appUiHfpCallOutcomingInactive(int16 isEnd)
 /* Show HFP call active */
 void appUiHfpCallActive(void)
 {
-    ProgRIPtr  progRun = &gProgRunInfo;
+    ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->dial_stat  |= DIAL_ST_ACT;
 
@@ -243,7 +321,7 @@ void appUiHfpCallActive(void)
 /* Show HFP call imactive */
 void appUiHfpCallInactive(void)
 {
-    ProgRIPtr  progRun = &gProgRunInfo;
+    ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->dial_stat  &= ~(DIAL_ST_IN | DIAL_ST_OUT | DIAL_ST_ACT);
     progRun->dial_stat  |= DIAL_ST_INACT;
@@ -258,23 +336,74 @@ void appUiHfpCallInactive(void)
 // 数值小于0，表示不确定，不设置
 void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectrity)
 {
-    ProgRIPtr  progRun = &gProgRunInfo;
-
-    (void)keyDown, (void)keyLong, (void)iElectrity;
+    ProgRIPtr  progRun = appSubGetProgRun();
 
     if(lidOpen >= 0)
         progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
 
+    if(keyDown >= 0)
+        progRun->caseKeyDown = (1 == keyDown) ? 1 : 0;
 
+    if(keyLong >= 0)
+        progRun->caseKeyLong = (1 == keyLong) ? 1 : 0;
 
+    if(iElectrity >= 0)
+        progRun->caseElectrity = iElectrity;
+
+    MessageSend(&appGetUi()->task, APP_CASE_REPORT_INFO, 0);
 }
 
 void appUiCaseVersion(uint16 hwVer, uint16 swVer)
 {
-    (void)hwVer, (void)swVer;
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    progRun->caseHWver = hwVer;
+    progRun->caseSWver = swVer;
+
+    MessageSend(&appGetUi()->task, APP_CASE_REPORT_VERSION, 0);
+}
+
+// 临时停止BLE广播，以便开始新的广播内容
+bool appUiIsStopBle(void)
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    return (progRun->stopBle == 1) ? TRUE : FALSE;
+}
+
+void appUiRestartBle(void)
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    progRun->stopBle = 1;
+    appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
+
+    progRun->stopBle = 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///  充电模块反馈的信息
+///////////////////////////////////////////////////////////////////////////////
+void appUiChargerConnected(void)
+{
 
 }
 
+void appUiChargerDisconnected(void)
+{
 
+}
+
+void appUiChargerChargingLow(void)
+{
+}
+
+void appUiChargerChargingOk(void)
+{
+}
+
+void appUiChargerComplete(void)
+{
+}
 
 #endif

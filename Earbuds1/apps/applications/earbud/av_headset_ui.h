@@ -466,6 +466,7 @@ do \
 
 #endif
 
+#ifndef CONFIG_STAROT
 #ifdef INCLUDE_CHARGER
 /*! \brief Charger connected */
 #define appUiChargerConnected()
@@ -493,6 +494,7 @@ do \
 /*! \brief Charger charging complete, enable charging complete filter */
 #define appUiChargerComplete() \
     appLedSetFilter(app_led_filter_charging_complete, 1)
+#endif
 #endif
 
 extern void appUiInit(void);

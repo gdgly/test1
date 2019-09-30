@@ -107,5 +107,7 @@ uint8 starotGaiaTransGetAudioType(void);
 #define STAROT_DIALOG_DEVICE_REQUEST_REJECT_RECORD 0x1007    // ui -> gaia 设备请求用户停止录音
 #define STAROT_DIALOG_AUDIO_DEVICE_PAUSE 0x1009              // ui -> gaia 音频设备发生切换 暂停
 #define STAROT_DIALOG_AUDIO_DEVICE_CONTINUE 0x100b           // ui -> gaia 音频设备发生切换 继续
+#define STAROT_DIALOG_CASE_STAT 0x100d                       // ui -> gaia 盒子当前信息
+#define STAROT_DIALOG_CASE_VER 0x100f                        // ui -> gaia 盒子当前版本
 
 #endif // AV_HEADSET_GAIA_STAROT_H
