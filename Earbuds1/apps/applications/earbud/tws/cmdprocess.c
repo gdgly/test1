@@ -338,12 +338,44 @@ static void ShellDoCommand(char *buffer, int len)
         sprintf(outbuf, "HWver:%04x SWver:0x%4x\n", ver[0], ver[1]);
     }
     else if(strstr(buffer, "getbt")) {        // 盒子获取耳机经典蓝牙地址
-   //     uint8 addr[8];
-   //     SystemGet
+        uint8 addr[8];
+        SystemGetEarAddr((uint8 *)addr);
+        sprintf(outbuf, "addr:%02x:%02x:%02x%02x:%02x:%02x\n",
+                addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
     }
     else if(strstr(buffer, "getble")) {       // 获取BLE信息
     }
     else if(strstr(buffer, "getstat")) {      // 获取当前状态(充电满)
+    }
+    else if(strstr(buffer, "casestat")){      // 设置箱子按键盖子
+        ProgRIPtr progRun = appSubGetProgRun();
+        char casepow[5]={0};
+        int16 lidopen,keydown,keylong, capower;
+
+        lidopen = ((buffer[9] == '0') ? 0 : 1);
+        keydown = ((buffer[11] == '0') ? 0 : 1);
+        keylong = ((buffer[13] == '0') ? 0 : 1);
+
+        strncpy(casepow, buffer+15,3);
+        capower = atoi(casepow);
+
+        appUiCaseStatus(lidopen, keydown, keylong, capower);
+        sprintf(outbuf, "caseLidOpen:1:%d  caseKeyDown:1:%d  caseKeyLong:1:%d caseElectrity:7:%d\n",
+                progRun->caseLidOpen, progRun->caseKeyDown,
+                progRun->caseKeyLong, progRun->caseElectrity);
+    }
+    else if(strstr(buffer, "setcasever")) {    // 设置case版本信息
+        ProgRIPtr progRun = appSubGetProgRun();
+        uint16 hwver, swver;
+        char hwv[8]={0}, swv[8]={0}, *stop;
+
+        strncpy(hwv, buffer+11, 6);
+        strncpy(swv, buffer+18, 6);
+
+        hwver = (uint16)strtol(hwv, &stop, 16);
+        swver = (uint16)strtol(swv, &stop, 16);
+        appUiCaseVersion(hwver, swver);
+        sprintf(outbuf, "HWver:%04x SWver:0x%4x\n", progRun->caseHWver, progRun->caseSWver);
     }
     else
         sprintf(outbuf, "Unknown %s\n", buffer);
