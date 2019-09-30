@@ -227,7 +227,7 @@ static void appGattHandleGattManRemoteClientConnectCfm(GATT_MANAGER_REMOTE_CLIEN
             appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
 
 #ifdef CONFIG_STAROT
-            DEBUG_LOG("appGattClientConnectCfm. cid=%d,st=%d mtu=%d",cfm->cid, cfm->status, cfm->mtu);
+            DEBUG_LOG("appGattHandleGattManRemoteClientConnectCfm: interval: %d, latency: %d, timeout: %d", 6, 0, 400);
             ConnectionDmBleConnectionParametersUpdateReq(appGetGattTask(), &cfm->taddr, 6, 6, 0, 400, 0, 160);
 
             DEBUG_LOG("appGattClientConnectCfm. cid=%d,st=%d mtu=%d",cfm->cid, cfm->status, cfm->mtu);
@@ -515,6 +515,10 @@ static void appGattMessageHandler(Task task, MessageId id, Message message)
         /************ ADVERTISING MANAGER MESSAGES ******************/
         case APP_ADVMGR_ADVERT_SET_DATA_CFM:
             appGattHandlerAdvMgrAdvertSetDataCfm((const APP_ADVMGR_ADVERT_SET_DATA_CFM_T *)message);
+            break;
+
+        case CL_DM_BLE_CONNECTION_PARAMETERS_UPDATE_CFM:
+            DEBUG_LOGF("CL_DM_BLE_CONNECTION_PARAMETERS_UPDATE_CFM");
             break;
 
         default:
