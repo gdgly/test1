@@ -335,6 +335,7 @@ typedef struct
 typedef struct
 {
     GAIA_TRANSPORT *transport;          /*!< Indicates the GAIA instance */
+    gaia_transport_type type;           /*!< 传输类型 gatt, rfcomm, none */
     bool success;                       /*!< The success of the operation */
 } GAIA_TRANSPORT_SUCCESS_MESSAGE_T;
 

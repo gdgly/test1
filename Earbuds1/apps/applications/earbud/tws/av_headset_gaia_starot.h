@@ -96,18 +96,40 @@ void notifyGaiaDialogSource(Source speaker, Source mic);
 
 uint8 starotGaiaTransGetAudioType(void);
 
+void starotGaiaDefaultParse( MessageId id, Message message);
+
 //-----------------------------------------------------
 // 定义GAIA与UI、DSP关于电话时的消息
 //-----------------------------------------------------
-#define STAROT_DIALOG_STATUS 0x1001                          // ui -> gaia 通话状态
-#define STAROT_DIALOG_USER_ACCEPT_RECORD 0x1002              // gaia -> (ui & dsp) 用户请求录音
-#define STAROT_DIALOG_AUDIO_DATA 0x1003                      // dsp -> gaia 请求传输数据
-#define STAROT_DIALOG_USER_REJECT_RECORD 0x1004              // gaia -> (ui & dsp) 用户请求录音
-#define STAROT_DIALOG_DEVICE_REQUEST_RECORD 0x1005          // ui -> gaia 设备请求用户开始录音
-#define STAROT_DIALOG_DEVICE_REQUEST_REJECT_RECORD 0x1007    // ui -> gaia 设备请求用户停止录音
-#define STAROT_DIALOG_AUDIO_DEVICE_PAUSE 0x1009              // ui -> gaia 音频设备发生切换 暂停
-#define STAROT_DIALOG_AUDIO_DEVICE_CONTINUE 0x100b           // ui -> gaia 音频设备发生切换 继续
-#define STAROT_DIALOG_CASE_STAT 0x100d                       // ui -> gaia 盒子当前信息
-#define STAROT_DIALOG_CASE_VER 0x100f                        // ui -> gaia 盒子当前版本
+
+enum {
+    STAROT_DIALOG_STATUS = AV_GAIA_MESSAGE_BASE + 0X20,   // ui -> gaia 通话状态
+    STAROT_DIALOG_USER_ACCEPT_RECORD,                     // gaia -> (ui & dsp) 用户请求录音
+    STAROT_DIALOG_AUDIO_DATA,                             // dsp -> gaia 请求传输数据
+    STAROT_DIALOG_USER_REJECT_RECORD,                     // gaia -> (ui & dsp) 用户请求录音
+    STAROT_DIALOG_DEVICE_REQUEST_RECORD,                  // ui -> gaia 设备请求用户开始录音
+    STAROT_DIALOG_DEVICE_REQUEST_REJECT_RECORD,           // ui -> gaia 设备请求用户停止录音
+    STAROT_DIALOG_AUDIO_DEVICE_PAUSE,                     // ui -> gaia 音频设备发生切换 暂停
+    STAROT_DIALOG_AUDIO_DEVICE_CONTINUE,                  // ui -> gaia 音频设备发生切换 继续
+    STAROT_DIALOG_CALL_ATTR_TIMEOUT,                      // gaia -> gaia 属性发送超时，如果还在通话中，继续发送
+    STAROT_DIALOG_CALL_BEGIN_TIMEOUT,                     // gaia -> gaia 电话开始发送命令超时
+    STAROT_DIALOG_CALL_END_TIMEOUT,                       // gaia -> gaia 电话结束发送超时
+    STAROT_DIALOG_CASE_STAT,                              // ui -> gaia 盒子当前信息
+    STAROT_DIALOG_CASE_VER,                               // ui -> gaia 盒子当前版本
+};
+
+#define STAROT_COMMAND_TIMEOUT 1000 // 命令超时时间
+
+/////////////////////////////////////////命令，超时，重发//////////////////////////////////////////
+struct StarotResendCommand_T {
+    uint16 command;
+    uint16 len;   /// payload的长度
+    uint8 payload[1];
+};
+typedef struct StarotResendCommand_T StarotResendCommand;
+
+StarotResendCommand* starotResendCommandInit(uint16 command, uint16 len, uint8* payload);
+StarotResendCommand* starotResendCommandDo(StarotResendCommand* resendCommand, bool stillNeedResend);
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // AV_HEADSET_GAIA_STAROT_H

@@ -2,13 +2,14 @@
 #include "av_headset_adv_manager.h"
 #include "av_headset_adv_manager_private.h"
 #include "tws/adv_manager.h"
+#include "av_headset_log.h"
 
 
 extern int16 ParamLoadBlePair(BlePairInfo *blePairInfo);
 
 extern int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
 
-static void appPrivateBleSetRandomCode(uint16 advCode);
+//static void appPrivateBleSetRandomCode(uint16 advCode);
 
 static uint8 *addManufacturerSpecificData(uint8 *ad_data, uint8 *space, uint16 size_specific_data, const uint8 *specific_data) {
     uint8 field_length;
@@ -65,6 +66,7 @@ uint8 *appAdvManagerAdvertdataAddManufacturerSpecificData(uint8 *ad_data, uint8 
     advTaskData.advManufacturerSpecificData.casePower = 0X00 | 0X35;
 //    advManufacturerSpecificData.randomCode = 0X66;
 
+    DEBUG_LOG("call appAdvManagerAdvertdataAddManufacturerSpecificData for ble adv data");
     return addManufacturerSpecificData(ad_data, space, sizeof(advTaskData.advManufacturerSpecificData),
                                        (const uint8 *) &advTaskData.advManufacturerSpecificData);
 }
@@ -81,14 +83,8 @@ bool appBleIsBond(void) {
 }
 
 bool appAdvParamInit(void) {
-    int16 res = ParamLoadBlePair(&advTaskData.bleBondInfo);
-    if (res < 0) {
-        advTaskData.bleBondInfo.bleIsBond = FALSE;
-        advTaskData.bleBondInfo.advCode = 0X00;
-        advTaskData.bleBondInfo.bondCode = 0X00;
-    }
+    ParamLoadBlePair(&advTaskData.bleBondInfo);
     appPrivateBleSetRandomCode(advTaskData.bleBondInfo.advCode);
-
     return TRUE;
 }
 
@@ -100,6 +96,7 @@ void appAdvParamSave(void) {
 }
 
 void appBleClearBond(void) {
+    DEBUG_LOG("call appBleClearBond");
     advTaskData.bleBondInfo.bleIsBond = FALSE;
     advTaskData.bleBondInfo.advCode = 0X00;
     advTaskData.bleBondInfo.bondCode = 0X00;
@@ -107,9 +104,9 @@ void appBleClearBond(void) {
     appPrivateBleSetRandomCode(0X00);
 }
 
-void appBleSetPond(uint16 advCode, uint32 bondCode) {
+void appBleSetBond(uint16 advCode, uint32 bondCode) {
+    DEBUG_LOG("set pair ble code is : adv %04X, bond %04X", advCode, bondCode);
     advTaskData.bleBondInfo.bleIsBond = TRUE;
-    printf("set pair ble code is : adv %04X, bond %04X\n", advCode, bondCode);
     advTaskData.bleBondInfo.advCode = advCode;
     advTaskData.bleBondInfo.bondCode = bondCode;
     appAdvParamSave();
@@ -123,4 +120,6 @@ uint32 appBleGetBondCode(void) {
 void appPrivateBleSetRandomCode(uint16 advCode) {
     advTaskData.advManufacturerSpecificData.randomCodeHigh = (advCode & 0XFF00) >> 8;
     advTaskData.advManufacturerSpecificData.randomCodeLow = advCode & 0X00FF;
+    DEBUG_LOG("random code : high %02X, low %02X", advTaskData.advManufacturerSpecificData.randomCodeHigh,
+              advTaskData.advManufacturerSpecificData.randomCodeLow);
 }

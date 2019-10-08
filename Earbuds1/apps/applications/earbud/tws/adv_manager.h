@@ -10,6 +10,9 @@ void appAdvParamSave(void);
 uint8* appAdvManagerAdvertdataAddManufacturerSpecificData(uint8 *ad_data, uint8* space);
 bool appAdvManagerAdvertdataUpdateRandomCode(uint16 randomCode);
 
+void appPrivateBleSetRandomCode(uint16 advCode);
+
+
 /// ble当前是否配对成功
 bool appBleIsBond(void);
 
@@ -21,7 +24,7 @@ struct BlePairInfo_T {
 typedef struct BlePairInfo_T BlePairInfo;
 
 void appBleClearBond(void);
-void appBleSetPond(uint16 advCode, uint32 bondCode);
+void appBleSetBond(uint16 advCode, uint32 bondCode);
 uint32 appBleGetBondCode(void);
 
 #endif

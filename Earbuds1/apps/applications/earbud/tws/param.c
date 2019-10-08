@@ -138,6 +138,7 @@ bool ParamUsingSingle(void)
 bool ParamUsingSingle(void) { return TRUE; }
 #endif
 
+
 int16 ParamLoadAll(void)
 {
     int16 ret = 0x07;
@@ -192,6 +193,7 @@ int16 SystemGetVersion(uint8 *buffer)              // 获取软硬件版本信�
 }
 
 
+extern bool appAdvParamInit(void);
 
 void ParamConfigInit(void)
 {
@@ -199,6 +201,9 @@ void ParamConfigInit(void)
 
     /* Get local device address */
     ConnectionReadLocalAddr(appGetAppTask());
+
+    /* 广播数据 */
+    appAdvParamInit();
 }
 
 void ParamInitHandleClDmLocalBdAddrCfm(Message message)

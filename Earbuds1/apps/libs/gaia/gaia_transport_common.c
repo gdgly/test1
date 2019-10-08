@@ -60,6 +60,7 @@ void gaiaTransportCommonSendGaiaConnectInd(gaia_transport *transport, bool succe
 {
     MESSAGE_PMAKE(gci, GAIA_CONNECT_IND_T);
     gci->transport = (GAIA_TRANSPORT*)transport;
+    gci->type = transport->type;
     gci->success = success;
     MessageSend(gaia->app_task, GAIA_CONNECT_IND, gci);
 }
