@@ -106,6 +106,7 @@ void SourceSinkI2SMasterClockEnable(void *source_sink, int isSource, int enable)
 //              /* em20168 Proximity */
 //==============================================================================================
 //#define HAVE_EM20168
+#define EM20168_ITR_PIN 61
 void EM20168_init(void);
 int EM20168Power(bool isOn);
 
@@ -114,9 +115,19 @@ int EM20168Power(bool isOn);
 //              /* bma400 Tap */
 //==============================================================================================
 //#define HAVE_BMA400
+#define BMA400_ITR_PIN 7
 void BMA400_init(void);
 int BMA400Power(bool isOn);
 
+#ifdef CONFIG_BOARD_V1
+
+#undef EM20168_ITR_PIN
+#define EM20168_ITR_PIN 61
+
+#undef BMA400_ITR_PIN
+#define BMA400_ITR_PIN 7
+
+#endif
 
 //==============================================================================================
 //            系统功能定义

@@ -13,7 +13,7 @@
 
 #define BMA400_I2C_ADDR 0x14
 #define BMA400_I2C_FREQ 100
-#define BMA400_ITR_PIN 7
+
 
 typedef struct{
     uint8 reg;
