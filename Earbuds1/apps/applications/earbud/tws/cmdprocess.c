@@ -333,9 +333,9 @@ static void ShellDoCommand(char *buffer, int len)
         sprintf(outbuf, "reboot System\n");
     }
     else if(strstr(buffer, "getver")) {       // 获取版本信息
-        uint16 ver[4];
-        SystemGetVersion((uint8 *)ver);
-        sprintf(outbuf, "HWver:%04x SWver:0x%4x\n", ver[0], ver[1]);
+        memset(outbuf, 0, sizeof(outbuf));
+        sprintf(outbuf, "DEVver:");
+        SystemGetVersion((uint8*)&outbuf[7]);
     }
     else if(strstr(buffer, "getbt")) {        // 盒子获取耳机经典蓝牙地址
         uint8 addr[8];

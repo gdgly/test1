@@ -52,7 +52,7 @@ void FixParamDefault(void)
     FixPrmPtr prm = &gFixParam;
 
     prm->aud_adj      = 0;
-    prm->hw_ver       = 0xFFFF;
+    memcpy(prm->hw_ver, "E00100", 6);
 }
 
 // taddr: save value;
@@ -181,15 +181,16 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
     return sizeof(BlePairInfo);
 }
 
-// hwVer[short]+swVer[short]
+// hwVer[6]+rev[2]+swVer[8]
 int16 SystemGetVersion(uint8 *buffer)              // 获取软硬件版本信息
 {
-    uint16 *ptr = (uint16*)buffer;
+    uint8 *ptr = (uint8*)buffer;
 
-    ptr[0] = gFixParam.hw_ver;
-    ptr[1] = SYSTEM_SW_VERSION;
+    memcpy(ptr, gFixParam.hw_ver, 6); ptr += 6;
+    ptr[0] = ptr[1] = ' ';  ptr += 2;
+    memcpy(ptr, SYSTEM_SW_VERSION, 8);
 
-    return 4;       // BYTE
+    return 16;       // BYTE
 }
 
 
