@@ -28,6 +28,8 @@ static void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message);
 
 static void gaiaNotifyAudioAcceptStatus(Task task, int command);
 
+static void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message);
+
 static int speakerDropNum = 0;
 static int micDropNum = 0;
 extern uint8 testSpeedIndex;
@@ -184,6 +186,11 @@ void starotGaiaDefaultParse(MessageId id, Message message) {
                 StarotResendCommand *cmd = starotResendCommandDo((StarotResendCommand *) message, TRUE);
                 MessageSendLater(appGetGaiaTask(), id, cmd, STAROT_COMMAND_TIMEOUT);
             }
+            break;
+
+        case STAROT_DIALOG_CASE_VER:
+        case STAROT_DIALOG_CASE_STAT:
+            gaiaParseCaseStatVer(message);
             break;
 
         default:
@@ -419,5 +426,39 @@ StarotResendCommand *starotResendCommandDo(StarotResendCommand *resendCommand, b
 }
 
 // }
+
+//向app发送盒子状态版本
+void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message) {
+
+    StarotAttr *head = NULL;
+    StarotAttr *attr = NULL;
+
+    if (message->command == STAROT_DIALOG_CASE_STAT) {
+        DEBUG_LOG("call STAROT_DIALOG_CASE_STAT");
+        attr = attrMalloc(&head, 4);
+        attr->attr = 0X01;
+        attr->payload[0] = message->payload[0];
+        attr->payload[1] = message->payload[1];
+        attr->payload[2] = message->payload[2];
+        attr->payload[3] = message->payload[3];
+    }
+
+    if (message->command == STAROT_DIALOG_CASE_VER) {
+        DEBUG_LOG("call STAROT_DIALOG_CASE_VER");
+        attr = attrMalloc(&head, 2);
+        attr->attr = 0X02;
+        memcpy(&head->payload[0], &message->payload[0], 2);
+        memcpy(&head->payload[2], &message->payload[2], 2);
+    }
+
+    if (NULL != head) {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        DEBUG_LOG("len is :%d %p", len, data);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_NOTIFY_CASE_STATUS, 0xfe, len, data);
+        attrFree(head, data);
+        DEBUG_LOG("call STAROT_DIALOG_CASE_STAT");
+    }
+}
 
 #endif
