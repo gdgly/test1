@@ -2358,7 +2358,7 @@ static ruleAction ruleBleConnectionUpdate(void)
         /* Use our own status to decide if we should be connectable */
     connectable = paired_with_peer && paired_with_handset && ble_connectable && !has_ble_connection;
 #ifdef CONFIG_STAROT
-    connectable = paired_with_peer && ble_connectable && !has_ble_connection;
+    connectable = paired_with_peer && ble_connectable && !has_ble_connection && (FALSE==appUiIsStopBle());
 #endif
     DEBUG_LOG("ruleBleConnectionUpdate Paired(peer:%d, handset:%d). BLE(allowed:%d,allowed_out_case:%d,has:%d,is_trying:%d)",
                     paired_with_peer,paired_with_handset,
