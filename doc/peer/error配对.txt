@@ -1,0 +1,142 @@
+Session Started
+Log information will appear here when available.
+
+C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30/tools/python27/python.exe -i C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30/extensions/pydbg_tabs/py/pydbg_tab.py -t C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30/extensions/pydbg_tabs/py/scripts/fw_live_log.py -d device://tc/usb2tc/101/qcc5126 -k C:\qtil\ADK_QCC512X_ROM_V21_WIN_6.4.0.30 -p C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30/apps/fw/tools/pydbg.py -w D:\WorkSpace\QCC5126\EarBuds\apps\applications\earbud\qcc512x_rom_v21\CF376_CG814\earbud.x2w
+
+Attaching to Device @ "tc:usb2tc:101"...
+2 windowed masters
+Device attach succeeded.
+device = qcc512x_qcc302x-lab
+chip = qcc512x_qcc302x-r02-v0
+----.---    apps1: 002E: appPairingEnterInitialising
+----.---    apps1: 002F: appPairingRegisterServiceRecord, bd_addr 0000,00,000000
+----.---    apps1: 0030: appPeerSigLinkKeyTaskRegister
+----.---    apps1: 0031: appHandleClSdpRegisterCfm, status 0
+----.---    apps1: 0032: appPairSetState(2)
+----.---    apps1: 0033: appPairingExitInitialising
+----.---    apps1: 0034: appPairingEnterIdle
+----.---    apps1: 0035: appPeerSyncInit
+----.---    apps1: 0036: appHfpSetState(1)
+----.---    apps1: 0037: appPairSetState(13)
+----.---    apps1: 0038: appPairingExitIdle
+----.---    apps1: 0039: SCANMAN Enable Page Scan, user 1 type 2
+----.---    apps1: 003A: SCANMAN Page scan params changed to 2
+----.---    apps1: 003B: appPairingFindHandsetsNeedingLinkKeyTx
+----.---    apps1: 003C: appPairSetState(2)
+----.---    apps1: 003D: appPairingEnterIdle
+----.---    apps1: 003E: appHandleClDmLocalNameComplete, status 0
+----.---    apps1: 003F: appHfpHandleHfpInitConfirm
+----.---    apps1: 0040: appHfpSetState(2)
+----.---    apps1: 0041: appHfpEnterDisconnected
+----.---    apps1: 0042: appAvStreamingResume(0x0, 0x2)
+----.---    apps1: 0043: appPhyStateRegisterClient 10a78
+----.---    apps1: 0044: appKymeraMicInit
+----.---    apps1: 0045: appKymeraAncInit
+----.---    apps1: 0046: appPeerSyncStatusClientRegister 10b1c
+----.---    apps1: 0047: appPowerClientRegister 10b1c
+----.---    apps1: 0048: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=100000, ps=1
+----.---    apps1: 0049: rulePageScanUpdate, run, need to enable page scan
+----.---    apps1: 004A: ruleBleConnectionUpdate Paired(peer:0, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+----.---    apps1: 004B: ruleBleConnectionUpdate, IGNORE - no change
+----.---    apps1: 004C: ruleCheckUpgradable, block as out of case and not permitted
+----.---    apps1: 004D: appSetState, state 0x00 to 0x40
+----.---    apps1: 004E: appEnterInitialising
+----.---    apps1: 004F: appScoFwdSetState(17) from 0
+----.---    apps1: 0050: appScoFwdSetState, initialising
+----.---    apps1: 0051: appPhyStateRegisterClient 10b7c
+----.---    apps1: 0052: appScoFwdSetWallclock, sink 0
+----.---    apps1: 0053: appSmHandleConnRulesPageScanUpdate enable:1
+----.---    apps1: 0054: SCANMAN Enable Page Scan, user 2 type 1
+----.---    apps1: 0055: appScoFwdHandleL2capRegisterCfm, status 0, psm 65279
+----.---    apps1: 0056: appScoFwdHandleClSdpRegisterCfm, status 0
+----.---    apps1: 0057: appScoFwdSetState(2) from 17
+----.---    apps1: 0058: appScoFwdEnterIdle
+----.---    apps1: 0059: appGaiaMessageHandler 0x7480 (29824)
+----.---    apps1: 005A: appGaiaHandleInitConfirm GAIA_INIT_CFM: 1 (succ)
+----.---    apps1: 005B: appGaiaMessageHandler 0x7485 (29829)
+----.---    apps1: 005C: appGaiaMessageHandler GAIA_START_SERVICE_CFM (nothing to do)
+----.---    apps1: 005D: appGattMessageHandler id:25600 0x6400
+----.---    apps1: 005E: APP:GATT: appGattHandleGattManRegisterWithGattCfm
+----.---    apps1: 005F: appGaiaMessageHandler 0x7485 (29829)
+----.---    apps1: 0060: appGaiaMessageHandler GAIA_START_SERVICE_CFM (nothing to do)
+----.---    apps1: 0061: appAdvManagerHandleConnectionLibraryMessages. Unhandled message. Id: 0x506A (20586) 0x13188
+----.---    apps1: 0062: appGattHandleDmBleCconfigureLocalAddressCfm sts:0 First resolvable 57C5:CF:967EFC
+----.---    apps1: 0063: appGattSetAdvertisingMode Mode set to 0 (was 0)
+----.---    apps1: 0064: appUpgradeMessageHandler. 0x7D00 (32000)
+----.---    apps1: 0065: appUpgradeMessageHandler. UPGRADE_INIT_CFM 0 (sts)
+----.---    apps1: 0066: appSmHandleInitConfirm
+----.---    apps1: 0067: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=100000, ps=1
+----.---    apps1: 0068: ruleBleConnectionUpdate Paired(peer:0, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+----.---    apps1: 0069: ruleBleConnectionUpdate, IGNORE - no change
+----.---    apps1: 006A: ruleCheckUpgradable, block as out of case and not permitted
+----.---    apps1: 006B: appSetState, state 0x40 to 0x80
+----.---    apps1: 006C: appExitInitialising
+----.---    apps1: 006D: appEnterDfuCheck
+----.---    apps1: 006E: appPowerOn
+----.---    apps1: 006F: appLedEnable, enable 1
+----.---    apps1: 0070: appLedSetPattern pattern 7805ddb0, priority 3
+----.---    apps1: 0071: appKymeraPromptPlay, queue prompt 11, int 0
+----.---    apps1: 0072: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+----.---    apps1: 0073: appSmHandleNoDfu. Not gone into DFU, so safe to assume we can continue
+----.---    apps1: 0074: appSetState, state 0x80 to 0x200
+----.---    apps1: 0075: appExitDfuCheck
+----.---    apps1: 0076: appEnterStartup
+----.---    apps1: 0077: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=100000, ps=1
+----.---    apps1: 0078: ruleBleConnectionUpdate Paired(peer:0, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+----.---    apps1: 0079: ruleBleConnectionUpdate, IGNORE - no change
+----.---    apps1: 007A: ruleCheckUpgradable, block as out of case and not permitted
+----.---    apps1: 007B: ruleStartupPeerPaired, run
+----.---    apps1: 007C: appLedSetPriority 3
+----.---    apps1: 007D: appKymeraHandleInternalTonePromptPlay, prompt b, tone 0, int 0, lock 0x0, mask 0x0
+106.955    apps1: 007E: appKymeraExternalAmpControl, adding a client to the audio SS
+106.964    apps1: 007F: appKymeraSetState, state 0 -> 9
+106.977    apps1: 0080: appKymeraConfigureDspPowerMode, tone 1, state 9, a2dp seid 0
+106.986    apps1: 0081: appKymeraConfigureDspPowerMode, kymera clocks 32 2 0, mode 1
+106.997    apps1: 0082: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+106.997    apps1: 0083: appSmHandleConnRulesPeerPair
+106.997    apps1: 0084: appSmHandleConnRulesPeerPair, rule said pair with peer
+106.997    apps1: 0085: appSetState, state 0x200 to 0x400
+106.997    apps1: 0086: appExitStartup
+107.015    apps1: 0087: appEnterPeerPairing
+107.015    apps1: 0088: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=83, time=4959243
+107.015    apps1: 0089: appHandleSysUnexpected, id = 0x8046 (32838)
+107.015    apps1: 008A: appHandleInternalPeerPairRequest, state 2
+107.015    apps1: 008B: appPairSetState(3)
+107.015    apps1: 008C: appPairingExitIdle
+107.015    apps1: 008D: SCANMAN Enable Page Scan, user 1 type 2
+107.015    apps1: 008E: appPairingEnterPeerInquiry
+107.015    apps1: 008F: appLedSetPattern pattern 7805df00, priority 1
+107.599    apps1: 0090: appLedStopPattern, priority 3
+107.599    apps1: 0091: appLedSetPriority 1
+107.853    apps1: 0092: appKymera MESSAGE_STREAM_DISCONNECT
+107.853    apps1: 0093: appKymeraTonePromptStop, state 9
+107.868    apps1: 0094: appKymeraExternalAmpControl, sending later KYMERA_INTERNAL_AUDIO_SS_DISABLE
+107.876    apps1: 0095: appKymeraSetState, state 9 -> 0
+
+
+107.879    apps1: 0096: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=266, time=4959243
+109.877    apps1: 0097: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=280, time=4959243
+111.877    apps1: 0098: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=278, time=4959243
+113.410    apps1: 0099: appHandleClDmInquireResult, complete, status 0, bdaddr 0,0,0, rssi -80, next_rssi -80
+113.878    apps1: 009A: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=282, time=4959243
+
+114.679    apps1: 009B: appConManagerHandleClDmAclOpenedIndication, status 0, incoming 1, 3,5b,ff02[0] Flags:1
+114.679    apps1: 009C: appConManagerHandleClDmAclOpenedIndication, peer or unknown
+114.679    apps1: 009D: appConManagerSetDeviceState, device 3,5b,ff02, state 1, lock 0
+114.700    apps1: 009E: appSmHandleConManagerConnectionInd connected:1
+114.700    apps1: 009F: appDeviceHandleConManagerConnectionInd UNKNOWN BREDR ff02 CONN:1 Status:0
+114.700    apps1: 00A0: appSmHandleInternalBredrConnected
+114.700    apps1: 00A1: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=100000, ps=1
+114.700    apps1: 00A2: ruleBleConnectionUpdate Paired(peer:0, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+114.700    apps1: 00A3: ruleBleConnectionUpdate, IGNORE - no change
+114.700    apps1: 00A4: ruleCheckUpgradable, block as out of case and not permitted
+114.700    apps1: 00A5: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+115.878    apps1: 00A6: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=278, time=4959243
+116.151    apps1: 00A7: appConManagerHandleClDmAclClosedIndication, status 19, 3,5b,ff02
+116.151    apps1: 00A8: appConManagerSetDeviceState, device 3,5b,ff02, state 3, lock 0
+116.163    apps1: 00A9: appSmHandleConManagerConnectionInd connected:0
+116.163    apps1: 00AA: appDeviceHandleConManagerConnectionInd UNKNOWN BREDR ff02 CONN:0 Status:19
+
+117.879    apps1: 00AB: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=277, time=4959243
+119.819    apps1: 00AC: appHandleClDmInquireResult, complete, status 0, bdaddr 0,0,0, rssi -80, next_rssi -80
+119.878    apps1: 00AD: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=281, time=4959243

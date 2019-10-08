@@ -1,0 +1,567 @@
+Session Started
+Log information will appear here when available.
+
+C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30/tools/python27/python.exe -i C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30/extensions/pydbg_tabs/py/pydbg_tab.py -t C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30/extensions/pydbg_tabs/py/scripts/fw_live_log.py -d device://tc/usb2tc/101/qcc5126 -k C:\qtil\ADK_QCC512X_ROM_V21_WIN_6.4.0.30 -p C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30/apps/fw/tools/pydbg.py -w D:\WorkSpace\QCC5126\EarBuds\apps\applications\earbud\qcc512x_rom_v21\CF376_CG814\earbud.x2w
+
+Attaching to Device @ "tc:usb2tc:101"...
+2 windowed masters
+Device attach succeeded.
+device = qcc512x_qcc302x-lab
+chip = qcc512x_qcc302x-r02-v0
+----.---    apps1: 002E: appPairingEnterInitialising
+----.---    apps1: 002F: appPairingRegisterServiceRecord, bd_addr 0000,00,000000
+----.---    apps1: 0030: appPeerSigLinkKeyTaskRegister
+----.---    apps1: 0031: appHandleClSdpRegisterCfm, status 0
+----.---    apps1: 0032: appPairSetState(2)
+----.---    apps1: 0033: appPairingExitInitialising
+----.---    apps1: 0034: appPairingEnterIdle
+----.---    apps1: 0035: appPeerSyncInit
+----.---    apps1: 0036: appHfpSetState(1)
+----.---    apps1: 0037: appPairSetState(13)
+----.---    apps1: 0038: appPairingExitIdle
+----.---    apps1: 0039: SCANMAN Enable Page Scan, user 1 type 2
+----.---    apps1: 003A: SCANMAN Page scan params changed to 2
+----.---    apps1: 003B: appPairingFindHandsetsNeedingLinkKeyTx
+----.---    apps1: 003C: appPairSetState(2)
+----.---    apps1: 003D: appPairingEnterIdle
+----.---    apps1: 003E: appHandleClDmLocalNameComplete, status 0
+----.---    apps1: 003F: appHfpHandleHfpInitConfirm
+----.---    apps1: 0040: appHfpSetState(2)
+----.---    apps1: 0041: appHfpEnterDisconnected
+----.---    apps1: 0042: appAvStreamingResume(0x0, 0x2)
+----.---    apps1: 0043: appPhyStateRegisterClient 10a78
+----.---    apps1: 0044: appKymeraMicInit
+----.---    apps1: 0045: appKymeraAncInit
+----.---    apps1: 0046: appPeerSyncStatusClientRegister 10b1c
+----.---    apps1: 0047: appPowerClientRegister 10b1c
+----.---    apps1: 0048: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=100000, ps=1
+----.---    apps1: 0049: rulePageScanUpdate, run, need to enable page scan
+----.---    apps1: 004A: ruleBleConnectionUpdate Paired(peer:0, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+----.---    apps1: 004B: ruleBleConnectionUpdate, IGNORE - no change
+----.---    apps1: 004C: ruleCheckUpgradable, block as out of case and not permitted
+----.---    apps1: 004D: appSetState, state 0x00 to 0x40
+----.---    apps1: 004E: appEnterInitialising
+----.---    apps1: 004F: appScoFwdSetState(17) from 0
+----.---    apps1: 0050: appScoFwdSetState, initialising
+----.---    apps1: 0051: appPhyStateRegisterClient 10b7c
+----.---    apps1: 0052: appScoFwdSetWallclock, sink 0
+----.---    apps1: 0053: appSmHandleConnRulesPageScanUpdate enable:1
+----.---    apps1: 0054: SCANMAN Enable Page Scan, user 2 type 1
+----.---    apps1: 0055: appScoFwdHandleL2capRegisterCfm, status 0, psm 65279
+----.---    apps1: 0056: appScoFwdHandleClSdpRegisterCfm, status 0
+----.---    apps1: 0057: appScoFwdSetState(2) from 17
+----.---    apps1: 0058: appScoFwdEnterIdle
+----.---    apps1: 0059: appGaiaMessageHandler 0x7480 (29824)
+----.---    apps1: 005A: appGaiaHandleInitConfirm GAIA_INIT_CFM: 1 (succ)
+----.---    apps1: 005B: appGaiaMessageHandler 0x7485 (29829)
+----.---    apps1: 005C: appGaiaMessageHandler GAIA_START_SERVICE_CFM (nothing to do)
+----.---    apps1: 005D: appGattMessageHandler id:25600 0x6400
+----.---    apps1: 005E: APP:GATT: appGattHandleGattManRegisterWithGattCfm
+----.---    apps1: 005F: appGaiaMessageHandler 0x7485 (29829)
+----.---    apps1: 0060: appGaiaMessageHandler GAIA_START_SERVICE_CFM (nothing to do)
+----.---    apps1: 0061: appAdvManagerHandleConnectionLibraryMessages. Unhandled message. Id: 0x506A (20586) 0x13188
+----.---    apps1: 0062: appGattHandleDmBleCconfigureLocalAddressCfm sts:0 First resolvable 4A47:57:816213
+----.---    apps1: 0063: appGattSetAdvertisingMode Mode set to 0 (was 0)
+----.---    apps1: 0064: appUpgradeMessageHandler. 0x7D00 (32000)
+----.---    apps1: 0065: appUpgradeMessageHandler. UPGRADE_INIT_CFM 0 (sts)
+----.---    apps1: 0066: appSmHandleInitConfirm
+----.---    apps1: 0067: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=100000, ps=1
+----.---    apps1: 0068: ruleBleConnectionUpdate Paired(peer:0, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+----.---    apps1: 0069: ruleBleConnectionUpdate, IGNORE - no change
+----.---    apps1: 006A: ruleCheckUpgradable, block as out of case and not permitted
+----.---    apps1: 006B: appSetState, state 0x40 to 0x80
+----.---    apps1: 006C: appExitInitialising
+----.---    apps1: 006D: appEnterDfuCheck
+----.---    apps1: 006E: appPowerOn
+----.---    apps1: 006F: appLedEnable, enable 1
+----.---    apps1: 0070: appLedSetPattern pattern 7805ddb0, priority 3
+----.---    apps1: 0071: appKymeraPromptPlay, queue prompt 11, int 0
+----.---    apps1: 0072: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+----.---    apps1: 0073: appSmHandleNoDfu. Not gone into DFU, so safe to assume we can continue
+----.---    apps1: 0074: appSetState, state 0x80 to 0x200
+----.---    apps1: 0075: appExitDfuCheck
+----.---    apps1: 0076: appEnterStartup
+----.---    apps1: 0077: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=100000, ps=1
+----.---    apps1: 0078: ruleBleConnectionUpdate Paired(peer:0, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+----.---    apps1: 0079: ruleBleConnectionUpdate, IGNORE - no change
+----.---    apps1: 007A: ruleCheckUpgradable, block as out of case and not permitted
+----.---    apps1: 007B: ruleStartupPeerPaired, run
+----.---    apps1: 007C: appLedSetPriority 3
+----.---    apps1: 007D: appKymeraHandleInternalTonePromptPlay, prompt b, tone 0, int 0, lock 0x0, mask 0x0
+878.759    apps1: 007E: appKymeraExternalAmpControl, adding a client to the audio SS
+878.767    apps1: 007F: appKymeraSetState, state 0 -> 9
+878.780    apps1: 0080: appKymeraConfigureDspPowerMode, tone 1, state 9, a2dp seid 0
+878.789    apps1: 0081: appKymeraConfigureDspPowerMode, kymera clocks 32 2 0, mode 1
+878.800    apps1: 0082: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+878.804    apps1: 0083: appSmHandleConnRulesPeerPair
+878.804    apps1: 0084: appSmHandleConnRulesPeerPair, rule said pair with peer
+878.804    apps1: 0085: appSetState, state 0x200 to 0x400
+878.804    apps1: 0086: appExitStartup
+878.804    apps1: 0087: appEnterPeerPairing
+878.804    apps1: 0088: appHandleSysUnexpected, id = 0x8046 (32838)
+878.804    apps1: 0089: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=81, time=4970996
+878.804    apps1: 008A: appHandleInternalPeerPairRequest, state 2
+878.804    apps1: 008B: appPairSetState(3)
+878.804    apps1: 008C: appPairingExitIdle
+878.804    apps1: 008D: SCANMAN Enable Page Scan, user 1 type 2
+878.804    apps1: 008E: appPairingEnterPeerInquiry
+878.804    apps1: 008F: appLedSetPattern pattern 7805df00, priority 1
+879.402    apps1: 0090: appLedStopPattern, priority 3
+879.402    apps1: 0091: appLedSetPriority 1
+879.656    apps1: 0092: appKymera MESSAGE_STREAM_DISCONNECT
+879.656    apps1: 0093: appKymeraTonePromptStop, state 9
+879.671    apps1: 0094: appKymeraExternalAmpControl, sending later KYMERA_INTERNAL_AUDIO_SS_DISABLE
+879.679    apps1: 0095: appKymeraSetState, state 9 -> 0
+880.741    apps1: 0096: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=415, time=4970996
+882.741    apps1: 0097: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=279, time=4970996
+884.741    apps1: 0098: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=282, time=4970996
+885.212    apps1: 0099: appHandleClDmInquireResult, complete, status 0, bdaddr 0,0,0, rssi -80, next_rssi -80
+886.742    apps1: 009A: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=283, time=4970996
+888.742    apps1: 009B: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=277, time=4970996
+890.742    apps1: 009C: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=281, time=4970996
+891.622    apps1: 009D: appHandleClDmInquireResult, complete, status 0, bdaddr 0,0,0, rssi -80, next_rssi -80
+
+
+892.668    apps1: 009E: appHandleClDmInquireResult, bdaddr 0003,5b,00ff04 rssi -50 cod 240404
+914.896    apps1: 009F: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=268, time=4970996
+914.909    apps1: 00A0: appHandleClDmInquireResult, bdaddr 0003,5b,00ff04 rssi -45 cod 240404
+917.622    apps1: 00A1: appHandleClDmInquireResult, bdaddr 0003,5b,00ff04 rssi -48 cod 240404
+920.293    apps1: 00A2: appHandleClDmInquireResult, bdaddr 0003,5b,00ff04 rssi -50 cod 240404
+921.876    apps1: 00A3: appHandleClDmInquireResult, bdaddr 0003,5b,00ff04 rssi -44 cod 240404
+925.816    apps1: 00A4: appHandleClDmInquireResult, bdaddr 0003,5b,00ff04 rssi -47 cod 240404
+925.816    apps1: 00A5: appHandleClDmInquireResult, bdaddr 0003,5b,00ff04 rssi -41 cod 240404
+925.816    apps1: 00A6: appHandleClDmInquireResult, bdaddr 0003,5b,00ff04 rssi -42 cod 240404
+925.816    apps1: 00A7: appHandleClDmInquireResult, bdaddr 0003,5b,00ff04 rssi -47 cod 240404
+925.816    apps1: 00A8: appHandleClDmInquireResult, bdaddr 0003,5b,00ff04 rssi -48 cod 240404
+925.816    apps1: 00A9: appHandleClDmInquireResult, complete, status 0, bdaddr 3,5b,ff04, rssi -41, next_rssi -80
+
+
+936.792    apps1: 00AA: appHandleClDmInquireResult, performing SDP service search
+936.792    apps1: 00AB: appPairSetState(4)
+936.792    apps1: 00AC: appPairingExitPeerInquiry
+936.792    apps1: 00AD: appLedStopPattern, priority 1
+936.792    apps1: 00AE: appPairingEnterPeerSdpSearch
+936.805    apps1: 00AF: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=1, time=65030034
+936.843    apps1: 00B0: appLedSetPriority -1
+937.053    apps1: 00B1: appConManagerHandleClDmAclOpenedIndication, status 0, incoming 0, 3,5b,ff04[0] Flags:0
+937.053    apps1: 00B2: appConManagerHandleClDmAclOpenedIndication, peer or unknown
+937.053    apps1: 00B3: appConManagerSetDeviceState, device 3,5b,ff04, state 1, lock 0
+
+
+937.074    apps1: 00B4: appSmHandleConManagerConnectionInd connected:1
+937.074    apps1: 00B5: appDeviceHandleConManagerConnectionInd UNKNOWN BREDR ff04 CONN:1 Status:0
+
+937.074    apps1: 00B6: appSmHandleInternalBredrConnected
+937.074    apps1: 00B7: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=100000, ps=1
+937.074    apps1: 00B8: ruleBleConnectionUpdate Paired(peer:0, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+937.074    apps1: 00B9: ruleBleConnectionUpdate, IGNORE - no change
+937.074    apps1: 00BA: ruleCheckUpgradable, block as out of case and not permitted
+937.074    apps1: 00BB: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+
+
+937.105    apps1: 00BC: appPairingHandleClSmAuthoriseIndication, state 4, protocol 0, channel 1, incoming 0
+937.149    apps1: 00BD: appHandleClSdpServiceSearchAttributeCfm, status 0
+937.149    apps1: 00BE: appHandleClSdpServiceSearchAttributeCfm, TWS Version 0500
+937.149    apps1: 00BF: appPairSetState(5)
+937.149    apps1: 00C0: appPairingEnterPeerAuthenticate, authenticating 0003,5b,00ff04
+937.172    apps1: 00C1: appPairingHandleClSmIoCapabilityReqIndication Pairing state 5. Type:0 Transp:0 sm_over_BREDR:0
+937.172    apps1: 00C2: appPairingHandleClSmIoCapabilityReqIndication, accept 1
+937.199    apps1: 00C3: appPairingHandleClSmRemoteIoCapabilityIndication ff04 auth:2 io:3 oib:0
+1013.654    apps1: 00C4: appPairingHandleClSmAuthenticateCfm, state 5, status 0, bonded 1
+1013.654    apps1: 00C5: appPairingHandleClSmAuthenticateConfirm: link_mode NO_SECURE_CONNECTION
+1013.671    apps1: 00C6: appDeviceUpdateCache, update peer, bdaddr 0003,5b,00ff04, version 5.00
+
+
+1035.549    apps1: 00C7: appKymera KYMERA_INTERNAL_AUDIO_SS_DISABLE
+1035.560    apps1: 00C8: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=244, time=65030034
+1035.560    apps1: 00C9: appConManagerHandleClDmAclClosedIndication, status 22, 3,5b,ff04
+1035.560    apps1: 00CA: appConManagerSetDeviceState, device 3,5b,ff04, state 3, lock 0
+1035.560    apps1: 00CB: appConManagerHandleClDmAclOpenedIndication, status 0, incoming 1, 3,5b,ff04[0] Flags:1
+1035.560    apps1: 00CC: appConManagerHandleClDmAclOpenedIndication, peer or unknown
+1035.560    apps1: 00CD: appConManagerSetDeviceState, device 3,5b,ff04, state 1, lock 0
+1035.599    apps1: 00CE: appPairingHandleClSmAuthoriseIndication, state 5, protocol 0, channel 1, incoming 1
+
+1035.599    apps1: 00CF: appSmHandleConManagerConnectionInd connected:0
+1035.599    apps1: 00D0: appSmHandleConManagerConnectionInd, disconnected from peer
+1035.599    apps1: 00D1: appPeerSyncResetSync
+1035.599    apps1: 00D2: appDeviceHandleConManagerConnectionInd PEER CONN:0 Status:22
+1035.599    apps1: 00D3: appSmHandleConManagerConnectionInd connected:1
+1035.599    apps1: 00D4: appDeviceHandleConManagerConnectionInd PEER CONN:1 Status:0
+1035.599    apps1: 00D5: appSmHandleInternalBredrConnected
+1035.599    apps1: 00D6: rulePageScanUpdate, peer sync not complete, ignore
+1035.599    apps1: 00D7: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1035.599    apps1: 00D8: ruleBleConnectionUpdate, IGNORE - no change
+1035.599    apps1: 00D9: ruleCheckUpgradable, block as out of case and not permitted
+1035.599    apps1: 00DA: appHandleClSdpUnregisterCfm, status 1
+1035.599    apps1: 00DB: appHandleClSdpUnregisterCfm, status 0
+1035.599    apps1: 00DC: appPairingRegisterServiceRecord, bd_addr 0003,5b,00ff04
+1035.599    apps1: 00DD: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1035.599    apps1: 00DE: appHandleClDmLocalNameComplete, status 0
+1035.599    apps1: 00DF: appHandleClSdpRegisterCfm, status 0
+1035.599    apps1: 00E0: appPairSetState(9)
+1035.599    apps1: 00E1: appPairingEnterPeerScoFwdSdpSearch
+
+
+
+1035.599    apps1: 00E2: appPairingHandleClSmAuthoriseIndication, state 9, protocol 0, channel 1, incoming 1
+1035.599    apps1: 00E3: appPairingHandleClSmAuthoriseIndication, state 9, protocol 0, channel 1, incoming 0
+1035.599    apps1: 00E4: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=1, time=163820335
+1035.686    apps1: 00E5: appPairingHandleClSmAuthoriseIndication, state 9, protocol 0, channel 1, incoming 1
+1035.686    apps1: 00E6: appHandleClSdpServiceSearchAttributeCfm, status 0
+1035.686    apps1: 00E7: appHandleClSdpServiceSearchAttributeCfm, peer SCO forward features 0003
+1035.686    apps1: 00E8: appDeviceSetScoForwardFeatures, features 0003
+1035.686    apps1: 00E9: appDeviceUpdateCache, update peer, bdaddr 0003,5b,00ff04, version 5.00
+1037.215    apps1: 00EA: appPairSetState(2)
+1037.215    apps1: 00EB: appPairingEnterIdle
+1037.215    apps1: 00EC: appSmHandlePairingPeerPairConfirm, status 0
+1037.229    apps1: 00ED: rulePageScanUpdate, peer sync not complete, ignore
+1037.229    apps1: 00EE: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1037.229    apps1: 00EF: ruleBleConnectionUpdate, IGNORE - no change
+1037.229    apps1: 00F0: ruleCheckUpgradable, block as out of case and not permitted
+1037.229    apps1: 00F1: appSetState, state 0x400 to 0x200
+1037.229    apps1: 00F2: appExitPeerPairing
+1037.229    apps1: 00F3: appEnterStartup
+1037.229    apps1: 00F4: rulePageScanUpdate, peer sync not complete, ignore
+1037.229    apps1: 00F5: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1037.229    apps1: 00F6: ruleBleConnectionUpdate, IGNORE - no change
+1037.229    apps1: 00F7: ruleCheckUpgradable, block as out of case and not permitted
+1037.229    apps1: 00F8: ruleStartupPeerPaired, done
+1037.229    apps1: 00F9: rulePeerSync, run (state x200)
+1037.229    apps1: 00FA: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1037.229    apps1: 00FB: appHandleInternalPeerPairCancel
+1037.229    apps1: 00FC: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1037.229    apps1: 00FD: appSmHandleConnRulesPeerSync
+1037.229    apps1: 00FE: appPeerSyncSend (response 0)
+1037.229    apps1: 00FF: appPeerSyncTxMsgDebug TX
+1037.229    apps1: 0100:     appPeerSync txseq 1 rxseq ff
+1037.229    apps1: 0101:     appPeerSync battery 1405, bdaddr 000000000000, version ffff
+1037.229    apps1: 0102:     appPeerSync (startup|RIP|a2dp_conn|avrcp_conn|hfp_conn|a2dp_streaming|sco|dfu)=10000000
+1037.229    apps1: 0103:     appPeerSync (in_case|in_ear|is_pairing|have_handset_pairing|advertising|BLE)=010000
+1037.229    apps1: 0104: appPeerSigMsgChannelTxRequest
+1037.229    apps1: 0105: rulePageScanUpdate, peer sync not complete, ignore
+1037.229    apps1: 0106: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1037.229    apps1: 0107: ruleBleConnectionUpdate, IGNORE - no change
+1037.229    apps1: 0108: ruleCheckUpgradable, block as out of case and not permitted
+1037.229    apps1: 0109: appAuthHandleClSmEncryptionChangeInd
+1037.229    apps1: 010A: appAuthHandleEncryptionChange: link_mode NO_SECURE_CONNECTION
+1037.229    apps1: 010B: appDeviceUpdateCache, update peer, bdaddr 0003,5b,00ff04, version 5.00
+1039.689    apps1: 010C: appPairingHandleClSmAuthoriseIndication, state 2, protocol 0, channel 23, incoming 1
+1039.689    apps1: 0000: appConManagerHandleClSmAuthoriseIndication, protocol 324074571, channel 346, incoming 324037147 BLE:347
+1039.689    apps1: 015C: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1039.689    apps1: 015D: ruleBleConnectionUpdate, IGNORE - no change
+1039.689    apps1: 015E: ruleCheckUpgradable, block as out of case and not permitted
+1039.689    apps1: 015F: ruleAutoHandsetPair, defer, not synced with peer
+1039.689    apps1: 0160: ruleOutOfCaseConnectPeer
+1039.689    apps1: 0161: ruleConnectPeer, defer as peer sync not complete
+1039.689    apps1: 0162: ruleOutOfCaseConnectHandset
+1039.689    apps1: 0163: ruleConnectHandset, reason 3
+1039.689    apps1: 0164: ruleConnectHandset, defer as peer sync in progress
+Couldn't find buf[0] = 0x165
+1039.729    apps1: 0166: appLedEnable, enable 0
+1039.729    apps1: 0167: rulePageScanUpdate, peer sync not complete, ignore
+1039.729    apps1: 0168: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1039.729    apps1: 0169: ruleBleConnectionUpdate, IGNORE - no change
+1039.729    apps1: 016A: ruleCheckUpgradable, block as out of case and not permitted
+1039.729    apps1: 016B: ruleAutoHandsetPair, defer, not synced with peer
+1039.729    apps1: 016C: ruleOutOfCaseConnectPeer
+1039.729    apps1: 016D: ruleConnectPeer, defer as peer sync not complete
+1039.729    apps1: 016E: ruleOutOfCaseConnectHandset
+1039.729    apps1: 016F: ruleConnectHandset, reason 3
+1039.729    apps1: 0170: ruleConnectHandset, defer as peer sync in progress
+1039.729    apps1: 0171: ruleInEarScoTransferToEarbud, ignore as this earbud has no active call
+1039.729    apps1: 0172: ruleSelectMicrophone, defer as peer sync not complete
+1039.729    apps1: 0173: ruleInEarAncEnable, run
+1039.729    apps1: 0174: appPeerSigHandleInternalMsgChannelTxRequest, state 1 chan 2 size 15
+1039.729    apps1: 0175: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1039.729    apps1: 0176: appPeerSyncHandlePeerSigMsgChannelTxCfm, failed, status 6
+1039.729    apps1: 0177: appPeerSyncHandleConnRulesNop
+1039.729    apps1: 0178: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1039.729    apps1: 0179: appLedSetPriority -1
+1039.729    apps1: 017A: appPeerSyncHandleConnRulesNop
+1039.729    apps1: 017B: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1039.729    apps1: 017C: appKymeraAncEnable, state 0
+1039.729    apps1: 017D: appPeerSyncHandlePeerSigMsgChannelTxCfm, failed, status 6
+1039.729    apps1: 017E: appAvrcpHandleAvrcpConnectIndicationNew
+1039.729    apps1: 017F: appAvInstanceCreate 14ce4
+1039.729    apps1: 0180: appSmHandlePeerSyncStatus 0
+1039.729    apps1: 0181: appSmHandlePeerSyncStatus 0
+1039.729    apps1: 0182: appAvrcpHandleInternalAvrcpConnectIndication(14ce4) clients 0
+1039.729    apps1: 0183: appAvrcpSetState(14ce4) state 21
+1039.729    apps1: 0184: appAvrcpExitDisconnected(14ce4)
+1039.729    apps1: 0185: appAvrcpEnterConnectingRemoteWaitResponse(14ce4)
+1039.729    apps1: 0186: appPeerSigHandleAvAvrcpConnectInd, state 1
+1039.729    apps1: 0187: appPeerSigHandleAvAvrcpConnectInd, accepted
+1039.729    apps1: 0188: appPeerSigSetState, state 14
+1039.729    apps1: 0189: appPeerSigExitDisconnected
+1039.729    apps1: 018A: SCANMAN Disable Page Scan, user 4
+1039.729    apps1: 018B: appPeerSigEnterConnectingRemote
+1039.729    apps1: 018C: appHandsetSigHandleAvAvrcpConnectInd, rejected
+1039.729    apps1: 018D: appAvHandleAvAvrcpConnectIndication
+1039.729    apps1: 018E: appAvHandleAvAvrcpConnectIndication, rejecting
+1039.729    apps1: 018F: appAvrcpHandleInternalAvrcpConnectResponse(14ce4), accept 1
+1039.729    apps1: 0190: appAvrcpHandleInternalAvrcpConnectResponse(14ce4), accept 0
+1039.729    apps1: 0191: appAvrcpHandleInternalAvrcpConnectResponse(14ce4), removing 10a78
+1039.729    apps1: 0192: appAvrcpHandleInternalAvrcpConnectResponse(14ce4), removing 10a78
+1039.729    apps1: 0193: appAvrcpHandleInternalAvrcpConnectResponse(14ce4), accept 0
+1039.729    apps1: 0194: appAvrcpHandleInternalAvrcpConnectResponse(14ce4), removing 108e4
+1039.729    apps1: 0195: appAvrcpHandleInternalAvrcpConnectResponse(14ce4), removing 14ce4
+1039.729    apps1: 0196: appAvrcpHandleInternalAvrcpConnectResponse(14ce4), connect response
+1039.729    apps1: 0197: appAvrcpSetState(14ce4) state 20
+1039.729    apps1: 0198: appAvrcpExitConnectingRemoteWaitResponse(14ce4)
+1039.729    apps1: 0199: appAvrcpEnterConnectingRemote(14ce4)
+1039.729    apps1: 019A: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=1, time=167945424
+1039.920    apps1: 019B: appAvrcpHandleAvrcpConnectConfirm(14ce4) status 0
+1039.920    apps1: 019C: appAvrcpSetState(14ce4) state 6
+1039.920    apps1: 019D: appAvrcpExitConnectingRemote(14ce4)
+1039.920    apps1: 019E: appAvrcpEnterConnected(14ce4)
+1039.920    apps1: 019F: appAvInstanceAvrcpConnected
+1039.920    apps1: 01A0: appLinkPolicyUpdatePowerTable for peer, index=6, prev=8
+1039.920    apps1: 01A1: appDeviceUpdateCache, update peer, bdaddr 0003,5b,00ff04, version 5.00
+1040.721    apps1: 01A2: appPeerSigHandleAvAvrcpConnectCfm, state 20, status 0, av 14ce4
+1040.721    apps1: 01A3: appPeerSigSetState, state 5
+1040.721    apps1: 01A4: appPeerSigExitConnectingRemote
+1040.721    apps1: 01A5: appPeerSigEnterConnected
+1040.721    apps1: 01A6: appPeerSigStartInactivityTimer
+1040.721    apps1: 01A7: appSmHandleAvAvrcpConnectedInd
+Couldn't find buf[0] = 0x20f
+1040.738    apps1: 01A8: appSmHandleAvAvrcpConnectedInd, using wallclock for UI synchronisation
+1040.738    apps1: 01A9: appScoFwdSetWallclock, sink 6749
+1040.738    apps1: 01AA: rulePageScanUpdate, peer sync not complete, ignore
+1040.738    apps1: 01AB: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1040.738    apps1: 01AC: ruleBleConnectionUpdate, IGNORE - no change
+1040.738    apps1: 01AD: ruleCheckUpgradable, block as out of case and not permitted
+1040.738    apps1: 01AE: ruleForwardLinkKeys, run
+1040.738    apps1: 01AF: ruleAutoHandsetPair, defer, not synced with peer
+1040.738    apps1: 01B0: ruleOutOfCaseConnectPeer
+1040.738    apps1: 01B1: ruleConnectPeer, defer as peer sync not complete
+1040.738    apps1: 01B2: ruleOutOfCaseConnectHandset
+1040.738    apps1: 01B3: ruleConnectHandset, reason 3
+1040.738    apps1: 01B4: ruleConnectHandset, defer as not sync'ed with peer
+1040.738    apps1: 01B5: ruleSelectMicrophone, defer as peer sync not complete
+1040.738    apps1: 01B6: appHandleUnexpected, id = 802, sm = 32776, hfp = 2, av = 3
+1040.738    apps1: 01B7: appScoFwdHandlePeerSignallingConnectionInd, status 2
+1040.738    apps1: 01B8: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1040.738    apps1: 01B9: appSmHandleConnRulesForwardLinkKeys
+1040.738    apps1: 01BA: rulePageScanUpdate, peer sync not complete, ignore
+1040.738    apps1: 0210: appSetState, state 0x8008 to 0x800
+1040.738    apps1: 0211: appExitInEarIdle
+1040.738    apps1: 0212: appExitInEar
+1040.738    apps1: 0213: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=110100, ps=1
+1040.738    apps1: 0214: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1040.738    apps1: 0215: ruleBleConnectionUpdate, IGNORE - no change
+1040.738    apps1: 0216: ruleCheckUpgradable, block as out of case and not permitted
+1040.738    apps1: 0217: rulePeerSync, run (state x8008)
+1040.738    apps1: 0218: appEnterHandsetPairing
+1040.738    apps1: 0219: appPeerSyncSend (response 0)
+1040.738    apps1: 021A: appPeerSyncTxMsgDebug TX
+1040.738    apps1: 021B:     appPeerSync txseq 4 rxseq 1
+1040.738    apps1: 021C:     appPeerSync battery 1484, bdaddr 000000000000, version ffff
+1040.738    apps1: 021D:     appPeerSync (startup|RIP|a2dp_conn|avrcp_conn|hfp_conn|a2dp_streaming|sco|dfu)=00000000
+1040.738    apps1: 021E:     appPeerSync (in_case|in_ear|is_pairing|have_handset_pairing|advertising|BLE)=011000
+1040.738    apps1: 021F: appPeerSigMsgChannelTxRequest
+1040.738    apps1: 0220: appGattSetAdvertisingMode Mode set to 1 (was 0)
+1040.738    apps1: 0221: appSmHandleConnRulesSelectMic selected mic 1
+1040.738    apps1: 0222: appKymeraScoUseLocalMic
+1040.738    apps1: 0223: rulePageScanUpdate, peer sync not complete, ignore
+1040.738    apps1: 0224: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1040.738    apps1: 0225: ruleBleConnectionUpdate, IGNORE - no change
+1040.738    apps1: 0226: ruleCheckUpgradable, block as out of case and not permitted
+1040.738    apps1: 0227: appSmHandleConnRulesSelectMic selected mic 1
+1040.738    apps1: 0228: appKymeraScoUseLocalMic
+1040.738    apps1: 0229: rulePageScanUpdate, peer sync not complete, ignore
+1040.738    apps1: 022A: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1040.738    apps1: 022B: ruleBleConnectionUpdate, IGNORE - no change
+1040.738    apps1: 022C: ruleCheckUpgradable, block as out of case and not permitted
+1040.738    apps1: 022D: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1040.738    apps1: 022E: appSmHandleConnRulesPeerSync
+1040.738    apps1: 022F: appPeerSyncSend (response 0)
+1040.738    apps1: 0230: appPeerSyncTxMsgDebug TX
+1040.738    apps1: 0231:     appPeerSync txseq 5 rxseq 1
+1040.738    apps1: 0232:     appPeerSync battery 1484, bdaddr 000000000000, version ffff
+1040.738    apps1: 0233:     appPeerSync (startup|RIP|a2dp_conn|avrcp_conn|hfp_conn|a2dp_streaming|sco|dfu)=00000000
+1040.738    apps1: 0234:     appPeerSync (in_case|in_ear|is_pairing|have_handset_pairing|advertising|BLE)=011000
+1040.738    apps1: 0235: appPeerSigMsgChannelTxRequest
+1040.738    apps1: 0236: rulePageScanUpdate, peer sync not complete, ignore
+1040.738    apps1: 0237: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1040.738    apps1: 0238: ruleBleConnectionUpdate, IGNORE - no change
+1040.738    apps1: 0239: ruleCheckUpgradable, block as out of case and not permitted
+1040.738    apps1: 023A: ruleOutOfEarA2dpActive, ignore as A2DP not active out of ear
+1040.738    apps1: 023B: ruleOutOfEarScoActive, defer as not sync'ed with peer
+1040.738    apps1: 023C: ruleSelectMicrophone, defer as peer sync not complete
+1040.738    apps1: 023D: ruleOutOfEarLedsEnable, run as out of ear
+1040.738    apps1: 023E: appSmHandleInternalAllRequestedLinksDisconnected 0x800
+1040.738    apps1: 023F: appPeerSigHandleInternalStartupRequest, state 5, bdaddr 0003,5b,00ff04
+Couldn't find buf[0] = 0xf
+1040.946    apps1: 0241: appPeerSigCancelInactivityTimer
+1040.946    apps1: 0242: appKymeraSwitchSelectMic invalid state to switch mic 0
+1040.946    apps1: 0243: appPeerSyncHandleConnRulesNop
+1040.946    apps1: 0244: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1040.946    apps1: 0245: appKymeraSwitchSelectMic invalid state to switch mic 0
+1040.946    apps1: 0246: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1040.946    apps1: 0247: appPeerSyncHandleConnRulesNop
+1040.946    apps1: 0248: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1040.946    apps1: 0249: appSmHandleConnRulesLedEnable
+1040.946    apps1: 024A: appLedEnable, enable 1
+1040.946    apps1: 024B: rulePageScanUpdate, peer sync not complete, ignore
+1040.946    apps1: 024C: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1040.946    apps1: 024D: ruleBleConnectionUpdate, IGNORE - no change
+1040.946    apps1: 024E: ruleCheckUpgradable, block as out of case and not permitted
+1040.946    apps1: 024F: ruleOutOfEarScoActive, defer as not sync'ed with peer
+1040.946    apps1: 0250: ruleSelectMicrophone, defer as peer sync not complete
+1040.946    apps1: 0251: ruleOutOfEarAncDisable, run
+1040.946    apps1: 0252: appHandleInternalHandsetPairRequest, state 2
+1040.946    apps1: 0253: appPairSetState(10)
+1040.946    apps1: 0254: appPairingExitIdle
+1040.946    apps1: 0255: SCANMAN Enable Page Scan, user 1 type 2
+1040.946    apps1: 0256: appPairingEnterHandsetDiscoverable
+1040.946    apps1: 0257: SCANMAN Enable Inquiry Scan, user 1 type 2
+1040.946    apps1: 0258: SCANMAN Inquiry scan params changed to 2
+1040.946    apps1: 0259: appKymeraPromptPlay, queue prompt 7, int 0
+1040.946    apps1: 025A: appLedSetPattern pattern 7805de64, priority 1
+1040.946    apps1: 025B: appAvrcpHandleInternalAvrcpVendorPassthroughRequest(14ce4)
+1040.946    apps1: 025C: appLedSetPriority -1
+1040.946    apps1: 025D: appPeerSyncHandleConnRulesNop
+1040.946    apps1: 025E: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1040.946    apps1: 025F: appKymeraAncDisable, state 0
+1040.946    apps1: 0260: appKymeraHandleInternalTonePromptPlay, prompt 7, tone 0, int 0, lock 0x0, mask 0x0
+1041.336    apps1: 0261: appKymeraExternalAmpControl, adding a client to the audio SS
+1041.344    apps1: 0262: appKymeraSetState, state 0 -> 9
+1041.358    apps1: 0263: appKymeraConfigureDspPowerMode, tone 1, state 9, a2dp seid 0
+1041.365    apps1: 0264: appKymeraConfigureDspPowerMode, kymera clocks 32 2 0, mode 1
+1041.376    apps1: 0265: appLedSetPriority 1
+1041.382    apps1: 0266: appHandleSysUnexpected, id = 0x8046 (32838)
+1041.387    apps1: 0267: appAvrcpHandleAvrcpPassthroughIndication(14ce4) 0
+1041.387    apps1: 0268: appPeerSigStartInactivityTimer
+1041.387    apps1: 0269: appPeerSyncRxMsgDebug RX
+1041.387    apps1: 026A:     appPeerSync txseq 2 rxseq 3
+1041.387    apps1: 026B:     appPeerSync battery 2046, bdaddr 000000000000, version ffff
+1041.387    apps1: 026C:     appPeerSync (startup|RIP|a2dp_conn|avrcp_conn|hfp_conn|a2dp_streaming|sco|dfu)=00000000
+1041.387    apps1: 026D:     appPeerSync (in_case|in_ear|is_pairing|have_handset_pairing|advertising|BLE)=010000
+1041.387    apps1: 026E: appPeerSyncSend (response 1)
+1041.387    apps1: 026F: appPeerSyncTxMsgDebug TX
+1041.387    apps1: 0270:     appPeerSync txseq 5 rxseq 2
+1041.387    apps1: 0271:     appPeerSync battery 1484, bdaddr 000000000000, version ffff
+1041.387    apps1: 0272:     appPeerSync (startup|RIP|a2dp_conn|avrcp_conn|hfp_conn|a2dp_streaming|sco|dfu)=00000000
+1041.387    apps1: 0273:     appPeerSync (in_case|in_ear|is_pairing|have_handset_pairing|advertising|BLE)=011000
+1041.387    apps1: 0274: appPeerSigMsgChannelTxRequest
+1041.387    apps1: 0275: appAvrcpHandleInternalAvrcpVendorPassthroughResponse(14ce4)
+1041.441    apps1: 0276: appAvrcpHandleAvrcpPassthroughConfirm(14ce4), status 0
+1041.441    apps1: 0277: appAvrcpHandleAvrcpPassthroughConfirm 150cc 150cc
+1041.441    apps1: 0278: appAvrcpFinishAvrcpPassthroughRequest(14ce4), data 139fc, status 0
+1041.441    apps1: 0279: appPeerSigHandleAvAvrcpVendorPassthroughConfirm 0 opid:41
+1041.441    apps1: 027A: appPeerSigStartInactivityTimer
+1041.441    apps1: 027B: appPeerSigHandleInternalMsgChannelTxRequest, state 5 chan 2 size 15
+1041.441    apps1: 027C: appPeerSigCancelInactivityTimer
+1041.441    apps1: 027D: appPeerSyncHandlePeerSigMsgChannelTxCfm, success
+1041.441    apps1: 027E: appAvrcpHandleInternalAvrcpVendorPassthroughRequest(14ce4)
+1041.441    apps1: 027F: appSmHandlePeerSyncStatus 0
+1041.441    apps1: 0280: appAvrcpHandleAvrcpPassthroughIndication(14ce4) 0
+1041.441    apps1: 0281: appPeerSigStartInactivityTimer
+1041.441    apps1: 0282: appPeerSyncRxMsgDebug RX
+1041.441    apps1: 0283:     appPeerSync txseq 3 rxseq 3
+1041.441    apps1: 0284:     appPeerSync battery 2046, bdaddr 000000000000, version ffff
+1041.441    apps1: 0285:     appPeerSync (startup|RIP|a2dp_conn|avrcp_conn|hfp_conn|a2dp_streaming|sco|dfu)=00000000
+1041.441    apps1: 0286:     appPeerSync (in_case|in_ear|is_pairing|have_handset_pairing|advertising|BLE)=010000
+1041.441    apps1: 0287: appPeerSyncSend (response 1)
+1041.441    apps1: 0288: appPeerSyncTxMsgDebug TX
+1041.441    apps1: 0289:     appPeerSync txseq 5 rxseq 3
+1041.441    apps1: 028A:     appPeerSync battery 1484, bdaddr 000000000000, version ffff
+1041.441    apps1: 028B:     appPeerSync (startup|RIP|a2dp_conn|avrcp_conn|hfp_conn|a2dp_streaming|sco|dfu)=00000000
+1041.441    apps1: 028C:     appPeerSync (in_case|in_ear|is_pairing|have_handset_pairing|advertising|BLE)=011000
+1041.441    apps1: 028D: appPeerSigMsgChannelTxRequest
+1041.441    apps1: 028E: appAvrcpHandleInternalAvrcpVendorPassthroughResponse(14ce4)
+1041.532    apps1: 028F: appAvrcpHandleAvrcpPassthroughConfirm(14ce4), status 0
+1041.532    apps1: 0290: appAvrcpHandleAvrcpPassthroughConfirm 150cc 150cc
+1041.532    apps1: 0291: appAvrcpFinishAvrcpPassthroughRequest(14ce4), data 1398c, status 0
+1041.532    apps1: 0292: appPeerSigHandleAvAvrcpVendorPassthroughConfirm 0 opid:41
+1041.532    apps1: 0293: appPeerSigStartInactivityTimer
+1041.532    apps1: 0294: appPeerSigHandleInternalStartupRequest, state 5, bdaddr 0003,5b,00ff04
+1041.532    apps1: 0295: appPeerSigHandleInternalMsgChannelTxRequest, state 5 chan 2 size 15
+1041.532    apps1: 0296: appPeerSigCancelInactivityTimer
+1041.532    apps1: 0297: appPeerSyncHandlePeerSigMsgChannelTxCfm, success
+1041.532    apps1: 0298: appAvrcpHandleInternalAvrcpVendorPassthroughRequest(14ce4)
+1041.532    apps1: 0299: appSmHandlePeerSyncStatus 0
+1041.532    apps1: 029A: appAvrcpHandleAvrcpPassthroughIndication(14ce4) 0
+1041.532    apps1: 029B: appPeerSigStartInactivityTimer
+1041.532    apps1: 029C: appPeerSyncRxMsgDebug RX
+1041.532    apps1: 029D:     appPeerSync txseq 3 rxseq 4
+1041.532    apps1: 029E:     appPeerSync battery 2049, bdaddr 000000000000, version ffff
+1041.532    apps1: 029F:     appPeerSync (startup|RIP|a2dp_conn|avrcp_conn|hfp_conn|a2dp_streaming|sco|dfu)=00000000
+1041.532    apps1: 02A0:     appPeerSync (in_case|in_ear|is_pairing|have_handset_pairing|advertising|BLE)=010000
+1041.532    apps1: 02A1: appAvrcpHandleInternalAvrcpVendorPassthroughResponse(14ce4)
+1041.532    apps1: 02A2: appAvrcpHandleAvrcpPassthroughConfirm(14ce4), status 0
+1041.532    apps1: 02A3: appAvrcpHandleAvrcpPassthroughConfirm 150cc 150cc
+1041.532    apps1: 02A4: appAvrcpFinishAvrcpPassthroughRequest(14ce4), data 1391c, status 0
+1041.532    apps1: 02A5: appAvrcpHandleAvrcpPassthroughIndication(14ce4) 0
+1041.532    apps1: 02A6: appPeerSigHandleAvAvrcpVendorPassthroughConfirm 0 opid:41
+1041.532    apps1: 02A7: appPeerSigStartInactivityTimer
+1041.532    apps1: 02A8: appPeerSigHandleInternalMsgChannelTxRequest, state 5 chan 2 size 15
+1041.532    apps1: 02A9: appPeerSigCancelInactivityTimer
+1041.532    apps1: 02AA: appPeerSigStartInactivityTimer
+1041.532    apps1: 02AB: appPeerSyncHandlePeerSigMsgChannelTxCfm, success
+1041.532    apps1: 02AC: appPeerSyncRxMsgDebug RX
+1041.532    apps1: 02AD:     appPeerSync txseq 3 rxseq 5
+1041.532    apps1: 02AE:     appPeerSync battery 2049, bdaddr 000000000000, version ffff
+1041.532    apps1: 02AF:     appPeerSync (startup|RIP|a2dp_conn|avrcp_conn|hfp_conn|a2dp_streaming|sco|dfu)=00000000
+1041.532    apps1: 02B0:     appPeerSync (in_case|in_ear|is_pairing|have_handset_pairing|advertising|BLE)=010000
+1041.532    apps1: 02B1: appPeerSyncHandlePeerSigMsgChannelTxInd, peer sync complete
+1041.532    apps1: 02B2: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=110100, ps=1
+1041.532    apps1: 02B3: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1041.532    apps1: 02B4: ruleBleConnectionUpdate, IGNORE - no change
+1041.532    apps1: 02B5: ruleCheckUpgradable, block as out of case and not permitted
+1041.532    apps1: 02B6: ruleSyncConnectPeer
+1041.532    apps1: 02B7: ruleConnectPeer, ignore as pairing
+1041.532    apps1: 02B8: ruleUpdateMruHandset, ignore as peer is not connected
+1041.532    apps1: 02B9: ruleSyncDisconnectPeer, ignore as not connected to peer
+1041.532    apps1: 02BA: ruleSyncDisconnectHandset, ignore as not connected to handset
+1041.532    apps1: 02BB: ruleOutOfEarScoActive, ignore as SCO not active out of ear
+1041.532    apps1: 02BC: ruleSelectMicrophone, SCOFWD master in ear, use local microphone
+1041.532    apps1: 02BD: appAvrcpHandleInternalAvrcpVendorPassthroughResponse(14ce4)
+1041.532    apps1: 02BE: appAvrcpHandleInternalAvrcpVendorPassthroughRequest(14ce4)
+1041.532    apps1: 02BF: appSmHandlePeerSyncStatus 0
+1041.532    apps1: 02C0: appSmHandlePeerSyncStatus 1
+1041.532    apps1: 02C1: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1041.532    apps1: 02C2: appSmHandleConnRulesSelectMic selected mic 1
+1041.532    apps1: 02C3: appKymeraScoUseLocalMic
+1041.532    apps1: 02C4: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=110100, ps=1
+1041.532    apps1: 02C5: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1041.532    apps1: 02C6: ruleBleConnectionUpdate, IGNORE - no change
+1041.532    apps1: 02C7: ruleCheckUpgradable, block as out of case and not permitted
+1041.532    apps1: 02C8: appPeerSyncHandleConnRulesNop
+1041.532    apps1: 02C9: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1041.749    apps1: 02CA: appAvrcpHandleAvrcpPassthroughConfirm(14ce4), status 0
+1041.749    apps1: 02CB: appAvrcpHandleAvrcpPassthroughConfirm 150cc 150cc
+1041.749    apps1: 02CC: appAvrcpFinishAvrcpPassthroughRequest(14ce4), data 13954, status 0
+1041.749    apps1: 02CD: appPeerSigHandleAvAvrcpVendorPassthroughConfirm 0 opid:41
+1041.749    apps1: 02CE: appPeerSigStartInactivityTimer
+1041.749    apps1: 02CF: appPeerSyncHandlePeerSigMsgChannelTxCfm, success
+1041.749    apps1: 02D0: rulePageScanUpdate, (sm_connectable,peer,handset,peer_sync,peer_handset,peer_handset_tws)=110100, ps=1
+1041.749    apps1: 02D1: ruleBleConnectionUpdate Paired(peer:1, handset:0). BLE(allowed:0,allowed_out_case:0,has:0,is_trying:0)
+1041.749    apps1: 02D2: ruleBleConnectionUpdate, IGNORE - no change
+1041.749    apps1: 02D3: ruleCheckUpgradable, block as out of case and not permitted
+1041.749    apps1: 02D4: ruleSyncConnectPeer
+1041.749    apps1: 02D5: ruleConnectPeer, ignore as pairing
+1041.749    apps1: 02D6: ruleUpdateMruHandset, ignore as peer is not connected
+1041.749    apps1: 02D7: ruleSyncDisconnectPeer, ignore as not connected to peer
+1041.749    apps1: 02D8: ruleSyncDisconnectHandset, ignore as not connected to handset
+1041.749    apps1: 02D9: appUpgradeAllowUpgrades(0) - success:1 (sts:0)
+1041.749    apps1: 02DA: appSmHandlePeerSyncStatus 1
+1041.749    apps1: 02DB: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=109, time=167945424
+1041.985    apps1: 02DC: appKymera MESSAGE_STREAM_DISCONNECT
+1041.985    apps1: 02DD: appKymeraTonePromptStop, state 9
+1042.000    apps1: 02DE: appKymeraExternalAmpControl, sending later KYMERA_INTERNAL_AUDIO_SS_DISABLE
+1042.008    apps1: 02DF: appKymeraSetState, state 9 -> 0
+1042.008    apps1: 02E0: appKymeraSwitchSelectMic invalid state to switch mic 0
+1042.560    apps1: 02E1: appAdvManagerHandleConnectionLibraryMessages. Unhandled message. Id: 0x5053 (20563) 0x12f60
+1042.560    apps1: 02E2: appHandleClDmModeChangeEvent, event 1, 3,5b,ff04
+1043.711    apps1: 02E3: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=338, time=167945424
+1045.713    apps1: 02E4: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=312, time=167945424
+1047.713    apps1: 02E5: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=310, time=167945424
+1049.712    apps1: 02E6: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=314, time=167945424
+1051.713    apps1: 02E7: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=314, time=167945424
+1053.714    apps1: 02E8: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=316, time=167945424
+1055.715    apps1: 02E9: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=314, time=167945424
+1057.714    apps1: 02EA: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=312, time=167945424
+1059.716    apps1: 02EB: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=313, time=167945424
+1061.716    apps1: 02EC: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=315, time=167945424
+1063.716    apps1: 02ED: appHandleSubsystemEventReport, ss_id=0, level=1, id=4186, cpu=0, occurrences=312, time=167945424
