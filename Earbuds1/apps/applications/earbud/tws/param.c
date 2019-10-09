@@ -20,6 +20,11 @@
 #define PSKEY_BTADDR_PARAM      (PSKEY_CUSTOMER0_VALUE+2)     // 蓝牙相关参数
 #define PSKEY_USER_PARAM        (PSKEY_CUSTOMER0_VALUE+4)     // 用户设置参数
 
+
+
+/* SW版本共4字节： 00.01.01.xx   xx为测试使用*/
+const uint8 SYSTEM_SW_VERSION[DEV_SWVER_LEN] = {0x01,0x01,0x01,0x21};   // 每次发布版本修改这儿的值
+
 // 保存参数，如果length=0,表示擦除当前PSK中的参数
 static int16 ParamSave(uint16 pskey, void *buffer, int length)
 {
@@ -52,7 +57,9 @@ void FixParamDefault(void)
     FixPrmPtr prm = &gFixParam;
 
     prm->aud_adj      = 0;
-    memcpy(prm->hw_ver, "E00100", 6);
+    prm->hw_ver[0]    = 0xE0;
+    prm->hw_ver[1]    = 0x01;
+    prm->hw_ver[2]    = 0x00;
 }
 
 // taddr: save value;
@@ -81,6 +88,10 @@ void BtAddrParamDefault(void)
 
     memset(prm, 0, sizeof(BtAddrParam));
     prm->single_era      = TRUE;
+
+    // 其它版本信息设置为无效
+    memset(prm->peerVer, 0xFF, DEV_HWSWVER_LEN);
+    memset(prm->caseVer, 0xFF, DEV_HWSWVER_LEN);
 }
 
 int16 ParamSaveBtAddrPrm(BtAddrPrmPtr pParam)
@@ -181,16 +192,29 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
     return sizeof(BlePairInfo);
 }
 
-// hwVer[6]+rev[2]+swVer[8]
-int16 SystemGetVersion(uint8 *buffer)              // 获取软硬件版本信息
+// 获取软硬件版本信息
+// hwVer[3]+rev[1]+swVer[4]
+// type: 0 设备自身， 1：对方耳机，2：盒子
+int16 SystemGetVersion(uint8 type, uint8 *buffer)
 {
     uint8 *ptr = (uint8*)buffer;
 
-    memcpy(ptr, gFixParam.hw_ver, 6); ptr += 6;
-    ptr[0] = ptr[1] = ' ';  ptr += 2;
-    memcpy(ptr, SYSTEM_SW_VERSION, 8);
+    switch(type) {
+    case 1:
+        memcpy(ptr, gBtAddrParam.peerVer, DEV_HWSWVER_LEN);
+        break;
+    case 2:
+        memcpy(ptr, gBtAddrParam.caseVer, DEV_HWSWVER_LEN);
+        break;
+    case 0:
+    default:
+        memcpy(ptr, gFixParam.hw_ver, DEV_HWVER_LEN);
+        ptr[DEV_HWVER_LEN] = ' ';
+        memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
+        break;
+    }
 
-    return 16;       // BYTE
+    return DEV_HWSWVER_LEN;       // BYTE
 }
 
 

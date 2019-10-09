@@ -1,14 +1,15 @@
 #ifndef PARAM_H
 #define PARAM_H
 
-/* 版本共8字节： 00.01.01.xx   xx为测试使用*/
-#define SYSTEM_SW_VERSION         "01010121"          // 每次发布版本修改这儿的值
+#define  DEV_HWVER_LEN            (3)
+#define  DEV_SWVER_LEN            (4)
+#define  DEV_HWSWVER_LEN          (DEV_HWVER_LEN+1+DEV_SWVER_LEN)          // 版本信息总长度
 
 //////////////////////////////////////////////////////////////////////////////////
 /////        出厂固定不变的参数
 //////////////////////////////////////////////////////////////////////////////////
 typedef struct tagFIXPARAM {
-    uint8          hw_ver[6];                  // 硬件版本
+    uint8          hw_ver[DEV_HWVER_LEN];                  // 硬件版本
     int16          aud_adj;                    // 音频微调
 
     uint8          rev[8];
@@ -27,6 +28,10 @@ typedef struct tagBTADDRPARAM {
     uint8          rev1[3];
     typed_bdaddr   peer_addr;          // 保存双方配对耳机蓝牙地址
     BlePairInfo    ble_pair;           // 保存ble配对信息adv广播，bind码
+
+    uint8          peerVer[16];        // 对方耳机版本信息
+    uint8          caseVer[16];        // 盒子版本信息
+
 
     uint8          rev[8];
 }BtAddrParam, *BtAddrPrmPtr;
@@ -55,7 +60,9 @@ int16 ParamGetPeerAddr( typed_bdaddr *taddr);       // 从内存中获取
 int16 ParamLoadBlePair( BlePairInfo *blePairInfo);
 int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
 
-int16 SystemGetVersion(uint8 *buffer);              // 获取软硬件版本信息
+// 获取软硬件版本信息
+// type: 0 设备自身， 1：对方耳机，2：盒子
+int16 SystemGetVersion(uint8 type, uint8 *buffer);
 
 void ParamConfigInit(void);
 void ParamInitHandleClDmLocalBdAddrCfm(Message message);

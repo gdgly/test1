@@ -335,7 +335,7 @@ static void ShellDoCommand(char *buffer, int len)
     else if(strstr(buffer, "getver")) {       // 获取版本信息
         memset(outbuf, 0, sizeof(outbuf));
         sprintf(outbuf, "DEVver:");
-        SystemGetVersion((uint8*)&outbuf[7]);
+        SystemGetVersion(0, (uint8*)&outbuf[7]);
     }
     else if(strstr(buffer, "getbt")) {        // 盒子获取耳机经典蓝牙地址
         uint8 addr[8];
