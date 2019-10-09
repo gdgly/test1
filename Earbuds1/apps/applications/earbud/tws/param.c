@@ -112,6 +112,11 @@ int16 ParamLoadBtAddrPrm(BtAddrPrmPtr pParam)
 //////// 一些用户可以修改的参数
 /////////////////////////////////////////////////////////////////////////////////
 UserParam gUserParam;
+static UserPrmPtr GetUserParam(void)
+{
+    return &gUserParam;
+}
+
 void UserParamDefault(void)
 {
     UserPrmPtr prm = &gUserParam;
@@ -194,27 +199,48 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
 
 // 获取软硬件版本信息
 // hwVer[3]+rev[1]+swVer[4]
-// type: 0 设备自身， 1：对方耳机，2：盒子
-int16 SystemGetVersion(uint8 type, uint8 *buffer)
+// type: 0 设备自身(左）， 1：对方耳机(右），2：盒子
+int16 SystemGetVersion(DevType type, uint8 *buffer)
 {
     uint8 *ptr = (uint8*)buffer;
 
-    switch(type) {
-    case 1:
-        memcpy(ptr, gBtAddrParam.peerVer, DEV_HWSWVER_LEN);
-        break;
-    case 2:
+    if(DEV_CASE == type)
         memcpy(ptr, gBtAddrParam.caseVer, DEV_HWSWVER_LEN);
-        break;
-    case 0:
-    default:
+    else if((DEV_LEFT == type && appConfigIsLeft())||(DEV_RIGHT == type && appConfigIsRight())) {
         memcpy(ptr, gFixParam.hw_ver, DEV_HWVER_LEN);
         ptr[DEV_HWVER_LEN] = ' ';
         memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
-        break;
+    }
+    else {
+        memcpy(ptr, gBtAddrParam.peerVer, DEV_HWSWVER_LEN);
     }
 
     return DEV_HWSWVER_LEN;       // BYTE
+}
+
+int16 UserGetKeyFunc(uint8 *lKeyFunc, uint8 *rKeyFunc)     // 获取功能键
+{
+    UserPrmPtr prm = GetUserParam();
+
+    if(lKeyFunc)
+        *lKeyFunc = prm->lKeyFunc;
+
+    if(rKeyFunc)
+        *rKeyFunc = prm->rKeyFunc;
+
+    return 0;
+}
+
+int16 UserSetKeyFunc(uint8 lKeyFunc, uint8 rKeyFunc)     // 设置功能键
+{
+    UserPrmPtr prm = GetUserParam();
+
+    prm->lKeyFunc = lKeyFunc;
+    prm->rKeyFunc = rKeyFunc;
+
+    ParamSaveUserPrm(prm);
+
+    return 0;
 }
 
 

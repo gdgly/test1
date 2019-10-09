@@ -5,6 +5,8 @@
 #define  DEV_SWVER_LEN            (4)
 #define  DEV_HWSWVER_LEN          (DEV_HWVER_LEN+1+DEV_SWVER_LEN)          // 版本信息总长度
 
+typedef enum {DEV_CASE=0, DEV_LEFT, DEV_RIGHT}DevType;         // 一套系统中三种分设备
+
 //////////////////////////////////////////////////////////////////////////////////
 /////        出厂固定不变的参数
 //////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +48,7 @@ bool ParamUsingSingle(void);
 //////// 一些用户可以修改的参数
 /////////////////////////////////////////////////////////////////////////////////
 typedef struct tagUSERPARAM {
+    uint8          lKeyFunc, rKeyFunc;        // 耳机双击按键功能
 
     uint8          rev[8];
 }UserParam, *UserPrmPtr;
@@ -61,8 +64,10 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo);
 int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
 
 // 获取软硬件版本信息
-// type: 0 设备自身， 1：对方耳机，2：盒子
-int16 SystemGetVersion(uint8 type, uint8 *buffer);
+// type: 盒子，自身(左）， 耳机(右）
+int16 SystemGetVersion(DevType type, uint8 *buffer);
+int16 UserGetKeyFunc(uint8 *lKeyFunc, uint8 *rKeyFunc);   // 获取功能键
+int16 UserSetKeyFunc(uint8 lKeyFunc, uint8 rKeyFunc);     // 设置功能键
 
 void ParamConfigInit(void);
 void ParamInitHandleClDmLocalBdAddrCfm(Message message);
