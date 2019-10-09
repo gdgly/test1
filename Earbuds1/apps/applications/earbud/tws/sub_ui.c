@@ -17,6 +17,9 @@
 
 ProgRunInfo gProgRunInfo;
 
+/* BLE 已经连接到手机，则不需要修改广播内容 */
+#define BLE_CONNECTED_PHONE()  (NULL != appGetGaiaTransport())
+
 /////////////////////////////////////////////////////////////////////////
 ///     向GAIA发送信息
 /////////////////////////////////////////////////////////////////////////
@@ -84,6 +87,13 @@ static int16 subUiCasever2Gaia(MessageId id, ProgRIPtr  progRun)
     return 0;
 }
 
+static int16 subUiChargeStat2Gaia(MessageId id, ProgRIPtr  progRun)
+{
+    (void)id,(void)progRun;
+
+    return 0;
+}
+
 /////////////////////////////////////////////////////////////////////////
 ///     接收GAIA信息并处理
 /////////////////////////////////////////////////////////////////////////
@@ -110,6 +120,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     switch(id) {
     case MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT:
+        if(progRun->iElectrity == ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent)
+            break;
         progRun->iElectrity = ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent;
         DEBUG_LOG("appSubUiHandleMessage iElectrity=%d", progRun->iElectrity);
         break;
@@ -140,6 +152,13 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
+        break;
+
+    case APP_CHARGE_STATUS:                 // 充电状态变化
+        if(BLE_CONNECTED_PHONE())
+            subUiChargeStat2Gaia(id, progRun);
+        else
+            appUiRestartBle();
         break;
     }
 }
@@ -375,6 +394,11 @@ void appUiRestartBle(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
+    if(BLE_CONNECTED_PHONE()) {
+        DEBUG_LOG("Ble Connected, restart none");
+        return;
+    }
+
     progRun->stopBle = 1;
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
 
@@ -384,26 +408,55 @@ void appUiRestartBle(void)
 ///////////////////////////////////////////////////////////////////////////////
 ///  充电模块反馈的信息
 ///////////////////////////////////////////////////////////////////////////////
+/// 变化流程为：appUiChargerConnected -->appUiChargerChargingOk(大电流） 循环消息
+///                                   -->appUiChargerChargingLow         循环消息
+///                                   -->appUiChargerComplete
+///              appUiChargerDisconnected
 void appUiChargerConnected(void)
 {
+    DEBUG_LOG("appUiChargerConnected");
 
+    appSubGetProgRun()->chargeStat = CHARGE_ST_CONNECT;
+    MessageSendLater(&appGetUi()->task, APP_CHARGE_STATUS, 0, 500);
 }
 
 void appUiChargerDisconnected(void)
 {
+    DEBUG_LOG("appUiChargerDisconnected");
 
+    appSubGetProgRun()->chargeStat = CHARGE_ST_NONE;
+    MessageSend(&appGetUi()->task, APP_CHARGE_STATUS, 0);
 }
 
 void appUiChargerChargingLow(void)
 {
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    if(progRun->chargeStat == CHARGE_ST_LOW)
+        return;
+
+    progRun->chargeStat = CHARGE_ST_LOW;
+    DEBUG_LOG("appUiChargerChargingLow");
 }
 
 void appUiChargerChargingOk(void)
 {
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    if(progRun->chargeStat == CHARGE_ST_OK)
+        return;
+
+    progRun->chargeStat = CHARGE_ST_OK;
+    DEBUG_LOG("appUiChargerChargingOk");
+    MessageSendLater(&appGetUi()->task, APP_CHARGE_STATUS, 0, 500);
 }
 
 void appUiChargerComplete(void)
 {
+    DEBUG_LOG("appUiChargerComplete");
+
+    appSubGetProgRun()->chargeStat = CHARGE_ST_FIN;
+    MessageSendLater(&appGetUi()->task, APP_CHARGE_STATUS, 0, 500);
 }
 
 #endif

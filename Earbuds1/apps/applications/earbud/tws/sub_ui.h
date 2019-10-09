@@ -15,12 +15,15 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_CASE_SET_BLEINFO       (2005)           // 设置BLE信息
 #define APP_CASE_SET_BTINFO        (2006)           // 盒子设置耳机经典蓝牙配对地址
 
+#define APP_CHARGE_STATUS          (2010)           // 充电信息报告
+
 #define APP_CALLIN_ACT             (2020)           // 拨号相关信息 拨入
 #define APP_CALLIN_INACT           (2021)           // 拨号相关信息 拨入断开
 #define APP_CALLOUT_ACT            (2022)           // 拨号相关信息 拨出
 #define APP_CALLOUT_INACT          (2023)           // 拨号相关信息 拨出断开
 #define APP_CALL_ACTIVE            (2024)           // 拨号相关信息 接听
 #define APP_CALL_INACTIVE          (2025)           // 拨号相关信息 断开
+
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
 //#define APP_CASE_GET_BTINFO        (2011)           // 盒子获取耳机经典蓝牙地址
@@ -40,7 +43,9 @@ typedef struct tagCALLINFO {
 enum {DIAL_ST_IN=1, DIAL_ST_OUT=2,                    // 电话拨入/出
       DIAL_ST_ACT=4, DIAL_ST_INACT=8,                 // 电话拨入接听中
      };
-
+enum {CHARGE_ST_NONE=0, CHARGE_ST_CONNECT,
+      CHARGE_ST_OK, CHARGE_ST_LOW,
+      CHARGE_ST_FIN};
 // 系统运行中的一些动态数据
 typedef struct tagPROGRUNINFO {
     bdaddr         addr;                    // 本机蓝牙地址
@@ -53,7 +58,7 @@ typedef struct tagPROGRUNINFO {
     uint16         stopBle:1;              // BLE更新广播内容时，需要先停止广播
 
     uint16         recStat:1;               // 当前是否正在录音
-    uint16         chargeStat:3;            // 当前充电状态0:disconnect 1:connect 2:chargeLow, 3:chargeOK, 4:finish
+    uint16         chargeStat:3;            // 当前充电状态 CHARGE_ST_XXX
 
 
     uint8          peerElectrity;           // 对方耳机电量 0...100    
