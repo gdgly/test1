@@ -19,6 +19,8 @@ ProgRunInfo gProgRunInfo;
 
 /* BLE 已经连接到手机，则不需要修改广播内容 */
 #define BLE_CONNECTED_PHONE()  (NULL != appGetGaiaTransport())
+/* 如果APP没有初始化结束，很多消息不能处理 */
+#define RETURN_APP_NOT_INIT()  do{if(appInitCompleted() == FALSE) return; }while(0)
 
 /////////////////////////////////////////////////////////////////////////
 ///     向GAIA发送信息
@@ -155,6 +157,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
 
     case APP_CHARGE_STATUS:                 // 充电状态变化
+        RETURN_APP_NOT_INIT();
+
         if(BLE_CONNECTED_PHONE())
             subUiChargeStat2Gaia(id, progRun);
         else
