@@ -3,7 +3,7 @@ Copyright (c) 2010 - 2018 Qualcomm Technologies International, Ltd.
 
 
 */
- 
+
 /*!
     @file gaia.h
     @brief Header file for the Generic Application Interface Architecture library
