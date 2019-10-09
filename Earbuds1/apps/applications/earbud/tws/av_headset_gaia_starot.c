@@ -110,7 +110,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             if (appGetGaia()->nowSendCallAudio > DIALOG_NONE) {
                 gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_REJECT_RECORD);
                 disable_audio_forward(TRUE);
-                appGetGaia()->nowSendCallAudio = DIALOG_NONE;
+                appGetGaia()->nowSendCallAudio = DIALOG_COMING;
             }
             break;
 
@@ -342,6 +342,10 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
         StarotResendCommand *resend = starotResendCommandInit(GAIA_COMMAND_STAROT_CALL_END, 0, 0);
         MessageSendLater(appGetGaiaTask(), STAROT_DIALOG_CALL_END_TIMEOUT, resend, STAROT_COMMAND_TIMEOUT);
+
+        if (appGetGaia()->nowSendCallAudio != DIALOG_NONE) {
+            disable_audio_forward(TRUE);
+        }
 
         appGetGaia()->status = 0;
         appGetGaia()->nowSendCallAudio = DIALOG_NONE;
