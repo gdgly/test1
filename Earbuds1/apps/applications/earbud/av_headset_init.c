@@ -127,8 +127,21 @@ static void appInitHandleGattInitCfm(Message message)
     appGattSetAdvertisingMode(APP_ADVERT_RATE_SLOW);
 }
 
-
 #ifdef USE_BDADDR_FOR_LEFT_RIGHT
+
+#ifdef CONFIG_I2CADDR_FOR_LEFT_RIGHT
+static void appConfigInit(void)
+{
+    appGetInit()->appInitIsLeft = 1;
+    MessageSend(appGetAppTask(), CL_DM_LOCAL_BD_ADDR_CFM, NULL);
+}
+
+static void appInitHandleClDmLocalBdAddrCfm(Message message)
+{
+    (void)message;
+}
+
+#else
 static void appConfigInit(void)
 {
     /* Get local device address */
@@ -147,6 +160,7 @@ static void appInitHandleClDmLocalBdAddrCfm(Message message)
                     cfm->bd_addr.nap, cfm->bd_addr.uap, cfm->bd_addr.lap);
     DEBUG_LOGF("appInit, left %d, right %d", appConfigIsLeft(), appConfigIsRight());
 }
+#endif
 #endif
 
 #ifdef INIT_DEBUG

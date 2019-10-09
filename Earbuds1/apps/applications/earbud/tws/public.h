@@ -121,6 +121,8 @@ int BMA400Power(bool isOn);
 
 #ifdef CONFIG_BOARD_V1
 
+#define CONFIG_I2CADDR_FOR_LEFT_RIGHT       // V1版本 使用I2C地址来确认是左右耳
+
 #undef EM20168_ITR_PIN
 #define EM20168_ITR_PIN 61
 
