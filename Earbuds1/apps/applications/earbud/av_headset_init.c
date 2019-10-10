@@ -190,6 +190,9 @@ static const appInitTableEntry appInitTable[] =
     {appChargerInit,        0, NULL},
 #endif
     {appLedInit,            0, NULL},
+#ifdef HAVE_MAX20340
+    {max20340_init,             0, NULL},
+#endif
 #ifdef CONFIG_LIS25BA
     {lis25Init,             0, NULL},
     {lis25Test,             0, NULL},
