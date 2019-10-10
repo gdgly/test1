@@ -32,7 +32,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 
 typedef struct tagCALLINFO {
     uint8         *number;
-    uint16         size_number;
+    uint16         size_number:15;
+    uint16         income:1;
 
     uint8         *name;
     uint16         size_name;
@@ -78,6 +79,8 @@ bdaddr* SystemGetEarAddr(uint8 *addrbuf); //获取蓝牙地址
 
 /* Get Call number */
 int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 size_name);
+/* Get Dial number */
+int16 appUiHfpDialId(uint8 *number, uint16 size_number);
 /* Show HFP incoming call */
 void appUiHfpCallIncomingActive(void);
 void appUiHfpCallOutcomingActive(void);

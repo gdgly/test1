@@ -103,6 +103,7 @@ static void appHfpEnterInitialisingHfp(void)
                             HFP_HF_INDICATORS |
 #ifdef CONFIG_STAROT
                             HFP_CLI_PRESENTATION |          // 获取拨入手机号
+                            HFP_ENHANCED_CALL_STATUS  |     //获取拨出手机号
 #endif
                             HFP_ESCO_S4_SUPPORTED);
 
@@ -1242,6 +1243,12 @@ static void appHfpHandleHfpCallStateIndication(const HFP_CALL_STATE_IND_T *ind)
             /* Store call setup indication */
             appGetHfp()->call_state = ind->call_state;
 
+#ifdef CONFIG_STAROT
+            if(ind->call_state== hfp_call_state_outgoing)
+            {
+                 HfpCurrentCallsRequest(hfp_primary_link);
+            }
+#endif
             /* Move to new state, depending on call state */
             state = hfp_call_state_table[appGetHfp()->call_state];
             if (appHfpGetState() != state)
@@ -2951,6 +2958,28 @@ static void appHfpHandleMessage(Task task, MessageId id, Message message)
         case HFP_CALL_STATE_IND:
              appHfpHandleHfpCallStateIndication((HFP_CALL_STATE_IND_T *)message);
              return;
+#ifdef CONFIG_STAROT
+    case HFP_CURRENT_CALLS_IND:
+
+           DEBUG_LOGF("HS3:HFP_CURRENT_CALLS_IND id[%d] mult[%d] number_len[%d]\n",
+                      ((const HFP_CURRENT_CALLS_IND_T *)message)->call_idx,
+                      ((const HFP_CURRENT_CALLS_IND_T *)message)->multiparty,
+                      ((const HFP_CURRENT_CALLS_IND_T *)message)->size_number);
+       {
+                uint8 i=0;
+                uint8 *p=(uint8 *)(((const HFP_CURRENT_CALLS_IND_T *)message)->number);
+                uint8 len=((const HFP_CURRENT_CALLS_IND_T *)message)->size_number;
+                DEBUG_LOGF("Receive  caller id=%s",p);
+                for(i=0;i<len;i++)
+                {
+                    DEBUG_LOGF("%c",p[i]);
+                }
+
+                appUiHfpDialId(p,len);
+
+        }
+                  return;
+#endif
 
         case HFP_VOICE_RECOGNITION_IND:
              appHfpHandleHfpVoiceRecognitionIndication((HFP_VOICE_RECOGNITION_IND_T *)message);

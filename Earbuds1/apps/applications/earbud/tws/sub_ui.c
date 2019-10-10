@@ -132,6 +132,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case HFP_CALLER_ID_IND:
         subUiCaller2Gaia(id, progRun);
         break;
+    case HFP_CURRENT_CALLS_IND:
+        subUiCaller2Gaia(id, progRun);
+        break;
     case APP_CALLIN_ACT:           // 拨号相关信息 拨入
     case APP_CALLIN_INACT:         // 拨号相关信息 拨入断开
     case APP_CALLOUT_ACT:          // 拨号相关信息 拨出
@@ -202,7 +205,7 @@ bdaddr* SystemGetEarAddr(uint8 *addrbuf) //获取蓝牙地址
     return &progRun->addr;
 }
 
-static bool HfpCallerIsSame(uint8 *number, uint16 size_number)
+static bool HfpCallerIsSame(uint8 *number, uint16 size_number, uint16 income)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
     CallIPtr   pCall;
@@ -217,20 +220,20 @@ static bool HfpCallerIsSame(uint8 *number, uint16 size_number)
         return FALSE;
 
     if(number && size_number > 0) {
-        if(memcmp(pCall->number, number, size_number) == 0)
+        if(memcmp(pCall->number, number, size_number) == 0 && pCall->income == income)
             return TRUE;
      }
 
     return FALSE;
 }
 
-// HFP TASK调用，新的号码拨入
-int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 size_name)
+static int16 appUiHfpSaveId(uint8 *number, uint16 size_number,
+                            uint8 *name, uint16 size_name, uint16 income)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
     CallIPtr   pCall;
 
-    if(HfpCallerIsSame(number, size_number) == TRUE)
+    if(HfpCallerIsSame(number, size_number, income) == TRUE)
         return 0;
 
     progRun->callIndex += 1;
@@ -252,6 +255,7 @@ int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 si
             pCall->number = PanicUnlessMalloc(size_number);
 
         pCall->size_number = size_number;
+        pCall->income      = income;
         memcpy(pCall->number, number, size_number-1);
         pCall->number[size_number] = 0;
         DEBUG_LOG("Call[%d]Number[%d]: %c %c %c %c", progRun->callIndex, size_number,
@@ -273,8 +277,25 @@ int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 si
             name[0], name[1], name[2], name[3]);
     }
 
+    return 0;
+}
+
+// HFP TASK调用，新的号码拨入
+int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 size_name)
+{
+    appUiHfpSaveId(number, size_number, name, size_name, 1);
+
     // 通知一下UI
     MessageSend(&appGetUi()->task, HFP_CALLER_ID_IND, 0);
+    return 0;
+}
+
+//获取拨出的号码
+int16 appUiHfpDialId(uint8 *number, uint16 size_number)
+{
+    appUiHfpSaveId(number, size_number, NULL, 0, 0);
+
+    MessageSend(&appGetUi()->task, HFP_CURRENT_CALLS_IND, 0);
     return 0;
 }
 
