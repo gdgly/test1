@@ -199,7 +199,7 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
 
 // 获取软硬件版本信息
 // hwVer[3]+rev[1]+swVer[4]
-// type: 0 设备自身(左）， 1：对方耳机(右），2：盒子
+// type: 0：盒子， 1：对方耳机(右），2：设备自身(左）
 int16 SystemGetVersion(DevType type, uint8 *buffer)
 {
     uint8 *ptr = (uint8*)buffer;
@@ -216,6 +216,22 @@ int16 SystemGetVersion(DevType type, uint8 *buffer)
     }
 
     return DEV_HWSWVER_LEN;       // BYTE
+}
+
+int16 SystemSetVersion(DevType type, uint8 *buffer)
+{
+    uint8 *ptr = (uint8*)buffer;
+    if(DEV_CASE == type)
+        memcpy(gBtAddrParam.caseVer, ptr, DEV_HWSWVER_LEN);
+    else if((DEV_LEFT == type && appConfigIsLeft())||(DEV_RIGHT == type && appConfigIsRight())) {
+       // 自己的版本号不能更改
+       // memcpy(gFixParam.hw_ver, ptr, DEV_HWVER_LEN);
+    }
+    else {
+        memcpy(gBtAddrParam.peerVer, ptr, DEV_HWSWVER_LEN);
+    }
+    return DEV_HWSWVER_LEN;
+
 }
 
 int16 UserGetKeyFunc(uint8 *lKeyFunc, uint8 *rKeyFunc)     // 获取功能键

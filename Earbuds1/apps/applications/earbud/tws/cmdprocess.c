@@ -333,14 +333,16 @@ static void ShellDoCommand(char *buffer, int len)
         sprintf(outbuf, "reboot System\n");
     }
     else if(strstr(buffer, "getver")) {       // 获取版本信息
+        uint8 ver[8];
         memset(outbuf, 0, sizeof(outbuf));
-        sprintf(outbuf, "DEVver:");
-        SystemGetVersion(0, (uint8*)&outbuf[7]);
+        SystemGetVersion(1, (uint8*)ver);
+        sprintf(outbuf, "DEVver:%02X %02X %02X %02X %02X %02X %02X %02X\n",
+                ver[0],  ver[1],  ver[2],  ver[3],  ver[4],  ver[5],  ver[6],  ver[7]);
     }
     else if(strstr(buffer, "getbt")) {        // 盒子获取耳机经典蓝牙地址
         uint8 addr[8];
         SystemGetEarAddr((uint8 *)addr);
-        sprintf(outbuf, "addr:%02x:%02x:%02x%02x:%02x:%02x\n",
+        sprintf(outbuf, "addr:%02X:%02X:%02X:%02X:%02X:%02X\n",
                 addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
     }
     else if(strstr(buffer, "getble")) {       // 获取BLE信息
@@ -376,6 +378,20 @@ static void ShellDoCommand(char *buffer, int len)
         swver = (uint16)strtol(swv, &stop, 16);
         appUiCaseVersion(hwver, swver);
         sprintf(outbuf, "HWver:%04x SWver:0x%4x\n", progRun->caseHWver, progRun->caseSWver);
+    }
+    else if(strstr(buffer, "setver")) {        // 设置peerver版本信息
+        memset(outbuf, 0, sizeof(outbuf));
+        uint8 leftver[8], rightver[8], casever[8];
+        SystemGetVersion(2, (uint8*)leftver);
+        SystemSetVersion(1, (uint8*)leftver);
+        SystemGetVersion(1, (uint8*)rightver);
+        SystemGetVersion(0, (uint8*)casever);
+        sprintf(outbuf, "leftver %02X %02X %02X %02X %02X %02X %02X %02X\n"
+                        "rightver%02X %02X %02X %02X %02X %02X %02X %02X\n"
+                        "casever %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                leftver[0],  leftver[1],  leftver[2],  leftver[3],  leftver[4],  leftver[5],  leftver[6],  leftver[7],
+                rightver[0], rightver[1], rightver[2], rightver[3], rightver[4], rightver[5], rightver[6], rightver[7],
+                casever[0],  casever[1],  casever[2],  casever[3],  casever[4],  casever[5],  casever[6],  casever[7]);
     }
     else
         sprintf(outbuf, "Unknown %s\n", buffer);

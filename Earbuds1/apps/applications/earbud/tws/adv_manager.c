@@ -9,6 +9,8 @@ extern int16 ParamLoadBlePair(BlePairInfo *blePairInfo);
 
 extern int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
 
+void appAdvManagerAdvertdatafunc(void);
+
 //static void appPrivateBleSetRandomCode(uint16 advCode);
 
 static uint8 *addManufacturerSpecificData(uint8 *ad_data, uint8 *space, uint16 size_specific_data, const uint8 *specific_data) {
@@ -57,13 +59,19 @@ struct AdvTaskData {
 
 static struct AdvTaskData advTaskData;
 
+void appAdvManagerAdvertdatafunc(void){
+    ProgRIPtr  progRun = appSubGetProgRun();
+    advTaskData.advManufacturerSpecificData.position = (0X40 | 0X08 | 0X01);
+    advTaskData.advManufacturerSpecificData.rightPower = progRun->peerElectrity;
+    advTaskData.advManufacturerSpecificData.leftPower = progRun->iElectrity;
+    advTaskData.advManufacturerSpecificData.casePower = progRun->caseElectrity;
+}
+
 uint8 *appAdvManagerAdvertdataAddManufacturerSpecificData(uint8 *ad_data, uint8 *space) {
     advTaskData.advManufacturerSpecificData.product = 0X01;
     advTaskData.advManufacturerSpecificData.version = 0X01;
-    advTaskData.advManufacturerSpecificData.position = (0X40 | 0X08 | 0X01);
-    advTaskData.advManufacturerSpecificData.rightPower = 0X80 | 0X33;
-    advTaskData.advManufacturerSpecificData.leftPower = 0X80 | 0X34;
-    advTaskData.advManufacturerSpecificData.casePower = 0X00 | 0X35;
+
+    appAdvManagerAdvertdatafunc();
 //    advManufacturerSpecificData.randomCode = 0X66;
 
     DEBUG_LOG("call appAdvManagerAdvertdataAddManufacturerSpecificData for ble adv data");

@@ -60,9 +60,9 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
 static int16 subUiCasestat2Gaia(MessageId id, ProgRIPtr  progRun)
 {
     (void)id;
-    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
+    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
 
-    message->command = STAROT_DIALOG_CASE_VER;
+    message->command = STAROT_DIALOG_CASE_STAT;
     message->payload[0] = (uint8)progRun->caseLidOpen;
     message->payload[1] = (uint8)progRun->caseKeyDown;
     message->payload[2] = (uint8)progRun->caseKeyLong;
@@ -77,14 +77,12 @@ static int16 subUiCasestat2Gaia(MessageId id, ProgRIPtr  progRun)
 // payload=[HwVer[2] + SwVer[2]]
 static int16 subUiCasever2Gaia(MessageId id, ProgRIPtr  progRun)
 {
-    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
+    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
     (void)id;
 
-    message->command = STAROT_DIALOG_CASE_STAT;
+    message->command = STAROT_DIALOG_CASE_VER;
     memcpy(&message->payload[0], &progRun->caseHWver, 2);
     memcpy(&message->payload[2], &progRun->caseSWver, 2);
-//    message->payload[0] = progRun->caseHWver;
-//    message->payload[2] = progRun->caseSWver;
     message->payloadLen = 4;
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
     return 0;
@@ -424,6 +422,19 @@ void appUiCaseVersion(uint16 hwVer, uint16 swVer)
 
     MessageSend(&appGetUi()->task, APP_CASE_REPORT_VERSION, 0);
 }
+
+
+/*
+void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt){
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    progRun->iElectrity = lbatt;
+    progRun->peerElectrity = rbatt;
+    progRun->caseElectrity = cbatt;
+
+    MessageSend(&appGetUi()->task, , 0);
+}
+*/
 
 // 临时停止BLE广播，以便开始新的广播内容
 bool appUiIsStopBle(void)
