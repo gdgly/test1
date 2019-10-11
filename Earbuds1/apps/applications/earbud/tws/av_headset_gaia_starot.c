@@ -99,6 +99,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             /// APP希望接受耳机的音频
         case GAIA_COMMAND_STAROT_START_TRANS_AUDIO_IND:
             if (appGetGaia()->nowSendCallAudio == DIALOG_COMING) {
+                testSpeedIndex = 0;
                 appGetGaia()->nowSendCallAudio |= DIALOG_CAN_TRANSFORM;
                 gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_ACCEPT_RECORD);
                 disable_audio_forward(FALSE);
@@ -192,8 +193,10 @@ void starotGaiaDefaultParse(MessageId id, Message message) {
         case STAROT_DIALOG_CALL_END_TIMEOUT:
             if (DIALOG_NONE == appGetGaia()->nowSendCallAudio) {
                 DEBUG_LOG("recv STAROT_DIALOG_CALL_END_TIMEOUT, need retry send to app");
-                StarotResendCommand *cmd = starotResendCommandDo((StarotResendCommand *) message, TRUE);
-                MessageSendLater(appGetGaiaTask(), id, cmd, STAROT_COMMAND_TIMEOUT);
+                if (NULL != appGetGaia()->transport) {
+                    StarotResendCommand *cmd = starotResendCommandDo((StarotResendCommand *) message, TRUE);
+                    MessageSendLater(appGetGaiaTask(), id, cmd, STAROT_COMMAND_TIMEOUT);
+                }
             }
             break;
 
@@ -294,7 +297,8 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
         }
     }
 
-    payload[0] = (uint8) flag;
+//    payload[0] = ((uint8) flag) | ((testSpeedIndex & 0x0F) << 4);
+    payload[0] = ((uint8) flag);
     audioTransType = flag;
 
     if (flag <= 0) {
