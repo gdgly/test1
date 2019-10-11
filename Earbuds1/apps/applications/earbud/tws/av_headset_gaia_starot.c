@@ -150,11 +150,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             } while (0);
             break;
 
-        case GAIA_COMMAND_STAROT_GET_DOUBLE_CLICK_SETTING:
+        case GAIA_COMMAND_STAROT_BASE_INFO_GET_DOUBLE_CLIENT_CONFIG:
             gaiaGetDoubleClickSet(message);
             break;
 
-        case GAIA_COMMAND_STAROT_SET_DOUBLE_CLICK_SETTING:
+        case GAIA_COMMAND_STAROT_BASE_INFO_SET_DOUBLE_CLIENT_CONFIG:
             gaiaSetDoubleClickSet(message);
             break;
 
@@ -487,7 +487,6 @@ void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message) {
 }
 
 void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
-    message->payload;
     StarotAttr *body = attrDecode(message->payload, message->payloadLen);
     if (NULL == body) {
         return;
@@ -532,14 +531,19 @@ void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
 }
 
 void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message) {
+    StarotAttr *body = attrDecode(message->payload, message->payloadLen);
+    if (NULL == body) {
+        return;
+    }
+
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
-    if (message->payload[0] == 0X01) {
+    if ((body->payload[0] & 0X01) > 0) {
         attr = attrMalloc(&head, 1);
         attr->attr = 0X01;
         UserGetKeyFunc(&attr->payload[0], 0);
     }
-    if (message->payload[1] == 0X02) {
+    if ((body->payload[0] & 0X02) > 0) {
         attr = attrMalloc(&head, 1);
         attr->attr = 0X02;
         UserGetKeyFunc(0, &attr->payload[0]);
@@ -548,15 +552,18 @@ void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     if (NULL != head) {
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-        DEBUG_LOG("len is :%d %p", len, data);
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_GET_DOUBLE_CLICK_SETTING, 0xfe, len, data);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
         attrFree(head, data);
-        DEBUG_LOG("GAIA_COMMAND_STAROT_GET_DOUBLE_CLICK_SETTING");
+    } else {
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
     }
+
+    attrFree(body, NULL);
 }
 
 void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     UserSetKeyFunc(message->payload[0], message->payload[1]);
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
 #endif
