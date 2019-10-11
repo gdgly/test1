@@ -24,6 +24,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_CALL_ACTIVE            (2024)           // 拨号相关信息 接听
 #define APP_CALL_INACTIVE          (2025)           // 拨号相关信息 断开
 
+#define APP_GAIA_CONNECT           (2050)           // GAIA 连接或断开发送消息过来
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
 //#define APP_CASE_GET_BTINFO        (2011)           // 盒子获取耳机经典蓝牙地址
@@ -58,6 +59,7 @@ typedef struct tagPROGRUNINFO {
     uint16         caseKeyLong:1;           // 按键按下长按键
     uint16         stopBle:1;              // BLE更新广播内容时，需要先停止广播
 
+    uint16         gaiaStat:1;              // GAIA与手机是否连接0：disconect, 1:connect
     uint16         recStat:1;               // 当前是否正在录音
     uint16         chargeStat:3;            // 当前充电状态 CHARGE_ST_XXX
 

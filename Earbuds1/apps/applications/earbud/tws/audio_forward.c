@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <vmal.h>
 
-#include "public.h"
 #include "av_headset.h"
 #include "av_headset_gaia_starot.h"
 #include "av_headset_kymera_private.h"

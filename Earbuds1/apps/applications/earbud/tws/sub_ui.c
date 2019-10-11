@@ -17,7 +17,7 @@
 
 ProgRunInfo gProgRunInfo;
 
-/* BLE 已经连接到手机，则不需要修改广播内容 */
+/* BLE 已经连接到手机，则不需要修改广播内容, 没有连接到手机则信息不需要发送出去 */
 #define BLE_CONNECTED_PHONE()  (NULL != appGetGaiaTransport())
 /* 如果APP没有初始化结束，很多消息不能处理 */
 #define RETURN_APP_NOT_INIT()  do{if(appInitCompleted() == FALSE) return; }while(0)
@@ -48,7 +48,8 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
     }
     message->payloadLen    = count;
 
-    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+    if(1 == progRun->gaiaStat)
+        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
     DEBUG_LOG("\nHFP CALL Status=0x%x LEN=%d", progRun->dial_stat, count);
     return 0;
@@ -126,6 +127,23 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
             break;
         progRun->iElectrity = ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent;
         DEBUG_LOG("appSubUiHandleMessage iElectrity=%d", progRun->iElectrity);
+        break;
+
+    case INIT_CFM:        
+        DEBUG_LOG("appSubUiHandleMessage INIT_CFM start Pairing for DEBUG");
+        if(ConnectionTrustedDeviceListSize() > 0)
+            break;
+
+        if(appSmStateIsIdle(appGetState()))
+            appSmPairHandset();
+        else
+            MessageSendLater(task, INIT_CFM, NULL, 500);
+        break;
+
+    case APP_GAIA_CONNECT:{
+            GAIA_STAROT_MESSAGE_T *ind = (GAIA_STAROT_MESSAGE_T*)message;
+            progRun->gaiaStat  = (ind->payload[0] ? 1 : 0);
+        }
         break;
 
     // 拨号、电话相关的消息
