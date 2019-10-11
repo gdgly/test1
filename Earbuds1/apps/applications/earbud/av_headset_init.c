@@ -132,7 +132,14 @@ static void appInitHandleGattInitCfm(Message message)
 #ifdef CONFIG_I2CADDR_FOR_LEFT_RIGHT
 static void appConfigInit(void)
 {
-    appGetInit()->appInitIsLeft = 1;
+    int ret = max20340_get_left_or_right();
+    if(1 == ret)
+        appGetInit()->appInitIsLeft = 1;
+    else if(2 == ret)
+        appGetInit()->appInitIsLeft = 0;
+    else
+        DEBUG_LOG("ERROR Get MAX20340 for LEFT/RIGHT");
+
     MessageSend(appGetAppTask(), CL_DM_LOCAL_BD_ADDR_CFM, NULL);
 }
 
