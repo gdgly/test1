@@ -3401,6 +3401,7 @@ void gaiaProcessCommand(gaia_transport *transport, uint16 vendor_id, uint16 comm
 #ifdef  GAIA_EXT
             case GAIA_COMMAND_TYPE_STAROT_DIALOG:
             case GAIA_COMMAND_TYPE_STAROT_BOND_CODE:
+            case GAIA_COMMAND_TYPE_STAROT_BASE_INFO:
                  handled = gaia_handle_starot_command(transport, command_id, size_payload, payload);
                  break;
 #endif

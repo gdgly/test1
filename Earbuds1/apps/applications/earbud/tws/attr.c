@@ -76,7 +76,7 @@ StarotAttr *attrDecode(uint8 *data, int len) {
         StarotAttr* ptr = attrMalloc(&res, l - 1);
         ptr->len = l;
         ptr->attr = a;
-        if (l > 2) {
+        if (l >= 2) {
             memcpy(ptr->payload, data + pos + 2, l - 1);
         }
 

@@ -3,7 +3,7 @@ Copyright (c) 2010 - 2018 Qualcomm Technologies International, Ltd.
 
 
 */
- 
+
 /*!
     @file gaia.h
     @brief Header file for the Generic Application Interface Architecture library
@@ -335,6 +335,7 @@ typedef struct
 typedef struct
 {
     GAIA_TRANSPORT *transport;          /*!< Indicates the GAIA instance */
+    gaia_transport_type type;           /*!< 传输类型 gatt, rfcomm, none */
     bool success;                       /*!< The success of the operation */
 } GAIA_TRANSPORT_SUCCESS_MESSAGE_T;
 
@@ -945,7 +946,9 @@ void GaiaRwcpSendNotification(uint8 *payload, uint16 payload_length);
 
 #ifdef GAIA_EXT
 
-#define GAIA_COMMAND_TYPE_STAROT (0x5000)  /// hjs：新添加的命令
+#define GAIA_COMMAND_TYPE_STAROT_DIALOG (0x5000)           /// 电话
+#define GAIA_COMMAND_TYPE_STAROT_BOND_CODE (0x5100)        /// 绑定码
+#define GAIA_COMMAND_TYPE_STAROT_BASE_INFO (0x5500)        /// 基础信息
 #define GAIA_VENDOR_STAROT (0x000F)
 
 typedef struct

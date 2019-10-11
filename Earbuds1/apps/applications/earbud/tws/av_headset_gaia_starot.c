@@ -150,16 +150,16 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             } while (0);
             break;
 
-        case GAIA_COMMAND_STAROT_GET_VERSION:
-            gaiaGetHeadsetVer(message);
-            break;
-
         case GAIA_COMMAND_STAROT_GET_DOUBLE_CLICK_SETTING:
             gaiaGetDoubleClickSet(message);
             break;
 
         case GAIA_COMMAND_STAROT_SET_DOUBLE_CLICK_SETTING:
             gaiaSetDoubleClickSet(message);
+            break;
+
+        case GAIA_COMMAND_STAROT_BASE_INFO_GET_VERSION:
+            gaiaGetHeadsetVer(message);
             break;
     }
     return TRUE;
@@ -486,26 +486,34 @@ void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message) {
     }
 }
 
-void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message){
+void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
+    message->payload;
+    StarotAttr *body = attrDecode(message->payload, message->payloadLen);
+    if (NULL == body) {
+        return;
+    }
+
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
-    if(message->payload[0] == 0X01){
+    if ((body->payload[0] & 0X01) > 0) {
         attr = attrMalloc(&head, 8);
         attr->attr = 0X01;
         uint8 buffer[8] = {0};
         SystemGetVersion(2, buffer);
         memcpy(attr->payload, buffer, 8);
     }
-    if(message->payload[1] == 0X02){
+
+    if ((body->payload[0] & 0X02) > 0) {
         attr = attrMalloc(&head, 8);
         attr->attr = 0X02;
         uint8 buffer[8] = {0};
         SystemGetVersion(1, buffer);
         memcpy(attr->payload, buffer, 8);
     }
-    if(message->payload[2] == 0X03){
+
+    if ((body->payload[0] & 0X04) > 0) {
         attr = attrMalloc(&head, 8);
-        attr->attr = 0X03;
+        attr->attr = 0X04;
         uint8 buffer[8] = {0};
         SystemGetVersion(0, buffer);
         memcpy(attr->payload, buffer, 8);
@@ -514,22 +522,24 @@ void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message){
     if (NULL != head) {
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-        DEBUG_LOG("len is :%d %p", len, data);
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_GET_VERSION, 0xfe, len, data);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_GET_VERSION, GAIA_STATUS_SUCCESS, len, data);
         attrFree(head, data);
-        DEBUG_LOG("GAIA_COMMAND_STAROT_GET_VERSION");
+    } else {
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_GET_VERSION, GAIA_STATUS_SUCCESS, 0, NULL);
     }
+
+    attrFree(body, NULL);
 }
 
-void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message){
+void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
-    if(message->payload[0] == 0X01){
+    if (message->payload[0] == 0X01) {
         attr = attrMalloc(&head, 1);
         attr->attr = 0X01;
         UserGetKeyFunc(&attr->payload[0], 0);
     }
-    if(message->payload[1] == 0X02){
+    if (message->payload[1] == 0X02) {
         attr = attrMalloc(&head, 1);
         attr->attr = 0X02;
         UserGetKeyFunc(0, &attr->payload[0]);
@@ -545,8 +555,8 @@ void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message){
     }
 }
 
-void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message){
-        UserSetKeyFunc(message->payload[0], message->payload[1]);
+void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
+    UserSetKeyFunc(message->payload[0], message->payload[1]);
 }
 
 #endif
