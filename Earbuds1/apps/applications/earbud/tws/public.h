@@ -5,6 +5,8 @@
 #include <logging.h>
 #include "tws/adv_manager.h"
 
+// #define CONFIG_BOARD_V1        // V1版本
+
 //==============================================================================================
 // TBR 调试器在DEMO板上使用使用的IO脚列表如下，可能会与我们系统中的冲突，注意不能同时使用
 //    上面一排右为1脚
@@ -119,20 +121,15 @@ int EM20168Power(bool isOn);
 void BMA400_init(void);
 int BMA400Power(bool isOn);
 
-//==============================================================================================
-//              /* max20340 single bus */
-//==============================================================================================
-#define HAVE_MAX20340
-#define MAX20340_ITR_PIN 2
-int max20340_get_left_or_right(void);//返回0没找到，1左耳，2右耳
-void max20340_init(void);
 
 //==============================================================================================
-//              /* 硬件版本 io 控制 */
+//      BOARD_V1 不同定义 硬件上的差别
 //==============================================================================================
 #ifdef CONFIG_BOARD_V1
 
 #define CONFIG_I2CADDR_FOR_LEFT_RIGHT       // V1版本 使用I2C地址来确认是左右耳
+#undef  appConfigLeftAudioChannel
+#define appConfigLeftAudioChannel()              (AUDIO_CHANNEL_B)       // 耳机使用右声道输出
 
 #undef EM20168_ITR_PIN
 #define EM20168_ITR_PIN 61
@@ -140,8 +137,11 @@ void max20340_init(void);
 #undef BMA400_ITR_PIN
 #define BMA400_ITR_PIN 7
 
-#undef MAX20340_ITR_PIN
+/* max20340 single bus */
+#define HAVE_MAX20340
 #define MAX20340_ITR_PIN 2
+int max20340_get_left_or_right(void);//返回0没找到，1左耳，2右耳
+void max20340_init(void);
 
 #endif
 
