@@ -127,21 +127,33 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("appSubUiHandleMessage iElectrity=%d", progRun->iElectrity);
         break;
 
-    case INIT_CFM:        
-        DEBUG_LOG("appSubUiHandleMessage INIT_CFM start Pairing for DEBUG");
+    // GAIA appGaiaClientRegister NOTIFY 过来的消息
+    case APP_GAIA_UPGRADE_ACTIVITY:
+    case APP_GAIA_UPGRADE_CONNECTED:
+    case APP_GAIA_UPGRADE_DISCONNECTED:
+        break;
+    case APP_GAIA_CONNECTED:
+        DEBUG_LOG("GAIA connect to phone");
+        progRun->gaiaStat  = 1;
+        break;
+    case APP_GAIA_DISCONNECTED:
+        DEBUG_LOG("GAIA disconnect from phone");
+        progRun->gaiaStat  = 0;
+        break;
+
+    case INIT_CFM:
+        DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");
+        appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
+        MessageSendLater(task, APP_INTERNAL_HANDSET_PAIR, NULL, 500);  // 启动广播(没有手机连接时)
+        break;
+    case APP_INTERNAL_HANDSET_PAIR:
         if(ConnectionTrustedDeviceListSize() > 0)
             break;
 
         if(appSmStateIsIdle(appGetState()))
             appSmPairHandset();
         else
-            MessageSendLater(task, INIT_CFM, NULL, 500);
-        break;
-
-    case APP_GAIA_CONNECT:{
-            GAIA_STAROT_MESSAGE_T *ind = (GAIA_STAROT_MESSAGE_T*)message;
-            progRun->gaiaStat  = (ind->payload[0] ? 1 : 0);
-        }
+            MessageSendLater(task, APP_INTERNAL_HANDSET_PAIR, NULL, 500);
         break;
 
     // 拨号、电话相关的消息
@@ -182,6 +194,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
             subUiChargeStat2Gaia(id, progRun);
         else
             appUiRestartBle();
+        break;
+     default:
+        DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
     }
 }

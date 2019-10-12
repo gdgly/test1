@@ -24,7 +24,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_CALL_ACTIVE            (2024)           // 拨号相关信息 接听
 #define APP_CALL_INACTIVE          (2025)           // 拨号相关信息 断开
 
-#define APP_GAIA_CONNECT           (2050)           // GAIA 连接或断开发送消息过来
+#define APP_INTERNAL_HANDSET_PAIR  (2090)           // 内部消息，启动广播连接手机
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
 //#define APP_CASE_GET_BTINFO        (2011)           // 盒子获取耳机经典蓝牙地址

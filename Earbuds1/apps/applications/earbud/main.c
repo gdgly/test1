@@ -35,8 +35,8 @@ appTaskData globalApp;
 static void appHandleSubsystemEventReport(MessageSubsystemEventReport *evt)
 {
     UNUSED(evt);
-    DEBUG_LOGF("appHandleSubsystemEventReport, ss_id=%d, level=%d, id=%d, cpu=%d, occurrences=%d, time=%d",
-        evt->ss_id, evt->level, evt->id, evt->cpu, evt->occurrences, evt->time);
+//    DEBUG_LOGF("appHandleSubsystemEventReport, ss_id=%d, level=%d, id=%d, cpu=%d, occurrences=%d, time=%d",
+//        evt->ss_id, evt->level, evt->id, evt->cpu, evt->occurrences, evt->time);
 }
 
 /*! \brief System Message Handler
@@ -94,6 +94,9 @@ static void appHandleSystemMessage(Task task, MessageId id, Message message)
 static void appHandleInitCfm(Message message)
 {
     appSmHandleMessage(appGetSmTask(), INIT_CFM, message);
+#ifdef CONFIG_STAROT
+    MessageSend(appGetUiTask(), INIT_CFM, NULL);
+#endif
 }
 
 
