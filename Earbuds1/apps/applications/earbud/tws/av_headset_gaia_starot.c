@@ -36,6 +36,14 @@ static void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message);//App获取设备�
 
 static void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message);//App设置设备的耳机的双击配置信息
 
+static void gaiaControlCallDialog(GAIA_STAROT_IND_T* message);
+static void gaiaControlAcceptDialog(GAIA_STAROT_IND_T* message);
+static void gaiaControlRejectDialog(GAIA_STAROT_IND_T* message);
+static void gaiaControlPreviousMusic(GAIA_STAROT_IND_T* message);
+static void gaiaControlNextMusic(GAIA_STAROT_IND_T* message);
+static void gaiaControlVolumeSet(GAIA_STAROT_IND_T* message);
+
+
 static int speakerDropNum = 0;
 static int micDropNum = 0;
 extern uint8 testSpeedIndex;
@@ -160,6 +168,27 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_VERSION:
             gaiaGetHeadsetVer(message);
+            break;
+    }
+
+    switch (message->command) {
+        case GAIA_COMMAND_STAROT_CONTROL_CALL_DIALOG:
+            gaiaControlCallDialog(message);
+            break;
+        case GAIA_COMMAND_STAROT_CONTROL_ACCEPT_DIALOG:
+            gaiaControlAcceptDialog(message);
+            break;
+        case GAIA_COMMAND_STAROT_CONTROL_REJECT_DIALOG:
+            gaiaControlRejectDialog(message);
+            break;
+        case GAIA_COMMAND_STAROT_CONTROL_PREVIOUS_MUSIC:
+            gaiaControlPreviousMusic(message);
+            break;
+        case GAIA_COMMAND_STAROT_CONTROL_NEXT_MUSIC:
+            gaiaControlNextMusic(message);
+            break;
+        case GAIA_COMMAND_STAROT_CONTROL_VOLUME_SET:
+            gaiaControlVolumeSet(message);
             break;
     }
     return TRUE;
@@ -579,6 +608,30 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     if ((0XFF != leftKey) || (0XFF != rightKey)) {
         UserSetKeyFunc(leftKey, rightKey);
     }
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+void gaiaControlCallDialog(GAIA_STAROT_IND_T* message) {
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+void gaiaControlAcceptDialog(GAIA_STAROT_IND_T* message) {
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+void gaiaControlRejectDialog(GAIA_STAROT_IND_T* message) {
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+void gaiaControlPreviousMusic(GAIA_STAROT_IND_T* message) {
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+void gaiaControlNextMusic(GAIA_STAROT_IND_T* message) {
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+void gaiaControlVolumeSet(GAIA_STAROT_IND_T* message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 

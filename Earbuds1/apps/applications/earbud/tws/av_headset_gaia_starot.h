@@ -46,6 +46,15 @@ enum {
 #define GAIA_COMMAND_STAROT_SET_DOUBLE_CLICK_SETTING 0X5104
 #define GAIA_COMMAND_STAROT_NOTIFY_CASE_STATUS 0X5105
 
+///////////////////////////控制类命令///////////////////////////////
+enum {
+    GAIA_COMMAND_STAROT_CONTROL_CALL_DIALOG = 0X5400,                         // 拨打电话
+    GAIA_COMMAND_STAROT_CONTROL_ACCEPT_DIALOG = 0X5401,                       // 接听电话
+    GAIA_COMMAND_STAROT_CONTROL_REJECT_DIALOG = 0X5402,                       // 拒绝电话
+    GAIA_COMMAND_STAROT_CONTROL_PREVIOUS_MUSIC= 0X5403,                       // 上一首音乐
+    GAIA_COMMAND_STAROT_CONTROL_NEXT_MUSIC= 0X5404,                           // 下一首音乐
+    GAIA_COMMAND_STAROT_CONTROL_VOLUME_SET= 0X5405,                           // 音量设置
+};
 ///////////////////////////base info///////////////////////////////
 enum {
     GAIA_COMMAND_STAROT_BASE_INFO_GET_VERSION = 0X5500,                       // 获取版本
