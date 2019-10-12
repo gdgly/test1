@@ -68,6 +68,7 @@ typedef struct tagPROGRUNINFO {
     uint8          iElectrity;              // 自己耳机电量 0...100
 
     uint8          dial_stat;               // 当前拨号情况
+    uint8          dial_type:1;             // 1: 电话， 0：微信等其它
     //保存手机拨入的信息
     uint8          callIndex:2;
     CallIPtr       callInfo[MAX_CALLIN_INFO]; // 保存两个信息

@@ -51,7 +51,25 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
     if(1 == progRun->gaiaStat)
         MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
-    DEBUG_LOG("\nHFP CALL Status=0x%x LEN=%d", progRun->dial_stat, count);
+    DEBUG_LOG("HFP CALL Status=0x%x LEN=%d", progRun->dial_stat, count);
+    return 0;
+}
+
+// Task HFP 通过这个函数来发送消息给GAIA,报告当前为语音通话还是WX等其它
+// payload=[状态1] 1：语音通话，0：其它
+static int16 subUiCallType2Gaia(MessageId id, ProgRIPtr  progRun)
+{
+    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 2);
+
+    (void)id;
+    message->command      = STAROT_DIALOG_TYPE;
+    message->payload[0]   = progRun->dial_type;
+    message->payloadLen   = 1;
+
+    if(1 == progRun->gaiaStat)
+        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+
+    DEBUG_LOG("Audio for Status=%d", progRun->dial_type);
     return 0;
 }
 
@@ -159,9 +177,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     // 拨号、电话相关的消息
     case HFP_CALLER_ID_IND:
         subUiCaller2Gaia(id, progRun);
+        subUiCallType2Gaia(id, progRun);
         break;
     case HFP_CURRENT_CALLS_IND:
         subUiCaller2Gaia(id, progRun);
+        subUiCallType2Gaia(id, progRun);
         break;
     case APP_CALLIN_ACT:           // 拨号相关信息 拨入
     case APP_CALLIN_INACT:         // 拨号相关信息 拨入断开
@@ -265,7 +285,7 @@ static int16 appUiHfpSaveId(uint8 *number, uint16 size_number,
     CallIPtr   pCall;
 
     if(HfpCallerIsSame(number, size_number, income) == TRUE)
-        return 0;
+        return -1;
 
     progRun->callIndex += 1;
     if(progRun->callIndex >= MAX_CALLIN_INFO)
@@ -311,10 +331,18 @@ static int16 appUiHfpSaveId(uint8 *number, uint16 size_number,
     return 0;
 }
 
+// 电话语音与WX语音区分
+// 获取到来电电话号码，语音通话
+// 获取到拨出电话号码信息，并且长度>1 语音通话
+// 获取到拨出电话号码信息，并且长度==0  WX等其它通话
+
 // HFP TASK调用，新的号码拨入
 int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 size_name)
 {
-    appUiHfpSaveId(number, size_number, name, size_name, 1);
+    if(appUiHfpSaveId(number, size_number, name, size_name, 1) < 0)
+        return 0;       // 重复信息
+
+    appSubGetProgRun()->dial_type = 1;
 
     // 通知一下UI
     MessageSend(&appGetUi()->task, HFP_CALLER_ID_IND, 0);
@@ -324,7 +352,12 @@ int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 si
 //获取拨出的号码
 int16 appUiHfpDialId(uint8 *number, uint16 size_number)
 {
-    appUiHfpSaveId(number, size_number, NULL, 0, 0);
+    if(0 == size_number)
+        appSubGetProgRun()->dial_type = 0;
+    else {
+        appSubGetProgRun()->dial_type = 1;
+        appUiHfpSaveId(number, size_number, NULL, 0, 0);
+    }
 
     MessageSend(&appGetUi()->task, HFP_CURRENT_CALLS_IND, 0);
     return 0;
