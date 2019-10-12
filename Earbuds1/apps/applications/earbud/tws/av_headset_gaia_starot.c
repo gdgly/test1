@@ -562,7 +562,23 @@ void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message) {
 }
 
 void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
-    UserSetKeyFunc(message->payload[0], message->payload[1]);
+    StarotAttr *body = attrDecode(message->payload, message->payloadLen);
+    if (NULL == body) {
+        return;
+    }
+    uint8 leftKey = 0XFF, rightKey = 0XFF;
+    StarotAttr* head = body;
+    while (NULL != head) {
+        if (0X01 == head->attr) {
+            leftKey = head->payload[0];
+        } else if(0X02 == head->attr) {
+            rightKey = head->payload[0];
+        }
+        head = head->next;
+    }
+    if ((0XFF != leftKey) || (0XFF != rightKey)) {
+        UserSetKeyFunc(leftKey, rightKey);
+    }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 

@@ -250,12 +250,13 @@ int16 UserGetKeyFunc(uint8 *lKeyFunc, uint8 *rKeyFunc)     // 获取功能键
 int16 UserSetKeyFunc(uint8 lKeyFunc, uint8 rKeyFunc)     // 设置功能键
 {
     UserPrmPtr prm = GetUserParam();
-
-    prm->lKeyFunc = lKeyFunc;
-    prm->rKeyFunc = rKeyFunc;
-
+    if(0XFF != lKeyFunc) {
+        prm->lKeyFunc = lKeyFunc;
+    }
+    if(0XFF != rKeyFunc) {
+        prm->rKeyFunc = rKeyFunc;
+    }
     ParamSaveUserPrm(prm);
-
     return 0;
 }
 
