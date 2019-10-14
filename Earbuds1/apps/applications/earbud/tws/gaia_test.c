@@ -22,13 +22,15 @@ extern uint16 bufferSendUnit;
 bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
                      Source data_source_sco, Source data_source_mic) {
     int size = SourceSize(source);
-
+//    SourceDrop(source, size);
+//    size = 0;
+    int dropUnit = 10;
     /// 丢弃过多的数据，防止数据过多，导致source不可以使用
-    if (size > 20 * bufferSendUnit) {
-        dissNum += 20 * bufferSendUnit;
-        size -= 20 * bufferSendUnit;
-        DEBUG_LOG("drop size 20 * %d", bufferSendUnit);
-        SourceDrop(source, 20 * bufferSendUnit);
+    if (size > dropUnit * bufferSendUnit) {
+        dissNum += dropUnit * bufferSendUnit;
+        size -= dropUnit * bufferSendUnit;
+        DEBUG_LOG("drop size %d * %d", dropUnit, bufferSendUnit);
+        SourceDrop(source, dropUnit * bufferSendUnit);
     }
 
     if (NULL == appGetGaia()->transport || NULL == data_source_sco || NULL == data_source_mic) {
@@ -46,4 +48,12 @@ bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
         return TRUE;
     }
     return FALSE;
+}
+
+void gaiaClearDropAudioSize(void) {
+    dissNum = 0;
+}
+
+int gaiaGetDropAudioSize(void) {
+    return dissNum;
 }

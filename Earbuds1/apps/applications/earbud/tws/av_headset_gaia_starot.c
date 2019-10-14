@@ -18,6 +18,9 @@ Source audioForwardSource = NULL;
 int audioTransType = 0;
 uint16 speedTestSendUnit = 81;
 
+extern void gaiaClearDropAudioSize(void);
+extern int gaiaGetDropAudioSize(void);
+
 extern void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
                                 uint16 payload_length, uint8 *payload);
 
@@ -110,9 +113,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             if (appGetGaia()->nowSendCallAudio == DIALOG_COMING) {
                 testSpeedIndex = 0;
                 appGetGaia()->nowSendCallAudio |= DIALOG_CAN_TRANSFORM;
+                appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
                 gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_ACCEPT_RECORD);
                 disable_audio_forward(FALSE);
                 audioTransType = 0;
+                gaiaClearDropAudioSize();
             }
             appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
                                 ((appGetGaia()->nowSendCallAudio & DIALOG_CAN_TRANSFORM) > 0 ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE),
@@ -259,6 +264,7 @@ void starotGaiaParseMessageMoreSpace(void) {
 
     if (appGetGaia()->needCycleSendAudio > 0) {
         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
         MessageSend(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL);
     } else {
         /// 尝试使用messagemorespace这唯一的命令去让他发送消息
@@ -303,7 +309,7 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
         return FALSE;
     }
     appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_ING;
-
+    //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
     static uint8 payload[512];
     uint16 flag = 0, pos = 1;
 
@@ -333,14 +339,17 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
 
     if (flag <= 0) {
         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
         return FALSE;
     }
 
     bool st = appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_AUDIO_IND, 0xfe, pos, payload);
     if (TRUE == st) {
         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_ING;
+        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
     } else {
         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
         //// 分配内存失败，需要使用定时器/数据驱动
         DEBUG_LOG("send data failed, wait more memory");
     }
@@ -397,6 +406,14 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
     /// 电话挂断
     if ((0 == status) || (status & dialogInActive) > 0) {
         DEBUG_LOG("Send GAIA_COMMAND_STAROT_CALL_END");
+        StarotAttr *attr = attrMalloc(&head, 4);
+        attr->attr = 0X06;
+        int num = gaiaGetDropAudioSize();
+        attr->payload[0] = (uint8)((num >> 0) & 0X00FF);
+        attr->payload[1] = (uint8)((num >> 8) & 0X00FF);
+        attr->payload[2] = (uint8)((num >> 16) & 0X00FF);
+        attr->payload[3] = (uint8)((num >> 24) & 0X00FF);
+
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
         StarotResendCommand *resend = starotResendCommandInit(GAIA_COMMAND_STAROT_CALL_END, 0, 0);
         MessageSendLater(appGetGaiaTask(), STAROT_DIALOG_CALL_END_TIMEOUT, resend, STAROT_COMMAND_TIMEOUT);
@@ -455,7 +472,7 @@ void starotSpeedSendIntervalParse(void) {
 //        DEBUG_LOG("now send speed index is %02x", testSpeedIndex);
     }
     appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_ING;
-
+    //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
 //                MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 10);
 }
 
@@ -624,13 +641,19 @@ void gaiaControlCallDialog(GAIA_STAROT_IND_T* message) {
     if (NULL == body) {
         return;
     }
-    if(0X01 == body->attr){
-        uint16 length = body->len;
-        uint8 number[11];
-        memcpy(number, body->payload, body->len);
-
+    if (0X01 == body->attr) {
+        uint16 length = 0;
+        /// 电话号码长度不会大于16
+        const int MaxPhoneNuberLen = 16;
+        uint8 number[MaxPhoneNuberLen];
+        if (body->len <= MaxPhoneNuberLen) {
+            length = body->len;
+        } else {
+            length = MaxPhoneNuberLen;
+        }
+        memcpy(number, body->payload, length);
         //调用拨打电话函数
-        HfpDialNumberRequest(hfp_primary_link, length, number);
+        HfpDialNumberRequest(hfp_primary_link, body->len, body->payload);
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }

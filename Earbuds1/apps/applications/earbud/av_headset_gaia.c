@@ -437,8 +437,10 @@ void appGaiaPraseCfm(const GAIA_SEND_PACKET_CFM_T *m) {
                 if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
                     if (gaiaTransportType == gaia_transport_rfcomm) {
                         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+                        DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
                     } else {
                         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+                        DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
                         MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 1);
                     }
                 }
@@ -446,6 +448,7 @@ void appGaiaPraseCfm(const GAIA_SEND_PACKET_CFM_T *m) {
                 if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
                     MessageSend(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL);
                     appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+                    DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
                     testSpeedIndex += 1;
                 }
             }
@@ -455,10 +458,13 @@ void appGaiaPraseCfm(const GAIA_SEND_PACKET_CFM_T *m) {
                 // todo hjs 发送包成功之后，重新检查是否有新数据需要发送
                 if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
                     appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+                    DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
                     if (gaiaTransportType == gaia_transport_rfcomm) {
                         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+                        DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
                     } else {
                         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+                        DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
                         starotNotifyAudioForward(FALSE, 0);
                     }
                 } else if (GAIA_COMMAND_STAROT_CALL_END == command_id && vendor_id == GAIA_VENDOR_STAROT) {
@@ -467,6 +473,7 @@ void appGaiaPraseCfm(const GAIA_SEND_PACKET_CFM_T *m) {
             } else {
                 if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
                     appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
+                    DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
                     testSpeedIndex += 1;
                     starotNotifyAudioForward(TRUE, starotGaiaTransGetAudioType());
                 }
