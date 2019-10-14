@@ -381,15 +381,11 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
     }
 
     /// 通话类型
-    if((status & dialogActive) > 0){
-//        DEBUG_LOG("Send GAIA_COMMAND_STAROT_CALL_TYPE");
-//        appGaiaSendPacket(GAIA_VENDOR_STAROT, /*GAIA_COMMAND_STAROT_CALL_TYPE*/, 0xfe, 0, NULL);
-//        StarotResendCommand *resend = starotResendCommandInit(/*GAIA_COMMAND_STAROT_CALL_TYPE*/, 0, 0);
-//        MessageSendLater(appGetGaiaTask(), STAROT_DIALOG_CALL_BEGIN_TIMEOUT, resend, STAROT_COMMAND_TIMEOUT);
+    if(message->command == STAROT_DIALOG_TYPE){
 
         StarotAttr *attr = attrMalloc(&head, 1);
         attr->attr = 0X04;
-        attr->payload[0] = ((status & dialogOut) > 0) ? 0X02 : 0X01;
+        attr->payload[0] = (status > 0) ? 0X01 : 0X02;
     }
 
     /// 电话接通
