@@ -382,7 +382,6 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
 
     /// 通话类型
     if(message->command == STAROT_DIALOG_TYPE){
-
         StarotAttr *attr = attrMalloc(&head, 1);
         attr->attr = 0X04;
         attr->payload[0] = (status > 0) ? 0X01 : 0X02;
