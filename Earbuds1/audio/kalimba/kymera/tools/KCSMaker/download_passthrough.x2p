@@ -1,99 +1,73 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<project name="download_passthrough" path="G:/work1/QCC5126/Earbuds1/audio/kalimba/kymera/tools/KCSMaker/@@@root@@@/audio/kalimba/kymera/capabilities/">
-    <configurations defaultKit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}">
-        <configuration name="debug" kit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}" options="clean|build|default">
-            <deployProject></deployProject>
+<?xml version="1.0" encoding="UTF-8"?>
+<project path="@@@root@@@/audio/kalimba/kymera/capabilities/">
+    <folder name="capabilities">
+        <folder name="basic_passthrough">
+            <file path="../../capabilities/basic_passthrough/basic_passthrough.c"/>
+            <file path="../../capabilities/basic_passthrough/basic_passthrough_data_processing.asm"/>
+            <file path="../../capabilities/basic_passthrough/basic_passthrough.h"/>
+            <file path="../../capabilities/basic_passthrough/basic_passthrough_private.h"/>
+            <file path="../../capabilities/basic_passthrough/basic_passthrough_shared_const.h"/>
+            <file path="../../capabilities/basic_passthrough/basic_passthrough_struct.h"/>
+        </folder>
+    </folder>
+    <configurations>
+        <configuration name="debug" options="build|clean|default">
             <devkitConfiguration>application</devkitConfiguration>
             <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
-            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
-            <devkitRevision>1565343019</devkitRevision>
-            <group name="basic_passthrough" type="capability">
-                <property name="CAP_NAME">basic_passthrough</property>
-                <property name="GEN_ASM_HDRS">basic_passthrough_struct.h</property>
-                <property name="H_PATH">${KYMERA_ROOT}/output/$(CONFIG)/gen/basic_passthrough</property>
-            </group>
-            <property name="BUILD_ID">sdk://tools/ubuild/maker/buildid/examples/timestamp.py</property>
+            <property name="MAKEFILE_TO_CALL">makefile</property>
+            <property name="KYMERA_SRC_PATH">KYMERA_SRC_PATH=../..</property>
             <property name="BUILD_NAME">BUILD_NAME=kymera_stre_audio</property>
             <property name="BUILD_PATH">BUILD_PATH=$(DEVKIT_ROOT)/audio/kalimba_ROM_5951/kymera/output/stre_rom_v21_release/build</property>
             <property name="BUILD_ROOT">BUILD_ROOT=$(DEVKIT_ROOT)/audio/kalimba/kymera/build</property>
-            <property name="BUILD_TYPE">MAKEFILE</property>
-            <property name="BUNDLE_NAME">BUNDLE_NAME=download_passthrough</property>
-            <property name="CHIP_TYPE">qcc512x_rom_v21</property>
-            <property name="CONFIG_MAKE">CONFIG=stre_rom_v21_release</property>
-            <property name="DBG_CORE">app\p1</property>
-            <property name="DEFAULT_LIBS">usb_early_init</property>
-            <property name="DEFS">__KALIMBA__ HAVE_32BIT_DATA_WIDTH INSTALL_HYDRA_LOG BLUELAB HYDRACORE</property>
-            <property name="EXTRA_WARNINGS">FALSE</property>
-            <property name="INCPATHS">../../../../installed_libs/include/profiles/default_qcc512x_rom_v21 sdk://apps/installed_libs/include/firmware_qcc512x_rom_v21 sdk://apps/installed_libs/include/firmware_qcc512x_rom_v21/app sdk://apps/installed_libs/include/standard</property>
-            <property name="KALSIM_CONFIG_MAKE">CONFIG=stre_rom_kalsim_kalcmd2_release</property>
-            <property name="KALSIM_ENABLE_DEBUGGER">false</property>
-            <property name="KALSIM_FIRMWARE">../../output/stre_rom_kalsim_kalcmd2_release/build/debugbin/kymera_stre_audio.elf</property>
-            <property name="KALSIM_KSE_PATH">../../../../kse</property>
-            <property name="KALSIM_MODE">false</property>
-            <property name="KALSIM_NAME">kalsim_qcc512x_audio.exe</property>
-            <property name="KALSIM_PLATFORM">stre</property>
-            <property name="KALSIM_SCRIPTS">script/kalsim/download.py,script/kalsim/download_passthrough.dkcs</property>
-            <property name="KYMERA_SRC_PATH">KYMERA_SRC_PATH=../..</property>
-            <property name="LIBPATHS">../../../../installed_libs/lib/default_qcc512x_rom_v21/native sdk://apps/installed_libs/lib/os/qcc512x_rom_v21</property>
-            <property name="MAKEFILE_TO_CALL">makefile</property>
             <property name="MAKE_JOBS">MAKE_JOBS=True</property>
-            <property name="OSTYPE">OSTYPE=Windows_NT</property>
-            <property name="OUTPUT">../../output_bundles/stre_rom_v21_release/download_passthrough/download_passthrough.elf</property>
-            <property name="PRESERVED_LIBS">qcc512x_rom_v21</property>
-            <property name="PRIVATE_DEFS"></property>
-            <property name="PRIVATE_INCPATHS"></property>
-            <property name="STRIP_SYMBOLS">FALSE</property>
-            <property name="SUBSYSTEM_NAME">audio</property>
-        </configuration>
-        <configuration name="kse" kit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}" options="clean|build|deploy">
-            <deployProject></deployProject>
-            <devkitConfiguration>application</devkitConfiguration>
-            <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
-            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
-            <devkitRevision>1565343019</devkitRevision>
             <group name="basic_passthrough" type="capability">
                 <property name="CAP_NAME">basic_passthrough</property>
-                <property name="GEN_ASM_HDRS">basic_passthrough_struct.h</property>
                 <property name="H_PATH">${KYMERA_ROOT}/output/$(CONFIG)/gen/basic_passthrough</property>
+                <property name="GEN_ASM_HDRS">basic_passthrough_struct.h</property>
             </group>
-            <property name="BUILD_ID">sdk://tools/ubuild/maker/buildid/examples/timestamp.py</property>
+            <property name="CONFIG_MAKE">CONFIG=stre_rom_v21_release</property>
+            <property name="BUNDLE_NAME">BUNDLE_NAME=download_passthrough</property>
+            <property name="OSTYPE">OSTYPE=Windows_NT</property>
+            <property name="BUILD_TYPE">MAKEFILE</property>
+            <property name="OUTPUT">../../output_bundles/stre_rom_v21_release/download_passthrough/download_passthrough.elf</property>
+            <property name="SUBSYSTEM_NAME">audio</property>
+            <property name="KALSIM_MODE">false</property>
+            <property name="KALSIM_ENABLE_DEBUGGER">false</property>
+            <property name="KALSIM_NAME">kalsim_qcc512x_audio.exe</property>
+            <property name="KALSIM_FIRMWARE">../../output/stre_rom_kalsim_kalcmd2_release/build/debugbin/kymera_stre_audio.elf</property>
+            <property name="KALSIM_SCRIPTS">script/kalsim/download.py,script/kalsim/download_passthrough.dkcs</property>
+            <property name="KALSIM_PLATFORM">stre</property>
+            <property name="KALSIM_CONFIG_MAKE">CONFIG=stre_rom_kalsim_kalcmd2_release</property>
+            <property name="KALSIM_KSE_PATH">../../../../kse</property>
+        </configuration>
+        <configuration name="kse" options="build|clean|deploy">
+            <devkitConfiguration>application</devkitConfiguration>
+            <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
+            <property name="MAKEFILE_TO_CALL">makefile</property>
+            <property name="KYMERA_SRC_PATH">KYMERA_SRC_PATH=../..</property>
             <property name="BUILD_NAME">BUILD_NAME=kymera_stre_audio</property>
             <property name="BUILD_PATH">BUILD_PATH=$(DEVKIT_ROOT)/audio/kalimba/kymera/output/stre_rom_kalsim_kalcmd2_release/build</property>
             <property name="BUILD_ROOT">BUILD_ROOT=$(DEVKIT_ROOT)/audio/kalimba/kymera/build</property>
-            <property name="BUILD_TYPE">MAKEFILE</property>
-            <property name="BUNDLE_NAME">BUNDLE_NAME=download_passthrough</property>
-            <property name="CHIP_TYPE">qcc512x_rom_v21</property>
-            <property name="CONFIG_MAKE">CONFIG=stre_rom_v21_release</property>
-            <property name="DBG_CORE">app\p1</property>
-            <property name="DEFAULT_LIBS">usb_early_init</property>
-            <property name="DEFS">__KALIMBA__ HAVE_32BIT_DATA_WIDTH INSTALL_HYDRA_LOG BLUELAB HYDRACORE</property>
-            <property name="EXTRA_WARNINGS">FALSE</property>
-            <property name="INCPATHS">../../../../installed_libs/include/profiles/default_qcc512x_rom_v21 sdk://apps/installed_libs/include/firmware_qcc512x_rom_v21 sdk://apps/installed_libs/include/firmware_qcc512x_rom_v21/app sdk://apps/installed_libs/include/standard</property>
-            <property name="KALSIM_CONFIG_MAKE">CONFIG=stre_rom_kalsim_kalcmd2_release</property>
-            <property name="KALSIM_ENABLE_DEBUGGER">false</property>
-            <property name="KALSIM_FIRMWARE">../../output/stre_rom_kalsim_kalcmd2_release/build/debugbin/kymera_stre_audio.elf</property>
-            <property name="KALSIM_KSE_PATH">../../../../kse</property>
-            <property name="KALSIM_MODE">true</property>
-            <property name="KALSIM_NAME">kalsim_qcc512x_audio.exe</property>
-            <property name="KALSIM_PLATFORM">stre</property>
-            <property name="KALSIM_SCRIPTS">script/kalsim/download.py,script/kalsim/download_passthrough.dkcs</property>
-            <property name="KYMERA_SRC_PATH">KYMERA_SRC_PATH=../..</property>
-            <property name="LIBPATHS">../../../../installed_libs/lib/default_qcc512x_rom_v21/native sdk://apps/installed_libs/lib/os/qcc512x_rom_v21</property>
-            <property name="MAKEFILE_TO_CALL">makefile</property>
             <property name="MAKE_JOBS">MAKE_JOBS=True</property>
+            <group name="basic_passthrough" type="capability">
+                <property name="CAP_NAME">basic_passthrough</property>
+                <property name="H_PATH">${KYMERA_ROOT}/output/$(CONFIG)/gen/basic_passthrough</property>
+                <property name="GEN_ASM_HDRS">basic_passthrough_struct.h</property>
+            </group>
+            <property name="CONFIG_MAKE">CONFIG=stre_rom_v21_release</property>
+            <property name="BUNDLE_NAME">BUNDLE_NAME=download_passthrough</property>
             <property name="OSTYPE">OSTYPE=Windows_NT</property>
+            <property name="BUILD_TYPE">MAKEFILE</property>
             <property name="OUTPUT">../../output_bundles/stre_rom_kalsim_kalcmd2_release/download_passthrough/download_passthrough.elf</property>
-            <property name="PRESERVED_LIBS">qcc512x_rom_v21</property>
-            <property name="PRIVATE_DEFS"></property>
-            <property name="PRIVATE_INCPATHS"></property>
-            <property name="STRIP_SYMBOLS">FALSE</property>
             <property name="SUBSYSTEM_NAME">audio</property>
+            <property name="KALSIM_MODE">true</property>
+            <property name="KALSIM_ENABLE_DEBUGGER">false</property>
+            <property name="KALSIM_NAME">kalsim_qcc512x_audio.exe</property>
+            <property name="KALSIM_FIRMWARE">../../output/stre_rom_kalsim_kalcmd2_release/build/debugbin/kymera_stre_audio.elf</property>
+            <property name="KALSIM_SCRIPTS">script/kalsim/download.py,script/kalsim/download_passthrough.dkcs</property>
+            <property name="KALSIM_PLATFORM">stre</property>
+            <property name="KALSIM_CONFIG_MAKE">CONFIG=stre_rom_kalsim_kalcmd2_release</property>
+            <property name="KALSIM_KSE_PATH">../../../../kse</property>
         </configuration>
     </configurations>
-    <file path="../../capabilities/basic_passthrough/basic_passthrough.c"/>
-    <file path="../../capabilities/basic_passthrough/basic_passthrough.h"/>
-    <file path="../../capabilities/basic_passthrough/basic_passthrough_data_processing.asm"/>
-    <file path="../../capabilities/basic_passthrough/basic_passthrough_private.h"/>
-    <file path="../../capabilities/basic_passthrough/basic_passthrough_shared_const.h"/>
-    <file path="../../capabilities/basic_passthrough/basic_passthrough_struct.h"/>
 </project>

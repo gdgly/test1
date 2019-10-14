@@ -393,10 +393,6 @@ static void ShellDoCommand(char *buffer, int len)
                 rightver[0], rightver[1], rightver[2], rightver[3], rightver[4], rightver[5], rightver[6], rightver[7],
                 casever[0],  casever[1],  casever[2],  casever[3],  casever[4],  casever[5],  casever[6],  casever[7]);
     }
-    //测试电话是否能挂断
-    else if(strstr(buffer, "csdh")){
-
-    }
     else
         sprintf(outbuf, "Unknown %s\n", buffer);
 

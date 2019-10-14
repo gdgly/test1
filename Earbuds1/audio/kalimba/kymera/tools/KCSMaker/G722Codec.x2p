@@ -5,7 +5,7 @@
             <deployProject></deployProject>
             <devkitConfiguration>application</devkitConfiguration>
             <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
-            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30</devkitPath>
+            <devkitPath>D:/QCC512X/ADK_QCC512X_ROM_V21_WIN_6.4.0.30</devkitPath>
             <devkitRevision>1560973766</devkitRevision>
             <group name="G722Codec" type="capability">
                 <property name="CAP_NAME">G722Codec</property>
@@ -49,7 +49,7 @@
             <deployProject></deployProject>
             <devkitConfiguration>application</devkitConfiguration>
             <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
-            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.30</devkitPath>
+            <devkitPath>D:/QCC512X/ADK_QCC512X_ROM_V21_WIN_6.4.0.30</devkitPath>
             <devkitRevision>1560973766</devkitRevision>
             <group name="G722Codec" type="capability">
                 <property name="CAP_NAME">G722Codec</property>

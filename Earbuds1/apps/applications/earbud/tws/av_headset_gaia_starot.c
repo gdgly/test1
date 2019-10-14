@@ -43,7 +43,6 @@ static void gaiaControlPreviousMusic(GAIA_STAROT_IND_T* message);
 static void gaiaControlNextMusic(GAIA_STAROT_IND_T* message);
 static void gaiaControlVolumeSet(GAIA_STAROT_IND_T* message);
 
-void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
 
 static int speakerDropNum = 0;
 static int micDropNum = 0;
@@ -380,18 +379,6 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
         appGetGaia()->status = appGetGaia()->status | dialogIn | dialogOut;
     }
 
-    /// 通话类型
-    if((status & dialogActive) > 0){
-//        DEBUG_LOG("Send GAIA_COMMAND_STAROT_CALL_TYPE");
-//        appGaiaSendPacket(GAIA_VENDOR_STAROT, /*GAIA_COMMAND_STAROT_CALL_TYPE*/, 0xfe, 0, NULL);
-//        StarotResendCommand *resend = starotResendCommandInit(/*GAIA_COMMAND_STAROT_CALL_TYPE*/, 0, 0);
-//        MessageSendLater(appGetGaiaTask(), STAROT_DIALOG_CALL_BEGIN_TIMEOUT, resend, STAROT_COMMAND_TIMEOUT);
-
-        StarotAttr *attr = attrMalloc(&head, 1);
-        attr->attr = 0X04;
-        attr->payload[0] = ((status & dialogOut) > 0) ? 0X02 : 0X01;
-    }
-
     /// 电话接通
     if ((status & dialogActive) > 0) {
         StarotAttr *attr = attrMalloc(&head, 1);
@@ -625,37 +612,18 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
 }
 
 void gaiaControlCallDialog(GAIA_STAROT_IND_T* message) {
-    StarotAttr *body = attrDecode(message->payload, message->payloadLen);
-    if (NULL == body) {
-        return;
-    }
-    if(0X01 == body->attr){
-        uint16 length = body->len;
-        uint8 number[11];
-        memcpy(number, body->payload, body->len);
-
-        //调用拨打电话函数
-        HfpDialNumberRequest(hfp_primary_link, length, number);
-    }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
 void gaiaControlAcceptDialog(GAIA_STAROT_IND_T* message) {
-//    appHfpCallReject();
-    appHfpCallAccept();
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
 void gaiaControlRejectDialog(GAIA_STAROT_IND_T* message) {
-//    appHfpCallReject();
-    appHfpCallHangup();
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
 void gaiaControlPreviousMusic(GAIA_STAROT_IND_T* message) {
-
-
-
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
@@ -664,14 +632,6 @@ void gaiaControlNextMusic(GAIA_STAROT_IND_T* message) {
 }
 
 void gaiaControlVolumeSet(GAIA_STAROT_IND_T* message) {
-    StarotAttr *body = attrDecode(message->payload, message->payloadLen);
-    if (NULL == body) {
-        return;
-    }
-    if(0X01 == body->attr){
-        //
-
-    }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 

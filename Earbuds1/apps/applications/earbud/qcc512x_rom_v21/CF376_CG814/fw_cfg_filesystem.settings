@@ -1,11 +1,4 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <settings>
-    <group name="kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}/filesystem/default">
-        <item name="Default">
-            <item name="deploy">device://tc/usb2tc/101/qcc5126</item>
-        </item>
-        <item name="Run on Device">
-            <item name="run">device://tc/usb2tc/101/qcc5126</item>
-        </item>
-    </group>
+    <group name="kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}/filesystem/default"/>
 </settings>
