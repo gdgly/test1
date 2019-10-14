@@ -5,7 +5,7 @@
 #include <logging.h>
 #include "tws/adv_manager.h"
 
-// #define CONFIG_BOARD_V1        // V1版本
+//#define CONFIG_BOARD_V1        // V1版本
 
 //==============================================================================================
 // TBR 调试器在DEMO板上使用使用的IO脚列表如下，可能会与我们系统中的冲突，注意不能同时使用
@@ -88,7 +88,7 @@ void ShellCmdInit(void);
 //==============================================================================================
 //              /* Lis25BA I2C AUDIO INIT */
 //==============================================================================================
-#define CONFIG_LIS25BA
+//#define CONFIG_LIS25BA
 #define CONFIG_LIS25BA_TEST         // 测试
 void lis25Init(void);
 int lis25Power(bool isOn);
@@ -123,6 +123,14 @@ int BMA400Power(bool isOn);
 
 
 //==============================================================================================
+//              /*Tap 功能 bma400 或者 lis2dw12两种芯片 */
+//==============================================================================================
+void tap_itr_handle_lis2dw12(void);
+void tap_itr_handle_bma400(void);
+void tap_itr_handler(Task task, MessageId id, Message msg);
+void tap_func_init(void);
+
+//==============================================================================================
 //      BOARD_V1 不同定义 硬件上的差别
 //==============================================================================================
 #ifdef CONFIG_BOARD_V1
@@ -131,9 +139,11 @@ int BMA400Power(bool isOn);
 #undef  appConfigLeftAudioChannel
 #define appConfigLeftAudioChannel()              (AUDIO_CHANNEL_B)       // 耳机使用右声道输出
 
+#define HAVE_EM20168
 #undef EM20168_ITR_PIN
-#define EM20168_ITR_PIN 61
+#define EM20168_ITR_PIN 8
 
+//#define HAVE_BMA400
 #undef BMA400_ITR_PIN
 #define BMA400_ITR_PIN 7
 
@@ -142,6 +152,10 @@ int BMA400Power(bool isOn);
 #define MAX20340_ITR_PIN 2
 int max20340_get_left_or_right(void);//返回0没找到，1左耳，2右耳
 void max20340_init(void);
+
+#define HAVE_LIS2DW12
+void lis2dw12_init(void);
+#define LIS2DW12_ITR_PIN 5
 
 #endif
 

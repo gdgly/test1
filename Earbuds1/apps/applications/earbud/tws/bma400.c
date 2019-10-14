@@ -24,7 +24,15 @@ bma400_str bma400_init_array[] = {
     {0x57, 0x18, 0x00},//BMA400_Z_AXIS_EN_TAP
     {0x57, 0x07, 0x00},//BMA400_TAP_SENSITIVITY_0
 
-    {0x20, 0x0c, 0x0c},//BMA400_EN_D_TAP,BMA400_EN_S_TAP
+    #ifdef MUTI_TAP
+        {0x20, 0x04, 0x04},//BMA400_EN_S_TAP
+    #else
+        #ifdef ONLY_DOUBLE_TAP
+            {0x20, 0x08, 0x08},//BMA400_EN_D_TAP
+        #else
+            {0x20, 0x0c, 0x0c},//BMA400_EN_D_TAP,BMA400_EN_S_TAP
+        #endif
+    #endif
     {0x20, 0x80, 0x80},//latch_int
 
     {0x23, 0x04, 0x04},//BMA400_TAP_MAP_INT1
@@ -204,13 +212,14 @@ void appAccelerometerClientUnregister(Task task)
         accel->handle = BITSERIAL_HANDLE_ERROR;
     }
 }
-#endif
+
 bool appAccelerometerGetDormantConfigureKeyValue(dormant_config_key *key, uint32* value)
 {
     (void*)key;
     (void*)value;
     return TRUE;
 }
+#endif
 
 #endif
 

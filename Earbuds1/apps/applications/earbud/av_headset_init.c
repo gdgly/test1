@@ -204,8 +204,8 @@ static const appInitTableEntry appInitTable[] =
     {lis25Init,             0, NULL},
     {lis25Test,             0, NULL},
 #endif
-#ifdef HAVE_BMA400
-    {BMA400_init,             0, NULL},
+#if defined(HAVE_BMA400) || defined(HAVE_LIS2DW12)
+    {tap_func_init,             0, NULL},
 #endif
 #ifdef HAVE_EM20168
     {EM20168_init,             0, NULL},
