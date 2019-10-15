@@ -2,12 +2,36 @@
 #ifdef HAVE_EM20168
 
 em20168_str em20168_init_array[] = {
+#if 0
     {0x01, 0x80},
     {0x0b, 0x80},
     {0x0c, 0xc0},
-    {0x0d, 0x3c},
+    {0x0d, 0x3c},//25ms
+    //{0x0d, 0x5c},//400ms
     {0x0e, 0x71},
     {0x24, 0x30},
+    {0x3, EM20168_LOW_VALUE_L},
+    {0x4, EM20168_LOW_VALUE_H},
+    {0x5, EM20168_HIGH_VALUE_L},
+    {0x6, EM20168_HIGH_VALUE_H},
+#endif
+    {0x26, 0x00},
+    {0x01, 0x80},
+    {0x0b, 0x80},
+    {0x0c, 0x80},
+    {0x0d, 0xb6},
+    //{0x0d, 0xd6},
+    {0x0e, 0x7f},
+    {0x24, 0x40},
+    {0x12, 0x96},
+    //{0x13, 0xc0},
+    //{0x1b, 0x80},
+    {0x1b, 0xc0},
+    {0x27, 0x00},
+    {0x1d, 0xf0},
+    {0x33, 0x68},
+    {0x34, 0x00},
+    {0x25, 0x00},
     {0x3, EM20168_LOW_VALUE_L},
     {0x4, EM20168_LOW_VALUE_H},
     {0x5, EM20168_HIGH_VALUE_L},
@@ -163,7 +187,7 @@ void EM20168_itr_handler(Task task, MessageId id, Message msg)
                         (prox->state->proximity != proximity_state_in_proximity) ){
                     prox->state->proximity = proximity_state_in_proximity;
 #ifndef EM20168_SEND_MSG
-                    printf("in ear\n\n", em20168_ps0_value);
+                    printf("in ear\n\n");
 #else
                     appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_IN_PROXIMITY);
 #endif
@@ -172,7 +196,7 @@ void EM20168_itr_handler(Task task, MessageId id, Message msg)
                         (prox->state->proximity == proximity_state_in_proximity) ){
                     prox->state->proximity = proximity_state_not_in_proximity;
 #ifndef EM20168_SEND_MSG
-                    printf("out ear\n\n", em20168_ps0_value);
+                    printf("out ear\n\n");
 #else
                     appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY);
 #endif
@@ -214,6 +238,11 @@ bool appProximityClientRegister(Task task)
             EM20168ReadRegister(prox->handle, em20168_read_array[i].reg, &value);
             printf("reg 0x%x = 0x%x\n", em20168_read_array[i].reg, value);
         }
+        EM20168WriteRegister(prox->handle, 2, 0);
+//        for(i=0; i<0x34; i++){
+//            EM20168ReadRegister(prox->handle, i, &value);
+//            printf("reg 0x%x = 0x%x\n", i, value);
+//        }
         EM20168Disable(prox->handle);
 
         /* Register for interrupt events */
