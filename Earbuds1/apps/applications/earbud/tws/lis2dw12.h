@@ -10,7 +10,7 @@
 #include "public.h"
 
 #define LIS2DW12_I2C_ADDR 0x19
-#define LIS2DW12_I2C_FREQ 100
+#define LIS2DW12_I2C_FREQ 400
 
 bool lis2dw12ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value);
 bool lis2dw12WriteRegister(bitserial_handle handle, uint8 reg, uint8 value);

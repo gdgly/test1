@@ -13,7 +13,7 @@
 
 #define MAX20340_LEFTEAR_I2C_ADDR 0x15
 #define MAX20340_RIGHTEAR_I2C_ADDR 0x6a
-#define MAX20340_I2C_FREQ 100
+#define MAX20340_I2C_FREQ 400
 
 bool max20340ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value);
 bool max20340ReadRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *value, uint8 len);

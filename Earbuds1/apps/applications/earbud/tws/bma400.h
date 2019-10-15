@@ -12,7 +12,7 @@
 #include "public.h"
 
 #define BMA400_I2C_ADDR 0x14
-#define BMA400_I2C_FREQ 100
+#define BMA400_I2C_FREQ 400
 
 
 typedef struct{
