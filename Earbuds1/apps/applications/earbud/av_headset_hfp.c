@@ -2959,26 +2959,14 @@ static void appHfpHandleMessage(Task task, MessageId id, Message message)
              appHfpHandleHfpCallStateIndication((HFP_CALL_STATE_IND_T *)message);
              return;
 #ifdef CONFIG_STAROT
-    case HFP_CURRENT_CALLS_IND:
-
-           DEBUG_LOGF("HS3:HFP_CURRENT_CALLS_IND id[%d] mult[%d] number_len[%d]\n",
-                      ((const HFP_CURRENT_CALLS_IND_T *)message)->call_idx,
-                      ((const HFP_CURRENT_CALLS_IND_T *)message)->multiparty,
-                      ((const HFP_CURRENT_CALLS_IND_T *)message)->size_number);
-       {
-                uint8 i=0;
-                uint8 *p=(uint8 *)(((const HFP_CURRENT_CALLS_IND_T *)message)->number);
-                uint8 len=((const HFP_CURRENT_CALLS_IND_T *)message)->size_number;
-                DEBUG_LOGF("Receive  caller id=%s",p);
-                for(i=0;i<len;i++)
-                {
-                    DEBUG_LOGF("%c",p[i]);
-                }
-
-                appUiHfpDialId(p,len);
-
-        }
-                  return;
+        case HFP_CURRENT_CALLS_IND:
+             appUiHfpDialId(((const HFP_CURRENT_CALLS_IND_T *)message)->number,
+                                ((const HFP_CURRENT_CALLS_IND_T *)message)->size_number);
+             DEBUG_LOG("CALL IND number_len=%d", ((const HFP_CURRENT_CALLS_IND_T *)message)->size_number);
+             return;
+        case HFP_DIAL_NUMBER_CFM:
+             DEBUG_LOG("DialNumber CFM");
+             return;
 #endif
 
         case HFP_VOICE_RECOGNITION_IND:
