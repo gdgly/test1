@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Copyright (c) 2018 Qualcomm Technologies International, Ltd.-->
+<!--Chain for HFP (wideband SCO), used for forwarding SCO to other earbud AND receiving MIC -->
+
+<chain name="CHAIN_ASSISTANT" id="0" generate_operator_roles_enum="False" generate_endpoint_roles_enum="False">
+
+    <include_header name="../av_headset_chain_roles.h"/>
+
+    <operator name="OPR_VOLUME_CONTROL" id="CAP_ID_VOL_CTRL_VOL">
+        <sink name="IN" terminal="0"/>
+        <source name="OUT" terminal="0"/>
+    </operator>
+
+    <operator name="OPR_CUSTOM_SCO_PASSTHROUGH" id="CAP_ID_DOWNLOAD_G722CODEC">
+        <sink name="IN" terminal="0"/>
+        <source name="OUT" terminal="0"/>
+    </operator>
+
+    <input sink="OPR_VOLUME_CONTROL.IN" role="EPR_VOLUME_AUX"/>
+    <output source="OPR_CUSTOM_SCO_PASSTHROUGH.OUT" role="EPR_AUDIO_MICFWD_OUT"/>
+
+    <connection source="OPR_VOLUME_CONTROL.OUT" sink="OPR_CUSTOM_SCO_PASSTHROUGH.IN"/>
+</chain>
+
