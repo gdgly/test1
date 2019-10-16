@@ -28,7 +28,6 @@
 #include "chains/chain_scofwd_recv.h"
 #include "chains/chain_micfwd_send_2mic.h"
 #include "chains/chain_scofwd_recv_2mic.h"
-#include "public.h"
 
 /*! Macro for creating messages */
 #define MAKE_KYMERA_MESSAGE(TYPE) \
@@ -152,6 +151,20 @@ void appKymeraPromptPlay(FILE_INDEX prompt, promptFormat format, uint32 rate,
     MessageSendConditionally(&theKymera->task, KYMERA_INTERNAL_TONE_PROMPT_PLAY, message, &theKymera->lock);
     theKymera->tone_count++;
 }
+
+#ifdef CONFIG_REC_ASSISTANT
+// 其它模块调用这个函数来开启模块
+void appKymeraRecordStart(void)
+{
+    kymeraTaskData *theKymera = appGetKymera();
+    MAKE_KYMERA_MESSAGE(KYMERA_INTERNAL_RECORD);
+
+    DEBUG_LOGF("appKymeraStartRecord");
+    message->rate = 16000;
+
+    MessageSend(&theKymera->task, KYMERA_INTERNAL_RECORD_START, message);
+}
+#endif
 
 void appKymeraTonePlay(const ringtone_note *tone, bool interruptible,
                        uint16 *client_lock, uint16 client_lock_mask)
@@ -598,6 +611,12 @@ static void kymera_msg_handler(Task task, MessageId id, Message msg)
         case KYMERA_INTERNAL_TONE_PROMPT_PLAY:
             appKymeraHandleInternalTonePromptPlay(msg);
         break;
+
+#ifdef CONFIG_REC_ASSISTANT
+        case KYMERA_INTERNAL_RECORD_START:
+            appKymeraHandleInternalRecordStart(msg);
+        break;
+#endif
 
         case KYMERA_INTERNAL_MICFWD_LOCAL_MIC:
             appKymeraSwitchSelectMic(MIC_SELECTION_LOCAL);

@@ -98,6 +98,12 @@ void appKymeraConfigureDspPowerMode(bool tone_playing)
 
     switch (appKymeraGetState())
     {
+#ifdef CONFIG_REC_ASSISTANT
+        case KYMERA_STATE_AUDIO_RECORD:
+            cconfig.active_mode = AUDIO_DSP_TURBO_CLOCK;
+            mode = AUDIO_POWER_SAVE_MODE_1;
+            break;
+#endif
         case KYMERA_STATE_A2DP_STARTING_A:
         case KYMERA_STATE_A2DP_STARTING_B:
         case KYMERA_STATE_A2DP_STARTING_C:

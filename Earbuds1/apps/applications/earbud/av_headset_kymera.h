@@ -45,7 +45,9 @@ typedef enum app_kymera_states
     /*! Kymera is playing a tone or a prompt. */
     KYMERA_STATE_TONE_PLAYING,
     /*! Kymera is performing ANC tuning. */
-    KYMERA_STATE_ANC_TUNING
+    KYMERA_STATE_ANC_TUNING,
+    /*! Record for assistant */
+    KYMERA_STATE_AUDIO_RECORD,
 } appKymeraState;
 
 /*! \brief ANC state */

@@ -59,8 +59,9 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 #if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_SCO )
     /** forward sco data  **/
     /* 1. load passthrough cap */
-    Operator scofwd_passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH));
+    Operator scofwd_passthrough = ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH);
 
+  if(scofwd_passthrough != INVALID_OPERATOR) {
     /* 2. set passthrough data format */
     PanicZero(VmalOperatorMessage(scofwd_passthrough, set_data_format,
                                   sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
@@ -71,13 +72,15 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 
     /* 4. setup MORE_DATA message. */
     indicateFwdDataSource(scofwd_capture, STYPE_SCO);
+  }
 #endif
 
 #if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_MIC )
     /** forward mic data  **/
     /* 1. load passthrough cap */
-    Operator micfwd_passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH));
+    Operator micfwd_passthrough = ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH);
 
+  if(micfwd_passthrough != INVALID_OPERATOR) {
     /* 2. set passthrough data format */
     PanicZero(VmalOperatorMessage(micfwd_passthrough, set_data_format,
                                   sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
@@ -88,6 +91,7 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 
     /* 4. setup MORE_DATA message. */
     indicateFwdDataSource(micfwd_capture, STYPE_MIC);
+  }
 #endif
 
 #ifdef GAIA_TEST
@@ -226,15 +230,14 @@ static bool __disable_audio_forward(void)
 
     if (sco_chain) {
         Operator passthrough = ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH);
-        if (passthrough) {
+        if(INVALID_OPERATOR != passthrough)
             PanicZero(VmalOperatorMessage(passthrough, set_data_format,
-                                          sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
-        }
+                                      sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+
         passthrough = ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH);
-        if (passthrough) {
+        if(INVALID_OPERATOR != passthrough)
             PanicZero(VmalOperatorMessage(passthrough, set_data_format,
-                                          sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
-        }
+                                      sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
         return TRUE;
     }
 #endif

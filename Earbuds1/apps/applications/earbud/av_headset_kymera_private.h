@@ -174,7 +174,22 @@ enum app_kymera_internal_message_ids
     KYMERA_INTERNAL_ANC_ON,
     /*! Internal ANC turn indication use in peer synchronization */
     KYMERA_INTERNAL_ANC_OFF,
+
+#ifdef CONFIG_REC_ASSISTANT
+    KYMERA_INTERNAL_RECORD_START,
+#endif
 };
+
+#ifdef CONFIG_REC_ASSISTANT
+typedef struct {
+    /*! The tone/prompt sample rate */
+    uint32 rate;
+} KYMERA_INTERNAL_RECORD_T;
+
+void appKymeraRecordStart(void);   // 其它模块调用这个函数来开启模块
+void appKymeraRecordStop(void);
+void appKymeraHandleInternalRecordStart(const KYMERA_INTERNAL_RECORD_T *msg);
+#endif
 
 /*! \brief The KYMERA_INTERNAL_A2DP_START and KYMERA_INTERNAL_A2DP_STARTING message content. */
 typedef struct
