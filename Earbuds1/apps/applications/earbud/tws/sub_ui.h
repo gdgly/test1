@@ -16,6 +16,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_CASE_SET_BTINFO        (2006)           // 盒子设置耳机经典蓝牙配对地址
 
 #define APP_CHARGE_STATUS          (2010)           // 充电信息报告
+#define APP_BTN_DOUBLE_TAP         (2011)           // 双击敲击
 
 #define APP_CALLIN_ACT             (2020)           // 拨号相关信息 拨入
 #define APP_CALLIN_INACT           (2021)           // 拨号相关信息 拨入断开

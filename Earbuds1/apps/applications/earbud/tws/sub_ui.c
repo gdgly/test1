@@ -22,6 +22,43 @@ ProgRunInfo gProgRunInfo;
 /* 如果APP没有初始化结束，很多消息不能处理 */
 #define RETURN_APP_NOT_INIT()  do{if(appInitCompleted() == FALSE) return; }while(0)
 
+static void subUiKeyDoubleTap(ProgRIPtr progRun)
+{
+    DEBUG_LOG("APP_MFB_BUTTON_PRESS %p", progRun);
+    if (appSmIsOutOfCase())
+    {
+        /* If voice call active, hangup */
+        if (appHfpIsCallActive())
+            appHfpCallHangup();
+            /* Sco Forward can be streaming a ring tone */
+        else if (appScoFwdIsReceiving() && !appScoFwdIsCallIncoming())
+            appScoFwdCallHangup();
+        /* If outgoing voice call, hangup */
+        else if (appHfpIsCallOutgoing())
+            appHfpCallHangup();
+        /* If incoming voice call, accept */
+        else if (appHfpIsCallIncoming())
+            appHfpCallAccept();
+        else if (appScoFwdIsCallIncoming())
+            appScoFwdCallAccept();
+        /* If AVRCP to handset connected, send play or pause */
+        else if (appDeviceIsHandsetAvrcpConnected())
+            appAvPlayToggle(TRUE);
+        /* If AVRCP is peer is connected and peer is connected to handset, send play or pause */
+        else if (appDeviceIsPeerAvrcpConnectedForAv() && appPeerSyncIsComplete() && appPeerSyncIsPeerHandsetAvrcpConnected())
+            appAvPlayToggle(TRUE);
+        else if (appDeviceIsHandsetHfpConnected() && appDeviceIsHandsetA2dpConnected())
+            appUiError();
+        else if(!appSmIsPairing())
+            appSmPairHandset();
+        else
+        {
+            appSmConnectHandset();
+            appUiAvConnect();
+        }
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////
 ///     向GAIA发送信息
 /////////////////////////////////////////////////////////////////////////
@@ -157,6 +194,10 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_GAIA_DISCONNECTED:
         DEBUG_LOG("GAIA disconnect from phone");
         progRun->gaiaStat  = 0;
+        break;
+
+    case APP_BTN_DOUBLE_TAP:
+        subUiKeyDoubleTap(progRun);
         break;
 
     case INIT_CFM:
