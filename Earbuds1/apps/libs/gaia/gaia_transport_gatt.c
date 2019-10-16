@@ -437,8 +437,6 @@ void gaiaTransportGattSendPacket(Task task, gaia_transport *transport, uint16 le
     uint16 size_response = length - GAIA_OFFS_PAYLOAD + GAIA_GATT_OFFS_PAYLOAD;
     uint8 *response = data + GAIA_OFFS_PAYLOAD - GAIA_GATT_OFFS_PAYLOAD;
 
-    if(transport)
-        memcpy(transport->state.gatt.response, data, GAIA_OFFS_PAYLOAD);    // 备份数据头信息
     gaiaTransportGattRes(transport, size_response, response, HANDLE_GAIA_RESPONSE_ENDPOINT);
     (void)task;
     free(data);
@@ -449,8 +447,7 @@ void gaiaHandleGattSendPacketCfm(GATT_MANAGER_REMOTE_CLIENT_NOTIFICATION_CFM_T *
     gaia_transport *transport = gaiaTransportFromCid(cfm->cid);
     uint8 *data = PanicNull(calloc(1, GAIA_OFFS_PAYLOAD));
 
-    if(transport)
-        memcpy(data, transport->state.gatt.response, GAIA_OFFS_PAYLOAD);
+    memcpy(data, cfm->dummy, sizeof(context_t));
     gaiaTransportCommonSendGaiaSendPacketCfm(transport, data, (cfm->status == gatt_status_success) ? TRUE : FALSE);
 }
 #endif

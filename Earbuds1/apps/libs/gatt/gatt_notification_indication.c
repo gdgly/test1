@@ -34,6 +34,33 @@ DESCRIPTION
 RETURNS
 
 */
+#ifdef CONFIG_STAROT_LIB
+static void gattSendCfmWithContext(
+    Task task,
+    gatt_status_t status,
+    uint16 cid,
+    uint16 flags,
+    context_t context,
+    uint16 handle
+    )
+{
+    /* NOTIFICATION and INDICATION message are identical in structure. */
+    MessageId id = GATT_INDICATION_CFM;
+    MAKE_GATT_MESSAGE(GATT_INDICATION_CFM);
+
+    message->status = status;
+    message->cid = cid;
+    message->handle = handle;
+    memcpy(message->dummy, &context, sizeof(context_t));
+
+    if (flags == ATT_HANDLE_VALUE_NOTIFICATION)
+        id = GATT_NOTIFICATION_CFM;
+
+    MessageSend(task, id, message);
+}
+#else
+  #define gattSendCfmWithContext  gattSendCfm
+#endif
 
 static void gattSendCfm(
     Task task, 
@@ -197,6 +224,10 @@ void gattHandleInternalHandleValueNtf(
         {
             uint8 *value = (uint8 *)PanicUnlessMalloc(req->size_value);
             memmove(value, req->value, req->size_value);
+#ifdef CONFIG_STAROT_LIB
+            /* 保存BLE命令的前4个字节,给反馈回来使用标记命令发送成功与否 */
+            memcpy(&prim->context, req->value, sizeof(context_t));
+#endif
             prim->value = VmGetHandleFromPointer(value);
         }
         else
@@ -208,11 +239,19 @@ void gattHandleInternalHandleValueNtf(
     }
     else 
     {
-        gattSendCfm(
+#ifdef CONFIG_STAROT_LIB
+        context_t context = 0;
+        if(req->size_value > 0)
+            memcpy(&context, req->value, sizeof(context));
+#endif
+        gattSendCfmWithContext(
             req->theAppTask,
             gatt_status_invalid_cid,
             req->cid,
             req->flags,
+    #ifdef CONFIG_STAROT_LIB
+            context,
+    #endif
             0
             );
     }
@@ -307,11 +346,14 @@ void gattHandleAttHandleValueNtfCfm(const ATT_HANDLE_VALUE_NTF_CFM_T *cfm)
         }
         
         /* From context, the flags must be for NOTIFICATION. */
-        gattSendCfm(
+        gattSendCfmWithContext(
             gattGetCidMappedTask(cfm->cid),
             status,
             cfm->cid,
             ATT_HANDLE_VALUE_NOTIFICATION,
+    #ifdef CONFIG_STAROT_LIB
+            cfm->context,
+    #endif
             cfm->handle
             );
 
