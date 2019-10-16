@@ -472,7 +472,7 @@ void appGaiaPraseCfm(const GAIA_SEND_PACKET_CFM_T *m) {
                     appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
                 }
             } else {
-                if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT)
+                if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
                     appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_IDLE;
                     testSpeedIndex += 1;
                     starotNotifyAudioForward(TRUE, starotGaiaTransGetAudioType());

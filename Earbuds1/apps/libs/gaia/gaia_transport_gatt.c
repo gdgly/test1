@@ -447,7 +447,7 @@ void gaiaHandleGattSendPacketCfm(GATT_MANAGER_REMOTE_CLIENT_NOTIFICATION_CFM_T *
     gaia_transport *transport = gaiaTransportFromCid(cfm->cid);
     uint8 *data = PanicNull(calloc(1, GAIA_OFFS_PAYLOAD));
 
-    memcpy(data, cfm->dummy, sizeof(context_t));
+    memcpy(data + GAIA_OFFS_VENDOR_ID, cfm->dummy, sizeof(context_t));
     gaiaTransportCommonSendGaiaSendPacketCfm(transport, data, (cfm->status == gatt_status_success) ? TRUE : FALSE);
 }
 #endif
