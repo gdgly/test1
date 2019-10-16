@@ -166,6 +166,12 @@ void lis2dw12_init(void);
 #define CONFIG_STAROT_PEERPAIR              // 左右耳相互保存BT地址用于配对
 #define CONFIG_STAROT_SINGLE                // 独立使用
 
+// 充电电流及电压使用
+#undef  appConfigChargerFastCurrent()
+#define appConfigChargerFastCurrent()         (70)
+#undef  appConfigChargerTerminationVoltage()
+#define appConfigChargerTerminationVoltage()  (4420)
+
 // BLE 功能使用
 #undef  appConfigBleAllowedOutOfCase()
 #define appConfigBleAllowedOutOfCase()          (TRUE)
