@@ -956,7 +956,7 @@ typedef struct
 {
     uint16 command;
     uint16 payloadLen;
-    uint8 payload[1];
+    uint8 payload[4];
 } GAIA_STAROT_MESSAGE_T;
 typedef GAIA_STAROT_MESSAGE_T GAIA_STAROT_IND_T;
 
