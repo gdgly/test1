@@ -35,8 +35,9 @@ static void msg_handler (Task appTask, MessageId id, Message msg);
 static void initSetSpeechDataSource(Source src);
 static void sendMessageMoreData(Task task, Source src, uint32 delay);
 static void indicateFwdDataSource(Source src, source_type_t type);
-static bool __disable_audio_forward(bool disable);
+static bool __disable_audio_forward(void);
 
+static bool audio_forward = FALSE;
 
 static AudioForwardTaskData audioFwdTaskData =
 {
@@ -92,11 +93,12 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 #ifdef GAIA_TEST
     /* 5. notify gaia dialog have start 现在在hfp和ui层处理开始消息*/
 //    gaiaStartNotify();
-    __disable_audio_forward(TRUE);
+    __disable_audio_forward();
 #endif
 }
 
 void disable_audio_forward(bool disable) {
+    audio_forward  = !disable;
     MAKE_FWD_MESSAGE(AUDIO_FWD_DISABLE);
 	message->disable = disable;
 	MessageSendLater(audioForwardTask, AUDIO_FWD_DISABLE, message, 0);
@@ -155,7 +157,7 @@ static void msg_handler (Task appTask, MessageId id, Message msg)
         case AUDIO_FWD_DISABLE:
        	{
             AUDIO_FWD_DISABLE_T* dis = (AUDIO_FWD_DISABLE_T*)msg;
-            __disable_audio_forward(dis->disable);
+            __disable_audio_forward();
         	break;
 		}
         default:
@@ -215,21 +217,24 @@ static void initSetSpeechDataSource(Source src)
         sendMessageMoreData(audioForwardTask, src, 0);
 }
 
-static bool __disable_audio_forward(bool disable)
+static bool __disable_audio_forward(void)
 {
 #if (FORWARD_AUDIO_TYPE & (FORWARD_AUDIO_MIC | FORWARD_AUDIO_SCO))
-    uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD, disable };
+    uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD, !audio_forward };
 
     kymera_chain_handle_t sco_chain = appKymeraGetScoChain();
 
     if (sco_chain) {
-        Operator passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH));
-        PanicZero(VmalOperatorMessage(passthrough, set_data_format,
-                                      sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
-
-        passthrough = PanicZero(ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH));
-        PanicZero(VmalOperatorMessage(passthrough, set_data_format,
-                                      sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+        Operator passthrough = ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH);
+        if (passthrough) {
+            PanicZero(VmalOperatorMessage(passthrough, set_data_format,
+                                          sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+        }
+        passthrough = ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH);
+        if (passthrough) {
+            PanicZero(VmalOperatorMessage(passthrough, set_data_format,
+                                          sizeof(set_data_format)/sizeof(set_data_format[0]), NULL, 0));
+        }
         return TRUE;
     }
 #endif

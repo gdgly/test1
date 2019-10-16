@@ -21,17 +21,31 @@ extern uint16 bufferSendUnit;
 /// false：没有发送消息到GAIA的TASK
 bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
                      Source data_source_sco, Source data_source_mic) {
+    UNUSED(data_source_mic);
+    UNUSED(data_source_sco);
     int size = SourceSize(source);
+    ///
+//    if (GAIA_AUDIO_SPEAKER == type) {
+//        const uint8 *ptr = SourceMap(source);
+//        UartTxData(ptr, (uint16)size);
+//    }
+//    SourceDrop(source, size);
+//    return TRUE;
+
 //    SourceDrop(source, size);
 //    size = 0;
+
     int dropUnit = 10;
     /// 丢弃过多的数据，防止数据过多，导致source不可以使用
-    if (size > dropUnit * bufferSendUnit) {
-        dissNum += dropUnit * bufferSendUnit;
-        size -= dropUnit * bufferSendUnit;
-        DEBUG_LOG("drop size %d * %d", dropUnit, bufferSendUnit);
-        SourceDrop(source, dropUnit * bufferSendUnit);
+    if (size > (dropUnit * bufferSendUnit)) {
+        int drop = size - (dropUnit * bufferSendUnit);
+        drop = drop / bufferSendUnit * bufferSendUnit;
+        size -= drop;
+        dissNum += drop;
+        DEBUG_LOG("drop size %d", drop);
+        SourceDrop(source, drop);
     }
+    dissNum += 1;
 
     if (NULL == appGetGaia()->transport || NULL == data_source_sco || NULL == data_source_mic) {
         DEBUG_LOG("sendDataMessage,type=%d Drop:%d no connect", type, size);

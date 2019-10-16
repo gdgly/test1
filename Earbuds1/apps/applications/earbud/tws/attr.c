@@ -14,18 +14,18 @@ StarotAttr *attrMalloc(StarotAttr** parent, uint8 payloadSize) {
     message->next = *parent;
     message->len = 1 + payloadSize;
     *parent = message;
-    DEBUG_LOG("attr new address is : %x", message);
+//    DEBUG_LOG("attr new address is : %x", message);
     return message;
 }
 
 void attrFree(StarotAttr *attr, void* data) {
     if (NULL != data) {
-        DEBUG_LOG("data free address is : %x", data);
+//        DEBUG_LOG("data free address is : %x", data);
         pfree(data);
     }
     while (NULL != attr) {
         StarotAttr* next = attr->next;
-        DEBUG_LOG("attr free address is : %x", attr);
+//        DEBUG_LOG("attr free address is : %x", attr);
         pfree(attr);
         attr = next;
     }
