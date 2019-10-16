@@ -5,7 +5,7 @@
 #include "pio_common.h"
 #include "bitserial_api.h"
 
-#include "public.h"
+#include "av_headset.h"
 
 typedef struct tagI2CINFO {
     bitserial_handle handle;

@@ -9,7 +9,6 @@
 #include "../av_headset.h"
 #include "../av_headset_log.h"
 #include "../av_headset_accelerometer.h"
-#include "public.h"
 
 #define MAX20340_LEFTEAR_I2C_ADDR 0x15
 #define MAX20340_RIGHTEAR_I2C_ADDR 0x6a

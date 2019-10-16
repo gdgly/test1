@@ -15,7 +15,6 @@
 #include <app/message/system_message.h>
 #include <../av_headset.h>
 
-#include "public.h"
 #include "param.h"
 
 #ifdef CONFIG_PSRAM_TEST

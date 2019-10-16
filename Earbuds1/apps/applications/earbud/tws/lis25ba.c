@@ -4,7 +4,7 @@
 
 #include "pio_common.h"
 
-#include "public.h"
+#include "av_headset.h"
 
 #ifdef CONFIG_LIS25BA
 

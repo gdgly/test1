@@ -14,7 +14,6 @@
 #include <panic.h>
 
 #include "av_headset.h"
-#include "av_headset_config.h"
 #include "av_headset_led.h"
 #include "av_headset_log.h"
 

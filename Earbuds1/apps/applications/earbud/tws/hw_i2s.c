@@ -18,7 +18,7 @@
 #include <opmsg_prim.h>
 #include <pmalloc.h>
 
-#include "public.h"
+#include "av_headset.h"
 
 #define I2S_PCM_BAUDRATE           (16000)       /* 采样率 */
 #define I2S_MCLK_MULT              (768)         /* 768=12.288M 384=6.144M */

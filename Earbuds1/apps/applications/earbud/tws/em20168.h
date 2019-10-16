@@ -8,7 +8,6 @@
 #include "../av_headset.h"
 #include "../av_headset_log.h"
 #include "../av_headset_proximity.h"
-#include "public.h"
 
 //#define EM20168_KEY_ITR_TEST
 //#define EM20168_SEND_MSG

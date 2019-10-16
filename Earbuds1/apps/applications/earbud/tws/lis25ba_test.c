@@ -13,7 +13,7 @@
 #include "packetiser_helper.h"
 #include "opmsg_prim.h"
 
-#include "public.h"
+#include "av_headset.h"
 
 #ifdef CONFIG_LIS25BA_TEST
 

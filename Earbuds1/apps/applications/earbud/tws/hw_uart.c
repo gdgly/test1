@@ -13,7 +13,7 @@
 #include <pmalloc.h>
 #include <app/message/system_message.h>
 
-#include "public.h"
+#include "av_headset.h"
 
 
 #ifdef CONFIG_HW_UART

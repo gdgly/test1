@@ -9,7 +9,6 @@
 #include "../av_headset.h"
 #include "../av_headset_log.h"
 #include "../av_headset_accelerometer.h"
-#include "public.h"
 
 #define BMA400_I2C_ADDR 0x14
 #define BMA400_I2C_FREQ 400

@@ -17,7 +17,6 @@
 #include "av_headset_con_manager.h"
 #include "av_headset_log.h"
 #include "av_headset_conn_rules.h"
-#include "av_headset_config.h"
 #include "av_headset_handset_signalling.h"
 #include "av_headset_scofwd.h"
 

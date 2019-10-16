@@ -7,7 +7,6 @@
 #include <input_event_manager.h>
 #include "../av_headset.h"
 #include "../av_headset_log.h"
-#include "public.h"
 
 #define LIS2DW12_I2C_ADDR 0x19
 #define LIS2DW12_I2C_FREQ 400
