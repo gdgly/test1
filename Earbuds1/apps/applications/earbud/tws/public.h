@@ -185,10 +185,16 @@ void lis2dw12_init(void);
 // ================================================
 //              audio forward 开关
 // ================================================
-#define CONFIG_REC_ASSISTANT                // 录音助手功能
+
+#define FORWARD_AUDIO_NULL (0)
 #define FORWARD_AUDIO_SCO  (1<<0)
 #define FORWARD_AUDIO_MIC  (1<<1)
-#define FORWARD_AUDIO_TYPE  (FORWARD_AUDIO_SCO | FORWARD_AUDIO_MIC)
+#define FORWARD_AUDIO_TYPE (FORWARD_AUDIO_SCO | FORWARD_AUDIO_MIC)
+
+// ================================================
+//              录音助手功能
+// ================================================
+#define CONFIG_REC_ASSISTANT                // 录音助手功能
 
 //==============================================================================================
 //            Flash参数读取与保存

@@ -17,6 +17,9 @@
 #include "chains/chain_scofwd_wb.h"
 #include "chains/chain_scofwd_nb.h"
 
+#include "chains/chain_scofwd_wb1.h"
+#include "chains/chain_scofwd_wb2.h"
+
 #include "chains/chain_sco_nb_2mic.h"
 #include "chains/chain_sco_wb_2mic.h"
 #include "chains/chain_micfwd_wb_2mic.h"
