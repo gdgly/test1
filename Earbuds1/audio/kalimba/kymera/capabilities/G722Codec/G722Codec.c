@@ -245,7 +245,7 @@ static void G722Codec_Init(G722CODEC_OP_DATA *opx_data)
 
     opx_data->num_active_chans = 0;
     opx_data->active_chans     = 0;
-    opx_data->disable_audforward=0;
+    opx_data->disable_audforward=TRUE;
 
     opx_data->sample_cnt       = 0;
     opx_data->timestamp        = 0; // time_get_time();
