@@ -25,9 +25,27 @@ bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
     UNUSED(data_source_sco);
     int size = SourceSize(source);
 
+    /// 输出到串口
+//    if (GAIA_AUDIO_SPEAKER == type) {
+//        const uint8 *ptr = SourceMap(source);
+//        UartTxData(ptr, (uint16)size);
+//    }
+//    SourceDrop(source, size);
+//    return TRUE;
+
+    /// 全部丢掉
+//    const uint8 *ptr = SourceMap(source);
+//    for(int i = 0; i < size; i += 40) {
+//        DEBUG_LOG("size : %d type : %d index :%x", size, type, (unsigned int*)(ptr + i)[0]);
+//    }
+//    SourceDrop(source, size);
+//    size = 0;
+//    return TRUE;
+
+    /// 正常传输
     int dropUnit = 10;
-    /// 丢弃过多的数据，防止数据过多，导致source不可以使用
     if (size > (dropUnit * bufferSendUnit)) {
+        /// 丢弃过多的数据，防止数据过多，导致source不可以使用
         int drop = size - (dropUnit * bufferSendUnit);
         drop = drop / bufferSendUnit * bufferSendUnit;
         size -= drop;
@@ -35,7 +53,6 @@ bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
         DEBUG_LOG("drop size %d", drop);
         SourceDrop(source, drop);
     }
-    dissNum += 1;
 
     if (NULL == appGetGaia()->transport) {
         DEBUG_LOG("sendDataMessage,type=%d Drop:%d no connect", type, size);

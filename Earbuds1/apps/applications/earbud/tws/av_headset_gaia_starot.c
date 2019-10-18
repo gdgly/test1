@@ -49,7 +49,9 @@ static void gaiaControlVolumeSet(GAIA_STAROT_IND_T* message);
 void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
 
 static int speakerDropNum = 0;
+//static int speakerG722Index = 0;
 static int micDropNum = 0;
+//static int micG722Index = 0;
 extern uint8 testSpeedIndex;
 
 static void starotSpeedSendIntervalParse(void);
@@ -281,10 +283,24 @@ void starotNotifyAudioForward(bool st, uint8 flag) {
 
     if (TRUE == st && flag > 0) {
         if ((flag & GAIA_AUDIO_SPEAKER) > 0 && NULL != dialogSpeaker) {
+//            const uint8 *ptr = (const uint8 *) SourceMap(dialogSpeaker);
+//            int t = ptr[0];
+//            if (((1 + speakerG722Index) & 0XFF) != t) {
+//                DEBUG_LOG("speark index error %x\n", t);
+//            }
+//            speakerG722Index = t;
             speakerDropNum += bufferSendUnit;
             SourceDrop(dialogSpeaker, bufferSendUnit);
         }
+
         if ((flag & GAIA_AUDIO_MIC) > 0 && NULL != dialogMic) {
+//            const uint8 *ptr = (const uint8 *) SourceMap(dialogMic);
+//            int t = ptr[0];
+//            if (((1 + micG722Index) & 0XFF) != t) {
+//                DEBUG_LOG("mic index error %x\n", t);
+//            }
+//            micG722Index = t;
+
             micDropNum += bufferSendUnit;
             SourceDrop(dialogMic, bufferSendUnit);
         }
@@ -335,8 +351,8 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
         }
     }
 
-//    payload[0] = ((uint8) flag) | ((testSpeedIndex & 0x0F) << 4);
-    payload[0] = ((uint8) flag);
+    payload[0] = ((uint8) flag) | ((testSpeedIndex & 0x0F) << 4);
+//    payload[0] = ((uint8) flag);
     audioTransType = flag;
 
     if (flag <= 0) {
