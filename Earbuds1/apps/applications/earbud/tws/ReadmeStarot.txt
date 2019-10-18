@@ -7,10 +7,19 @@
 
 20191015
   升级命令格式，主要就是命令GAIA_COMMAND_VM_UPGRADE_CONTROL(0x642) + 字命令（1byte UPGRADE_HOST_XXX）
-  UPGRADE_HOST_SYNC + 长度(2Byte) + ID（4Byte)
-
-
-
+  UPGRADE_HOST_SYNC + 长度(2Byte) + progID（4Byte)
+  -->000a0642    13 0004 a0a51c09
+  <--000a4003 12 14 0006 00 a0a51c09 03        进入UPGRADE_STATE_READY
+  UPGRADE_HOST_START_REQ
+  -->000a0642    01 0000
+  <--000a4003 12 020003 000666                 进入UPGRADE_STATE_DATA_READY
+  UPGRADE_HOST_START_DATA_REQ
+  -->000a0642    15 0000
+    注意接收到这条命令，会准备并擦除分区，是需要时间的，分区不正确会导致系统重启(PANIC 0xb6 4108 (PANIC_P0_PANICKED)。
+    擦除成功会获取底层 MESSAGE_IMAGE_UPGRADE_ERASE_STATUS 消息。
+  <--            03 0008 size offset           进入UPGRADE_STATE_DATA_TRANSFER
+  UPGRADE_HOST_DATA
+  -->000a0642    04                            写数据，再次
 
 
 一、命令列表说明 （pydbg)，可以同时执行两条命令（中间加分号）

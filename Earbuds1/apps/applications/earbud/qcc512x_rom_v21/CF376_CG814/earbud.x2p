@@ -14,7 +14,7 @@
             <property name="DEFAULT_LIBS">usb_early_init</property>
             <property name="DEFS">AV_DEBUG BLUELAB CONFIG_STAROT CF376_CG814 CHIP_LED_BASE_PIO=67 CHIP_NUM_LEDS=6 DEBUG HAVE_1_BUTTON HAVE_1_LED HAVE_32BIT_DATA_WIDTH HAVE_STR_ROM_2_0_1 HYDRA HYDRACORE INCLUDE_AV INCLUDE_CHARGER INCLUDE_DFU INCLUDE_GATT INCLUDE_GATT_BATTERY_SERVER INCLUDE_GATT_GAIA_SERVER INCLUDE_HFP INCLUDE_MICFWD INCLUDE_PROMPTS INCLUDE_SCOFWD INCLUDE_TONES INSTALL_HYDRA_LOG USE_BDADDR_FOR_LEFT_RIGHT __KALIMBA__</property>
             <property name="EXTRA_WARNINGS">FALSE</property>
-            <property name="FLASH_CONFIG">..\..\64Mbit_default_flash_config.py</property>
+            <property name="FLASH_CONFIG">..\..\32Mbit_default_flash_config.py</property>
             <property name="HW_VARIANT">CF376_CG814</property>
             <property name="INCPATHS">../../../../installed_libs/include/firmware_qcc512x_rom_v21 ../../../../installed_libs/include/firmware_qcc512x_rom_v21/app ../../../../installed_libs/include/profiles/default_qcc512x_rom_v21 ../../../../installed_libs/include/standard ../../chains ../.. ../../tws sdk://apps/installed_libs/include/firmware_qcc512x_rom_v21 sdk://apps/installed_libs/include/firmware_qcc512x_rom_v21/app sdk://apps/installed_libs/include/standard sdk://audio/kalimba/kymera/common/interface/gen/k32</property>
             <property name="LIBPATHS">../../../../installed_libs/lib/default_qcc512x_rom_v21/native ../../../../installed_libs/lib/os/qcc512x_rom_v21 sdk://apps/installed_libs/lib/os/qcc512x_rom_v21</property>
@@ -156,6 +156,8 @@
     <file path="../../chains/chain_scofwd_recv.chain"/>
     <file path="../../chains/chain_scofwd_recv_2mic.chain"/>
     <file path="../../chains/chain_scofwd_wb.chain"/>
+    <file path="../../chains/chain_scofwd_wb1.chain"/>
+    <file path="../../chains/chain_scofwd_wb2.chain"/>
     <file path="../../chains/chain_scofwd_wb_2mic.chain"/>
     <file path="../../chains/chain_tone_gen.chain"/>
     <file path="../../chains/chain_tone_gen_no_iir.chain"/>
