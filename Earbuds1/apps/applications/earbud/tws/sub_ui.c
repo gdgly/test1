@@ -59,6 +59,16 @@ static void subUiKeyDoubleTap(ProgRIPtr progRun)
     }
 }
 
+// 唤醒时是需要设置BIAS
+static void appSubUISetMicbias(int set)
+{
+    uint16 value = (set ? MIC_BIAS_FORCE_ON : MIC_BIAS_OFF);
+
+    MicbiasConfigure(MIC_BIAS_0, MIC_BIAS_VOLTAGE, appConfigMic0BiasVoltage());
+    MicbiasConfigure(MIC_BIAS_0, MIC_BIAS_ENABLE, value);
+}
+
+
 /////////////////////////////////////////////////////////////////////////
 ///     向GAIA发送信息
 /////////////////////////////////////////////////////////////////////////
@@ -202,6 +212,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case INIT_CFM:
         DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");
+        appSubUISetMicbias(TRUE);
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
         MessageSendLater(task, APP_INTERNAL_HANDSET_PAIR, NULL, 500);  // 启动广播(没有手机连接时)
         break;

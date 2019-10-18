@@ -168,9 +168,13 @@ void lis2dw12_init(void);
 
 // 充电电流及电压使用
 #undef  appConfigChargerFastCurrent()
-#define appConfigChargerFastCurrent()         (70)
+#define appConfigChargerFastCurrent()         (50)
 #undef  appConfigChargerTerminationVoltage()
-#define appConfigChargerTerminationVoltage()  (4420)
+#define appConfigChargerTerminationVoltage()  (4400)
+#undef  appConfigBatteryFullyCharged()
+#define appConfigBatteryFullyCharged()        (4400)
+#undef  appConfigChargerTerminationCurrent()
+#define appConfigChargerTerminationCurrent()  (3)
 
 // BLE 功能使用
 #undef  appConfigBleAllowedOutOfCase()
@@ -204,7 +208,7 @@ void lis2dw12_init(void);
 //==============================================================================================
 //         CAPABILITY 使用定义
 //==============================================================================================
-#define DOWNLOAD_PASSSTHROUGH                // PASSThrough 取数据
+// #define DOWNLOAD_PASSSTHROUGH                // PASSThrough 取数据
 #define DOWNLOAD_G722_ENCODER                // G722压缩将取数据
 
 #endif // PUBLIC_H
