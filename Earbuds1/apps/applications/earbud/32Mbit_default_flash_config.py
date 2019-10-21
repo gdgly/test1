@@ -17,6 +17,6 @@
     ("rw_config",       { "capacity" :  2 * 64 * 1024}),
     ("rw_fs",           { "capacity" :  1 * 64 * 1024}),
     ("ro_cfg_fs",       { "capacity" :  2 * 64 * 1024,  "authenticate": False}),
-    ("ro_fs",           { "capacity" :  6 * 64 * 1024,  "authenticate": False})
+    ("ro_fs",           { "capacity" :  5 * 64 * 1024,  "authenticate": False})
 ]
 }
