@@ -77,6 +77,10 @@ static void appSubUISetMicbias(int set)
 static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
 {
     uint8 count = 2;
+
+    if(1 == progRun->gaiaStat)
+        return -1;
+
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
 
     (void)id;
@@ -95,8 +99,7 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
     }
     message->payloadLen    = count;
 
-    if(1 == progRun->gaiaStat)
-        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
     DEBUG_LOG("HFP CALL Status=0x%x LEN=%d", progRun->dial_stat, count);
     return 0;
@@ -106,6 +109,9 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
 // payload=[状态1] 1：语音通话，0：其它
 static int16 subUiCallType2Gaia(MessageId id, ProgRIPtr  progRun)
 {
+    if(1 == progRun->gaiaStat)
+        return -1;
+
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 2);
 
     (void)id;
@@ -113,8 +119,7 @@ static int16 subUiCallType2Gaia(MessageId id, ProgRIPtr  progRun)
     message->payload[0]   = progRun->dial_type;
     message->payloadLen   = 1;
 
-    if(1 == progRun->gaiaStat)
-        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
     DEBUG_LOG("Audio for Status=%d", progRun->dial_type);
     return 0;
