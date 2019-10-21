@@ -5,7 +5,7 @@
 #include <logging.h>
 #include "tws/adv_manager.h"
 
-#define CONFIG_BOARD_V1        // V1版本
+//#define CONFIG_BOARD_V1        // V1版本
 
 //==============================================================================================
 // TBR 调试器在DEMO板上使用使用的IO脚列表如下，可能会与我们系统中的冲突，注意不能同时使用
@@ -133,7 +133,7 @@ void tap_func_init(void);
 //==============================================================================================
 //      BOARD_V1 不同定义 硬件上的差别
 //==============================================================================================
-//#ifdef CONFIG_BOARD_V1
+#ifdef CONFIG_BOARD_V1
 
 #define CONFIG_I2CADDR_FOR_LEFT_RIGHT       // V1版本 使用I2C地址来确认是左右耳
 #undef  appConfigLeftAudioChannel
