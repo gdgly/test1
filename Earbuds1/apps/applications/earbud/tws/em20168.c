@@ -21,10 +21,11 @@ em20168_str em20168_init_array[] = {
     {0x0c, 0x80},
     {0x0d, 0xb6},
     //{0x0d, 0xd6},
-    {0x0e, 0x7f},
-    {0x24, 0x40},
+    //{0x0e, 0x7f},
+    {0x0e, 0x78},
+    {0x24, 0x0b},
     {0x12, 0x96},
-    //{0x13, 0xc0},
+    //{0x13, 0xc8},
     //{0x1b, 0x80},
     {0x1b, 0xc0},
     {0x27, 0x00},
@@ -93,13 +94,13 @@ bitserial_handle EM20168Enable(void)
     uint32 mask;
 
     //printf("EM20168Enable");
-#ifndef EM20168_KEY_ITR_TEST
     bank = PIO2BANK(EM20168_ITR_PIN);
     mask = PIO2MASK(EM20168_ITR_PIN);
     PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
     PanicNotZero(PioSetDir32Bank(bank, mask, 0));
     PanicNotZero(PioSet32Bank(bank, mask, mask));
-#else
+
+#ifdef EM20168_KEY_ITR_TEST
     bank = PIO2BANK(EM20168_KEY_ITR_PIN);
     mask = PIO2MASK(EM20168_KEY_ITR_PIN);
     PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
@@ -114,30 +115,6 @@ void EM20168Disable(bitserial_handle handle)
 {
     //printf("EM20168Disable");
     hwi2cClose(handle);
-}
-
-void EM20168_init(void)
-{
-    bitserial_handle handle;
-    uint8 value;
-    uint8 i;
-    value = 0;
-    handle = EM20168Enable();
-    if(BITSERIAL_HANDLE_ERROR == handle) {
-        return;
-    }
-    EM20168ReadRegister(handle, 0x00, &value);
-    EM20168ReadRegister(handle, 0x00, &value);
-    printf("em20168 id = 0x%x\n", value);
-
-    printf("em20168 init num = %d\n", ARRAY_DIM(em20168_init_array));
-    for(i=0; i<ARRAY_DIM(em20168_init_array); i++){
-        EM20168WriteRegister(handle,
-                em20168_init_array[i].reg,
-                em20168_init_array[i].value);
-    }
-    EM20168Disable(handle);
-    return;
 }
 
 int EM20168Power(bool isOn)
@@ -157,104 +134,209 @@ int EM20168Power(bool isOn)
     return ret;
 }
 
-void EM20168_itr_handler(Task task, MessageId id, Message msg)
+void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
 {
+    (void)id;(void)msg;(void)task;
+    bitserial_handle handle;
     uint8 value;
     unsigned short em20168_ps0_value;
-    unsigned long pin, pio_state;
-    proximityTaskData *prox = (proximityTaskData *) task;
-    MessagePioChanged *pioMsg = (MessagePioChanged*)msg;
-#ifndef EM20168_KEY_ITR_TEST
-    pin = EM20168_ITR_PIN;
-#else
-    pin = EM20168_KEY_ITR_PIN;
+    proximityTaskData *prox = appGetProximity();
+    handle = EM20168Enable();
+
+    EM20168ReadRegister(handle, 0x21, &value);
+    em20168_ps0_value = value << 8;
+    EM20168ReadRegister(handle, 0x20, &value);
+    em20168_ps0_value += value;
+#ifndef EM20168_SEND_MSG
+    printf("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
 #endif
+    EM20168WriteRegister(handle, 2, 0);
+
+    if(em20168_ps0_value >= EM20168_HIGH_VALUE &&
+            (prox->state->proximity != proximity_state_in_proximity) ){
+        prox->state->proximity = proximity_state_in_proximity;
+#ifndef EM20168_SEND_MSG
+        printf("in ear\n\n");
+#else
+        if (NULL != prox->clients)
+            appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_IN_PROXIMITY);
+#endif
+    }
+    if(em20168_ps0_value <= EM20168_LOW_VALUE &&
+            (prox->state->proximity == proximity_state_in_proximity) ){
+        prox->state->proximity = proximity_state_not_in_proximity;
+#ifndef EM20168_SEND_MSG
+        printf("out ear\n\n");
+#else
+        if (NULL != prox->clients)
+            appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY);
+#endif
+    }
+
+    EM20168Disable(handle);
+}
+
+void EM20168_itr_handler(Task task, MessageId id, Message msg)
+{
+    (void)task;
+    unsigned long pin, pio_state;
+    MessagePioChanged *pioMsg = (MessagePioChanged*)msg;
+    pin = EM20168_ITR_PIN;
     pin = PIO2MASK(pin);
     pio_state = pioMsg->state16to31 << 16 | pioMsg->state;
-    prox->handle = EM20168Enable();
-    EM20168ReadRegister(prox->handle, 0x00, &value);
-    EM20168ReadRegister(prox->handle, 0x00, &value);
-    EM20168WriteRegister(prox->handle, 2, 0);
     switch(id) {
         case MESSAGE_PIO_CHANGED:
             if( !(pin&pio_state) ){
-                EM20168ReadRegister(prox->handle, 0x21, &value);
-                em20168_ps0_value = value << 8;
-                EM20168ReadRegister(prox->handle, 0x20, &value);
-                em20168_ps0_value += value;
-                //printf("reg = 0x%x\n\n", em20168_ps0_value);
-                if(em20168_ps0_value >= EM20168_HIGH_VALUE &&
-                        (prox->state->proximity != proximity_state_in_proximity) ){
-                    prox->state->proximity = proximity_state_in_proximity;
-#ifndef EM20168_SEND_MSG
-                    printf("in ear\n\n");
-#else
-                    appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_IN_PROXIMITY);
-#endif
-                }
-                if(em20168_ps0_value <= EM20168_LOW_VALUE &&
-                        (prox->state->proximity == proximity_state_in_proximity) ){
-                    prox->state->proximity = proximity_state_not_in_proximity;
-#ifndef EM20168_SEND_MSG
-                    printf("out ear\n\n");
-#else
-                    appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY);
-#endif
-                }
+                EM20168_itr_read_reg(task, id, msg);
             }
             break;
         default:
             printf("id=%d(0x%x\n", id, id);
             break;
     }
-    EM20168Disable(prox->handle);
 }
+
+#ifdef EM20168_KEY_ITR_TEST
+void EM20168_keytest_itr_handler(Task task, MessageId id, Message msg)
+{
+    (void)task;uint8 value;
+    unsigned short em20168_ps0_value;
+    bitserial_handle handle;
+    unsigned long pin, pio_state;
+    MessagePioChanged *pioMsg = (MessagePioChanged*)msg;
+    pin = EM20168_KEY_ITR_PIN;
+    pin = PIO2MASK(pin);
+    pio_state = pioMsg->state16to31 << 16 | pioMsg->state;
+    switch(id) {
+        case MESSAGE_PIO_CHANGED:
+            if( !(pin&pio_state) ){
+                handle = EM20168Enable();
+                EM20168ReadRegister(handle, 0x00, &value);
+                EM20168ReadRegister(handle, 0x00, &value);
+                printf("EM20168 id = 0x%x\n\n", value);
+
+                EM20168ReadRegister(handle, 0x21, &value);
+                em20168_ps0_value = value << 8;
+                EM20168ReadRegister(handle, 0x20, &value);
+                em20168_ps0_value += value;
+                printf("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
+                EM20168WriteRegister(handle, 2, 0);
+                EM20168Disable(handle);
+            }
+            break;
+        default:
+            printf("id=%d(0x%x\n", id, id);
+            break;
+    }
+}
+#endif
+
+typedef struct tagSHELLCMDINFO {
+    TaskData       task;
+}EM20168InfoTask;
+static EM20168InfoTask *EM20168Task = NULL;
+#ifdef EM20168_KEY_ITR_TEST
+static EM20168InfoTask *ProximitykeyTask = NULL;
+#endif
+
+static void delay_ms(int time_ms)
+{
+    uint32 time_now = VmGetTimerTime();
+    uint32 time_end = time_now + time_ms*1000;
+    while(1){
+        time_now = VmGetTimerTime();
+        if(time_now > time_end){
+            break;
+        }
+    }
+}
+
+void EM20168_init(void)
+{
+    bitserial_handle handle;
+    uint8 value;
+    uint8 i;
+    value = 0;
+#ifdef EM20168_CAL_OFFSET_VALUE
+    uint8 offset=0;
+    uint8 ps_l=0;
+    uint8 ps_h=0;
+    uint16 ps_data=0;
+#endif
+
+    handle = EM20168Enable();
+    PanicFalse(handle != BITSERIAL_HANDLE_ERROR);
+
+    EM20168ReadRegister(handle, 0x00, &value);
+    EM20168ReadRegister(handle, 0x00, &value);
+    if(value == 0x37)
+        printf("em20168 id = 0x%x\n", value);
+    else{
+        EM20168Disable(handle);
+        printf("em20168 read id error!\n");
+        return;
+    }
+
+    EM20168WriteRegister(handle,0x14,0x00);
+    delay_ms(100);
+
+    for(i=0; i<ARRAY_DIM(em20168_init_array); i++){
+        EM20168WriteRegister(handle,
+                em20168_init_array[i].reg,
+                em20168_init_array[i].value);
+    }
+
+    for(i=0; i<ARRAY_DIM(em20168_init_array); i++){
+        EM20168ReadRegister(handle, em20168_init_array[i].reg, &value);
+        printf("reg 0x%x = 0x%x\n", em20168_init_array[i].reg, value);
+    }
+
+#ifdef EM20168_CAL_OFFSET_VALUE
+    for(i=0;i<=128;i++){
+        delay_ms(100);
+        EM20168ReadRegister(handle, 0x21, &ps_h);
+        EM20168ReadRegister(handle, 0x20, &ps_l);
+        ps_data = (ps_h <<8) | ps_l;
+        if(ps_data != 0){
+            offset +=1;
+            EM20168WriteRegister(handle, 0x24, offset);
+            printf("20168 catching offset EM20168 reg = 0x%x 0x%x \n\n", ps_data,offset);
+        }else{
+            printf("20168 steady mode EM20168 reg = 0x%x 0x%x \n\n", ps_data,offset);
+            break;
+        }
+    }
+#endif
+
+    EM20168WriteRegister(handle, 2, 0);//clear itr
+
+    EM20168Task = PanicUnlessNew(EM20168InfoTask);
+    memset(EM20168Task, 0, sizeof(EM20168Task));
+    EM20168Task->task.handler = EM20168_itr_handler;
+    InputEventManagerRegisterTask(&EM20168Task->task, EM20168_ITR_PIN);
+
+#ifdef EM20168_KEY_ITR_TEST
+    ProximitykeyTask = PanicUnlessNew(EM20168InfoTask);
+    memset(ProximitykeyTask, 0, sizeof(ProximitykeyTask));
+    ProximitykeyTask->task.handler = EM20168_keytest_itr_handler;
+    InputEventManagerRegisterTask(&ProximitykeyTask->task, EM20168_KEY_ITR_PIN);
+#endif
+
+    EM20168Disable(handle);
+}
+
+
 #ifdef INCLUDE_PROXIMITY
 bool appProximityClientRegister(Task task)
 {
-    uint8 value;
-    uint8 i;
     proximityTaskData *prox = appGetProximity();
     if (NULL == prox->clients)
     {
         prox->state = PanicUnlessNew(proximityState);
         prox->state->proximity = proximity_state_unknown;
         prox->clients = appTaskListInit();
-
-        prox->handle = EM20168Enable();
-        PanicFalse(prox->handle != BITSERIAL_HANDLE_ERROR);
-
-        EM20168ReadRegister(prox->handle, 0x00, &value);
-        EM20168ReadRegister(prox->handle, 0x00, &value);
-        printf("em20168 id = 0x%x\n", value);
-
-        printf("em20168 init num = %d\n", ARRAY_DIM(em20168_init_array));
-        for(i=0; i<ARRAY_DIM(em20168_init_array); i++){
-            EM20168WriteRegister(prox->handle,
-                    em20168_init_array[i].reg,
-                    em20168_init_array[i].value);
-        }
-        for(i=0; i<ARRAY_DIM(em20168_read_array); i++){
-            EM20168ReadRegister(prox->handle, em20168_read_array[i].reg, &value);
-            printf("reg 0x%x = 0x%x\n", em20168_read_array[i].reg, value);
-        }
-        EM20168WriteRegister(prox->handle, 2, 0);
-//        for(i=0; i<0x34; i++){
-//            EM20168ReadRegister(prox->handle, i, &value);
-//            printf("reg 0x%x = 0x%x\n", i, value);
-//        }
-        EM20168Disable(prox->handle);
-
-        /* Register for interrupt events */
-        prox->task.handler = EM20168_itr_handler;
-#ifndef EM20168_KEY_ITR_TEST
-        InputEventManagerRegisterTask(&prox->task, EM20168_ITR_PIN);
-#else
-        InputEventManagerRegisterTask(&prox->task, EM20168_KEY_ITR_PIN);
-#endif
     }
     /* Send initial message to client */
-#ifdef EM20168_SEND_MSG
     switch (prox->state->proximity)
     {
         case proximity_state_in_proximity:
@@ -264,11 +346,12 @@ bool appProximityClientRegister(Task task)
             MessageSend(task, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY, NULL);
             break;
         case proximity_state_unknown:
+            MessageSend(task, PROXIMITY_MESSAGE_IN_PROXIMITY, NULL);
+            break;
         default:
             /* The client will be informed after the first interrupt */
             break;
     }
-#endif
 
     return appTaskListAddTask(prox->clients, task);
 }
@@ -285,13 +368,9 @@ void appProximityClientUnregister(Task task)
         prox->state = NULL;
 
         PanicFalse(prox->handle != BITSERIAL_HANDLE_ERROR);
-
         /* Unregister for interrupt events */
-#ifndef EM20168_KEY_ITR_TEST
         InputEventManagerUnregisterTask(&prox->task, EM20168_ITR_PIN);
-#else
-        InputEventManagerUnregisterTask(&prox->task, EM20168_KEY_ITR_PIN);
-#endif
+
         /* Reset into lowest power mode in case the sensor is not powered off. */
         prox->handle = BITSERIAL_HANDLE_ERROR;
     }

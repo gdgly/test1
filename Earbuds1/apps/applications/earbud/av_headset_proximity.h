@@ -9,7 +9,7 @@
 
 #ifndef AV_HEADSET_PROXIMITY_H
 #define AV_HEADSET_PROXIMITY_H
-
+#define INCLUDE_PROXIMITY
 #include "av_headset_tasklist.h"
 #include "av_headset_message.h"
 

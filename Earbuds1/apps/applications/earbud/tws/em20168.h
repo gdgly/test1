@@ -9,11 +9,12 @@
 #include "../av_headset_log.h"
 #include "../av_headset_proximity.h"
 
-//#define EM20168_KEY_ITR_TEST
-//#define EM20168_SEND_MSG
+//#define EM20168_CAL_OFFSET_VALUE //校准0x24寄存器
+//#define EM20168_KEY_ITR_TEST  //打开按键中断
+//#define EM20168_SEND_MSG  //打开发送入耳出耳消息
 #define EM20168_I2C_ADDR 0x24
 #define EM20168_I2C_FREQ 400
-#define EM20168_KEY_ITR_PIN 6
+#define EM20168_KEY_ITR_PIN 18
 
 //#define EM20168_HIGH_VALUE 0x200
 #define EM20168_HIGH_VALUE 0x3300
@@ -47,5 +48,7 @@ bool EM20168WriteRegister(bitserial_handle handle, uint8 reg, uint8 value);
 bitserial_handle EM20168Enable(void);
 void EM20168Disable(bitserial_handle handle);
 void EM20168_itr_handler(Task task, MessageId id, Message msg);
+void EM20168_itr_read_reg(Task task, MessageId id, Message msg);
+void EM20168_keytest_itr_handler(Task task, MessageId id, Message msg);
 
 #endif // EM20168_H
