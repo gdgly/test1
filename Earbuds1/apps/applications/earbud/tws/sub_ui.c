@@ -192,7 +192,6 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
 #ifdef CONFIG_REC_ASSISTANT
         appKymeraRecordStart();
         disable_audio_forward(FALSE);
-        DEBUG_LOG("nowSend:%d", appGetGaia()->nowSendCallAudio);
 #endif
         break;
     case STAROT_DIALOG_USER_REJECT_RECORD:               ///设备停止录音
@@ -200,8 +199,6 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
 #ifdef CONFIG_REC_ASSISTANT
         disable_audio_forward(TRUE);
         appKymeraRecordStop();
-        DEBUG_LOG("nowSend:%d", appGetGaia()->nowSendCallAudio);
-        appGetGaia()->nowSendCallAudio = DIALOG_COMING;
 #endif
         break;
     }
