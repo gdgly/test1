@@ -63,15 +63,12 @@ struct GaiaStarotPrivateData_T {
 
 static struct GaiaStarotPrivateData_T gaiaStarotPrivateData;
 
-
 void starotGaiaInit(void) {
     memset(&gaiaStarotPrivateData, 0x00, sizeof(struct GaiaStarotPrivateData_T));
     gaiaStarotPrivateData.speedTestSendUnit = 81;
 }
 
-
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
-
     switch (message->command) {
         case GAIA_COMMAND_STAROT_FIRST_COMMAND: {
             appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
@@ -311,60 +308,59 @@ void starotNotifyAudioForward(bool st, uint8 flag) {
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
     UNUSED(message);
 
-//    /// 不能传输，在source中缓存，如果缓存过多，会丢弃
-////    DEBUG_LOG("transformAudioFlag: %d nowSendAudioPhase is %d", appGetGaia()->transformAudioFlag, appGetGaia()->nowSendAudioPhase);
-//    if (appGetGaia()->transformAudioFlag < TRANSFORM_CANT) {
-//        return FALSE;
-//    }
+    /// 不能传输，在source中缓存，如果缓存过多，会丢弃
+//    DEBUG_LOG("transformAudioFlag: %d nowSendAudioPhase is %d", appGetGaia()->transformAudioFlag, appGetGaia()->nowSendAudioPhase);
+    if (appGetGaia()->transformAudioFlag < TRANSFORM_CANT) {
+        return FALSE;
+    }
 
-//    if (appGetGaia()->nowSendAudioPhase != GAIA_TRANSFORM_AUDIO_IDLE) {
-//        return FALSE;
-//    }
-//    appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_ING;
-//    //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudioPhase);
-//    static uint8 payload[256];
-//    uint16 flag = 0, pos = 1;
+    if (appGetGaia()->nowSendAudioPhase != GAIA_TRANSFORM_AUDIO_IDLE) {
+        return FALSE;
+    }
+    appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_ING;
+    //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudioPhase);
+    static uint8 payload[256];
+    uint16 flag = 0, pos = 1;
 
-//    if (NULL !=  gaiaStarotPrivateData.dialogSpeaker) {
-//        int size = SourceSize(gaiaStarotPrivateData.dialogSpeaker);
-//        if (size >= bufferSendUnit) {
-//            flag |= GAIA_AUDIO_SPEAKER;
-//            const uint8 *ptr = (const uint8 *) SourceMap(gaiaStarotPrivateData.dialogSpeaker);
-//            memcpy(payload + pos, ptr, bufferSendUnit);
-//            pos += bufferSendUnit;
-//        }
-//    }
+    if (NULL !=  gaiaStarotPrivateData.dialogSpeaker) {
+        int size = SourceSize(gaiaStarotPrivateData.dialogSpeaker);
+        if (size >= bufferSendUnit) {
+            flag |= GAIA_AUDIO_SPEAKER;
+            const uint8 *ptr = (const uint8 *) SourceMap(gaiaStarotPrivateData.dialogSpeaker);
+            memcpy(payload + pos, ptr, bufferSendUnit);
+            pos += bufferSendUnit;
+        }
+    }
 
-//    if (NULL !=  gaiaStarotPrivateData.dialogMic) {
-//        int size = SourceSize(gaiaStarotPrivateData.dialogMic);
-//        if (size >= bufferSendUnit) {
-//            flag |= GAIA_AUDIO_MIC;
-//            const uint8 *ptr = SourceMap(gaiaStarotPrivateData.dialogMic);
-//            memcpy(payload + pos, ptr, bufferSendUnit);
-//            pos += bufferSendUnit;
-//        }
-//    }
+    if (NULL !=  gaiaStarotPrivateData.dialogMic) {
+        int size = SourceSize(gaiaStarotPrivateData.dialogMic);
+        if (size >= bufferSendUnit) {
+            flag |= GAIA_AUDIO_MIC;
+            const uint8 *ptr = SourceMap(gaiaStarotPrivateData.dialogMic);
+            memcpy(payload + pos, ptr, bufferSendUnit);
+            pos += bufferSendUnit;
+        }
+    }
 
-//    payload[0] = ((uint8) flag) | ((gaiaStarotPrivateData.testSpeedIndex & 0x0F) << 4);
-////    payload[0] = ((uint8) flag);
-//    gaiaStarotPrivateData.audioTransType = flag;
+    payload[0] = ((uint8) flag) | ((gaiaStarotPrivateData.testSpeedIndex & 0x0F) << 4);
+    gaiaStarotPrivateData.audioTransType = flag;
 
-//    if (flag <= 0) {
-//        appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
-//        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudioPhase);
-//        return FALSE;
-//    }
+    if (flag <= 0) {
+        appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
+        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudioPhase);
+        return FALSE;
+    }
 
-//    bool st = appGaiaSendPacket(GAIA_VENDOR_STAROT, appGetGaia()->transformAudioFlag, 0xfe, pos, payload);
-//    if (TRUE == st) {
-//        appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_ING;
-//        DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudioPhase);
-//    } else {
-//        appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
-//        DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudioPhase);
-//        //// 分配内存失败，需要使用定时器/数据驱动
-//        DEBUG_LOG("send data failed, wait more memory");
-//    }
+    bool st = appGaiaSendPacket(GAIA_VENDOR_STAROT, appGetGaia()->transformAudioFlag, 0xfe, pos, payload);
+    if (TRUE == st) {
+        appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_ING;
+        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudioPhase);
+    } else {
+        appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudioPhase);
+        //// 分配内存失败，需要使用定时器/数据驱动
+        //DEBUG_LOG("send data failed, wait more memory");
+    }
 
     return TRUE;
 }
@@ -796,6 +792,9 @@ void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
     uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
     uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
 
+    DEBUG_LOG("now send audio is : %d: command:%04x vendor:%04x status:%d", appGetGaia()->nowSendAudioPhase, command_id, vendor_id, m->success);
+
+
     if (GAIA_COMMAND_STAROT_CALL_END == command_id && vendor_id == GAIA_VENDOR_STAROT && FALSE == m->success) {
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
         return;
@@ -807,7 +806,6 @@ void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
 
     if (FALSE == m->success) {
         appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
-        //DEBUG_LOG("now send audio is : %d: %d", appGetGaia()->nowSendAudioPhase);
         if (gaiaStarotPrivateData.gaiaTransportType == gaia_transport_rfcomm) {
             appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
             //DEBUG_LOG("now send audio is : %d: %d", appGetGaia()->nowSendAudioPhase);
