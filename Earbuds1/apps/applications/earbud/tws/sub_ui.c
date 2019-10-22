@@ -14,6 +14,10 @@
 #include "sub_ui.h"
 #include "av_headset_gaia_starot.h"
 
+extern void appKymeraRecordStart(void);
+extern void appKymeraRecordStop(void);
+extern void disable_audio_forward(bool disable);
+void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
 
 ProgRunInfo gProgRunInfo;
 
@@ -170,15 +174,35 @@ static int16 subUiChargeStat2Gaia(MessageId id, ProgRIPtr  progRun)
 /////////////////////////////////////////////////////////////////////////
 static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
 {
-    GAIA_STAROT_MESSAGE_T *ind = (GAIA_STAROT_MESSAGE_T*)message;
-
+    GAIA_STAROT_IND_T *ind = (GAIA_STAROT_MESSAGE_T*)message;
     (void)progRun;
     switch(ind->command) {
-    case STAROT_DIALOG_USER_ACCEPT_RECORD:
-        progRun->recStat  = 1;
+    case GAIA_COMMAND_STAROT_CONTROL_CALL_DIALOG:        ///调用拨打电话函数
+        HfpDialNumberRequest(hfp_primary_link, ind->payloadLen, ind->payload);
         break;
-    case STAROT_DIALOG_USER_REJECT_RECORD:
+    case GAIA_COMMAND_STAROT_CONTROL_ACCEPT_DIALOG:      ///调用接听电话
+        appHfpCallAccept();
+        break;
+    case GAIA_COMMAND_STAROT_CONTROL_REJECT_DIALOG:      ///调用拒接电话
+        appHfpCallHangup();
+        break;
+
+    case STAROT_DIALOG_USER_ACCEPT_RECORD:               ///设备开始录音
+        progRun->recStat  = 1;
+#ifdef CONFIG_REC_ASSISTANT
+        appKymeraRecordStart();
+        disable_audio_forward(FALSE);
+        DEBUG_LOG("nowSend:%d", appGetGaia()->nowSendCallAudio);
+#endif
+        break;
+    case STAROT_DIALOG_USER_REJECT_RECORD:               ///设备停止录音
         progRun->recStat  = 0;
+#ifdef CONFIG_REC_ASSISTANT
+        disable_audio_forward(TRUE);
+        appKymeraRecordStop();
+        DEBUG_LOG("nowSend:%d", appGetGaia()->nowSendCallAudio);
+        appGetGaia()->nowSendCallAudio = DIALOG_COMING;
+#endif
         break;
     }
 }

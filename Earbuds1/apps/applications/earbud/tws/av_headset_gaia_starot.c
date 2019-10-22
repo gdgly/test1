@@ -20,6 +20,7 @@ uint16 speedTestSendUnit = 81;
 
 extern void gaiaClearDropAudioSize(void);
 extern int gaiaGetDropAudioSize(void);
+StarotAttr *attrDecode(uint8 *data, int len);
 
 extern void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
                                 uint16 payload_length, uint8 *payload);
@@ -39,19 +40,20 @@ static void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message);//App获取设备�
 
 static void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message);//App设置设备的耳机的双击配置信息
 
-static void gaiaControlCallDialog(GAIA_STAROT_IND_T* message);
+static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message);//App请求录音
+
+static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
+
+static void gaiaControlCallDialog(GAIA_STAROT_IND_T* mess);
 static void gaiaControlAcceptDialog(GAIA_STAROT_IND_T* message);
 static void gaiaControlRejectDialog(GAIA_STAROT_IND_T* message);
 static void gaiaControlPreviousMusic(GAIA_STAROT_IND_T* message);
 static void gaiaControlNextMusic(GAIA_STAROT_IND_T* message);
 static void gaiaControlVolumeSet(GAIA_STAROT_IND_T* message);
 
-void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
 
 static int speakerDropNum = 0;
-//static int speakerG722Index = 0;
 static int micDropNum = 0;
-//static int micG722Index = 0;
 extern uint8 testSpeedIndex;
 
 static void starotSpeedSendIntervalParse(void);
@@ -87,6 +89,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         }
             break;
 
+        case STAROT_DIALOG_STATUS:
+            gaiaParseDialogStatus(message);
+            break;
 
         case GAIA_COMMAND_STAROT_CALL_BEGIN | GAIA_ACK_MASK:
             DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_BEGIN replay");
@@ -103,6 +108,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_ATTR_TIMEOUT);
             break;
 
+        case STAROT_DIALOG_AUDIO_DATA:
+            starotGaiaSendAudio(NULL);
+            break;
+
+            /// APP希望接受耳机的音频
         case GAIA_COMMAND_STAROT_START_TRANS_AUDIO_IND:
             if (appGetGaia()->nowSendCallAudio == DIALOG_COMING) {
                 testSpeedIndex = 0;
@@ -200,6 +210,15 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             gaiaControlVolumeSet(message);
             break;
     }
+    /// 助手52NN
+    switch (message->command) {
+        case GAIA_COMMAND_STAROT_ASSISTANT_CONTROL:
+            gaiaSetRequestRecord(message);
+            break;
+        case GAIA_COMMAND_STAROT_AUDIO_APP_DEVIVE:
+            gaiaAssistantAudioAppDev(message);
+            break;
+    }
     return TRUE;
 }
 
@@ -283,24 +302,10 @@ void starotNotifyAudioForward(bool st, uint8 flag) {
 
     if (TRUE == st && flag > 0) {
         if ((flag & GAIA_AUDIO_SPEAKER) > 0 && NULL != dialogSpeaker) {
-//            const uint8 *ptr = (const uint8 *) SourceMap(dialogSpeaker);
-//            int t = ptr[0];
-//            if (((1 + speakerG722Index) & 0XFF) != t) {
-//                DEBUG_LOG("speark index error %x\n", t);
-//            }
-//            speakerG722Index = t;
             speakerDropNum += bufferSendUnit;
             SourceDrop(dialogSpeaker, bufferSendUnit);
         }
-
         if ((flag & GAIA_AUDIO_MIC) > 0 && NULL != dialogMic) {
-//            const uint8 *ptr = (const uint8 *) SourceMap(dialogMic);
-//            int t = ptr[0];
-//            if (((1 + micG722Index) & 0XFF) != t) {
-//                DEBUG_LOG("mic index error %x\n", t);
-//            }
-//            micG722Index = t;
-
             micDropNum += bufferSendUnit;
             SourceDrop(dialogMic, bufferSendUnit);
         }
@@ -361,13 +366,18 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
         return FALSE;
     }
 //    DEBUG_LOG("Send audio data to app");
-    bool st = appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_AUDIO_IND, 0xfe, pos, payload);
+    bool st;
+    if(appGetGaia()->audiorcall == 0){
+        st = appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_AUDIO_DEVIVE_APP, 0xfe, pos, payload);
+    }else{
+        st = appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_AUDIO_IND, 0xfe, pos, payload);
+    }
     if (TRUE == st) {
         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_ING;
-        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
+        DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
     } else {
         appGetGaia()->nowSendAudio = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
-        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
+        DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudio);
         //// 分配内存失败，需要使用定时器/数据驱动
         DEBUG_LOG("send data failed, wait more memory");
     }
@@ -655,37 +665,64 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
-void gaiaControlCallDialog(GAIA_STAROT_IND_T* message) {
+void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message){
     StarotAttr *body = attrDecode(message->payload, message->payloadLen);
     if (NULL == body) {
         return;
     }
-    if (0X01 == body->attr) {
-        uint16 length = 0;
-        /// 电话号码长度不会大于16
-        const int MaxPhoneNuberLen = 16;
-        uint8 number[MaxPhoneNuberLen];
-        if (body->len <= MaxPhoneNuberLen) {
-            length = body->len;
-        } else {
-            length = MaxPhoneNuberLen;
-        }
-        memcpy(number, body->payload, length);
-        //调用拨打电话函数
-        HfpDialNumberRequest(hfp_primary_link, body->len, body->payload);
+    DEBUG_LOG("attr:%02X %02X", message->payload[0], message->payload[1]);
+    if(0X01 == body->attr){
+//        appGetGaia()->nowSendAudio = 0;
+        appGetGaia()->nowSendCallAudio = DIALOG_CAN_TRANSFORM;
+        appGetGaia()->audiorcall = 0;
+        gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_ACCEPT_RECORD);
+    }
+    if(0X02 == body->attr){
+        gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_REJECT_RECORD);
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
+void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message){
+    //App播放音频数据
+
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+
+void gaiaControlCallDialog(GAIA_STAROT_IND_T* mess) {
+   StarotAttr *body = attrDecode(mess->payload, mess->payloadLen);
+   if (NULL == body) {
+       return;
+   }
+   if (0X01 == body->attr) {
+       uint16 length = 0;
+       /// 电话号码长度不会大于16
+       const int MaxPhoneNuberLen = 16;
+       if (body->len <= MaxPhoneNuberLen) {
+           length = body->len;
+       } else {
+           length = MaxPhoneNuberLen;
+       }
+
+       MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_IND, length);
+       message->command = GAIA_COMMAND_STAROT_CONTROL_CALL_DIALOG;
+       message->payloadLen = length;
+       memcpy(message->payload, body->payload, length);
+       MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
+   }
+
+   appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
 void gaiaControlAcceptDialog(GAIA_STAROT_IND_T* message) {
-//    appHfpCallReject();
-    appHfpCallAccept();
+    gaiaNotifyAudioAcceptStatus(appGetUiTask(), GAIA_COMMAND_STAROT_CONTROL_ACCEPT_DIALOG);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
 void gaiaControlRejectDialog(GAIA_STAROT_IND_T* message) {
 //    appHfpCallReject();
-    appHfpCallHangup();
+    gaiaNotifyAudioAcceptStatus(appGetUiTask(), GAIA_COMMAND_STAROT_CONTROL_REJECT_DIALOG);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 

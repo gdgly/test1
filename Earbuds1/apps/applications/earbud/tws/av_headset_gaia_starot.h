@@ -63,7 +63,14 @@ enum {
     GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_CASE_STATUS = 0X5503,                // 通知充电盒状态
     GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_POWER_POSITION_CONNECTION = 0X5504,  // 通知电量、位置、连接信息
 };
-
+/////////////////////////////助手控制////////////////////////////////
+enum {
+    GAIA_COMMAND_STAROT_REQUEST_START_ASSISTANT = 0X5200,                     // 请求开始助手
+    GAIA_COMMAND_STAROT_ASSISTANT_CONTROL = 0X5201,                           // 助手控制录音
+    GAIA_COMMAND_STAROT_AUDIO_DEVIVE_APP = 0X5202,                            // 助手音频Device->App
+    GAIA_COMMAND_STAROT_AUDIO_APP_DEVIVE = 0X5203,                            // 助手音频App->Device
+    GAIA_COMMAND_STAROT_AUDIO_CONFIRM_PACKAGE = 0X5204,                       // 音频确认包
+};
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
 
@@ -144,7 +151,7 @@ enum {
 struct StarotResendCommand_T {
     uint16 command;
     uint16 len;   /// payload的长度
-    uint8 payload[1];
+    uint8 payload[4];
 };
 typedef struct StarotResendCommand_T StarotResendCommand;
 

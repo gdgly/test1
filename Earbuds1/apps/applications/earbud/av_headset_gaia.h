@@ -45,6 +45,7 @@ typedef struct
     int nowSendAudio;
     int nowSendCallAudio;
     int status;
+    int audiorcall;
 #endif GAIA_TEST
 } gaiaTaskData;
 
