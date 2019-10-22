@@ -19,16 +19,165 @@
 #include "av_headset_power.h"
 #include "av_headset_log.h"
 
-/*! Include the correct button header based on the number of buttons available to the UI */
-#if defined(HAVE_9_BUTTONS)
-#include "9_buttons.h"
-#elif defined(HAVE_6_BUTTONS)
-#include "6_buttons.h"
-#elif defined(HAVE_1_BUTTON)
-#include "1_button.h"
-#else
-#error "No buttons define found"
-#endif
+///*! Include the correct button header based on the number of buttons available to the UI */
+//#if defined(HAVE_9_BUTTONS)
+//#include "9_buttons.h"
+//#elif defined(HAVE_6_BUTTONS)
+//#include "6_buttons.h"
+//#elif defined(HAVE_1_BUTTON)
+//#include "1_button.h"
+//#else
+//#error "No buttons define found"
+//#endif
+
+#define MFB_BUTTON           (1UL <<  0)
+
+#define APP_MFB_BUTTON_6_SECOND                  1007
+#define APP_BUTTON_DFU                           1011
+#define APP_BUTTON_HELD_FACTORY_RESET            1012
+#define APP_BUTTON_POWER_OFF                     1005
+#define APP_BUTTON_FACTORY_RESET                 1013
+#define APP_MFB_BUTTON_ANC_TOGGLE_ON_OFF         1001
+#define APP_MFB_BUTTON_HELD_2                    1004
+#define APP_MFB_BUTTON_8_SECOND                  1009
+#define APP_MFB_BUTTON_1_SECOND                  1003
+#define APP_MFB_BUTTON_HELD_3                    1006
+#define APP_MFB_BUTTON_HELD_1                    1002
+#define APP_MFB_BUTTON_PRESS                     1000
+#define APP_MFB_BUTTON_HELD_4                    1008
+#define APP_BUTTON_HELD_DFU                      1010
+
+const InputEventConfig_t InputEventConfig  =
+{
+    /* Table to convert from PIO to input event ID*/
+    {
+         0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+    },
+
+    /* Masks for each PIO bank to configure as inputs */
+    { 0x00000001UL, 0x00000000UL, 0x00000000UL },
+    /* PIO debounce settings */
+    //4, 5
+    1, 0
+};
+
+const InputActionMessage_t InputEventActions[] =
+{
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD,                                   /* Action */
+        15000,                                  /* Timeout */
+        0,                                      /* Repeat */
+        APP_BUTTON_HELD_FACTORY_RESET,          /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD,                                   /* Action */
+        3000,                                   /* Timeout */
+        0,                                      /* Repeat */
+        APP_MFB_BUTTON_HELD_2,                  /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD,                                   /* Action */
+        6000,                                   /* Timeout */
+        0,                                      /* Repeat */
+        APP_MFB_BUTTON_HELD_3,                  /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD,                                   /* Action */
+        1000,                                   /* Timeout */
+        0,                                      /* Repeat */
+        APP_MFB_BUTTON_HELD_1,                  /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD,                                   /* Action */
+        8000,                                   /* Timeout */
+        0,                                      /* Repeat */
+        APP_MFB_BUTTON_HELD_4,                  /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD,                                   /* Action */
+        12000,                                  /* Timeout */
+        0,                                      /* Repeat */
+        APP_BUTTON_HELD_DFU,                    /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD_RELEASE,                           /* Action */
+        6000,                                   /* Timeout */
+        0,                                      /* Repeat */
+        APP_MFB_BUTTON_6_SECOND,                /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD_RELEASE,                           /* Action */
+        12000,                                  /* Timeout */
+        0,                                      /* Repeat */
+        APP_BUTTON_DFU,                         /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD_RELEASE,                           /* Action */
+        3000,                                   /* Timeout */
+        0,                                      /* Repeat */
+        APP_BUTTON_POWER_OFF,                   /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD_RELEASE,                           /* Action */
+        15000,                                  /* Timeout */
+        0,                                      /* Repeat */
+        APP_BUTTON_FACTORY_RESET,               /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD_RELEASE,                           /* Action */
+        8000,                                   /* Timeout */
+        0,                                      /* Repeat */
+        APP_MFB_BUTTON_8_SECOND,                /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        HELD_RELEASE,                           /* Action */
+        1000,                                   /* Timeout */
+        0,                                      /* Repeat */
+        APP_MFB_BUTTON_1_SECOND,                /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        DOUBLE,                                 /* Action */
+        500,                                    /* Timeout */
+        0,                                      /* Repeat */
+        APP_MFB_BUTTON_ANC_TOGGLE_ON_OFF,       /* Message */
+    },
+    {
+        MFB_BUTTON,                             /* Input event bits */
+        MFB_BUTTON,                             /* Input event mask */
+        RELEASE,                                /* Action */
+        0,                                      /* Timeout */
+        0,                                      /* Repeat */
+        APP_MFB_BUTTON_PRESS,                   /* Message */
+    },
+};
 
 /*! User interface internal messasges */
 enum ui_internal_messages
