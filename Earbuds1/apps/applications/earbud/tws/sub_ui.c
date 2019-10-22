@@ -82,7 +82,7 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
 {
     uint8 count = 2;
 
-    if(1 == progRun->gaiaStat)
+    if(1 != progRun->gaiaStat)
         return -1;
 
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
@@ -113,7 +113,7 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
 // payload=[状态1] 1：语音通话，0：其它
 static int16 subUiCallType2Gaia(MessageId id, ProgRIPtr  progRun)
 {
-    if(1 == progRun->gaiaStat)
+    if(1 != progRun->gaiaStat)
         return -1;
 
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 2);
