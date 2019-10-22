@@ -111,6 +111,8 @@ typedef struct {
 
 typedef GAIA_STAROT_DIALOG_SOURCE GAIA_STAROT_DIALOG_SOURCE_T;
 
+#define CALL_AUDIO_IND(cmd) ((cmd) == GAIA_COMMAND_STAROT_CALL_AUDIO_IND || (cmd) == GAIA_COMMAND_STAROT_AI_AUDIO_TO_APP)
+
 void starotGaiaInit(void);
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
@@ -149,6 +151,8 @@ enum {
     STAROT_DIALOG_CALL_END_TIMEOUT,                       // gaia -> gaia 电话结束发送超时
     STAROT_DIALOG_CASE_STAT,                              // ui -> gaia 盒子当前信息
     STAROT_DIALOG_CASE_VER,                               // ui -> gaia 盒子当前版本
+    STAROT_AI_USER_START_RECORD,                          // ui -> (ui & dsp) AI请求录音
+    STAROT_AI_USER_STOP_RECORD,                           // ui -> (ui & dsp) AI停止录音
 };
 
 #define STAROT_COMMAND_TIMEOUT 1000 // 命令超时时间

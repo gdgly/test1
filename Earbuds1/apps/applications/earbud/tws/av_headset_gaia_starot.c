@@ -23,6 +23,8 @@ extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status
                               uint16 payload_length, uint8 *payload);
 
 static void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message);
+static void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T* message);
+static void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T* message);
 
 static void gaiaNotifyAudioAcceptStatus(Task task, int command);
 
@@ -123,30 +125,12 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 
             /// APP希望接受耳机的音频
         case GAIA_COMMAND_STAROT_START_TRANS_AUDIO_IND:
-            if (appGetGaia()->transformAudioFlag == TRANSFORM_COMING) {
-                gaiaStarotPrivateData.testSpeedIndex = 0;
-                appGetGaia()->transformAudioFlag = DIALOG_CAN_TRANSFORM;
-                appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
-                gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_ACCEPT_RECORD);
-                disable_audio_forward(FALSE);
-                DEBUG_LOG("call disable_audio_forward(FALSE);");
-                gaiaStarotPrivateData.audioTransType = 0;
-                gaiaClearDropAudioSize();
-            }
-            appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
-                                ((appGetGaia()->transformAudioFlag & DIALOG_CAN_TRANSFORM) > 0 ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE),
-                                0, NULL);
+            starotGaiaDialogStartTransport(message);
             break;
 
             /// APP希望停止接受音频或压根从头不想要音频数据
         case GAIA_COMMAND_STAROT_END_TRANS_AUDIO_IND:
-            appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
-                                ((appGetGaia()->transformAudioFlag == DIALOG_CAN_TRANSFORM) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE), 0, NULL);
-            if (appGetGaia()->transformAudioFlag == DIALOG_CAN_TRANSFORM) {
-                gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_REJECT_RECORD);
-                disable_audio_forward(TRUE);
-                appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
-            }
+            starotGaiaDialogStopTransport(message);
             break;
 
         case GAIA_COMMAND_STAROT_SET_BOND_CODE_IND:
@@ -655,12 +639,12 @@ void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message){
     if (0X01 == body->attr) {
         if (TRANSFORM_NONE == appGetGaia()->transformAudioFlag) {
             appGetGaia()->transformAudioFlag = RECORD_CAN_TRANSFORM;
-            gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_ACCEPT_RECORD);
+            gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_AI_USER_START_RECORD);
         }
     } else if (0X02 == body->attr) {
         if (RECORD_CAN_TRANSFORM == appGetGaia()->transformAudioFlag) {
+            gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_AI_USER_STOP_RECORD);
             appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
-            gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_REJECT_RECORD);
         }
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
@@ -767,29 +751,29 @@ void starotGaiaParseCfm(const GAIA_SEND_PACKET_CFM_T *m) {
 }
 
 void starotGaiaParseTestCfm(const GAIA_SEND_PACKET_CFM_T *m) {
-    uint8* packet = m->packet;
+    uint8 *packet = m->packet;
 
     uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
     uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
 
+    if (!CALL_AUDIO_IND(command_id) || vendor_id != GAIA_VENDOR_STAROT) {
+        return;
+    }
+
     if (FALSE == m->success) {
-        if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
-            if (gaiaStarotPrivateData.gaiaTransportType == gaia_transport_rfcomm) {
-                appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
-                //DEBUG_LOG("now send audio is : %d: %d", appGetGaia()->nowSendAudioPhase);
-            } else {
-                appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
-                //DEBUG_LOG("now send audio is : %d: %d", appGetGaia()->nowSendAudioPhase);
-                MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 1);
-            }
-        }
-    } else {
-        if (command_id == GAIA_COMMAND_STAROT_CALL_AUDIO_IND && vendor_id == GAIA_VENDOR_STAROT) {
-            MessageSend(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL);
+        if (gaiaStarotPrivateData.gaiaTransportType == gaia_transport_rfcomm) {
+            appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+            //DEBUG_LOG("now send audio is : %d: %d", appGetGaia()->nowSendAudioPhase);
+        } else {
             appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
             //DEBUG_LOG("now send audio is : %d: %d", appGetGaia()->nowSendAudioPhase);
-            gaiaStarotPrivateData.testSpeedIndex += 1;
+            MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 1);
         }
+    } else {
+        MessageSend(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL);
+        appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
+        //DEBUG_LOG("now send audio is : %d: %d", appGetGaia()->nowSendAudioPhase);
+        gaiaStarotPrivateData.testSpeedIndex += 1;
     }
 }
 
@@ -806,7 +790,7 @@ void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
         return;
     }
 
-    if (!(GAIA_COMMAND_STAROT_CALL_AUDIO_IND == command_id || GAIA_COMMAND_STAROT_AI_AUDIO_TO_APP == command_id) || vendor_id != GAIA_VENDOR_STAROT) {
+    if (!CALL_AUDIO_IND(command_id) || vendor_id != GAIA_VENDOR_STAROT) {
         return;
     }
 
@@ -832,6 +816,29 @@ void starotGaiaSetTransportType(gaia_transport_type gaiaTransportType) {
     gaiaStarotPrivateData.gaiaTransportType = gaiaTransportType;
 }
 
+void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T* message) {
+    if (appGetGaia()->transformAudioFlag == TRANSFORM_COMING) {
+        gaiaStarotPrivateData.testSpeedIndex = 0;
+        appGetGaia()->transformAudioFlag = DIALOG_CAN_TRANSFORM;
+        appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
+        gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_ACCEPT_RECORD);
+        DEBUG_LOG("call disable_audio_forward(FALSE);");
+        gaiaStarotPrivateData.audioTransType = 0;
+        gaiaClearDropAudioSize();
+    }
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
+                        ((appGetGaia()->transformAudioFlag & DIALOG_CAN_TRANSFORM) > 0 ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE),
+                        0, NULL);
+}
+
+void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T* message) {
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
+                        ((appGetGaia()->transformAudioFlag == DIALOG_CAN_TRANSFORM) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE), 0, NULL);
+    if (appGetGaia()->transformAudioFlag == DIALOG_CAN_TRANSFORM) {
+        gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_REJECT_RECORD);
+        appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
+    }
+}
 
 #endif
 

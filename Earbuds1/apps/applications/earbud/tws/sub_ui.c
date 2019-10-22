@@ -187,19 +187,28 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         appHfpCallHangup();
         break;
 
-    case STAROT_DIALOG_USER_ACCEPT_RECORD:               ///设备开始录音
+    case STAROT_AI_USER_START_RECORD:               ///设备开始录音
         progRun->recStat  = 1;
 #ifdef CONFIG_REC_ASSISTANT
         appKymeraRecordStart();
         disable_audio_forward(FALSE);
 #endif
         break;
-    case STAROT_DIALOG_USER_REJECT_RECORD:               ///设备停止录音
+
+    case STAROT_AI_USER_STOP_RECORD:               ///设备停止录音
         progRun->recStat  = 0;
 #ifdef CONFIG_REC_ASSISTANT
         disable_audio_forward(TRUE);
         appKymeraRecordStop();
 #endif
+        break;
+
+    case STAROT_DIALOG_USER_ACCEPT_RECORD:
+        disable_audio_forward(FALSE);
+        break;
+
+    case STAROT_DIALOG_USER_REJECT_RECORD:
+        disable_audio_forward(TRUE);
         break;
     }
 }

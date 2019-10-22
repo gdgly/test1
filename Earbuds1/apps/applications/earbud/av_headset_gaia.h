@@ -80,8 +80,6 @@ extern void appGaiaDisconnect(void);
  */
 extern void appGaiaAllowNewConnections(bool allow);
 
-
-
 #endif /* INCLUDE_DFU */
 #endif /* _AV_HEADSET_GAIA_H_ */
 

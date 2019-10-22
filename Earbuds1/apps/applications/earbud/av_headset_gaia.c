@@ -22,16 +22,11 @@ This is a minimal implementation that only supports upgrade.
 
 #endif
 
-
-
-#define CALL_AUDIO_IND(cmd) ((cmd) == GAIA_COMMAND_STAROT_CALL_AUDIO_IND || (cmd) == GAIA_COMMAND_STAROT_AUDIO_DEVIVE_APP)
-
 /*! Enumerated type of internal message IDs used by this module */
 typedef enum av_headset_gaia_internal_messages {
     /*! Disconnect GAIA */
             APP_GAIA_INTERNAL_DISCONNECT = INTERNAL_MESSAGE_BASE,
 };
-
 
 static void appGaiaMessageHandler(Task task, MessageId id, Message message);
 

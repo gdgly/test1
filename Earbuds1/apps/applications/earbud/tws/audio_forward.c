@@ -102,7 +102,7 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 }
 
 void disable_audio_forward(bool disable) {
-    DEBUG_LOG("call disable_audio_forward(%s)", (TRUE == disable) ? "TRUE" : "FALSE");
+    DEBUG_LOG("call disable_audio_forward(%s)", disable);
     audio_forward  = !disable;
     MAKE_FWD_MESSAGE(AUDIO_FWD_DISABLE);
 	message->disable = disable;
