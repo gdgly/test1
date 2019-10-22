@@ -1,0 +1,51 @@
+file=app2
+
+# Chip Type: QCC5126
+# LK-VAM-CVC-HS-0010->cVc Headset 1-MIC
+# LK-VAM-CVC-HS-0020->cVc Headset 2-MIC
+# LK-VAM-CVC-SPK-0010->cVc Speaker 1-MIC
+# LK-VAM-CVC-SPK-0020->cVc Speaker 2-MIC (endfire or broadside)
+# LK-VAM-APTX-CLHD->aptX Classic + aptX-HD Decoders
+# LK-VAM-APTX-LLCLHD->aptX Low Latency Decoders OR aptX  Classic + aptX-HD Decoders
+# LK-VAM-APTX-CLM->aptX Classic TWS Mono Decoder
+# LK-VAM-APTX_AD->aptx Adaptive Decoder
+# LK-VAM-APTX_ADM->aptx Adaptive Mono Decoder
+# LK-VAM-ANC-FF->ANC Feed-Forward on a stereo headset
+# LK-VAM-ANC-FB->ANC Feed-Back on a stereo headset
+# LK-VAM-ANC-HY->ANC Hybrid or Feed-Forward or Feed-Back on a stereo headset
+# LK-VAM-CVC-EB-0010->cVc Earbud 1-MIC 
+# LK-VAM-CVC-EB-0020->cVc Earbud 2-Mic
+# LK-VAM-ANC-FFM->ANC Feed-Forward on an earbud
+# LK-VAM-ANC-FBM->ANC Feed-Back on an earbud
+# LK-VAM-ANC-HYM->ANC Hybrid or Feed-Back or Feed-Forward on an earbud
+# LK-VAM-VOC-VAD->Voice Activity Detection
+# LK-VAM-VOC-QVA->Qualcomm Voice Activation
+
+# Starting Address: 00025B00FF00
+# Ending Address: 00025B00FF0F
+# Number of Bluetooth Addresses: 16
+#**** TEST LICENSE - NOT FOR PRODUCTION ****
+FeatureLicenseKey = [ 00 92 6A CC 1B 3C 98 8D FD D6 B6 18 C3 50 74 D5 4A 26 3A DD 6E 69 C6 67 A9 21 86 D8 F5 C7 91 4D 8D 0B 32 D7 E2 2D 07 9A 2B 39 D5 9F 84 77 DE 15 21 97 DF B9 6B 83 3F EB 13 18 19 A0 A8 E0 F1 25 ]
+
+USBProductString = [ 51 43 43 35 31 32 36 ]
+
+USBSerialNumberString = [ 41 42 43 44 45 46 30 31 32 33 34 35 36 37 38 39 ]
+
+USBManufString = [ 51 75 61 6C 63 6F 6D 6D ]
+
+# The default value of SiflashResumeToSuspendDelay is set to 1000us that is the minimum erase/program resume to suspend
+# delay that must be respected to avoid errors for all the QSPI flashes supported.  
+# 
+# Cypress/Spansion S25FS-S QSPI flash requires minimum erase/program resume to suspend
+# delay that must be respected to avoid errors, 50us is recommended by Cypress.
+#
+# If QSPI other than Cypress/Spansion is used, this value should be amended according to
+# the flash datasheet.
+#
+# Note that this controls minimum delay and not a typical or average delay required
+# for a flash command to progress, which is often also specified in the datasheet.
+#
+# If the minimum delay required by the flash part is not stated in its datasheet
+# please contact the flash manufacturer for clarification.
+
+SiflashResumeToSuspendDelay = 1000

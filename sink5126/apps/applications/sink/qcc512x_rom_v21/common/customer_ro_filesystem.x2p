@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<project>
+    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_usb_audio.edkcs"/>
+    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_celt.edkcs"/>
+    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_spdif_decode.edkcs"/>
+    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_anc_tuning.edkcs"/>
+    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_va_graph_manager.edkcs"/>
+    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_aptx_adaptive_demux.edkcs"/>
+    <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_aptx_adaptive_decode.edkcs"/>
+    <configurations>
+        <configuration name="filesystem" options="build|deploy|finalBuild" kit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}">
+            <devkitConfiguration>filesystem</devkitConfiguration>
+            <devkitGroup>kitres://{885B2E62-D6DE-4472-8989-51ED1537BF28}</devkitGroup>
+            <deployProject>deploy</deployProject>
+            <property name="BUILD_TYPE"/>
+            <property name="DBG_CORE"/>
+            <property name="DEFS"/>
+            <property name="FS_ROOT">..\customer_ro_filesystem</property>
+            <property name="INCPATHS"/>
+            <property name="LIBPATHS"/>
+            <property name="LIBS"/>
+            <property name="OUTPUT"/>
+            <property name="OUTPUT_TYPE"/>
+            <property name="PRESERVED_LIBS"/>
+            <property name="QUICKCHARGE_CONFIG">../../quick_charge_config/smb1352_default.xml</property>
+            <property name="STRIP_SYMBOLS"/>
+            <property name="TYPE">customer_ro</property>
+            <property name="system_label">QCC512X_ROM_V21</property>
+        </configuration>
+    </configurations>
+</project>

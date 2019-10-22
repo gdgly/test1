@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<project>
+    <file path="subsys3_psflash.htf"/>
+    <file path="subsys7_psflash.htf"/>
+    <file path="anc_tuning_config.htf"/>
+    <file path="cVc1mic-primAEC-only_parameters.htf"/>
+    <file path="cVc2mic-primAEC-only_parameters.htf"/>
+    <configurations>
+        <configuration name="filesystem" options="build|deploy" kit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}">
+            <devkitConfiguration>filesystem</devkitConfiguration>
+            <devkitGroup>kitres://{885B2E62-D6DE-4472-8989-51ED1537BF28}</devkitGroup>
+            <deployProject>deploy</deployProject>
+            <property name="BUILD_TYPE"/>
+            <property name="DBG_CORE"/>
+            <property name="DEFS"/>
+            <property name="FS_ROOT"/>
+            <property name="INCPATHS"/>
+            <property name="LIBPATHS"/>
+            <property name="LIBS"/>
+            <property name="OUTPUT"/>
+            <property name="OUTPUT_TYPE"/>
+            <property name="PRESERVED_LIBS"/>
+            <property name="STRIP_SYMBOLS"/>
+            <property name="TYPE">user_ps</property>
+            <property name="system_label">QCC512X_ROM_V21</property>
+        </configuration>
+    </configurations>
+</project>

@@ -1,0 +1,689 @@
+Archive member included because of file (symbol)
+
+C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                              C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o ($_cvc_send_1mic_nb_hs_cap_data)
+C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                              C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o) ($_CVC_SEND_CAP_Config_headset_1mic)
+C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+                              C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o) ($cvc_send.data.dms200_obj)
+C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+                              C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o) ($M.CVC_SEND_CAP.headset_data_1mic.Downloadable.DynTable_Main)
+C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+                              C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o) ($M.CVC_SEND_CAP.headset_data_2mic.Downloadable.DynTable_Main)
+C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+                              C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o) ($M.CVC_SEND_CAP.speaker_data_1mic.Downloadable.DynTable_Main)
+C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+                              C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o) ($M.CVC_SEND_CAP.speaker_data_2mic.Downloadable.DynTable_Main)
+C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                              C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o) ($cvc.init.root)
+
+Discarded input sections
+
+ .text          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+ .data          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+ .bss           0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+ .text          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ .data          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ .bss           0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ GLOBAL_DEBUG_STRINGS?$_ACAT_INSTANCE_TYPE_CAP_ID_DOWNLOAD_CVCHS1MIC_SEND_NB
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ GLOBAL_DEBUG_STRINGS?$_ACAT_INSTANCE_TYPE_CAP_ID_DOWNLOAD_CVCHS1MIC_SEND_WB
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ GLOBAL_DEBUG_STRINGS?$_ACAT_INSTANCE_TYPE_CAP_ID_DOWNLOAD_CVCHS2MIC_MONO_SEND_NB
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ GLOBAL_DEBUG_STRINGS?$_ACAT_INSTANCE_TYPE_CAP_ID_DOWNLOAD_CVCHS2MIC_MONO_SEND_WB
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ GLOBAL_DEBUG_STRINGS?$_ACAT_INSTANCE_TYPE_CAP_ID_DOWNLOAD_CVCHS2MIC_BINAURAL_SEND_NB
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ GLOBAL_DEBUG_STRINGS?$_ACAT_INSTANCE_TYPE_CAP_ID_DOWNLOAD_CVCHS2MIC_BINAURAL_SEND_WB
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ GLOBAL_DEBUG_STRINGS?$_ACAT_INSTANCE_TYPE_CAP_ID_DOWNLOAD_CVCSPKR1MIC_SEND_NB
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ GLOBAL_DEBUG_STRINGS?$_ACAT_INSTANCE_TYPE_CAP_ID_DOWNLOAD_CVCSPKR1MIC_SEND_WB
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ GLOBAL_DEBUG_STRINGS?$_ACAT_INSTANCE_TYPE_CAP_ID_DOWNLOAD_CVCSPKR2MIC_SEND_NB
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ GLOBAL_DEBUG_STRINGS?$_ACAT_INSTANCE_TYPE_CAP_ID_DOWNLOAD_CVCSPKR2MIC_SEND_WB
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ .text          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ .data          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ .bss           0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ PM?$M.CVC_SEND_CAP.config.auto_1mic__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ PM?$M.CVC_SEND_CAP.config.auto_2mic__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ PM?$M.CVC_SEND_CAP.config.speaker_3mic__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ PM?$M.CVC_SEND_CAP.config.speaker_4mic__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ PM?$M.CVC_SEND_CAP_Config_spkr_circ_3mic__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ PM?$M.CVC_SEND_CAP_Config_spkr_circ_3mic_va1b__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ PM?$M.CVC_SEND_CAP_Config_spkr_circ_3mic_va4b__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ PM?$M.CVC_SEND_CAP_Config_headset_2mic_wakeon__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ PM?$M.CVC_SEND_CAP_Config_headset_2mic_bargein__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ PM?$M.CVC_SEND.hs2mic_va__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ .text          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ .data          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ .bss           0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ PM?$M.cvc_send.passthrough.speaker_va__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ .text          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+ .data          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+ .bss           0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+ .text          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+ .data          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+ .bss           0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+ .text          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+ .data          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+ .bss           0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+ .text          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+ .data          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+ .bss           0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+ .text          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+ .data          0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+ .bss           0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+ PM?$M.CVC_SEND.module_init.stream_purge__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+ PM?$M.CVC_SEND.module_init.filter_bank.stream_connect__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+ PM?$M.CVC_SEND.module_init.dms200.speaker_va__minim
+                0x00000000        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x04002000                PM_RAM_CODE_START_ADDRESS = 0x4002000
+                0x00000200                PATCH_RESERVED_RAM = 0x200
+                0x00040000                $DATA_RAM_SIZE_BYTES = 0x40000
+                0x00000c00                $STACK_SIZE_BYTES = 0xc00
+                0x04200000                $PM_RAM_START_ADDRESS = 0x4200000
+                0x00100000                $DATA_PM_RAM_WINDOW = 0x100000
+                0x00700000                $DATA_RAM_START_ADDRESS = 0x700000
+                0x00740000                $DATA_RAM_END_ADDRESS = ($DATA_RAM_START_ADDRESS + $DATA_RAM_SIZE_BYTES)
+                0xff800004                $DM2_RAM_BASE_ADDRESS = 0xff800004
+                0x00000060                $PRESERVE_BLOCK_SIZE_BYTES = 0x60
+                0x84200000                $CODE_MAGIC$ = 0x84200000
+                0x04200000                __CODE_ram_address = $PM_RAM_START_ADDRESS
+                0x84200000                . = ($CODE_MAGIC$ ALIGN 0x4)
+
+.text_reset     0x84200000        0x0 load address 0x04200000
+                0x84200000                $MEM_MAP_CODE_START = <code 343> (.)
+ *(RESET_PM*)
+
+.text_maxim
+ *.o(PM_MAXIM\?*__maxim)
+ *.o(*PM_FLASH\?*__maxim)
+ *.o(*PM*\?*__maxim)
+ *.o(*pm*\?*__maxim)
+
+.text_maxim_private
+ *.po(PM_MAXIM\?*__maxim)
+ *.po(*PM_FLASH\?*__maxim)
+ *.po(*PM*\?*__maxim)
+
+.text_minim     0x84200000     0x12cc
+ *.o(PM_KEEP\?*)
+ *.o(*pm*\?*__minim)
+ pm?$_cvc_send_create__minim
+                0x84200000       0xca C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x84200000                $_cvc_send_create
+ pm?$_cvc_send_destroy__minim
+                0x842000ca       0x86 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x842000ca                $_cvc_send_destroy
+ pm?$_cvc_send_connect__minim
+                0x84200150       0x94 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x84200150                $_cvc_send_connect
+ pm?$_cvc_send_disconnect__minim
+                0x842001e4       0xc2 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x842001e4                $_cvc_send_disconnect
+ pm?$_cvc_send_buffer_details__minim
+                0x842002a6       0x7e C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x842002a6                $_cvc_send_buffer_details
+ pm?$_cvc_send_get_sched_info__minim
+                0x84200324       0x40 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x84200324                $_cvc_send_get_sched_info
+ pm?$_cvc_send_process_data__minim
+                0x84200364      0x16a C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x84200364                $_cvc_send_process_data
+ pm?$_cvc_send_opmsg_obpm_set_control__minim
+                0x842004ce      0x146 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x842004ce                $_cvc_send_opmsg_obpm_set_control
+ pm?$_cvc_send_opmsg_obpm_get_params__minim
+                0x84200614       0x22 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x84200614                $_cvc_send_opmsg_obpm_get_params
+ pm?$_cvc_send_opmsg_obpm_get_defaults__minim
+                0x84200636       0x22 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x84200636                $_cvc_send_opmsg_obpm_get_defaults
+ pm?$_cvc_send_opmsg_obpm_set_params__minim
+                0x84200658       0x2a C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x84200658                $_cvc_send_opmsg_obpm_set_params
+ pm?$_cvc_send_opmsg_obpm_get_status__minim
+                0x84200682      0x11e C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x84200682                $_cvc_send_opmsg_obpm_get_status
+ pm?$_cvc_send_opmsg_set_ucid__minim
+                0x842007a0       0x4c C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x842007a0                $_cvc_send_opmsg_set_ucid
+ pm?$_cvc_send_opmsg_get_ps_id__minim
+                0x842007ec       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x842007ec                $_cvc_send_opmsg_get_ps_id
+ pm?$_cvc_send_opmsg_get_voice_quality__minim
+                0x84200814       0x40 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x84200814                $_cvc_send_opmsg_get_voice_quality
+ pm?$_cvc_send_ups_set_state__minim
+                0x84200854        0x8 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x84200854                $_cvc_send_ups_set_state
+ pm?$_ups_state_snd__minim
+                0x8420085c       0x2e C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x8420085c                $_ups_state_snd
+ pm?$_cvc_send_set_requested_features__minim
+                0x8420088a       0x6c C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x8420088a                $_cvc_send_set_requested_features
+ pm?$_ups_params_snd__minim
+                0x842008f6       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x842008f6                $_ups_params_snd
+ pm?$_cvc_send_release_constants__minim
+                0x8420091e        0x2 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x8420091e                $_cvc_send_release_constants
+ pm?_cvc_send_config__minim
+                0x84200920       0xba C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ *.o(PM_FLASH\?*__minim)
+ *.o(*PM*\?*__minim)
+ PM?$M.kdc_start__minim
+                0x842009da       0x40 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+                0x842009da                $kdc_start
+ PM?$M.CVC_SEND_CAP.config.headset_1mic__minim
+                0x84200a1a       0x14 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                0x84200a1a                $_CVC_SEND_CAP_Config_headset_1mic
+ PM?$M.CVC_SEND_CAP.config.headset_2mic__minim
+                0x84200a2e       0x18 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                0x84200a2e                $_CVC_SEND_CAP_Config_headset_2mic_binaural
+                0x84200a34                $M.CVC_SEND_CAP.config.headset_2mic.Config_headset_2mic
+                0x84200a32                $_CVC_SEND_CAP_Config_headset_2mic_mono
+ PM?$M.CVC_SEND_CAP.config.speaker_1mic__minim
+                0x84200a46       0x14 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                0x84200a46                $_CVC_SEND_CAP_Config_speaker_1mic
+ PM?$M.CVC_SEND_CAP.config.speaker_2mic__minim
+                0x84200a5a       0x14 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                0x84200a5a                $_CVC_SEND_CAP_Config_speaker_2mic
+ PM?$M.CVC_SEND_CAP.dyn_config__minim
+                0x84200a6e       0x2c C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                0x84200a6e                $cvc_send.dyn_config
+ PM?$M.CVC_SEND_CAP.Create__minim
+                0x84200a9a      0x134 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                0x84200bc0                $M.CVC_SEND_CAP.Create.create_done
+                0x84200bca                $M.CVC_SEND_CAP.Create.create_failed
+                0x84200bbe                $M.CVC_SEND_CAP.Create.stream_create
+                0x84200a9a                $_CVC_SEND_CAP_Create
+                0x84200b62                $M.CVC_SEND_CAP.Create.jp_no_asf_share
+ PM?$M.CVC_SEND_CAP.Destroy__minim
+                0x84200bce       0xa6 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                0x84200bce                $_CVC_SEND_CAP_Destroy
+ PM?$M.CVC_SEND_CAP.Initialize__minim
+                0x84200c74        0xe C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                0x84200c74                $_CVC_SEND_CAP_Initialize
+ PM?$M.CVC_SEND_CAP.Process__minim
+                0x84200c82       0xbe C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                0x84200cf6                $cvc_send.mic_stream_update
+                0x84200c82                $_CVC_SEND_CAP_Process
+ PM?$M.COMPUTE_VOICE_QUALITY_METRIC__minim
+                0x84200d40       0xbc C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+                0x84200d72                $M.COMPUTE_VOICE_QUALITY_METRIC.use_ASF
+                0x84200d54                $M.COMPUTE_VOICE_QUALITY_METRIC.compute_WPL
+                0x84200dbc                $M.COMPUTE_VOICE_QUALITY_METRIC.compute_metric
+                0x84200df4                $M.COMPUTE_VOICE_QUALITY_METRIC.exit
+                0x84200dec                $M.COMPUTE_VOICE_QUALITY_METRIC.return_0_scale
+                0x84200d96                $M.COMPUTE_VOICE_QUALITY_METRIC.no_ASF
+                0x84200d40                $_compute_voice_quality_metric
+                0x84200df0                $M.COMPUTE_VOICE_QUALITY_METRIC.return_error
+ PM?$M.cvc_send.passthrough.voice__minim
+                0x84200dfc       0x44 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+                0x84200dfc                $cvc_send.passthrough.voice
+                0x84200e3a                $M.cvc_send.passthrough.voice.get_source
+                0x84200e0e                $cvc_send.passthrough
+ PM?$M.cvc_send.passthrough.va__minim
+                0x84200e40       0x14 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+                0x84200e40                $cvc_send.passthrough.va
+ PM?$M.CVC_SEND.stream_gain__minim
+                0x84200e54       0x26 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+                0x84200e62                $cvc_send.stream_gain.process
+                0x84200e58                $cvc_send.stream_gain.process.va
+                0x84200e5e                $cvc_send.stream_gain.process.voice
+                0x84200e54                $cvc_send.stream_gain.passthrough
+                0x84200e64                $cvc_send.stream_gain
+ PM?$M.CVC_SEND.mute_control__minim
+                0x84200e7a       0x12 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+                0x84200e7a                $cvc_send.mute_control
+ PM?$M.CVC_SEND.module_init.root__minim
+                0x84200e8c       0x6a C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84200e8c                $cvc.init.root
+                0x84200eda                $M.CVC_SEND.module_init.root.end_CE_fixed_param
+ PM?$M.CVC_SEND.module_init.harmonicity__minim
+                0x84200ef6        0x8 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84200ef6                $cvc.init.harm
+ PM?$M.CVC_SEND.module_init.harmonicity_export__minim
+                0x84200efe        0xe C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84200efe                $cvc.init.harm_export
+ PM?$M.CVC_SEND.module_init.oms_in__minim
+                0x84200f0c        0xe C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84200f0c                $cvc.init.oms_in
+ PM?$M.CVC_SEND.module_control.oms_in__minim
+                0x84200f1a       0x1a C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84200f1a                $cvc.mc.oms_in
+ PM?$M.CVC_SEND.module_control.dmss.residule_noise_reduction__minim
+                0x84200f34       0x64 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84200f88                $M.CVC_SEND.module_control.dmss.residule_noise_reduction.rnr_auto
+                0x84200f34                $cvc.mc.dmss_rnr
+ PM?$M.CVC_SEND.module_control.dmss.target_protection__minim
+                0x84200f98       0x40 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84200f98                $cvc.mc.dmss_tp
+ PM?$M.CVC_SEND.module_init.aec520__minim
+                0x84200fd8       0x44 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84200fd8                $cvc.init.aec520
+                0x84201010                $cvc.init.vsm_fdnlp
+ PM?$M.CVC_SEND.module_control.aec520__minim
+                0x8420101c       0x40 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x8420101c                $cvc.mc.aec520
+                0x84201056                $cvc.mc.aec520_nlp
+                0x84201056                $cvc.mc.aec520_cng
+ PM?$M.CVC_SEND.module_control.aec_ref_delay__minim
+                0x8420105c       0x10 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x8420105c                $cvc.mc.ref_delay
+ PM?$M.CVC_SEND.event.echo_flag__minim
+                0x8420106c       0x12 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x8420106c                $cvc.event.echo_flag
+ PM?$M.CVC_SEND.module_init.aed100__minim
+                0x8420107e       0x1a C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x8420107e                $cvc.init.aed100
+ PM?$M.CVC_SEND.module_control.aed100__minim
+                0x84201098       0x34 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84201098                $cvc.mc.aed100
+ PM?$M.CVC_SEND.module_init.agc400__minim
+                0x842010cc       0x12 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x842010cc                $cvc.init.agc400
+ PM?$M.CVC_SEND.module_control.agc400__minim
+                0x842010de       0x38 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x842010de                $cvc.mc.agc400
+ PM?$M.CVC_SEND.module_init.mgdc_persist__minim
+                0x84201116       0x14 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84201116                $cvc.mgdc_persist.init
+ PM?$M.CVC_SEND.event.mgdc_persist__minim
+                0x8420112a        0xa C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x8420112a                $cvc.mgdc_persist.state_upload
+ PM?$M.CVC_SEND.module_control.mgdc100__minim
+                0x84201134       0x3c C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84201134                $cvc.mc.mgdc100
+ PM?$M.CVC_SEND.event.mgdc_harm_dynamic__minim
+                0x84201170       0x20 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84201170                $cvc.mgdc.harm_dynamic
+ PM?$M.CVC_SEND.module_init.ndvc200__minim
+                0x84201190        0xc C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84201190                $cvc.init.ndvc200
+ PM?$M.CVC_SEND.module_init.asf200__minim
+                0x8420119c       0x2a C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x8420119c                $cvc.init.asf100
+                0x842011c4                $cvc.init.asf200
+ PM?$M.CVC_SEND.module_control.asf100__minim
+                0x842011c6       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x842011de                $M.CVC_SEND.module_control.asf100.end_beam0_switch
+                0x842011c6                $cvc.mc.asf100
+                0x842011de                $cvc.mc.asf200
+ PM?$M.CVC_SEND.user.wnr_oms.init__minim
+                0x842011ee       0x18 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x842011ee                $cvc.user.dms200.wnr.initialize
+ PM?$M.CVC_SEND.user.dms200.va_init__minim
+                0x84201206       0x22 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84201206                $cvc.user.dms200.va_init
+ PM?$M.CVC_SEND.module_init.dms200__minim
+                0x84201228       0x4c C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x8420125e                $cvc.init.dms200.common
+                0x84201228                $cvc.init.dms200
+ PM?$M.CVC_SEND.module_control.dms200__minim
+                0x84201274       0x2a C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x84201274                $cvc.mc.dms200
+ PM?$M.CVC_SEND.module_control.dms_out__minim
+                0x8420129e        0x8 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x8420129e                $cvc.mc.dms_out
+ PM?$M.CVC_SEND.module_control.voice__minim
+                0x842012a6       0x12 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x842012a6                $cvc.mc.voice
+ PM?$M.CVC_SEND.module_control.va__minim
+                0x842012b8       0x12 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x842012b8                $cvc.mc.va
+ PM?$M.CVC_SEND.pre_process__minim
+                0x842012ca        0x2 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+                0x842012ca                $cvc.pre_process
+
+.text_minim_private
+                0x842012cc        0x0
+ *.po(PM_KEEP\?*)
+ *.po(*pm*\?*__minim)
+ *.po(*PM*\?*__minim)
+                0x842012cc                $MEM_MAP_CODE_END = <code 343> (.)
+                0x000012cc                __CODE_RAM_SIZE = ($MEM_MAP_CODE_END - $MEM_MAP_CODE_START)
+                0x042012cc                __DM2_ram_address = ((__CODE_ram_address + __CODE_RAM_SIZE) ALIGN 0x4)
+                0xff800004                . = $DM2_RAM_BASE_ADDRESS
+                0xff800004                $DM2_START_ADDRESS = .
+
+.initc_dm2_private
+                0xff800004        0x0 load address 0x042012cc
+                0xff800004                $MEM_MAP_DM2_INITC_START = <code 343> (.)
+ *(*DM_SPI_COMMS*)
+ *.po(*DM2\?*)
+ *.po(*dm2\?*)
+
+.initc_dm2      0xff800004        0x0
+ *.o(*DM2\?*)
+ *.o(*dm2\?*)
+                0xff800004                $MEM_MAP_DM2_INITC_END = <code 343> (.)
+                0x00000000                $DM2_INIT_SIZE_BYTES = ($MEM_MAP_DM2_INITC_END - $MEM_MAP_DM2_INITC_START)
+                0xff800004                $DM2_END_ADDRESS = .
+                0x042012cc                __const_data_api_address = ((__DM2_ram_address + $DM2_INIT_SIZE_BYTES) ALIGN 0x4)
+                0xff800004                . = (. ALIGN 0x4)
+
+.const_data_api_16
+                0xff800004     0x32ee load address 0x042012cc
+                0xff800004                $CONST16_START = <code 343> (.)
+ *.o(const16\?*)
+ *.o(CONST16\?*)
+ CONST16?$M.CVC_SEND_CAP.headset_data_1mic.Downloadable.DynTable_Main
+                0xff800004      0x98e C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+                0xff800004                $_CVC_SEND_CAP_headset_data_1mic_DownloadableDynTable_Main
+                0xff800004                $M.CVC_SEND_CAP.headset_data_1mic.Downloadable.DynTable_Main
+ CONST16?$M.CVC_SEND_CAP.headset_data_2mic.Downloadable.DynTable_Main
+                0xff800992      0xf38 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+                0xff800992                $_CVC_SEND_CAP_headset_data_2mic_DownloadableDynTable_Main
+                0xff800992                $M.CVC_SEND_CAP.headset_data_2mic.Downloadable.DynTable_Main
+ CONST16?$M.CVC_SEND_CAP.speaker_data_1mic.Downloadable.DynTable_Main
+                0xff8018ca      0xa70 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+                0xff8018ca                $_CVC_SEND_CAP_speaker_data_1mic_DownloadableDynTable_Main
+                0xff8018ca                $M.CVC_SEND_CAP.speaker_data_1mic.Downloadable.DynTable_Main
+ CONST16?$M.CVC_SEND_CAP.speaker_data_2mic.Downloadable.DynTable_Main
+                0xff80233a      0xfb8 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+                0xff80233a                $_CVC_SEND_CAP_speaker_data_2mic_DownloadableDynTable_Main
+                0xff80233a                $M.CVC_SEND_CAP.speaker_data_2mic.Downloadable.DynTable_Main
+
+.const_data_api_16_private
+                0xff8032f2        0x0
+ *.po(const16\?*)
+ *.po(CONST16\?*)
+                0xff8032f2                $CONST16_END = <code 343> (.)
+
+.const_data_api
+                0xff8032f4      0xcd0 load address 0x042045bc
+                0xff8032f4                $CONST32_START = <code 343> (.)
+ *.o(const\?*)
+ *.o(CONST\?*)
+ CONST?$M.CVC_SEND_CAP.headset_data_1mic.Downloadable.DynTable_Linker
+                0xff8032f4      0x2a8 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+                0xff8032f4                $M.CVC_SEND_CAP.headset_data_1mic.Downloadable.DynTable_Linker
+ CONST?$M.CVC_SEND_CAP.headset_data_2mic.Downloadable.DynTable_Linker
+                0xff80359c      0x398 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+                0xff80359c                $M.CVC_SEND_CAP.headset_data_2mic.Downloadable.DynTable_Linker
+ CONST?$M.CVC_SEND_CAP.speaker_data_1mic.Downloadable.DynTable_Linker
+                0xff803934      0x2d8 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+                0xff803934                $M.CVC_SEND_CAP.speaker_data_1mic.Downloadable.DynTable_Linker
+ CONST?$M.CVC_SEND_CAP.speaker_data_2mic.Downloadable.DynTable_Linker
+                0xff803c0c      0x3b8 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+                0xff803c0c                $M.CVC_SEND_CAP.speaker_data_2mic.Downloadable.DynTable_Linker
+
+.const_data_api_private
+                0xff803fc4        0x0
+ *.po(const\?*)
+ *.po(CONST\?*)
+                0xff803fc4                $CONST32_END = <code 343> (.)
+                0x00003fc0                $CONST_DATA_API_SIZE_BYTES = ($CONST32_END - $CONST16_START)
+                0x0420528c                __CONST_ram_address = ((__const_data_api_address + $CONST_DATA_API_SIZE_BYTES) ALIGN 0x4)
+                0x00700000                . = ($DATA_RAM_START_ADDRESS ALIGN 0x4)
+                0x00700000                $DM1_START_ADDRESS = .
+
+.dmconst        0x00700000      0x208 load address 0x0420528c
+                0x00700000                $MEM_MAP_CONST_START = <code 343> (.)
+ *.o(DMCONST*)
+ *.o(dmconst*)
+ dmconst?$_cvc_send_1mic_nb_hs_cap_data
+                0x00700000       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x00700000                $_cvc_send_1mic_nb_hs_cap_data
+ dmconst?$_cvc_send_1mic_wb_hs_cap_data
+                0x00700028       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x00700028                $_cvc_send_1mic_wb_hs_cap_data
+ dmconst?$_cvc_send_2mic_hs_mono_nb_cap_data
+                0x00700050       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x00700050                $_cvc_send_2mic_hs_mono_nb_cap_data
+ dmconst?$_cvc_send_2mic_hs_mono_wb_cap_data
+                0x00700078       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x00700078                $_cvc_send_2mic_hs_mono_wb_cap_data
+ dmconst?$_cvc_send_2mic_hs_binaural_nb_cap_data
+                0x007000a0       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x007000a0                $_cvc_send_2mic_hs_binaural_nb_cap_data
+ dmconst?$_cvc_send_2mic_hs_binaural_wb_cap_data
+                0x007000c8       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x007000c8                $_cvc_send_2mic_hs_binaural_wb_cap_data
+ dmconst?$_cvc_send_1mic_speaker_nb_cap_data
+                0x007000f0       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x007000f0                $_cvc_send_1mic_speaker_nb_cap_data
+ dmconst?$_cvc_send_1mic_speaker_wb_cap_data
+                0x00700118       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x00700118                $_cvc_send_1mic_speaker_wb_cap_data
+ dmconst?$_cvc_send_2mic_speaker_nb_cap_data
+                0x00700140       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x00700140                $_cvc_send_2mic_speaker_nb_cap_data
+ dmconst?$_cvc_send_2mic_speaker_wb_cap_data
+                0x00700168       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x00700168                $_cvc_send_2mic_speaker_wb_cap_data
+ dmconst?$_cvc_send_handler_table
+                0x00700190       0x28 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x00700190                $_cvc_send_handler_table
+ dmconst?$_cvc_send_opmsg_handler_table
+                0x007001b8       0x50 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x007001b8                $_cvc_send_opmsg_handler_table
+
+.dmconst_private
+                0x00700208        0x0
+ *.po(DMCONST*)
+ *.po(dmconst*)
+                0x00700208                $MEM_MAP_CONST_END = <code 343> (.)
+                0x00000208                $CONST_SIZE_BYTES = ($MEM_MAP_CONST_END - $MEM_MAP_CONST_START)
+                0x04205494                __DM1_ram_address = ((__CONST_ram_address + $CONST_SIZE_BYTES) ALIGN 0x4)
+                0x00700208                . = (. ALIGN 0x4)
+
+.initc_dm1      0x00700208       0x94 load address 0x04205494
+                0x00700208                $MEM_MAP_DM1_INITC_START = <code 343> (.)
+ *.o(*DM1\?*)
+ *.o(*dm1\?*)
+ *.o(dm\?*)
+ dm?$_cvc_send_caps
+                0x00700208       0x90 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+                0x00700208                $_cvc_send_caps
+ *.o(DM\?*)
+ .initc_dm1     0x00700298        0x4 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+                0x00700298                __devtools_image_checksum
+
+.initc_dm1_private
+                0x0070029c        0x0
+ *.po(*DM1\?*)
+ *.po(*dm1\?*)
+ *.po(dm\?*)
+ *.po(DM\?*)
+                0x0070029c                $MEM_MAP_DM1_INITC_END = <code 343> (.)
+                0x00000094                $INITC_DM1_SIZE = ($MEM_MAP_DM1_INITC_END - $MEM_MAP_DM1_INITC_START)
+                0x04205528                __DATA_zero_init_address = ((__DM1_ram_address + $INITC_DM1_SIZE) ALIGN 0x4)
+
+.zeroinit       0x0070029c        0x0 load address 0x04205528
+                0x0070029c                $MEM_MAP_BSS_START = <code 343> (.)
+ *.o(dmzi*)
+ *.o(DMZI*)
+ *.o(*DM1_ZI\?*)
+ *.o(*dm1_zi\?*)
+
+.zeroinit_private
+                0x0070029c        0x0
+ *.po(dmzi*)
+ *.po(DMZI*)
+ *.po(*DM1_ZI\?*)
+ *.po(*dm1_zi\?*)
+                0x0070029c                $MEM_MAP_BSS_END = <code 343> (.)
+                0x0073f3a0                . = (($DATA_RAM_END_ADDRESS - $PRESERVE_BLOCK_SIZE_BYTES) - $STACK_SIZE_BYTES)
+
+.stack          0x0073f3a0        0x0
+                0x0073f3a0                $MEM_MAP_STACK_START = <code 343> (.)
+ *(STACK_DM*)
+                0x0073f3a0                $MEM_MAP_STACK_END = <code 343> (.)
+                0x0073ffa0                . = ($DATA_RAM_END_ADDRESS - $PRESERVE_BLOCK_SIZE_BYTES)
+
+.preserve       0x0073ffa0        0x0
+                0x0073ffa0                $MEM_PRESERVE_START = <code 343> (.)
+ *(DM_PRESERVE_BLOCK*)
+                0x0073ffa0                $MEM_PRESERVE_END = <code 343> (.)
+                0x0073ffa0                $DM1_END_ADDRESS = .
+                0x15500000                . = 0x15500000
+
+debug_strings
+ *(DEBUG_TRACE_STRINGS*)
+                0x00000000                $MEM_MAP_BSS_LENGTH_DWORDS = ((SIZEOF (.zeroinit) + 0x3) / 0x4)
+                0x00105494                $MEM_MAP_DM1_INITC_ROM_ADDR = ($DATA_PM_RAM_WINDOW + <code 343> ((__DM1_ram_address - __CODE_ram_address)))
+                0x00700000                $DM1_REGION.__Base = $DM1_START_ADDRESS
+                0x0073ffa0                $DM1_REGION.__Limit = $DM1_END_ADDRESS
+                0xff800004                $DM2_REGION.__Base = $DM2_START_ADDRESS
+                0xff800004                $DM2_REGION.__Limit = $DM2_END_ADDRESS
+                0x00000025                $DM1_INIT_SIZE_DWORDS = ((SIZEOF (.initc_dm1) + 0x3) / 0x4)
+                0x001012cc                $MEM_MAP_DM2_INITC_ROM_ADDR = ($DATA_PM_RAM_WINDOW + <code 343> ((__DM2_ram_address - __CODE_ram_address)))
+                0x00000000                $DM2_INIT_SIZE_DWORDS = (($DM2_INIT_SIZE_BYTES + 0x3) / 0x4)
+                0xff800004                $DM_DNLD_CONST16_REGION.__Base = $CONST16_START
+                0xff8032f1                $DM_DNLD_CONST16_REGION.__Limit = ($CONST16_END - 0x1)
+                0xff8032f4                $DM_DNLD_CONST32_REGION.__Base = $CONST32_START
+                0xff803fc3                $DM_DNLD_CONST32_REGION.__Limit = ($CONST32_END - 0x1)
+                0x00700000                $DMCONST_DNLD_REGION.__Base = $MEM_MAP_CONST_START
+                0x00700207                $DMCONST_DNLD_REGION.__Limit = ($MEM_MAP_CONST_END - 0x1)
+                0x00700298                $__devtools_image_checksum = __devtools_image_checksum
+START GROUP
+LOAD C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+LOAD C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a
+LOAD D:\QCC512X\ADK_QCC512X_ROM_V21_WIN_6.4.0.39\audio\kalimba_ROM_5951\kymera\output\stre_rom_v21_release\build\debugbin\kymera_stre_audio.elf
+LOAD D:\QCC512X\ADK_QCC512X_ROM_V21_WIN_6.4.0.39\tools\kcc\lib\QCC512x_audio\libc.a
+LOAD D:\QCC512X\ADK_QCC512X_ROM_V21_WIN_6.4.0.39\tools\kcc\lib\QCC512x_audio\libfle.a
+LOAD D:\QCC512X\ADK_QCC512X_ROM_V21_WIN_6.4.0.39\tools\kcc\lib\QCC512x_audio\libcrt.a
+END GROUP
+OUTPUT(C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugbin\download_cvc_send.elf elf32-littlekalimba)
+
+.debug_comment  0x00000000      0x3eb
+ .debug_comment
+                0x00000000       0x68 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+ .debug_comment
+                0x00000068       0xab C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ .debug_comment
+                0x00000113       0x68 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ .debug_comment
+                0x0000017b       0x68 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ .debug_comment
+                0x000001e3       0x68 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+ .debug_comment
+                0x0000024b       0x68 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+ .debug_comment
+                0x000002b3       0x68 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+ .debug_comment
+                0x0000031b       0x68 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+ .debug_comment
+                0x00000383       0x68 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+
+.debug_line     0x00000000     0x3b23
+ .debug_line    0x00000000       0xd7 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+ .debug_line    0x000000d7     0x2253 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ .debug_line    0x0000232a      0x95b C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ .debug_line    0x00002c85      0x1bd C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ .debug_line    0x00002e42       0xbc C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+ .debug_line    0x00002efe       0xbc C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+ .debug_line    0x00002fba       0xbc C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+ .debug_line    0x00003076       0xbc C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+ .debug_line    0x00003132      0x9f1 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+
+.debug_info     0x00000000     0x84be
+ .debug_info    0x00000000      0x12a C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+ .debug_info    0x0000012a     0x6e48 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ .debug_info    0x00006f72      0x4b1 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ .debug_info    0x00007423      0x190 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ .debug_info    0x000075b3      0x1e1 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+ .debug_info    0x00007794      0x1e1 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+ .debug_info    0x00007975      0x1e1 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+ .debug_info    0x00007b56      0x1e1 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+ .debug_info    0x00007d37      0x787 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+
+.debug_abbrev   0x00000000      0x538
+ .debug_abbrev  0x00000000       0x69 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+ .debug_abbrev  0x00000069      0x20e C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ .debug_abbrev  0x00000277       0x67 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ .debug_abbrev  0x000002de       0x67 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ .debug_abbrev  0x00000345       0x63 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+ .debug_abbrev  0x000003a8       0x63 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+ .debug_abbrev  0x0000040b       0x63 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+ .debug_abbrev  0x0000046e       0x63 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+ .debug_abbrev  0x000004d1       0x67 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+
+.debug_aranges  0x00000000      0x2f8
+ .debug_aranges
+                0x00000000       0x20 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+ .debug_aranges
+                0x00000020       0xc0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ .debug_aranges
+                0x000000e0       0xb8 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ .debug_aranges
+                0x00000198       0x40 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ .debug_aranges
+                0x000001d8        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+ .debug_aranges
+                0x000001d8        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+ .debug_aranges
+                0x000001d8        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+ .debug_aranges
+                0x000001d8        0x0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+ .debug_aranges
+                0x000001d8      0x120 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+
+.debug_pubnames
+                0x00000000      0x913
+ .debug_pubnames
+                0x00000000       0x12 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+ .debug_pubnames
+                0x00000012      0x673 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+ .debug_pubnames
+                0x00000685       0x12 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ .debug_pubnames
+                0x00000697       0x12 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ .debug_pubnames
+                0x000006a9       0x96 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_1mic.o)
+ .debug_pubnames
+                0x0000073f       0x96 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_headset_2mic.o)
+ .debug_pubnames
+                0x000007d5       0x96 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_1mic.o)
+ .debug_pubnames
+                0x0000086b       0x96 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_speaker_2mic.o)
+ .debug_pubnames
+                0x00000901       0x12 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)
+
+.debug_comment.1
+                0x00000000       0x30
+ .debug_comment
+                0x00000000       0x30 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+
+.note.ABI-tag   0x00000000       0x10
+ .note.ABI-tag  0x00000000       0x10 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\download\debugobj\kdc_start.o
+
+.debug_loc      0x00000000      0xbe0
+ .debug_loc     0x00000000      0xbe0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+
+.debug_frame    0x00000000      0x3e8
+ .debug_frame   0x00000000      0x3e8 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send.o)
+
+.debug_ranges   0x00000000      0x200
+ .debug_ranges  0x00000000       0xb0 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(cvc_send_proc.o)
+ .debug_ranges  0x000000b0       0x38 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(pass_through.o)
+ .debug_ranges  0x000000e8      0x118 C:\Users\dannywang\Documents\sink\audio\kalimba\kymera\tools\KCSMaker\out\stre_rom_v21_release\capabilities\cvc_send\debugbin\libcvc_send.a(config_functions.o)

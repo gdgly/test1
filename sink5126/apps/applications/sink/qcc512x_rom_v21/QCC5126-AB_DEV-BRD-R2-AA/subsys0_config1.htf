@@ -1,0 +1,209 @@
+
+file=curator1
+
+################################################################################
+# Note: The mib UartPinsConfig is used to configure the UART PIOs
+#
+# UART PIO settings for Aura QCC5126 are RTS:61 CTS:5 TX:54 RX:53
+#UartPinsConfig = [ 3d 05 36 35 ]
+# UART PIO settings for Aura WBLAM124 are RTS:22 CTS:23 TX:20 RX:21 
+UartPinsConfig = [ 16 17 14 15 ]
+
+################################################################################
+# Note: The mib ActiveDigitalVoltageAt32MHz selects the digital voltage level
+#       to use when the system is active in 32MHz operation.
+#
+#       Values are:
+#          0 - use 1V1 [Default]
+#          1 - use 1V0
+#
+#       This will remain set to 1V1 at this time pending validation of 1V0 
+#       operation.
+#
+# ActiveDigitalVoltageAt32MHz=1
+
+################################################################################
+# Note: The mib XtalCalibrationParameters is used to configure the XTAL
+#       calibration alogorithm. This consists of three settings per XTAL power
+#       mode (ULP, LP and LN) of:
+#         Min Bias - Minimum Bias setting allowed
+#         Max Bias - Maximum Bias setting allowed
+#         Target Threshold - Threshold crossing at which the bias is selected
+# 
+#       An additional globally applied option is provided for selecting the
+#       bias prior to, or after, crossing below the comparator target threshold
+#
+#       This MIB uses an array of ten octets defined as follows:
+#        Octets 0-2 - ULP mode Min Bias, Max Bias and Target Threshold resp.  
+#        Octets 3-5 - LP mode Min Bias, Max Bias and Target Threshold resp.
+#        Octets 6-8 - LN mode Min Bias, Max Bias and Target Threshold resp.
+#        Octet 9 - Bit 0 - Increment bias after below Target Threshold reached. 
+#        Octet 9 - Bits 7:1 - Reserved.
+#
+#       In simple terms, the calibration algorithm comprises the following
+#       sequence steps for each XTAL power mode:
+#         - starts with a bias setting of Max Bias
+#         - calculates a comparator value based on the XTAL amplitude measurements
+#           for the current bias setting
+#         - if the comparator value is greater than the Target Threshold, and the
+#           current bias is greater than the Min Bias, then the bias value is 
+#           decremented and the previous step executed.
+#         - if the above calibration loop exits because the Min Bias has been 
+#           reached, then the Min Bias value shall be selected for the XTAL
+#           power mode being calibrated.
+#         - if the loop exits because the comparator value has gone below the
+#           Target Threshold, then the current bias value is selected for the
+#           XTAL power mode being calibrated. This bias value can, however, be 
+#           optionally incremented (via the Octet 9 Bit 0 setting) to ensure that 
+#           the final bias corresponds to a comparator value >= Target Threshold
+#           rather than one which is < Target Threshold.
+#
+#       The recommended settings for Aura 2.0 are:
+#          ULP - statically set: OSC_ULP_BIAS_TRIM = 7
+#          LP  - dynamically set: 8 < OSC_ULP_BIAS_TRIM < 20 with a Target 
+#                Threshold of 85.
+#          LN  - statically set: OSC_BIAS_TRIM = 10
+#
+XtalCalibrationParameters = [ 07 07 00 09 12 55 0a 0a 00 01 ]
+
+################################################################################
+# Note: The mib XtalPowerModeStateSettings is used to enable dynamic XTAL power
+#       mode transitioning between different power modes depending on the
+#       device's current operational configuration with respect to:
+#        - PLL operation - 'Or'-ing of the System PLL and MClk PLL Off/On states
+#        - Always-on-Voice (AOV) - Off/On state
+#        - Audio Analogue Clock (AAC) - Off/On state
+#        - BT sub-system - Disabled/Enabled state
+#
+#       The above thus gives 16 possible combinations for which one of the 
+#       following four XTAL power modes is selectable,:
+#         0 - Low Power (LP)
+#         1 - Low Power without current boost (LPX)
+#         2 - Low Power without current boost and LN regulator (LPXX)
+#         3 - Low Noise (LN)
+#
+#       N.B. The above power modes are set per nibble in the 8 octet length MIB 
+#            key.
+#
+#       As an example, the following MIB key settings of:
+#
+#       XtalPowerModeStateSettings = [02 01 02 01 00 00 00 00]
+#
+#       equates to:
+#
+#       Configuration
+#       PLL AOV AAC BT   Power Mode
+#        0   0   0   0     LPXX
+#        0   0   0   1     LP
+#        0   0   1   0     LPX
+#        0   0   1   1     LP
+#        0   1   0   0     LPXX
+#        0   1   0   1     LP
+#        0   1   1   0     LPX
+#        0   1   1   1     LP
+#          ..........
+#        1   1   1   0     LP
+#        1   1   1   1     LP
+#
+XtalPowerModeStateSettings = [ 02 01 02 01 00 00 00 00 ]
+
+################################################################################
+# Note: The mib SqifClockControl is used to configure the default clock source
+#       settings for the SQIF Interface 0 and SQIF Interface 1
+#
+#       This MIB uses two nibbles to set the SQIF clocks as follows:
+#       Bits 3:0 - define the SQIF Interface 0 clock source selection.
+#       Bits 7:4 - define the SQIF Interface 1 clock source selection.
+#
+#       Values for each SQIF clock nibble are:
+#       0 - XTAL clock source
+#       1 - PLL clock source
+#
+#       XTAL shall be selected for both SQIF Interfaces for Aura 2.0
+SqifClockControl = 0x00
+
+# CUR-5203 Aura V2: Set DISABLEACTIONSONUSBSUSPEND to true in default filesystem
+DisableActionsOnUSBSuspend = true
+
+# CUR-5269 "USBHubMaxPower" should default to 250 (that's 500mA)
+# All USB compliance testing uses this value.
+# Note that the MIB is defined as units of 2mA hence 250 = 500mA
+USBHubMaxPower = 250
+
+# Allow PWM/PFM Autoswitching
+PMUForcePWM = false
+
+# Set SMPS auto-switching thresholds to optimise power consumption in
+# typical audio streaming use case. See B-257076. These values depend on
+# inductor choice - the following are for 4.7uH inductors.
+PMUSMPSDigThresholds = [ 06 03 07 07 00 06 ]
+PMUSMPSAnaThresholds = [ 06 1a 07 03 00 07 ]
+
+# CUR-5476 "MaxTemperatureFor250PpmMode" is now default to 85 (use the full spec)
+MaxTemperatureFor250PpmMode = 85
+
+# CUR-5574 - increase subsystem watchdog timeouts to 500ms
+SubsystemWatchdogDefault  = [03E8 1770 01F4]
+
+# Patch point subtidy_tidy_subsystem is only called if this is true,
+# and this is used for CUR-5764 SQIF reset recovery time patch.
+TidyOnCrash = true
+
+# CUR-5847 Set HaltAllSubsystemsOnPanic = true in CRS a05 Aura 2.0 FS and default on main
+# When a subsystem crashes and the debugger is attached we must ensure that all
+# other subsystems are also halted. If we don't do this the state of the chip
+# is likely to change making coredumps and debug analysis extremely difficult.
+HaltAllSubsystemsOnPanic = true
+
+# MIB keys for AP memory APSxx04M-SQQ QSPI RAM
+
+EnableAudioSqif = true
+SqifEnableChipSelect1 = 4
+# APS1604M-SQQ (80/1 = 80MHz 4-4-4)
+QSPIRAMSettings = 0x3000006d
+
+# Pad being used for power control here is PIO2. The octets highlighted in the
+# following MIB keys must match the PIO expected to switch external circuitry
+# providing power to VDD_RAM_1V8 (pin J1). In this example, PIO2 is active low.
+# The PIO used for power control must either belong to the keep-alive domain
+# or have a default pad pull which ensures that the RAM is switched OFF when
+# the chip enters dormant mode.
+
+#                        Active level (0: Active low, 1: Active high)
+#                        |
+QSPIRAMPIOControl = 0x00003202
+#                            |
+#                            RAM_EN
+
+PioDirectionElements = [02 01]
+#                        |
+#                        RAM_EN
+
+#                       Default state (PIO level for RAM off)
+#                       |
+PioDriveElements = [02 01]
+#                    |
+#                    RAM_EN
+
+# The default value for the PioPadControlElements MIB key sets the pad control
+# for the pads used by Apps QSPI. When this key is set in the device manager 
+# filesystem, the default value is never set. Therefore the pad control values 
+# for the Apps QSPI must be configured here.
+#
+#                         Apps QSPI (replaces ROM default)     Audio QSPI                          CS1    PIO2
+PioPadControlElements = [ 0d 01 0a 02 09 59 0c 59 0b 59 0e 59  26 01 23 02 22 59 25 59 24 59 27 59 20 59  02 78 ]
+#                                                                                                         |
+#                                                                                                         RAM_EN
+
+# Winbond W25Q64FW
+QSPIFRAMLUTBaseParams = [00 ef 60 17 10 00 01 20 00]
+QSPIFRAMLUTSPIReadParams = [00 03 01]
+QSPIFRAMLUTSPIConfVector =  [00 06 02 01 50 02 31 02]
+QSPIFRAMLUTFastConfVector =  [00 06 02 01 50 02 31 02]
+QSPIFRAMLUTWriteCmds =  [00 02 06]
+QSPIFRAMLUTEraseCmds = [00 d8 60]
+QSPIFRAMLUTStatusReadParams = [00 01 01 02 01]
+QSPIFRAMLUTStatusReadVector = [00 03 01 01 05]
+QSPIFRAMLUTDPDCmds = [00 b9 ab]
+QSPIFRAMLUTFastReadParams = [00 03 eb 00 04]
+QSPIFRAMLUTResetVector = [00 05 02 01 66 01 99]
