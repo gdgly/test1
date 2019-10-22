@@ -201,5 +201,4 @@
     <file path="../../tws/sub_ui.c"/>
     <file path="../../tws/sub_ui.h"/>
     <file path="../../tws/tap_func.c"/>
-    <file path="../common/1_button.pio.buttonxml"/>
 </project>
