@@ -211,13 +211,6 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message) {
 
         case GAIA_CONNECT_IND:                   /* Indication of an inbound connection */
             appGaiaHandleConnectInd((const GAIA_CONNECT_IND_T *) message);
-#ifdef GAIA_TEST
-            /// GAIA连接成功，检测是否在通话中
-            if (appGetGaia()->transformAudioFlag == TRANSFORM_COMING) {
-                ///通知gaia客户端，有电话中
-                appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_BEGIN, 0xfe, 0, NULL);
-            }
-#endif
             break;
 
         case GAIA_DISCONNECT_IND:                /* Indication that the connection has closed */

@@ -85,8 +85,8 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
                 gaiaStarotPrivateData.speedTestSendUnit = 80 + 1;
             }
             appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
-            DEBUG_LOG("call GAIA_COMMAND_STAROT_START_SEND_TIMER, unit is : %d", gaiaStarotPrivateData.speedTestSendUnit);
             appGetGaia()->needCycleSendAudio = 1;
+            DEBUG_LOG("call GAIA_COMMAND_STAROT_START_SEND_TIMER, unit is : %d", gaiaStarotPrivateData.speedTestSendUnit);
             MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 10);
         }
             break;
@@ -381,6 +381,8 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
     DEBUG_LOG("call STAROT_DIALOG_STATUS STATUS IS %02x", status);
     StarotAttr *head = NULL;
 
+    DEBUG_LOG("call gaiaParseDialogStatus");
+
     /// 电话接入,只想通知一次APP电话来的消息
     if ((((status & dialogIn) > 0) && ((appGetGaia()->dialogStatus & dialogIn) < 1))
         || (((status & dialogOut) > 0) && ((appGetGaia()->dialogStatus & dialogOut) < 1))) {
@@ -650,12 +652,16 @@ void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message){
         return;
     }
     DEBUG_LOG("attr:%02X %02X", message->payload[0], message->payload[1]);
-    if(0X01 == body->attr){
-        appGetGaia()->transformAudioFlag = RECORD_CAN_TRANSFORM;
-        gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_ACCEPT_RECORD);
-    } else if(0X02 == body->attr) {
-        appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
-        gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_REJECT_RECORD);
+    if (0X01 == body->attr) {
+        if (TRANSFORM_NONE == appGetGaia()->transformAudioFlag) {
+            appGetGaia()->transformAudioFlag = RECORD_CAN_TRANSFORM;
+            gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_ACCEPT_RECORD);
+        }
+    } else if (0X02 == body->attr) {
+        if (RECORD_CAN_TRANSFORM == appGetGaia()->transformAudioFlag) {
+            appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
+            gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_REJECT_RECORD);
+        }
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
