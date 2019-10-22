@@ -118,7 +118,7 @@ void disconnectAudioForward(kymera_chain_handle_t sco_chain) {
 
 #if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_MIC )
     Source mic_audfwd_src = ChainGetOutput(sco_chain, EPR_AUDIO_MICFWD_OUT);
-    if(sco_audfwd_src != NULL)
+    if(mic_audfwd_src != NULL)
         SourceUnmap(mic_audfwd_src);
 #endif
 }
