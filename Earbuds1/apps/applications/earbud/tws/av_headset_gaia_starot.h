@@ -10,7 +10,6 @@ enum GAIA_AUDIO_TYPE {
     GAIA_AUDIO_MIC = 2
 };
 
-
 ////////////////////////////EVENT//////////////////////////////
 enum {
     /// 临时，不能这样定义，会冲突
@@ -65,16 +64,12 @@ enum {
 };
 /////////////////////////////助手控制////////////////////////////////
 enum {
-    GAIA_COMMAND_STAROT_REQUEST_START_ASSISTANT = 0X5200,                     // 请求开始助手
-    GAIA_COMMAND_STAROT_ASSISTANT_CONTROL = 0X5201,                           // 助手控制录音
-    GAIA_COMMAND_STAROT_AUDIO_DEVIVE_APP = 0X5202,                            // 助手音频Device->App
-    GAIA_COMMAND_STAROT_AUDIO_APP_DEVIVE = 0X5203,                            // 助手音频App->Device
-    GAIA_COMMAND_STAROT_AUDIO_CONFIRM_PACKAGE = 0X5204,                       // 音频确认包
+    GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START = 0X5200,                     // 请求开始助手
+    GAIA_COMMAND_STAROT_AI_CONTROL = 0X5201,                                  // 助手控制录音
+    GAIA_COMMAND_STAROT_AI_AUDIO_TO_APP = 0X5202,                             // 助手音频Device->App
+    GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE = 0X5203,                          // 助手音频App->Device
+    GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE_ACK  = 0X5204,                     // 音频确认包
 };
-
-bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
-
-void starotGaiaParseMessageMoreSpace(void);
 
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))
 #define GAIA_OFFS_VENDOR_ID (4)
@@ -89,10 +84,12 @@ enum GAIA_TRANSFORM_AUDIO_STATUS {
     GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE,
 };
 
-enum GAIA_DIALOG_STATUS {
-    DIALOG_NONE = 0,
-    DIALOG_COMING = 1,
-    DIALOG_CAN_TRANSFORM = 2
+enum GAIA_AUDIO_TRANSFORM_FLAG {
+    TRANSFORM_NONE = 0,
+    TRANSFORM_COMING = 1,
+    TRANSFORM_CANT = 2,
+    DIALOG_CAN_TRANSFORM = GAIA_COMMAND_STAROT_CALL_AUDIO_IND,
+    RECORD_CAN_TRANSFORM = GAIA_COMMAND_STAROT_AI_AUDIO_TO_APP,
 };
 
 typedef struct {
@@ -114,6 +111,14 @@ typedef struct {
 
 typedef GAIA_STAROT_DIALOG_SOURCE GAIA_STAROT_DIALOG_SOURCE_T;
 
+#define CALL_AUDIO_IND(cmd) ((cmd) == GAIA_COMMAND_STAROT_CALL_AUDIO_IND || (cmd) == GAIA_COMMAND_STAROT_AI_AUDIO_TO_APP)
+
+void starotGaiaInit(void);
+
+bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
+
+void starotGaiaParseMessageMoreSpace(void);
+
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message);
 
 void starotNotifyAudioForward(bool st, uint8 flag);
@@ -124,6 +129,9 @@ uint8 starotGaiaTransGetAudioType(void);
 
 void starotGaiaDefaultParse( MessageId id, Message message);
 
+void starotGaiaParseCfm(const GAIA_SEND_PACKET_CFM_T *m);
+
+void starotGaiaSetTransportType(gaia_transport_type gaiaTransportType);
 //-----------------------------------------------------
 // 定义GAIA与UI、DSP关于电话时的消息
 //-----------------------------------------------------
@@ -143,6 +151,8 @@ enum {
     STAROT_DIALOG_CALL_END_TIMEOUT,                       // gaia -> gaia 电话结束发送超时
     STAROT_DIALOG_CASE_STAT,                              // ui -> gaia 盒子当前信息
     STAROT_DIALOG_CASE_VER,                               // ui -> gaia 盒子当前版本
+    STAROT_AI_USER_START_RECORD,                          // ui -> (ui & dsp) AI请求录音
+    STAROT_AI_USER_STOP_RECORD,                           // ui -> (ui & dsp) AI停止录音
 };
 
 #define STAROT_COMMAND_TIMEOUT 1000 // 命令超时时间
@@ -153,6 +163,9 @@ struct StarotResendCommand_T {
     uint16 len;   /// payload的长度
     uint8 payload[4];
 };
+
+
+
 typedef struct StarotResendCommand_T StarotResendCommand;
 
 StarotResendCommand* starotResendCommandInit(uint16 command, uint16 len, uint8* payload);

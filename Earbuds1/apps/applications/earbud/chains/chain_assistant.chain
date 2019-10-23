@@ -11,14 +11,14 @@
         <source name="OUT" terminal="0"/>
     </operator>
 
-    <operator name="OPR_CUSTOM_SCO_PASSTHROUGH" id="CAP_ID_DOWNLOAD_G722CODEC">
+    <operator name="OPR_CUSTOM_MIC_PASSTHROUGH" id="CAP_ID_DOWNLOAD_G722CODEC">
         <sink name="IN" terminal="0"/>
         <source name="OUT" terminal="0"/>
     </operator>
 
     <input sink="OPR_VOLUME_CONTROL.IN" role="EPR_VOLUME_AUX"/>
-    <output source="OPR_CUSTOM_SCO_PASSTHROUGH.OUT" role="EPR_AUDIO_MICFWD_OUT"/>
+    <output source="OPR_CUSTOM_MIC_PASSTHROUGH.OUT" role="EPR_AUDIO_MICFWD_OUT"/>
 
-    <connection source="OPR_VOLUME_CONTROL.OUT" sink="OPR_CUSTOM_SCO_PASSTHROUGH.IN"/>
+    <connection source="OPR_VOLUME_CONTROL.OUT" sink="OPR_CUSTOM_MIC_PASSTHROUGH.IN"/>
 </chain>
 

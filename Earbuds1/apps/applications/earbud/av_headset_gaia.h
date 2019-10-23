@@ -42,10 +42,9 @@ typedef struct
 
 #ifdef GAIA_TEST
     int needCycleSendAudio;
-    int nowSendAudio;
-    int nowSendCallAudio;
-    int status;
-    int audiorcall;
+    int nowSendAudioPhase;
+    int transformAudioFlag;
+    int dialogStatus;
 #endif GAIA_TEST
 } gaiaTaskData;
 
@@ -80,8 +79,6 @@ extern void appGaiaDisconnect(void);
     \param  allow A new gaia connection is allowed
  */
 extern void appGaiaAllowNewConnections(bool allow);
-
-
 
 #endif /* INCLUDE_DFU */
 #endif /* _AV_HEADSET_GAIA_H_ */

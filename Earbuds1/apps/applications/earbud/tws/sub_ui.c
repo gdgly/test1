@@ -82,7 +82,7 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
 {
     uint8 count = 2;
 
-    if(1 == progRun->gaiaStat)
+    if(1 != progRun->gaiaStat)
         return -1;
 
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
@@ -113,7 +113,7 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
 // payload=[状态1] 1：语音通话，0：其它
 static int16 subUiCallType2Gaia(MessageId id, ProgRIPtr  progRun)
 {
-    if(1 == progRun->gaiaStat)
+    if(1 != progRun->gaiaStat)
         return -1;
 
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 2);
@@ -187,22 +187,28 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         appHfpCallHangup();
         break;
 
-    case STAROT_DIALOG_USER_ACCEPT_RECORD:               ///设备开始录音
+    case STAROT_AI_USER_START_RECORD:               ///设备开始录音
         progRun->recStat  = 1;
 #ifdef CONFIG_REC_ASSISTANT
         appKymeraRecordStart();
         disable_audio_forward(FALSE);
-        DEBUG_LOG("nowSend:%d", appGetGaia()->nowSendCallAudio);
 #endif
         break;
-    case STAROT_DIALOG_USER_REJECT_RECORD:               ///设备停止录音
+
+    case STAROT_AI_USER_STOP_RECORD:               ///设备停止录音
         progRun->recStat  = 0;
 #ifdef CONFIG_REC_ASSISTANT
         disable_audio_forward(TRUE);
         appKymeraRecordStop();
-        DEBUG_LOG("nowSend:%d", appGetGaia()->nowSendCallAudio);
-        appGetGaia()->nowSendCallAudio = DIALOG_COMING;
 #endif
+        break;
+
+    case STAROT_DIALOG_USER_ACCEPT_RECORD:
+        disable_audio_forward(FALSE);
+        break;
+
+    case STAROT_DIALOG_USER_REJECT_RECORD:
+        disable_audio_forward(TRUE);
         break;
     }
 }

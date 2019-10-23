@@ -28,7 +28,6 @@
             <property name="SW_VARIANT"></property>
         </configuration>
     </configurations>
-    <file path="../../1_button.buttonxml"/>
     <file path="../../av_headset.h"/>
     <file path="../../av_headset_a2dp.c"/>
     <file path="../../av_headset_a2dp.h"/>
@@ -202,5 +201,4 @@
     <file path="../../tws/sub_ui.c"/>
     <file path="../../tws/sub_ui.h"/>
     <file path="../../tws/tap_func.c"/>
-    <file path="../common/1_button.pio.buttonxml"/>
 </project>
