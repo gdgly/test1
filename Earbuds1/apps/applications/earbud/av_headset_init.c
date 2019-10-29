@@ -134,11 +134,13 @@ static void appInitHandleGattInitCfm(Message message)
 static void appConfigInit(void)
 {
     int ret = max20340_get_left_or_right();
-    if(1 == ret)
+    if(1 == ret) {
         appGetInit()->appInitIsLeft = 1;
-    else if(2 == ret)
+        DEBUG_LOG("is left ear");
+    } else if(2 == ret) {
         appGetInit()->appInitIsLeft = 0;
-    else
+        DEBUG_LOG("is right ear");
+    } else
         DEBUG_LOG("ERROR Get MAX20340 for LEFT/RIGHT");
 
     MessageSend(appGetAppTask(), CL_DM_LOCAL_BD_ADDR_CFM, NULL);
