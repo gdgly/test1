@@ -66,6 +66,7 @@ void CProductDevToolsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_FIRM_NAME, m_edFirmName);
 	DDX_Control(pDX, IDC_LIST_COMMU, m_ListCtrl);
 	DDX_Control(pDX, IDC_EDIT5, m_edAddr);
+	DDX_Control(pDX, IDC_EDIT_HWVER, m_edHWver);
 }
 
 BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
@@ -80,6 +81,8 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_MESSAGE(WM_DEV_ERROR, &CProductDevToolsDlg::OnDevCtrlError)
 	ON_MESSAGE(WM_DEV_REPORT, &CProductDevToolsDlg::OnDevCtrlReport)
 	ON_BN_CLICKED(IDC_BTN_OPEN_FILE, &CProductDevToolsDlg::OnBnClickedBtnOpenFile)
+	ON_BN_CLICKED(IDC_BTN_STOP, &CProductDevToolsDlg::OnBnClickedBtnStop)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -114,6 +117,7 @@ BOOL CProductDevToolsDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
+	m_edHWver.SetWindowText("000102");
 	m_edAddr.SetWindowTextA("{0x00ff09, 0x5b, 0x02}");
 	m_edSend.SetWindowTextA("abcdefg测试数据1234567");
 	m_edFirmName.SetWindowTextA("C:\\Users\\dannywang\\Documents\\QCC5126.git\\Earbuds1\\apps\\applications\\earbud\\qcc512x_rom_v21\\CF376_CG814\\flash_image.xuv");
@@ -606,11 +610,37 @@ void CProductDevToolsDlg::OnBnClickedBtnStart()
 
 	UpdateData(TRUE);
 	m_edFirmName.GetWindowText(sText);	m_devCtrl.SetFlashImage(sText);
-	m_edAddr.GetWindowText(sText); m_devCtrl.SetBtAddr(sText);	
+	m_edAddr.GetWindowText(sText); m_devCtrl.SetBtAddr(sText);
+	m_edHWver.GetWindowTextA(sText); m_devCtrl.SetHwVersion(sText);
 
 	m_devCtrl.Start(this->m_hWnd);
 }
 
+void CProductDevToolsDlg::OnBnClickedBtnStop()
+{
+	m_devCtrl.Stop();
+}
+
+
+void CProductDevToolsDlg::OnDestroy()
+{
+	CDialogEx::OnDestroy();
+
+	MSG msg;
+	m_devCtrl.Stop();
+	for (int i = 0; i < 1000; i++) {
+		if (FALSE == m_devCtrl.IsRuning()) {
+			TRACE("DevCtrl Exit i=%d\n", i);
+			break;
+		}
+
+		if (GetMessage(&msg, NULL, 0, 0)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		Sleep(3);
+	}
+}
 
 
 
@@ -655,6 +685,18 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 		sText.Format("%s", (char*)lParam);
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 		break;
+	case REPORT_RDBD_NAME:
+		sText.Format("%s", (char*)lParam);
+		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
+		break;
+	case REPORT_RDBD_ADDR:
+		sText.Format("%s", (char*)lParam);
+		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
+		break;
+	case REPORT_COMMU_SUCC:
+		sText.Format("%s", (char*)lParam);
+		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
+		break;
 	}
 
 	return 0;
@@ -673,3 +715,5 @@ void CProductDevToolsDlg::OnBnClickedBtnOpenFile()
 
 	m_edFirmName.SetWindowTextA(sPath);
 }
+
+

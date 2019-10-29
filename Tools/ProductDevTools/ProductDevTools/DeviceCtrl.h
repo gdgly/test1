@@ -18,11 +18,13 @@ enum {
 	ERROR_OPEN_ENGINE=40,               // TestEngine
 	ERROR_CACHE_INIT,
 	ERROR_CACHE_READ,
+	ERROR_READ_DEVNAME,
 	ERROR_READ_BDADDR,
 	ERROR_WRITE_BTADDR,
 	ERROR_WRITE_CACHE,
+	ERROR_WRITE_FIXPARAM,
 
-	RERROT_COMMU_FAIL=70,              // COMMU
+	ERROR_COMMU_FAIL=70,              // COMMU
 
 };
 
@@ -36,21 +38,29 @@ enum {
 	REPORT_PROGRAM_END,
 	REPORT_OPEN_ENGINE,
 	REPORT_RDBD_ADDR,
+	REPORT_RDBD_NAME,
 	REPORT_WRBD_ADDR,
+	REPORT_WRITE_FIXPARAM,
 	REPORT_CLOSE_ENGINE,
 
 	REPORT_WAIT_RESTART,
 	REPORT_COMMU_START,
 	REPORT_COMMU_SUCC,
 	REPORT_COMMU_READ,
+	REPORT_COMMU_OPEN,
+	RERROT_COMMU_TIMEOUT,
 
+	REPORT_USER_EXIT,
 	REPORT_LAST,
 };
 
+#define PSKEY_BUFFER_LEN            (128)
+#define MSG_BUFFER_COUNT            (31)
 
 #define  DEV_HWVER_LEN            (3)
 typedef struct tagFIXPARAM {
 	uint8          hw_ver[DEV_HWVER_LEN];                  // Ó²¼þ°æ±¾
+	uint8          rev1;
 	int16          aud_adj;                    // ÒôÆµÎ¢µ÷
 
 	uint8          rev[8];
@@ -64,6 +74,8 @@ public:
 
 public:
 	int Start(HWND hWnd);
+	int Stop(void);
+	BOOL IsRuning() { return (m_ctrlThread == INVALID_HANDLE_VALUE) ? FALSE : TRUE; }
 	int RuningProc(void);
 	void RuningEnd(void);
 
@@ -71,11 +83,13 @@ public:
 	CString Error2String(int eCoder);
 	CString Report2String(int rCode);
 	void SetFlashImage(CString sFile) { m_sFlashImage = sFile; }
+	int SetHwVersion(CString sText);
 	int SetBtAddr(CString addr);       // {0x00ff09, 0x5b, 0x02}
 private:
 	CString m_sFlashImage;
 	UINT m_checkStatus;
 	char m_bdAddr[32];
+	FixParam m_FixParam;
 	BOOL  m_bEnableErase;
 
 	int Burning(void);
@@ -84,8 +98,12 @@ private:
 
 	int OpenEngine(void);
 	int CloseEngine(void);
-
+	
 private:
+	uint8 m_msgNo;
+	uint8 m_msgData[MSG_BUFFER_COUNT][PSKEY_BUFFER_LEN];
+	uint8 * GetMsgBuffer();
+
 	UINT m_curTick;
 	HWND m_hWnd;
 	BOOL m_bExit;

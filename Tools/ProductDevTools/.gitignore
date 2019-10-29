@@ -1,0 +1,10 @@
+/Debug
+/ProductDevTools/Debug
+/ipch
+/Release
+/ProductDevTools/Release
+/.vs
+*.VC.db
+*.VC.opendb
+*.aps
+

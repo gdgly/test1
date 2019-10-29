@@ -53,6 +53,9 @@ public:
 	afx_msg void OnBnClickedBtnOpenFile();
 	CListCtrl m_ListCtrl;
 	CEdit m_edAddr;
+	CEdit m_edHWver;
+	afx_msg void OnBnClickedBtnStop();
+	afx_msg void OnDestroy();
 };
 
 
