@@ -71,6 +71,11 @@ enum {
     GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE_ACK  = 0X5204,                     // 音频确认包
 };
 
+/////////////////////////////测试与生产///////////////////////////////
+enum {
+    GAIA_COMMAND_STAROT_TEST_PRODUCT_REST = 0X5600,                           // 恢复出厂设置
+};
+
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))
 #define GAIA_OFFS_VENDOR_ID (4)
 #define GAIA_OFFS_COMMAND_ID (6)

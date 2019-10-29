@@ -51,6 +51,7 @@ static void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m);
 
 static void starotSpeedSendIntervalParse(void);
 
+static void gaiaTestProductRest(GAIA_STAROT_IND_T *message);
 
 struct GaiaStarotPrivateData_T {
     Source dialogSpeaker;
@@ -187,6 +188,13 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE:
             gaiaAssistantAudioAppDev(message);
+            break;
+    }
+
+    /// 测试与生产
+    switch (message->command) {
+        case GAIA_COMMAND_STAROT_TEST_PRODUCT_REST:
+            gaiaTestProductRest(message);
             break;
     }
     return TRUE;
@@ -839,6 +847,13 @@ void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T* message) {
         appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
     }
 }
+
+// { 测试与生产
+void gaiaTestProductRest(GAIA_STAROT_IND_T *message) {
+    /// todo 清空和设置
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+// }
 
 #endif
 

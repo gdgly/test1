@@ -951,6 +951,7 @@ void GaiaRwcpSendNotification(uint8 *payload, uint16 payload_length);
 #define GAIA_COMMAND_TYPE_STAROT_ASSISTANT (0x5200)        /// 助手
 #define GAIA_COMMAND_TYPE_STAROT_CONTROL (0x5400)          /// 控制类
 #define GAIA_COMMAND_TYPE_STAROT_BASE_INFO (0x5500)        /// 基础信息
+#define GAIA_COMMAND_TYPE_STAROT_TEST_PRODUCT (0x5600)     /// 测试生成
 #define GAIA_VENDOR_STAROT (0x000F)
 
 typedef struct
