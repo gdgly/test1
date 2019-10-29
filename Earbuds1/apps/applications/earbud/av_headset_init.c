@@ -18,6 +18,7 @@
 #include "av_headset.h"
 #include "av_headset_log.h"
 #include "gaia.h"
+#include "apollo.h"
 
 /*! \brief Initialsiation function entry
 */
@@ -248,6 +249,7 @@ static const appInitTableEntry appInitTable[] =
 #ifdef INCLUDE_DFU
     {appUpgradeInit,        UPGRADE_INIT_CFM, NULL},    // Upgrade wants to start a connection (can be gatt)
 #endif
+    {apollo_int_io_init,        0, NULL},
     {NULL,                  0, NULL}
 };
 

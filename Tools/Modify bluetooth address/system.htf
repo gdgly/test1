@@ -1,0 +1,6 @@
+version=QCC512X_ROM_V21_CONFIG
+
+file=bt2
+
+pskey_bdaddr={0x00ff02,0x5b,0x0002}
+pskey_device_name="TWS002"

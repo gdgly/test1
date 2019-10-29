@@ -96,13 +96,13 @@ void appKymeraRecordStop(void)
             uint16 volume = volTo60thDbGain(0);
             OperatorsVolumeSetAuxGain(op, volume);
 
+            ChainStop(theKymera->chain_record_handle);
             disconnectAudioForward(theKymera->chain_record_handle);
 
             appKymeraMicCleanup(appConfigScoMic1(), appConfigScoMic2());
 
             /* Disable external amplifier if required */
             appKymeraExternalAmpControl(FALSE);
-            ChainStop(theKymera->chain_record_handle);
             ChainDestroy(theKymera->chain_record_handle);
             theKymera->chain_record_handle = NULL;
 

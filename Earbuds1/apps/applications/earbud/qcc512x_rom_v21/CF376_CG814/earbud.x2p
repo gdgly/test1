@@ -172,6 +172,8 @@
     <file path="../../tws/ReadmeStarot.txt"/>
     <file path="../../tws/adv_manager.c"/>
     <file path="../../tws/adv_manager.h"/>
+    <file path="../../tws/apollo.c"/>
+    <file path="../../tws/apollo.h"/>
     <file path="../../tws/attr.c"/>
     <file path="../../tws/attr.h"/>
     <file path="../../tws/audio_forward.c"/>
