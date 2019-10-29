@@ -149,7 +149,7 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     EM20168ReadRegister(handle, 0x20, &value);
     em20168_ps0_value += value;
 #ifndef EM20168_SEND_MSG
-    printf("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
+    DEBUG_LOG("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
 #endif
     EM20168WriteRegister(handle, 2, 0);
 
@@ -157,7 +157,7 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
             (prox->state->proximity != proximity_state_in_proximity) ){
         prox->state->proximity = proximity_state_in_proximity;
 #ifndef EM20168_SEND_MSG
-        printf("in ear\n\n");
+        DEBUG_LOG("in ear\n\n");
 #else
         if (NULL != prox->clients)
             appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_IN_PROXIMITY);
@@ -167,7 +167,7 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
             (prox->state->proximity == proximity_state_in_proximity) ){
         prox->state->proximity = proximity_state_not_in_proximity;
 #ifndef EM20168_SEND_MSG
-        printf("out ear\n\n");
+        DEBUG_LOG("out ear\n\n");
 #else
         if (NULL != prox->clients)
             appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY);

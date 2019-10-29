@@ -120,10 +120,10 @@ void lis2dw12_init(void)
     }
     lis2dw12ReadRegister(handle, 0xf, &value);
     lis2dw12ReadRegister(handle, 0xf, &value);
-    printf("lis2dw12 id = 0x%x\n", value);
+    DEBUG_LOG("lis2dw12 id = 0x%x\n", value);
     if(value != 0x44){
         lis2dw12Disable(handle);
-        printf("can not get lis2dw12 id!\n");
+        DEBUG_LOG("can not get lis2dw12 id!\n");
         return;
     }
 
