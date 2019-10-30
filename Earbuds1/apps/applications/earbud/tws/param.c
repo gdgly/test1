@@ -23,7 +23,7 @@
 
 
 /* SW版本共4字节： 00.01.01.xx   xx为测试使用*/
-const uint8 SYSTEM_SW_VERSION[DEV_SWVER_LEN] = {0x01,0x01,0x01,0x23};   // 每次发布版本修改这儿的值
+const uint8 SYSTEM_SW_VERSION[DEV_SWVER_LEN] = {0x00,0x01,0x02,0x23};   // 每次发布版本修改这儿的值
 
 // 保存参数，如果length=0,表示擦除当前PSK中的参数
 static int16 ParamSave(uint16 pskey, void *buffer, int length)
