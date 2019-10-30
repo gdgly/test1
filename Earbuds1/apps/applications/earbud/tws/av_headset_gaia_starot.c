@@ -120,10 +120,6 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_ATTR_TIMEOUT);
             break;
 
-        case STAROT_DIALOG_AUDIO_DATA:
-            starotGaiaSendAudio(NULL);
-            break;
-
             /// APP希望接受耳机的音频
         case GAIA_COMMAND_STAROT_START_TRANS_AUDIO_IND:
             starotGaiaDialogStartTransport(message);
