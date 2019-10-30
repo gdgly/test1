@@ -6,10 +6,15 @@
 #include <hydra_macros.h>
 #include <input_event_manager.h>
 
+//#define TIME_READ_LIS2DW12_REG
+
 typedef struct tagSHELLCMDINFO {
     TaskData       task;
 }tapfuncInfoTask;
 static tapfuncInfoTask *pTapfuncTask = NULL;
+#ifdef TIME_READ_LIS2DW12_REG
+static tapfuncInfoTask *pTimefuncTask = NULL;
+#endif
 
 #ifdef HAVE_BMA400
 void tap_itr_handle_bma400(void)
@@ -98,6 +103,24 @@ void tap_itr_handler(Task task, MessageId id, Message msg)
     }
 }
 
+#ifdef TIME_READ_LIS2DW12_REG
+#define MESSAGE_TIME_TRIGGER 1
+static void tap_time_handle_msg(Task task, MessageId id, Message message)
+{
+    (void)message;(void)task;
+    switch (id)
+    {
+        case MESSAGE_TIME_TRIGGER:
+            tap_itr_handle_lis2dw12();
+            printf("1s read lis2dw12 reg\n");
+            MessageSendLater(&pTimefuncTask->task,
+                             MESSAGE_TIME_TRIGGER, NULL,
+                             1000);
+        break;
+    }
+}
+#endif
+
 void tap_func_init(void)
 {
     pTapfuncTask = PanicUnlessNew(tapfuncInfoTask);
@@ -111,6 +134,14 @@ void tap_func_init(void)
     lis2dw12_init();
     pTapfuncTask->task.handler = tap_itr_handler;
     InputEventManagerRegisterTask(&pTapfuncTask->task, LIS2DW12_ITR_PIN);
+#endif
+#ifdef TIME_READ_LIS2DW12_REG
+    pTimefuncTask= PanicUnlessNew(tapfuncInfoTask);
+    memset(pTimefuncTask, 0, sizeof(tapfuncInfoTask));
+    pTimefuncTask->task.handler = tap_time_handle_msg;
+    MessageSendLater(&pTimefuncTask->task,
+                     MESSAGE_TIME_TRIGGER, NULL,
+                     5000);
 #endif
 }
 
