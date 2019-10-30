@@ -460,6 +460,7 @@ void singlebus_key_itr_handler(Task task, MessageId id, Message msg)
 
 typedef struct tagSHELLCMDINFO {
     TaskData       task;
+    bool status;
 }singlebus_funcInfoTask;
 static singlebus_funcInfoTask *psbfuncTask = NULL;
 #ifdef MAX20340_TEST
@@ -520,6 +521,15 @@ max20340_str max20340_init_array[] = {
     //{MX20340_REG_PLC_MASK, 0xff},
 };
 
+int max20340_GetStatus(void)
+{
+    if(psbfuncTask->status == TRUE){
+        return 0;
+    }else{
+        return -1;
+    }
+}
+
 void max20340_init(void)
 {
     bitserial_handle handle;
@@ -550,6 +560,7 @@ void max20340_init(void)
     memset(psbfuncTask, 0, sizeof(singlebus_funcInfoTask));
     psbfuncTask->task.handler = singlebus_itr_handler;
     InputEventManagerRegisterTask(&psbfuncTask->task, MAX20340_ITR_PIN);
+    psbfuncTask->status = TRUE;
 
 #ifdef MAX20340_TEST
     psbtest_funcTask = PanicUnlessNew(singlebus_funcInfoTask);

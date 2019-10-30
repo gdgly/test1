@@ -51,6 +51,7 @@ static void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m);
 
 static void starotSpeedSendIntervalParse(void);
 
+static void gaiaTestProductRest(GAIA_STAROT_IND_T *message);
 
 struct GaiaStarotPrivateData_T {
     Source dialogSpeaker;
@@ -187,6 +188,13 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE:
             gaiaAssistantAudioAppDev(message);
+            break;
+    }
+
+    /// 测试与生产
+    switch (message->command) {
+        case GAIA_COMMAND_STAROT_TEST_PRODUCT_REST:
+            gaiaTestProductRest(message);
             break;
     }
     return TRUE;
@@ -628,6 +636,7 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
         UserSetKeyFunc(leftKey, rightKey);
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+    attrFree(body, NULL);
 }
 
 void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message){
@@ -648,6 +657,7 @@ void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message){
         }
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+    attrFree(body, NULL);
 }
 
 void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message){
@@ -677,8 +687,8 @@ void gaiaControlCallDialog(GAIA_STAROT_IND_T* mess) {
        memcpy(message->payload, body->payload, length);
        MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
    }
-
    appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
+   attrFree(body, NULL);
 }
 
 void gaiaControlAcceptDialog(GAIA_STAROT_IND_T* message) {
@@ -782,9 +792,6 @@ void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
     uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
     uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
 
-    DEBUG_LOG("now send audio is : %d: command:%04x vendor:%04x status:%d", appGetGaia()->nowSendAudioPhase, command_id, vendor_id, m->success);
-
-
     if (GAIA_COMMAND_STAROT_CALL_END == command_id && vendor_id == GAIA_VENDOR_STAROT && FALSE == m->success) {
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
         return;
@@ -793,6 +800,8 @@ void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
     if (!CALL_AUDIO_IND(command_id) || vendor_id != GAIA_VENDOR_STAROT) {
         return;
     }
+
+    DEBUG_LOG("now send audio is : %d: command:%04x vendor:%04x status:%d", appGetGaia()->nowSendAudioPhase, command_id, vendor_id, m->success);
 
     if (FALSE == m->success) {
         appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
@@ -839,6 +848,15 @@ void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T* message) {
         appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
     }
 }
+
+// { 测试与生产
+void gaiaTestProductRest(GAIA_STAROT_IND_T *message) {
+    appSmFactoryReset();
+//    appPowerReboot();
+    /// todo 清空和设置
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+// }
 
 #endif
 

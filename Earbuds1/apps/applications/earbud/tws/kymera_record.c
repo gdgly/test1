@@ -112,10 +112,10 @@ void appKymeraRecordStop(void)
         break;
 
         case KYMERA_STATE_IDLE:
+            break;
         default:
             /* Unknown state / not supported */
             DEBUG_LOGF("appKymeraRecordStop, unsupported state %u", appKymeraGetState());
-            Panic();
             break;
     }
 
