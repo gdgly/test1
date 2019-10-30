@@ -108,6 +108,16 @@ lis2dw12_str lis2dw12_init_array[] = {
     {0x3f, 1<<5,    1<<5},//interrupts_enable 1
 };
 
+bool lis2dw12_status = FALSE;
+int lis2dw12_GetStatus(void)
+{
+    if(lis2dw12_status == TRUE){
+        return 0;
+    }else{
+        return -1;
+    }
+}
+
 void lis2dw12_init(void)
 {
     bitserial_handle handle;
@@ -141,6 +151,7 @@ void lis2dw12_init(void)
         lis2dw12ReadRegister(handle, lis2dw12_init_array[i].reg, &value);
         printf("lis2dw12 reg 0x%x = 0x%x\n", lis2dw12_init_array[i].reg, value);
     }
+    lis2dw12_status = TRUE;
 
     lis2dw12Disable(handle);
     return;
