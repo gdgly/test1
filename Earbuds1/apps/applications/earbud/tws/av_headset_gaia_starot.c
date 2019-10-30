@@ -101,10 +101,6 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         }
             break;
 
-        case STAROT_DIALOG_STATUS:
-            gaiaParseDialogStatus(message);
-            break;
-
         case GAIA_COMMAND_STAROT_CALL_BEGIN | GAIA_ACK_MASK:
             DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_BEGIN replay");
             MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_BEGIN_TIMEOUT);
@@ -369,7 +365,13 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
     DEBUG_LOG("call STAROT_DIALOG_STATUS STATUS IS %02x", status);
     StarotAttr *head = NULL;
 
+    char temp[128] = {0};
+    int k = 0;
+    for (k = 0; k < message->payloadLen; ++k) {
+        sprintf(temp + k * 2, "%02X", message->payload[k]);
+    }
     DEBUG_LOG("call gaiaParseDialogStatus");
+    printf("-hjs-%s\n", temp);
 
     /// 电话接入,只想通知一次APP电话来的消息
     if ((((status & dialogIn) > 0) && ((appGetGaia()->dialogStatus & dialogIn) < 1))
@@ -402,25 +404,30 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
     }
 
     /// 电话挂断
+    bool needSendEnd = FALSE;
     if ((0 == status) || (status & dialogInActive) > 0) {
         DEBUG_LOG("Send GAIA_COMMAND_STAROT_CALL_END");
-        StarotAttr *attr = attrMalloc(&head, 4);
-        attr->attr = 0X06;
-        int num = gaiaGetDropAudioSize();
-        attr->payload[0] = (uint8)((num >> 0) & 0X00FF);
-        attr->payload[1] = (uint8)((num >> 8) & 0X00FF);
-        attr->payload[2] = (uint8)((num >> 16) & 0X00FF);
-        attr->payload[3] = (uint8)((num >> 24) & 0X00FF);
+        {
+            StarotAttr *attr = attrMalloc(&head, 4);
+            attr->attr = 0X06;
+            int num = gaiaGetDropAudioSize();
+            attr->payload[0] = (uint8)((num >> 0) & 0X00FF);
+            attr->payload[1] = (uint8)((num >> 8) & 0X00FF);
+            attr->payload[2] = (uint8)((num >> 16) & 0X00FF);
+            attr->payload[3] = (uint8)((num >> 24) & 0X00FF);
+        }
 
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
-//        StarotResendCommand *resend = starotResendCommandInit(GAIA_COMMAND_STAROT_CALL_END, 0, 0);
-//        MessageSendLater(appGetGaiaTask(), STAROT_DIALOG_CALL_END_TIMEOUT, resend, STAROT_COMMAND_TIMEOUT);
+        {
+            StarotAttr *attr = attrMalloc(&head, 1);
+            attr->attr = 0X03;
+        }
+        needSendEnd = TRUE;
 
         if (appGetGaia()->transformAudioFlag > TRANSFORM_CANT) {
+            /// todo 建议放到知道电话彻底结束的地方调用，需要考虑多方会话的情况
             disable_audio_forward(TRUE);
             DEBUG_LOG("call disable_audio_forward(TRUE);");
         }
-
         appGetGaia()->dialogStatus = 0;
         appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
     }
@@ -443,6 +450,13 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
 //        MessageSendLater(appGetGaiaTask(), STAROT_DIALOG_CALL_ATTR_TIMEOUT, resend, STAROT_COMMAND_TIMEOUT);
         attrFree(head, data);
     }
+
+    if (TRUE == needSendEnd) {
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
+//        StarotResendCommand *resend = starotResendCommandInit(GAIA_COMMAND_STAROT_CALL_END, 0, 0);
+//        MessageSendLater(appGetGaiaTask(), STAROT_DIALOG_CALL_END_TIMEOUT, resend, STAROT_COMMAND_TIMEOUT);
+    }
+
 }
 
 void gaiaNotifyAudioAcceptStatus(Task task, int command) {
@@ -797,7 +811,7 @@ void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
         return;
     }
 
-    DEBUG_LOG("now send audio is : %d: command:%04x vendor:%04x status:%d", appGetGaia()->nowSendAudioPhase, command_id, vendor_id, m->success);
+//    DEBUG_LOG("now send audio is : %d: command:%04x vendor:%04x status:%d", appGetGaia()->nowSendAudioPhase, command_id, vendor_id, m->success);
 
     if (FALSE == m->success) {
         appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
