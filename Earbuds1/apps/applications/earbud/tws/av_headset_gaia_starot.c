@@ -790,9 +790,6 @@ void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
     uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
     uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
 
-    DEBUG_LOG("now send audio is : %d: command:%04x vendor:%04x status:%d", appGetGaia()->nowSendAudioPhase, command_id, vendor_id, m->success);
-
-
     if (GAIA_COMMAND_STAROT_CALL_END == command_id && vendor_id == GAIA_VENDOR_STAROT && FALSE == m->success) {
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
         return;
@@ -801,6 +798,8 @@ void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
     if (!CALL_AUDIO_IND(command_id) || vendor_id != GAIA_VENDOR_STAROT) {
         return;
     }
+
+    DEBUG_LOG("now send audio is : %d: command:%04x vendor:%04x status:%d", appGetGaia()->nowSendAudioPhase, command_id, vendor_id, m->success);
 
     if (FALSE == m->success) {
         appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
@@ -850,6 +849,8 @@ void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T* message) {
 
 // { 测试与生产
 void gaiaTestProductRest(GAIA_STAROT_IND_T *message) {
+    appSmFactoryReset();
+//    appPowerReboot();
     /// todo 清空和设置
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
