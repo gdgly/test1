@@ -636,6 +636,7 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
         UserSetKeyFunc(leftKey, rightKey);
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+    attrFree(body, NULL);
 }
 
 void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message){
@@ -656,6 +657,7 @@ void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message){
         }
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+    attrFree(body, NULL);
 }
 
 void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message){
@@ -685,8 +687,8 @@ void gaiaControlCallDialog(GAIA_STAROT_IND_T* mess) {
        memcpy(message->payload, body->payload, length);
        MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
    }
-
    appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
+   attrFree(body, NULL);
 }
 
 void gaiaControlAcceptDialog(GAIA_STAROT_IND_T* message) {

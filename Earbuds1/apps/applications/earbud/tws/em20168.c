@@ -234,6 +234,7 @@ void EM20168_keytest_itr_handler(Task task, MessageId id, Message msg)
 
 typedef struct tagSHELLCMDINFO {
     TaskData       task;
+    bool status;
 }EM20168InfoTask;
 static EM20168InfoTask *EM20168Task = NULL;
 #ifdef EM20168_KEY_ITR_TEST
@@ -249,6 +250,15 @@ static void delay_ms(int time_ms)
         if(time_now > time_end){
             break;
         }
+    }
+}
+
+int EM20168_GetStatus(void)
+{
+    if(EM20168Task->status == TRUE){
+        return 0;
+    }else{
+        return -1;
     }
 }
 
@@ -298,7 +308,7 @@ void EM20168_init(void)
         delay_ms(1000);
     }
     for(i=0;i<=128;i++){
-        delay_ms(100);
+        delay_ms(1000);
         EM20168ReadRegister(handle, 0x21, &ps_h);
         EM20168ReadRegister(handle, 0x20, &ps_l);
         ps_data = (ps_h <<8) | ps_l;
@@ -319,6 +329,7 @@ void EM20168_init(void)
     memset(EM20168Task, 0, sizeof(EM20168Task));
     EM20168Task->task.handler = EM20168_itr_handler;
     InputEventManagerRegisterTask(&EM20168Task->task, EM20168_ITR_PIN);
+    EM20168Task->status = TRUE;
 
 #ifdef EM20168_KEY_ITR_TEST
     ProximitykeyTask = PanicUnlessNew(EM20168InfoTask);
