@@ -11,7 +11,7 @@
 
 //#define EM20168_CAL_OFFSET_VALUE //校准0x24寄存器
 //#define EM20168_KEY_ITR_TEST  //打开按键中断
-//#define EM20168_SEND_MSG  //打开发送入耳出耳消息
+#define EM20168_SEND_MSG  //打开发送入耳出耳消息
 #define EM20168_I2C_ADDR 0x24
 #define EM20168_I2C_FREQ 400
 #define EM20168_KEY_ITR_PIN 18

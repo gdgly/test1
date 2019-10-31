@@ -5,7 +5,7 @@
 #include <logging.h>
 #include "tws/adv_manager.h"
 
-//#define CONFIG_BOARD_V1        // V1版本
+#define CONFIG_BOARD_V1        // V1版本
 
 //==============================================================================================
 // TBR 调试器在DEMO板上使用使用的IO脚列表如下，可能会与我们系统中的冲突，注意不能同时使用
@@ -107,7 +107,7 @@ void SourceSinkI2SMasterClockEnable(void *source_sink, int isSource, int enable)
 //==============================================================================================
 //              /* em20168 Proximity */
 //==============================================================================================
-//#define HAVE_EM20168
+#define HAVE_EM20168
 #define EM20168_ITR_PIN 61
 void EM20168_init(void);
 int EM20168Power(bool isOn);
