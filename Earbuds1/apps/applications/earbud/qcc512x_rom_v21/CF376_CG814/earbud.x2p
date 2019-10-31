@@ -202,5 +202,7 @@
     <file path="../../tws/public.h"/>
     <file path="../../tws/sub_ui.c"/>
     <file path="../../tws/sub_ui.h"/>
+    <file path="../../tws/sw_watchdog.c"/>
+    <file path="../../tws/sw_watchdog.h"/>
     <file path="../../tws/tap_func.c"/>
 </project>

@@ -198,6 +198,12 @@ int lis2dw12_GetStatus(void);//0 表示初始化ok, -1 wrong
 #define FORWARD_AUDIO_TYPE (FORWARD_AUDIO_SCO | FORWARD_AUDIO_MIC)
 
 // ================================================
+//              software watchdog 开关
+// ================================================
+
+#define ENABLE_WATCHDOG
+
+// ================================================
 //              录音助手功能
 // ================================================
 #define CONFIG_REC_ASSISTANT                // 录音助手功能

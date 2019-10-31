@@ -27,6 +27,8 @@
 #include "av_headset_scan_manager.h"
 #include "av_headset_anc_tuning.h"
 
+#include "sw_watchdog.h"
+
 
 /*! Application data structure */
 appTaskData globalApp;
@@ -151,6 +153,9 @@ static void appHandleMessage(Task task, MessageId id, Message message)
         case INIT_CFM:
             appHandleInitCfm(message);
             return;
+        case AV_SYS_RST_WATCH_DOG:
+            watchdogReset();
+            return;
     }
 
     appHandleUnexpected(id);
@@ -182,6 +187,8 @@ int main(void)
 
     /* Start the application module and library initialisation sequence */
     appInit();
+
+    watchdogReset();
 
     /* Start the message scheduler loop */
     MessageLoop();

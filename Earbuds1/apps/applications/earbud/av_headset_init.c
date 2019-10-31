@@ -251,7 +251,9 @@ static const appInitTableEntry appInitTable[] =
 #ifdef INCLUDE_DFU
     {appUpgradeInit,        UPGRADE_INIT_CFM, NULL},    // Upgrade wants to start a connection (can be gatt)
 #endif
+#ifdef ENABLE_APOLLO
     {apollo_int_io_init,        0, NULL},
+#endif
     {NULL,                  0, NULL}
 };
 
