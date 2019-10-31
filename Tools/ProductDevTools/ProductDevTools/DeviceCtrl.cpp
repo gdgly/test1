@@ -13,6 +13,7 @@ CDeviceCtrl::CDeviceCtrl()
 	m_curTick = 0;
 	m_devHandle = 0;
 	memset(m_bdAddr, 0, sizeof(m_bdAddr));
+	m_sFlashImage.Empty();
 	m_ctrlThread = INVALID_HANDLE_VALUE;
 }
 
@@ -49,7 +50,8 @@ CString CDeviceCtrl::Error2String(int eCoder)
 }
 
 static CString _sReport[] = {
-	"ERROR_CHIPID",
+	"REPORT_THREAD_START",
+	"REPORT_CHIPID",
 	"REPORT_ERASE_START",
 	"REPORT_ERASE_PROGRESS",
 	"REPORT_PROGRAM_START",
@@ -57,8 +59,9 @@ static CString _sReport[] = {
 	"REPORT_PROGRAM_END",
 	"REPORT_OPEN_ENGINE",
 	"REPORT_RDBD_ADDR",
-	"REPORT_RDBD_NAME",
 	"REPORT_WRBD_ADDR",
+	"REPORT_RDBD_NAME",
+	"REPORT_WRBD_NAME",
 	"REPORT_WRITE_FIXPARAM",
 	"REPORT_CLOSE_ENGINE",
 	
@@ -78,7 +81,7 @@ CString CDeviceCtrl::Report2String(int rCode)
 	CString sText;
 
 	if (rCode >= 200 || rCode < REPORT_LAST) {
-		rCode -= ERROR_CHIPID;
+		rCode -= REPORT_FIRST;
 		sText = _sReport[rCode];
 	}
 
@@ -119,20 +122,25 @@ int CDeviceCtrl::RuningProc(void)
 {
 	int ret = 0;
 
-#if 0
-	if((ret = Burning()) < 0)
-		return ret;
+	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_THREAD_START, (LPARAM)0);
 
-	if (m_bExit == TRUE) goto out;
+	if (!m_sFlashImage.IsEmpty()) {
+		if ((ret = Burning()) < 0)
+			return ret;
 
-	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WAIT_RESTART, (LPARAM)0);
-	Sleep(500);	
-	if (m_bExit == TRUE) goto out;
-#endif
-	if ((ret = SetAllParam()) < 0)
-		return ret;
+		if (m_bExit == TRUE) goto out;
 
-	if (m_bExit == TRUE) goto out;
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WAIT_RESTART, (LPARAM)0);
+		Sleep(500);
+		if (m_bExit == TRUE) goto out;
+	}
+
+	if (m_bdAddr[0] != '\0') {
+		if ((ret = SetAllParam()) < 0)
+			return ret;
+
+		if (m_bExit == TRUE) goto out;
+	}
 
 	if ((ret=CheckDevice()) < 0)
 		return ret;
@@ -155,6 +163,17 @@ int CDeviceCtrl::SetBtAddr(CString addr)
 	addr.ReleaseBuffer();
 
 	return 0;
+}
+
+void CDeviceCtrl::SetBtName(CString sName)
+{
+	if (sName.IsEmpty())
+		return ;
+
+	memset(m_bdName, 0, sizeof(m_bdName));
+
+	memcpy(m_bdName, sName.GetBuffer(), sName.GetLength());
+	sName.ReleaseBuffer();
 }
 
 int CDeviceCtrl::SetHwVersion(CString sText)
@@ -189,7 +208,7 @@ uint8 * CDeviceCtrl::GetMsgBuffer()
 int CDeviceCtrl::Burning(void)
 {
 	INT ret, progress;
-	UINT16 maxLen, count = 0;
+	UINT16 maxLen = MAX_STR_LEN, count = 0;
 	char portsStr[MAX_STR_LEN];
 	char transStr[MAX_STR_LEN];
 
@@ -227,7 +246,7 @@ int CDeviceCtrl::Burning(void)
 
 	status = flGetChipId();   // 0 is :ERROR
 	TRACE("chipID=%x\n", status);
-	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, ERROR_CHIPID, (LPARAM)status);
+	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_CHIPID, (LPARAM)status);
 
 	status = flGetVersion(sVer);
 	TRACE("VER:%s\n", sVer);
@@ -370,13 +389,24 @@ int CDeviceCtrl::SetAllParam(void)
 	if(status != TE_OK) {
 		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_BTADDR, status, -5);
 	}
+	else {
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRBD_ADDR, (LPARAM)m_bdAddr);
+	}
 	TRACE("LINE:%d ret=%d\n", __LINE__, ret);
+	
+	if ((ret = teConfigCacheWriteItem(m_devHandle, "bt2:pskey_device_name", m_bdName)) != TE_OK) {
+		TRACE("BTADDR teConfigCacheWriteItem NAME\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_DEVNAME, status, -15);
+	}
+	else {
+		TRACE("BTADDR teConfigCacheWriteItem:name=%s\n", m_bdName);
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRBD_NAME, (LPARAM)m_bdName);		// BTADDR ANME
+	}	
 	
 	status = teConfigCacheWrite(m_devHandle, NULL, 0);
 	if (status != TE_OK) {
 		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_CACHE, status, -6);
 	}
-	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRBD_ADDR, (LPARAM)m_bdAddr);
 	TRACE("LINE:%d ret=%d\n", __LINE__, ret);
 
 	// 写固定参数区域
@@ -397,11 +427,29 @@ int CDeviceCtrl::SetAllParam(void)
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRITE_FIXPARAM, (LPARAM)0);
 
 
-	ret = 0;
-
 out:
 	CloseEngine();
 
+	return ret;
+}
+
+int CDeviceCtrl::PsWrite(int psKey, void *buffer, int buflen)
+{
+	int ret = 0;
+
+	if (OpenEngine() < 0) {
+		TRACE("Error openTestEngine\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
+	}
+
+	ret = tePsWrite(m_devHandle, psKey, (buflen + 1) / 2, (uint16*)buffer);
+	if (ret != TE_OK)
+		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_FIXPARAM, ret, -7);
+	else
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRITE_FIXPARAM, (LPARAM)0);
+
+out:
+	CloseEngine();
 	return ret;
 }
 
@@ -417,7 +465,7 @@ enum {
 
 int CDeviceCtrl::CheckDevice(void)
 {
-	int ret;
+	int ret,conneted = 0;
 	CString sText;
 	UINT16 *cmdbuf, cmdlen;
 	uint8 channel;
@@ -451,6 +499,7 @@ int CDeviceCtrl::CheckDevice(void)
 			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN/2, &rdlen, 500);
 			if (ret == TE_OK) {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_READ, (LPARAM)rdbuf);
+				conneted = 1;
 			}
 			break;
 
@@ -464,7 +513,7 @@ int CDeviceCtrl::CheckDevice(void)
 			m_checkStatus += 1;
 		}
 		else {
-			if ((::GetTickCount() - m_curTick) > (3 * 1000)) {
+			if ((::GetTickCount() - m_curTick) > (5 * 1000) && (conneted == 0)) {
 				m_checkStatus -= 1;
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, RERROT_COMMU_TIMEOUT, (LPARAM)0);
 				TRACE("Time out\n");

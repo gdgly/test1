@@ -21,6 +21,7 @@ enum {
 	ERROR_READ_DEVNAME,
 	ERROR_READ_BDADDR,
 	ERROR_WRITE_BTADDR,
+	ERROR_WRITE_DEVNAME,
 	ERROR_WRITE_CACHE,
 	ERROR_WRITE_FIXPARAM,
 
@@ -30,7 +31,9 @@ enum {
 
 #define WM_DEV_REPORT             (WM_USER+101)
 enum {
-	ERROR_CHIPID = 200,
+	REPORT_FIRST=200,
+	REPORT_THREAD_START= REPORT_FIRST,
+	REPORT_CHIPID,
 	REPORT_ERASE_START,
 	REPORT_ERASE_PROGRESS,
 	REPORT_PROGRAM_START,
@@ -38,8 +41,9 @@ enum {
 	REPORT_PROGRAM_END,
 	REPORT_OPEN_ENGINE,
 	REPORT_RDBD_ADDR,
-	REPORT_RDBD_NAME,
 	REPORT_WRBD_ADDR,
+	REPORT_RDBD_NAME,
+	REPORT_WRBD_NAME,
 	REPORT_WRITE_FIXPARAM,
 	REPORT_CLOSE_ENGINE,
 
@@ -79,16 +83,20 @@ public:
 	int RuningProc(void);
 	void RuningEnd(void);
 
+	int PsWrite(int psKey, void *buffer, int buflen);
+
 public:
 	CString Error2String(int eCoder);
 	CString Report2String(int rCode);
-	void SetFlashImage(CString sFile) { m_sFlashImage = sFile; }
+	void SetFlashImage(CString sFile) { m_sFlashImage = sFile; }	
+	void SetEraseAll(int bErase) { m_bEnableErase = bErase;  }
 	int SetHwVersion(CString sText);
 	int SetBtAddr(CString addr);       // {0x00ff09, 0x5b, 0x02}
+	void SetBtName(CString sName);
 private:
 	CString m_sFlashImage;
 	UINT m_checkStatus;
-	char m_bdAddr[32];
+	char m_bdAddr[32], m_bdName[32];
 	FixParam m_FixParam;
 	BOOL  m_bEnableErase;
 
