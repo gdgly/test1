@@ -12,6 +12,7 @@ typedef enum {DEV_CASE=0, DEV_LEFT, DEV_RIGHT}DevType;         // 一套系统�
 //////////////////////////////////////////////////////////////////////////////////
 typedef struct tagFIXPARAM {
     uint8          hw_ver[DEV_HWVER_LEN];                  // 硬件版本
+    uint8          rev1;
     int16          aud_adj;                    // 音频微调
 
     uint8          rev[8];

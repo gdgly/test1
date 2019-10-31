@@ -18,7 +18,7 @@ bool lis2dw12ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        //printf("%s faild,result = %d\n",__func__, result);
+        //DEBUG_LOG("%s faild,result = %d\n",__func__, result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -35,7 +35,7 @@ bool lis2dw12WriteRegister(bitserial_handle handle, uint8 reg, uint8 value)
                             command, 2,
                             BITSERIAL_FLAG_BLOCK);
     if(result != BITSERIAL_RESULT_SUCCESS){
-        printf("%s faild,result = %d\n",__func__, result);
+        DEBUG_LOG("%s faild,result = %d\n",__func__, result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -56,7 +56,7 @@ bool lis2dw12ReadRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *va
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        //printf("%s faild,result = %d\n",__func__, result);
+        //DEBUG_LOG("%s faild,result = %d\n",__func__, result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -91,8 +91,10 @@ lis2dw12_str lis2dw12_init_array[] = {
     {0x25, 1<<2,    1<<2},//low_noise 1
     {0x20, 0xf<<4,  7<<4},//odr
     {0x22, 3,       0},//slp_mode 0
-    {0x22, 1<<5,    1<<5},//PP_OD 1
-    {0x22, 1<<4,    1<<4},//interrupt request latched
+    //{0x22, 1<<5,    1<<5},//PP_OD 1
+    {0x22, 1<<5,    0<<5},//PP_OD 1
+    //{0x22, 1<<4,    1<<4},//interrupt request latched
+    {0x22, 1<<4,    0<<4},//interrupt not latched
     {0x22, 1<<3,    1<<3},//H_LACTIVE 1 //1: active low
     {0x32, 1<<5,    1<<5},//tap_z_en 1
     {0x32, 1<<6,    1<<6},//tap_y_en 1
@@ -108,6 +110,16 @@ lis2dw12_str lis2dw12_init_array[] = {
     {0x3f, 1<<5,    1<<5},//interrupts_enable 1
 };
 
+bool lis2dw12_status = FALSE;
+int lis2dw12_GetStatus(void)
+{
+    if(lis2dw12_status == TRUE){
+        return 0;
+    }else{
+        return -1;
+    }
+}
+
 void lis2dw12_init(void)
 {
     bitserial_handle handle;
@@ -120,10 +132,10 @@ void lis2dw12_init(void)
     }
     lis2dw12ReadRegister(handle, 0xf, &value);
     lis2dw12ReadRegister(handle, 0xf, &value);
-    printf("lis2dw12 id = 0x%x\n", value);
+    DEBUG_LOG("lis2dw12 id = 0x%x\n", value);
     if(value != 0x44){
         lis2dw12Disable(handle);
-        printf("can not get lis2dw12 id!\n");
+        DEBUG_LOG("can not get lis2dw12 id!\n");
         return;
     }
 
@@ -139,8 +151,9 @@ void lis2dw12_init(void)
     }
     for(i=0; i<ARRAY_DIM(lis2dw12_init_array); i++){
         lis2dw12ReadRegister(handle, lis2dw12_init_array[i].reg, &value);
-        printf("lis2dw12 reg 0x%x = 0x%x\n", lis2dw12_init_array[i].reg, value);
+        DEBUG_LOG("lis2dw12 reg 0x%x = 0x%x\n", lis2dw12_init_array[i].reg, value);
     }
+    lis2dw12_status = TRUE;
 
     lis2dw12Disable(handle);
     return;

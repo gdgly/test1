@@ -139,13 +139,11 @@ void tap_func_init(void);
 #undef  appConfigLeftAudioChannel
 #define appConfigLeftAudioChannel()              (AUDIO_CHANNEL_B)       // 耳机使用右声道输出
 
+/*接近光*/
 #define HAVE_EM20168
 #undef EM20168_ITR_PIN
 #define EM20168_ITR_PIN 8
-
-//#define HAVE_BMA400
-#undef BMA400_ITR_PIN
-#define BMA400_ITR_PIN 7
+int EM20168_GetStatus(void);//0 表示初始化ok, -1 wrong
 
 /* max20340 single bus */
 #define HAVE_MAX20340
@@ -153,10 +151,13 @@ void tap_func_init(void);
 #define MAX20340_EN_PIN 4
 int max20340_get_left_or_right(void);//返回0没找到，1左耳，2右耳
 void max20340_init(void);
+int max20340_GetStatus(void);//0 表示初始化ok, -1 wrong
 
+/*tap*/
 #define HAVE_LIS2DW12
-void lis2dw12_init(void);
 #define LIS2DW12_ITR_PIN 5
+void lis2dw12_init(void);
+int lis2dw12_GetStatus(void);//0 表示初始化ok, -1 wrong
 
 #endif
 

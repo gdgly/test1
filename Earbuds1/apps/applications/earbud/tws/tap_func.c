@@ -6,10 +6,15 @@
 #include <hydra_macros.h>
 #include <input_event_manager.h>
 
+//#define TIME_READ_LIS2DW12_REG
+
 typedef struct tagSHELLCMDINFO {
     TaskData       task;
 }tapfuncInfoTask;
 static tapfuncInfoTask *pTapfuncTask = NULL;
+#ifdef TIME_READ_LIS2DW12_REG
+static tapfuncInfoTask *pTimefuncTask = NULL;
+#endif
 
 #ifdef HAVE_BMA400
 void tap_itr_handle_bma400(void)
@@ -20,23 +25,23 @@ void tap_itr_handle_bma400(void)
     BMA400ReadRegister(handle, 0x0e, value_a+0);
     BMA400ReadRegister(handle, 0x0f, value_a+1);
     BMA400ReadRegister(handle, 0x10, value_a+2);
-    //printf("reg0x0e=0x%x, reg0x0f=0x%x, reg0x10=0x%x\n",value_a[0], value_a[1], value_a[2]);
+    //DEBUG_LOG("reg0x0e=0x%x, reg0x0f=0x%x, reg0x10=0x%x\n",value_a[0], value_a[1], value_a[2]);
 #ifdef MUTI_TAP
     uint32 time;
     if(value_a[1] & 0x4){
         time = VmGetClock();
-        printf("single tap, time = %d\n", time);
+        DEBUG_LOG("single tap, time = %d\n", time);
     }
 #endif
 #ifndef ONLY_DOUBLE_TAP
     if(value_a[1] & 0x4){
-        printf("single tap\n");
+        DEBUG_LOG("single tap\n");
         MessageSend(&(appGetUi()->task), 1000, NULL);
     }
 #endif
 #ifndef MUTI_TAP
     if(value_a[1] & 0x8){
-        printf("double tap\n");
+        DEBUG_LOG("double tap\n");
         //MessageSend(&(appGetUi()->task), 1000, NULL);
         MessageSend(&(appGetUi()->task), 1006, NULL);
         CONN_RULES_BLE_CONNECTION_UPDATE_T *msg_value = PanicUnlessNew(CONN_RULES_BLE_CONNECTION_UPDATE_T);
@@ -56,10 +61,10 @@ void tap_itr_handle_lis2dw12(void)
     bitserial_handle handle;
     handle = lis2dw12Enable();
     lis2dw12ReadRegister_withlen(handle, 0x37, value_arr, 5);
-//    printf("reg 0x37=0x%x, 0x38=0x%x, 0x39=0x%x, 0x3a=0x%x, 0x3b=0x%x\n",
+//    DEBUG_LOG("reg 0x37=0x%x, 0x38=0x%x, 0x39=0x%x, 0x3a=0x%x, 0x3b=0x%x\n",
 //           value_arr[0], value_arr[1], value_arr[2], value_arr[3], value_arr[4]);
     if(value_arr[0] & 0x10){
-        printf("double tap\n");
+        DEBUG_LOG("double tap\n");
         MessageSend(appGetUiTask(), APP_BTN_DOUBLE_TAP, NULL);
     }
     lis2dw12Disable(handle);
@@ -93,10 +98,28 @@ void tap_itr_handler(Task task, MessageId id, Message msg)
             }
             break;
         default:
-            printf("id=%d(0x%x\n", id, id);
+            DEBUG_LOG("id=%d(0x%x\n", id, id);
             break;
     }
 }
+
+#ifdef TIME_READ_LIS2DW12_REG
+#define MESSAGE_TIME_TRIGGER 1
+static void tap_time_handle_msg(Task task, MessageId id, Message message)
+{
+    (void)message;(void)task;
+    switch (id)
+    {
+        case MESSAGE_TIME_TRIGGER:
+            tap_itr_handle_lis2dw12();
+            //DEBUG_LOG("1s read lis2dw12 reg\n");
+            MessageSendLater(&pTimefuncTask->task,
+                             MESSAGE_TIME_TRIGGER, NULL,
+                             1000);
+        break;
+    }
+}
+#endif
 
 void tap_func_init(void)
 {
@@ -111,6 +134,14 @@ void tap_func_init(void)
     lis2dw12_init();
     pTapfuncTask->task.handler = tap_itr_handler;
     InputEventManagerRegisterTask(&pTapfuncTask->task, LIS2DW12_ITR_PIN);
+#endif
+#ifdef TIME_READ_LIS2DW12_REG
+    pTimefuncTask= PanicUnlessNew(tapfuncInfoTask);
+    memset(pTimefuncTask, 0, sizeof(tapfuncInfoTask));
+    pTimefuncTask->task.handler = tap_time_handle_msg;
+    MessageSendLater(&pTimefuncTask->task,
+                     MESSAGE_TIME_TRIGGER, NULL,
+                     5000);
 #endif
 }
 
