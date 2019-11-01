@@ -34,7 +34,7 @@
 #define MAX20340_RIGHTEAR_I2C_ADDR 0x6a
 #define MAX20340_I2C_FREQ 400
 
-#define MAX20340_TEST
+//#define MAX20340_TEST
 #define MAX20340_TEST_PIN 18
 
 bool max20340ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value);

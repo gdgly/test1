@@ -6,6 +6,7 @@
 #include "tws/adv_manager.h"
 
 #define CONFIG_BOARD_V1        // V1版本
+//#define CONFIG_BOARD_V1_EARBARD //v1耳机板与demo板io不一样，打开此宏表示是耳机
 
 //==============================================================================================
 // TBR 调试器在DEMO板上使用使用的IO脚列表如下，可能会与我们系统中的冲突，注意不能同时使用
@@ -107,7 +108,7 @@ void SourceSinkI2SMasterClockEnable(void *source_sink, int isSource, int enable)
 //==============================================================================================
 //              /* em20168 Proximity */
 //==============================================================================================
-#define HAVE_EM20168
+//#define HAVE_EM20168
 #define EM20168_ITR_PIN 61
 void EM20168_init(void);
 int EM20168Power(bool isOn);
@@ -158,6 +159,14 @@ int max20340_GetStatus(void);//0 表示初始化ok, -1 wrong
 #define LIS2DW12_ITR_PIN 5
 void lis2dw12_init(void);
 int lis2dw12_GetStatus(void);//0 表示初始化ok, -1 wrong
+
+/*耳机软板io重定义*/
+#ifdef CONFIG_BOARD_V1_EARBARD
+#undef PSRAM_POWER_PIO
+#undef MAX20340_ITR_PIN
+#define PSRAM_POWER_PIO     3
+#define MAX20340_ITR_PIN    2
+#endif
 
 #endif
 

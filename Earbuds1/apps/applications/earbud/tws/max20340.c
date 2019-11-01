@@ -418,8 +418,9 @@ void singlebus_itr_process(void)
         max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x7f);
         max20340WriteRegister(handle, MX20340_REG_PLC_MASK, 0x0e);
         //max20340WriteRegister(handle, MX20340_REG_PLC_MASK, 0xff);
-    }//else if(value_a[MX20340_REG_STA_IRQ]&0x2){
-    else{
+    }else if(value_a[MX20340_REG_PLC_IRQ] & 0x08){//总线接收数据出错，不做回应，master会重发
+        ;
+    }else if(value_a[MX20340_REG_PLC_IRQ] & 0x06){//总线接收到数据
         recv_data_process_ear(handle, value_a);
     }
 #endif
@@ -477,6 +478,8 @@ void singlebus_key_itr_handler(Task task, MessageId id, Message msg)
 }
 #endif
 
+#define TIME_READ_MAX20340_REG
+
 typedef struct tagSHELLCMDINFO {
     TaskData       task;
     bool status;
@@ -484,6 +487,27 @@ typedef struct tagSHELLCMDINFO {
 static singlebus_funcInfoTask *psbfuncTask = NULL;
 #ifdef MAX20340_TEST
 static singlebus_funcInfoTask *psbtest_funcTask = NULL;
+#endif
+#ifdef TIME_READ_MAX20340_REG
+static singlebus_funcInfoTask *time_funcTask = NULL;
+#endif
+
+#ifdef TIME_READ_MAX20340_REG
+#define MESSAGE_MAX20340_TIME_TRIGGER 1
+static void max20340_time_handle_msg(Task task, MessageId id, Message message)
+{
+    (void)message;(void)task;
+    switch (id)
+    {
+        case MESSAGE_MAX20340_TIME_TRIGGER:
+            singlebus_itr_process();
+            //DEBUG_LOG("lalalala\n");
+            MessageSendLater(&time_funcTask->task,
+                             MESSAGE_MAX20340_TIME_TRIGGER, NULL,
+                             1000);
+        break;
+    }
+}
 #endif
 
 int max20340_get_left_or_right(void)
@@ -527,7 +551,8 @@ typedef struct{
     uint8 value;
 }max20340_str;
 max20340_str max20340_init_array[] = {
-    {MX20340_REG_CTRL1, 0xe0},
+    //{MX20340_REG_CTRL1, 0xe0},
+    {MX20340_REG_CTRL1, 0xe1},
     //{MX20340_REG_CTRL2, 0xe1},
     {MX20340_REG_CTRL2, 0xe2},
     {MX20340_REG_CTRL3, 0xa4},
@@ -588,6 +613,16 @@ void max20340_init(void)
     psbtest_funcTask->task.handler = singlebus_key_itr_handler;
     InputEventManagerRegisterTask(&psbtest_funcTask->task, MAX20340_TEST_PIN);
 #endif
+
+#ifdef TIME_READ_MAX20340_REG
+    time_funcTask = PanicUnlessNew(singlebus_funcInfoTask);
+    memset(time_funcTask, 0, sizeof(singlebus_funcInfoTask));
+    time_funcTask->task.handler = max20340_time_handle_msg;
+    MessageSendLater(&time_funcTask->task,
+                     MESSAGE_MAX20340_TIME_TRIGGER, NULL,
+                     6000);
+#endif
+
     max20340Disable(handle);
     return;
 }
