@@ -69,6 +69,8 @@ enum {
     GAIA_COMMAND_STAROT_AI_AUDIO_TO_APP = 0X5202,                             // 助手音频Device->App
     GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE = 0X5203,                          // 助手音频App->Device
     GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE_ACK  = 0X5204,                     // 音频确认包
+    GAIA_COMMAND_STAROT_AI_BEGIN_RECORD = 0X5205,                             // 开始录音
+    GAIA_COMMAND_STAROT_AI_END_RECORD = 0X5206,                               // 停止录音
 };
 
 /////////////////////////////测试与生产///////////////////////////////

@@ -33,7 +33,7 @@ static void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message);//APP主动获取耳�
 static void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message);//App获取设备的耳机的双击配置信息
 static void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message);//App设置设备的耳机的双击配置信息
 
-static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message);//App请求录音
+static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App请求录音
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
 
 static void gaiaControlCallDialog(GAIA_STAROT_IND_T* mess);
@@ -175,8 +175,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
     }
     /// 助手52NN
     switch (message->command) {
-        case GAIA_COMMAND_STAROT_AI_CONTROL:
-            gaiaSetRequestRecord(message);
+        case GAIA_COMMAND_STAROT_AI_BEGIN_RECORD:
+            gaiaSetRequestRecord(message, TRUE);
+            break;
+        case GAIA_COMMAND_STAROT_AI_END_RECORD:
+            gaiaSetRequestRecord(message, FALSE);
             break;
         case GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE:
             gaiaAssistantAudioAppDev(message);
@@ -649,32 +652,25 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     attrFree(body, NULL);
 }
 
-void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message){
-    StarotAttr *body = attrDecode(message->payload, message->payloadLen);
-    if (NULL == body) {
-        return;
-    }
-    DEBUG_LOG("attr:%02X %02X", message->payload[0], message->payload[1]);
-    if (0X01 == body->attr) {
+void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin) {
+    if (TRUE == isBegin) {
         if (TRANSFORM_NONE == appGetGaia()->transformAudioFlag) {
             appGetGaia()->transformAudioFlag = RECORD_CAN_TRANSFORM;
             gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_AI_USER_START_RECORD);
         }
-    } else if (0X02 == body->attr) {
+    } else if (FALSE == isBegin) {
         if (RECORD_CAN_TRANSFORM == appGetGaia()->transformAudioFlag) {
             gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_AI_USER_STOP_RECORD);
             appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
         }
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
-    attrFree(body, NULL);
 }
 
-void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message){
+void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message) {
     //App播放音频数据
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
-
 
 void gaiaControlCallDialog(GAIA_STAROT_IND_T* mess) {
    StarotAttr *body = attrDecode(mess->payload, mess->payloadLen);
