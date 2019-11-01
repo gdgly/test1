@@ -6,7 +6,7 @@
 #include <hydra_macros.h>
 #include <input_event_manager.h>
 
-//#define TIME_READ_LIS2DW12_REG
+#define TIME_READ_LIS2DW12_REG
 
 typedef struct tagSHELLCMDINFO {
     TaskData       task;
