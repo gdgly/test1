@@ -89,6 +89,11 @@ int lis25Power(bool isOn)
     return lis25WriteReg(BITSERIAL_HANDLE_ERROR, LIS25_REG_CTRL_REG, isOn ?  0 : 0x20 );
 }
 
+int lis25GetStatus(void)
+{
+    int Stared = gLis25Info.inited;
+    return Stared; }
+
 #else
 void lis25Init(void) { return; }
 int lis25Power(bool isOn) { UNUSED(isOn); return 0; }

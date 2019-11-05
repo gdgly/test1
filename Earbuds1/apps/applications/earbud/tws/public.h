@@ -89,10 +89,11 @@ void ShellCmdInit(void);
 //==============================================================================================
 //              /* Lis25BA I2C AUDIO INIT */
 //==============================================================================================
-//#define CONFIG_LIS25BA
+#define CONFIG_LIS25BA
 #define CONFIG_LIS25BA_TEST         // 测试
 void lis25Init(void);
 int lis25Power(bool isOn);
+int lis25GetStatus(void);             //  0is OK.
 void lis25Test(void);
 int lis25TestPower(bool isOn);
 
@@ -130,6 +131,12 @@ void tap_itr_handle_lis2dw12(void);
 void tap_itr_handle_bma400(void);
 void tap_itr_handler(Task task, MessageId id, Message msg);
 void tap_func_init(void);
+
+//==============================================================================================
+//              /* PC Write Test */
+//==============================================================================================
+#define CUMMPC_PC_USB
+void CummuInit(void);
 
 //==============================================================================================
 //      BOARD_V1 不同定义 硬件上的差别
