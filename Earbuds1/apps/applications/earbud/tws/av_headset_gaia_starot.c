@@ -35,6 +35,7 @@ static void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message);//App设置设备�
 
 static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App请求录音
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
+static void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message);//接受设备传过来的停止信息
 
 static void gaiaControlCallDialog(GAIA_STAROT_IND_T* mess);
 static void gaiaControlAcceptDialog(GAIA_STAROT_IND_T* message);
@@ -183,6 +184,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE:
             gaiaAssistantAudioAppDev(message);
+            break;
+        case GAIA_CONNECT_STAROT_RECORD_STOP_REPORT:
+            gaiaDevRecordStopInfo(message);
             break;
     }
 
@@ -539,7 +543,7 @@ void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message) {
 
     if (message->command == STAROT_DIALOG_CASE_VER) {
         DEBUG_LOG("call STAROT_DIALOG_CASE_VER");
-        attr = attrMalloc(&head, 2);
+        attr = attrMalloc(&head, 4);
         attr->attr = 0X02;
         memcpy(&head->payload[0], &message->payload[0], 2);
         memcpy(&head->payload[2], &message->payload[2], 2);
@@ -670,6 +674,24 @@ void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin) {
 void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message) {
     //App播放音频数据
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
+    StarotAttr *head = NULL;
+    StarotAttr *attr = NULL;
+
+    DEBUG_LOG("gaiaDevRecordStopInfo");
+    attr = attrMalloc(&head, 1);
+    attr->attr = 0X01;
+    attr->payload[0] = message->payload[0];
+
+    if (NULL != head) {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_CONNECT_STAROT_RECORD_STOP_REPORT, 0xfe, len, data);
+        attrFree(head, data);
+        DEBUG_LOG("call GAIA_CONNECT_STAROT_RECORD_STOP_REPORT");
+    }
 }
 
 void gaiaControlCallDialog(GAIA_STAROT_IND_T* mess) {

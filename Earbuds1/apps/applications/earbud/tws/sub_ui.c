@@ -163,6 +163,16 @@ static int16 subUiCasever2Gaia(MessageId id, ProgRIPtr  progRun)
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
     return 0;
 }
+//上报stop停止状态
+static void subUiStopReport2Gaia(void)
+{
+    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 1);
+
+    message->command = GAIA_CONNECT_STAROT_RECORD_STOP_REPORT;
+    message->payload[0] = 0X01;
+    message->payloadLen = 1;
+    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+}
 
 static int16 subUiChargeStat2Gaia(MessageId id, ProgRIPtr  progRun)
 {
@@ -303,6 +313,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
             subUiChargeStat2Gaia(id, progRun);
         else
             appUiRestartBle();
+        break;
+    case STAROT_DEV_STOP_STATUS_REPORT:
+        subUiStopReport2Gaia();
         break;
      default:
         DEBUG_LOG("Unknown Message id=0x%x", id);

@@ -71,6 +71,7 @@ enum {
     GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE_ACK  = 0X5204,                     // 音频确认包
     GAIA_COMMAND_STAROT_AI_BEGIN_RECORD = 0X5205,                             // 开始录音
     GAIA_COMMAND_STAROT_AI_END_RECORD = 0X5206,                               // 停止录音
+    GAIA_CONNECT_STAROT_RECORD_STOP_REPORT = 0X5207,                          // 拨入电话停止录音上报
 };
 
 /////////////////////////////测试与生产///////////////////////////////
@@ -160,6 +161,7 @@ enum {
     STAROT_DIALOG_CASE_VER,                               // ui -> gaia 盒子当前版本
     STAROT_AI_USER_START_RECORD,                          // ui -> (ui & dsp) AI请求录音
     STAROT_AI_USER_STOP_RECORD,                           // ui -> (ui & dsp) AI停止录音
+    STAROT_DEV_STOP_STATUS_REPORT,                        // ui -> (ui & dsp) 上报停止录音状态
 };
 
 #define STAROT_COMMAND_TIMEOUT 1000 // 命令超时时间

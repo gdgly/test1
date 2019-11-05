@@ -14,6 +14,7 @@
 #include "chains/chain_prompt_decoder.h"
 #include "chains/chain_prompt_decoder_no_iir.h"
 #include "chains/chain_prompt_pcm.h"
+#include "tws/av_headset_gaia_starot.h"
 
 /*! \brief Setup the prompt audio source.
     \param source The prompt audio source.
@@ -109,7 +110,7 @@ static Source appKymeraCreateTonePromptChain(const KYMERA_INTERNAL_TONE_PROMPT_P
     }
     return ChainGetOutput(chain, EPR_TONE_PROMPT_CHAIN_OUT);
 }
-
+extern void disable_audio_forward(bool disable);
 void appKymeraHandleInternalTonePromptPlay(const KYMERA_INTERNAL_TONE_PROMPT_PLAY_T *msg)
 {
     kymeraTaskData *theKymera = appGetKymera();
@@ -117,6 +118,14 @@ void appKymeraHandleInternalTonePromptPlay(const KYMERA_INTERNAL_TONE_PROMPT_PLA
 
     DEBUG_LOGF("appKymeraHandleInternalTonePromptPlay, prompt %x, tone %p, int %u, lock 0x%x, mask 0x%x",
                 msg->prompt, msg->tone, msg->interruptible, msg->client_lock, msg->client_lock_mask);
+
+#ifdef CONFIG_REC_ASSISTANT
+    if (appKymeraGetState() == KYMERA_STATE_AUDIO_RECORD){
+        disable_audio_forward(TRUE);
+        appKymeraRecordStop();
+        MessageSend(&appGetUi()->task, STAROT_DEV_STOP_STATUS_REPORT, 0);
+    }
+#endif
 
     /* If there is a tone still playing at this point, it must be an interruptable tone, so cut it off */
     appKymeraTonePromptStop();
