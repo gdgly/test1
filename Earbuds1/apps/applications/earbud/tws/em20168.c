@@ -16,7 +16,6 @@ em20168_str em20168_init_array[] = {
     {0x6, EM20168_HIGH_VALUE_H},
 #endif
     {0x26, 0x00},
-    {0x01, 0x80},
     {0x0b, 0x80},
     {0x0c, 0x80},
     //{0x0d, 0xb6},
@@ -38,6 +37,7 @@ em20168_str em20168_init_array[] = {
     {0x4, EM20168_LOW_VALUE_H},
     {0x5, EM20168_HIGH_VALUE_L},
     {0x6, EM20168_HIGH_VALUE_H},
+    {0x01, 0x80},
 };
 
 em20168_str em20168_read_array[] = {
@@ -144,10 +144,11 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     proximityTaskData *prox = appGetProximity();
     handle = EM20168Enable();
 
-    EM20168ReadRegister(handle, 0x21, &value);
-    em20168_ps0_value = value << 8;
     EM20168ReadRegister(handle, 0x20, &value);
-    em20168_ps0_value += value;
+    em20168_ps0_value = value;
+    EM20168ReadRegister(handle, 0x21, &value);
+    em20168_ps0_value += value << 8;
+
 #ifndef EM20168_SEND_MSG
     DEBUG_LOG("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
 #endif
@@ -156,24 +157,24 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     if(em20168_ps0_value >= EM20168_HIGH_VALUE &&
             (prox->state->proximity != proximity_state_in_proximity) ){
         prox->state->proximity = proximity_state_in_proximity;
-#ifdef EM20168_SEND_MSG
-        if (NULL != prox->clients)
-        {
+#ifndef EM20168_SEND_MSG
+        DEBUG_LOG("in ear");
+#else
+        if (NULL != prox->clients){
             DEBUG_LOG("in ear");
             appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_IN_PROXIMITY);
-
         }
 #endif
     }
     if(em20168_ps0_value <= EM20168_LOW_VALUE &&
             (prox->state->proximity == proximity_state_in_proximity) ){
         prox->state->proximity = proximity_state_not_in_proximity;
-#ifdef EM20168_SEND_MSG
-        if (NULL != prox->clients)
-        {
+#ifndef EM20168_SEND_MSG
+        DEBUG_LOG("out ear");
+#else
+        if (NULL != prox->clients){
             DEBUG_LOG("out ear");
             appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY);
-
         }
 #endif
     }
@@ -196,7 +197,7 @@ void EM20168_itr_handler(Task task, MessageId id, Message msg)
             }
             break;
         default:
-            DEBUG_LOG("id=%d(0x%x\n", id, id);
+            DEBUG_LOG("id=%d\n", id);
             break;
     }
 }
@@ -230,7 +231,7 @@ void EM20168_keytest_itr_handler(Task task, MessageId id, Message msg)
             }
             break;
         default:
-            DEBUG_LOG("id=%d(0x%x\n", id, id);
+            DEBUG_LOG("id=%d\n", id);
             break;
     }
 }
@@ -288,7 +289,7 @@ void EM20168_init(void)
         DEBUG_LOG("em20168 id = 0x%x\n", value);
     else{
         EM20168Disable(handle);
-        DEBUG_LOG("em20168 read id error!\n");
+        DEBUG_LOG("em20168 read id error!value = %d\n", value);
         return;
     }
 

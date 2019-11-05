@@ -140,6 +140,20 @@ int lis2dw12_GetStatus(void)
     }
 }
 
+int Lis2dw12Power(bool isOn)
+{
+    int ret;
+    bitserial_handle handle;
+    handle = lis2dw12Enable();
+    if(isOn){
+        ret = lis2dw12WriteRegister(handle, 0x32, 0x25);
+    }else{
+        ret = lis2dw12WriteRegister(handle, 0x32, 0x05);
+    }
+    lis2dw12Disable(handle);
+    return ret;
+}
+
 void lis2dw12_init(void)
 {
     bitserial_handle handle;

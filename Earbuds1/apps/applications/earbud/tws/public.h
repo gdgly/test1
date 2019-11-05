@@ -166,6 +166,7 @@ int max20340_GetStatus(void);//0 表示初始化ok, -1 wrong
 #define LIS2DW12_ITR_PIN 5
 void lis2dw12_init(void);
 int lis2dw12_GetStatus(void);//0 表示初始化ok, -1 wrong
+int Lis2dw12Power(bool isOn);//1 打开，0关闭
 
 /*耳机软板io重定义*/
 #ifdef CONFIG_BOARD_V1_EARBARD
