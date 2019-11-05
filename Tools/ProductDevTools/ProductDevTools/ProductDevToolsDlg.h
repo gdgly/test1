@@ -56,6 +56,9 @@ public:
 	CEdit m_edHWver;
 	afx_msg void OnBnClickedBtnStop();
 	afx_msg void OnDestroy();
+	BOOL m_bEraseAll;
+	CEdit m_edName;
+	afx_msg void OnBnClickedButtonPswrite();
 };
 
 

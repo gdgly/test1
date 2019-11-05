@@ -85,9 +85,11 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
     if(1 != progRun->gaiaStat)
         return -1;
 
+    if(id == APP_CALLIN_INACT )
+        return -1;
+
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
 
-    (void)id;
     message->command      = STAROT_DIALOG_STATUS;
     message->payload[0]   = progRun->dial_stat;
     message->payload[1]   = 0;

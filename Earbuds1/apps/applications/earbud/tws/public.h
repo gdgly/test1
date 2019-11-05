@@ -6,6 +6,7 @@
 #include "tws/adv_manager.h"
 
 #define CONFIG_BOARD_V1        // V1版本
+//#define CONFIG_BOARD_V1_EARBARD //v1耳机板与demo板io不一样，打开此宏表示是耳机
 
 //==============================================================================================
 // TBR 调试器在DEMO板上使用使用的IO脚列表如下，可能会与我们系统中的冲突，注意不能同时使用
@@ -88,10 +89,11 @@ void ShellCmdInit(void);
 //==============================================================================================
 //              /* Lis25BA I2C AUDIO INIT */
 //==============================================================================================
-//#define CONFIG_LIS25BA
+#define CONFIG_LIS25BA
 #define CONFIG_LIS25BA_TEST         // 测试
 void lis25Init(void);
 int lis25Power(bool isOn);
+int lis25GetStatus(void);             //  0is OK.
 void lis25Test(void);
 int lis25TestPower(bool isOn);
 
@@ -131,6 +133,12 @@ void tap_itr_handler(Task task, MessageId id, Message msg);
 void tap_func_init(void);
 
 //==============================================================================================
+//              /* PC Write Test */
+//==============================================================================================
+#define CUMMPC_PC_USB
+void CummuInit(void);
+
+//==============================================================================================
 //      BOARD_V1 不同定义 硬件上的差别
 //==============================================================================================
 #ifdef CONFIG_BOARD_V1
@@ -158,6 +166,15 @@ int max20340_GetStatus(void);//0 表示初始化ok, -1 wrong
 #define LIS2DW12_ITR_PIN 5
 void lis2dw12_init(void);
 int lis2dw12_GetStatus(void);//0 表示初始化ok, -1 wrong
+int Lis2dw12Power(bool isOn);//1 打开，0关闭
+
+/*耳机软板io重定义*/
+#ifdef CONFIG_BOARD_V1_EARBARD
+#undef PSRAM_POWER_PIO
+#undef MAX20340_ITR_PIN
+#define PSRAM_POWER_PIO     3
+#define MAX20340_ITR_PIN    2
+#endif
 
 #endif
 
@@ -196,6 +213,12 @@ int lis2dw12_GetStatus(void);//0 表示初始化ok, -1 wrong
 #define FORWARD_AUDIO_SCO  (1<<0)
 #define FORWARD_AUDIO_MIC  (1<<1)
 #define FORWARD_AUDIO_TYPE (FORWARD_AUDIO_SCO | FORWARD_AUDIO_MIC)
+
+// ================================================
+//              software watchdog 开关
+// ================================================
+
+#define ENABLE_WATCHDOG
 
 // ================================================
 //              录音助手功能

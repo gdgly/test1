@@ -51,6 +51,7 @@ END_MESSAGE_MAP()
 
 CProductDevToolsDlg::CProductDevToolsDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_PRODUCTDEVTOOLS_DIALOG, pParent)
+	, m_bEraseAll(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
@@ -67,6 +68,8 @@ void CProductDevToolsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_COMMU, m_ListCtrl);
 	DDX_Control(pDX, IDC_EDIT5, m_edAddr);
 	DDX_Control(pDX, IDC_EDIT_HWVER, m_edHWver);
+	DDX_Check(pDX, IDC_CHECK_ERASE, m_bEraseAll);
+	DDX_Control(pDX, IDC_EDIT_NAME, m_edName);
 }
 
 BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
@@ -83,6 +86,7 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_OPEN_FILE, &CProductDevToolsDlg::OnBnClickedBtnOpenFile)
 	ON_BN_CLICKED(IDC_BTN_STOP, &CProductDevToolsDlg::OnBnClickedBtnStop)
 	ON_WM_DESTROY()
+	ON_BN_CLICKED(IDC_BUTTON_PSWRITE, &CProductDevToolsDlg::OnBnClickedButtonPswrite)
 END_MESSAGE_MAP()
 
 
@@ -117,10 +121,13 @@ BOOL CProductDevToolsDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
+	CString sText;
 	m_edHWver.SetWindowText("000102");
-	m_edAddr.SetWindowTextA("{0x00ff09, 0x5b, 0x02}");
+	m_edAddr.SetWindowTextA("{0x00ff0F, 0x5b, 0x02}");
+	m_edName.SetWindowTextA("\"TWS-F\"");
 	m_edSend.SetWindowTextA("abcdefg测试数据1234567");
-	m_edFirmName.SetWindowTextA("C:\\Users\\dannywang\\Documents\\QCC5126.git\\Earbuds1\\apps\\applications\\earbud\\qcc512x_rom_v21\\CF376_CG814\\flash_image.xuv");
+	sText = ::AfxGetApp()->GetProfileString("PRODUCT_CONFIG", "IMAGENAME", "");
+	m_edFirmName.SetWindowTextA(sText);
 
 	int nCol = 0;
 	DWORD dwStyle = m_ListCtrl.GetExtendedStyle();
@@ -604,15 +611,33 @@ void CProductDevToolsDlg::OnBnClickedButtonClose()
 }
 
 
+void CProductDevToolsDlg::OnBnClickedButtonPswrite()
+{
+	unsigned char buf[24];
+
+	memset(buf, 0xFF, sizeof(buf));
+	m_devCtrl.PsWrite(9742 + 141, buf, sizeof(buf));
+}
+
+
 void CProductDevToolsDlg::OnBnClickedBtnStart()
 {
 	CString sText;
 
 	UpdateData(TRUE);
 	m_edFirmName.GetWindowText(sText);	m_devCtrl.SetFlashImage(sText);
+	if (!sText.IsEmpty()){
+		DWORD dwAttrib = GetFileAttributes(sText);
+		if (INVALID_FILE_ATTRIBUTES != dwAttrib) {
+			BOOL ret = ::AfxGetApp()->WriteProfileString("PRODUCT_CONFIG", "IMAGENAME", sText);
+			TRACE("Write FlashImage%d:%s\n", ret, sText);
+		}
+	}
+	m_edName.GetWindowText(sText); m_devCtrl.SetBtName(sText);
 	m_edAddr.GetWindowText(sText); m_devCtrl.SetBtAddr(sText);
 	m_edHWver.GetWindowTextA(sText); m_devCtrl.SetHwVersion(sText);
-
+	m_devCtrl.SetEraseAll(m_bEraseAll);
+	
 	m_devCtrl.Start(this->m_hWnd);
 }
 
@@ -682,22 +707,17 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 		break;
 	case REPORT_COMMU_READ:
-		sText.Format("%s", (char*)lParam);
-		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
-		break;
 	case REPORT_RDBD_NAME:
-		sText.Format("%s", (char*)lParam);
-		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
-		break;
+	case REPORT_WRBD_NAME:
 	case REPORT_RDBD_ADDR:
-		sText.Format("%s", (char*)lParam);
-		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
-		break;
+	case REPORT_WRBD_ADDR:
 	case REPORT_COMMU_SUCC:
 		sText.Format("%s", (char*)lParam);
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 		break;
 	}
+
+	m_ListCtrl.EnsureVisible(count, FALSE);
 
 	return 0;
 }
@@ -715,5 +735,6 @@ void CProductDevToolsDlg::OnBnClickedBtnOpenFile()
 
 	m_edFirmName.SetWindowTextA(sPath);
 }
+
 
 

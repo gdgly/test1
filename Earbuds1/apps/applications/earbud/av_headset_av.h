@@ -206,7 +206,10 @@ enum av_headset_av_messages
     AV_CREATE_IND,
     AV_DESTROY_IND,
     AV_STREAMING_ACTIVE_IND,
-    AV_STREAMING_INACTIVE_IND
+    AV_STREAMING_INACTIVE_IND,
+
+    //临时放在这里，后面研究这些message都应该放在哪里
+    AV_SYS_RST_WATCH_DOG
 };
 
 

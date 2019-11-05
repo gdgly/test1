@@ -57,7 +57,7 @@ bool BMA400ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        //printf("%s faild,result = %d\n",__func__, result);
+        //DEBUG_LOG("%s faild,result = %d\n",__func__, result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -73,7 +73,7 @@ bool BMA400WriteRegister(bitserial_handle handle, uint8 reg, uint8 value)
                             command, 2,
                             BITSERIAL_FLAG_BLOCK);
     if(result != BITSERIAL_RESULT_SUCCESS){
-        printf("%s faild,result = %d\n",__func__, result);
+        DEBUG_LOG("%s faild,result = %d\n",__func__, result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -84,7 +84,7 @@ bitserial_handle BMA400Enable(void)
     uint16 bank;
     uint32 mask;
 
-    //printf("BMA400Enable");
+    //DEBUG_LOG("BMA400Enable");
     bank = PIO2BANK(BMA400_ITR_PIN);
     mask = PIO2MASK(BMA400_ITR_PIN);
     PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
@@ -96,7 +96,7 @@ bitserial_handle BMA400Enable(void)
 
 void BMA400Disable(bitserial_handle handle)
 {
-    //printf("BMA400Disable");
+    //DEBUG_LOG("BMA400Disable");
     hwi2cClose(handle);
 }
 
@@ -147,12 +147,12 @@ void BMA400_itr_handler(Task task, MessageId id, Message msg)
     BMA400ReadRegister(accel->handle, 0x0e, value_a+0);
     BMA400ReadRegister(accel->handle, 0x0f, value_a+1);
     BMA400ReadRegister(accel->handle, 0x10, value_a+2);
-    //printf("reg0x0e=0x%x, reg0x0f=0x%x, reg0x10=0x%x\n",value_a[0], value_a[1], value_a[2]);
+    //DEBUG_LOG("reg0x0e=0x%x, reg0x0f=0x%x, reg0x10=0x%x\n",value_a[0], value_a[1], value_a[2]);
     if(value_a[1] & 0x4){
-        printf("single tap\n");
+        DEBUG_LOG("single tap\n");
     }
     if(value_a[1] & 0x8){
-        printf("double tap\n");
+        DEBUG_LOG("double tap\n");
     }
     BMA400Disable(accel->handle);
 }
@@ -178,7 +178,7 @@ bool appAccelerometerClientRegister(Task task)
         }
         for(i=0; i<ARRAY_DIM(bma400_read_array); i++){
             BMA400ReadRegister(accel->handle, bma400_read_array[i].reg, &value);
-            printf("bma400 reg 0x%x = 0x%x\n", bma400_read_array[i].reg, value);
+            DEBUG_LOG("bma400 reg 0x%x = 0x%x\n", bma400_read_array[i].reg, value);
         }
         BMA400Disable(accel->handle);
         /* Register for interrupt events */

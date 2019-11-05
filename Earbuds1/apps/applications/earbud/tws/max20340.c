@@ -18,7 +18,7 @@ bool max20340ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        //printf("%s faild,result = %d\n",__func__, result);
+        //DEBUG_LOG("%s faild,result = %d\n",__func__, result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -39,7 +39,7 @@ bool max20340ReadRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *va
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        //printf("%s faild,result = %d\n",__func__, result);
+        //DEBUG_LOG("%s faild,result = %d\n",__func__, result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -56,7 +56,7 @@ bool max20340WriteRegister(bitserial_handle handle, uint8 reg, uint8 value)
                             command, 2,
                             BITSERIAL_FLAG_BLOCK);
     if(result != BITSERIAL_RESULT_SUCCESS){
-        printf("%s faild,result = %d\n",__func__, result);
+        DEBUG_LOG("%s faild,result = %d\n",__func__, result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -74,7 +74,7 @@ bool max20340WriteRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *v
                             command, len+1,
                             BITSERIAL_FLAG_BLOCK);
     if(result != BITSERIAL_RESULT_SUCCESS){
-        printf("%s faild,result = %d\n",__func__, result);
+        DEBUG_LOG("%s faild,result = %d\n",__func__, result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -104,10 +104,13 @@ bitserial_handle max20340Enable(void)
 
 void max20340Disable(bitserial_handle handle)
 {
-    //printf("EM20168Disable");
+    //DEBUG_LOG("EM20168Disable");
     hwi2cClose(handle);
 }
 
+#define REAL_ITR 1
+#define TEST_ITR 0
+#if REAL_ITR
 static void box_get_data_process(uint8 *get_buf, uint8 *send_buf, uint8 *cache_buf, uint8 need_times)
 {
     uint8 type,cmd,req_data_num;
@@ -149,7 +152,7 @@ static void box_send_data_process(uint8 *get_buf, uint8 *send_buf, uint8 *cache_
     case 1://数据包
         if( *offset > (need_times - 1) ){
             *offset = 0;
-            printf("max20340 request err cmd=%d,type=%d\n", cmd, type);
+            DEBUG_LOG("max20340 request err cmd=%d,type=%d\n", cmd, type);
         }
         cache_buf[0+*offset*2] = get_buf[1];
         cache_buf[1+*offset*2] = get_buf[2];
@@ -187,7 +190,7 @@ static void box_send_btaddr(uint8 *get_buf, uint8 *send_buf)
     uint8 type;
     type = (get_buf[0] & 0x3);
     if(type == 2){//结束包，蓝牙包接收完整，可以通知出去了
-        printf("btaddr = %x:%x:%x:%x:%x:%x\n",
+        DEBUG_LOG("btaddr = %x:%x:%x:%x:%x:%x\n",
                btaddr[0], btaddr[1], btaddr[2], btaddr[3], btaddr[4], btaddr[5]);
     }
     box_send_data_process(get_buf, send_buf, btaddr, 6/2, &offset);
@@ -296,13 +299,13 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
             send_buf[1] = ((checksum>>8) & 0xff);
             send_buf[2] = (checksum & 0xff);
         }else{
-            printf("update request start_flag error! start_flag = %d\n", start_flag);
+            DEBUG_LOG("update request start_flag error! start_flag = %d\n", start_flag);
         }
         break;
     case 1://数据包
         data_num = (get_buf[1]<<8 + get_buf[2]);//0-511
         if(data_num>511){
-            printf("update request data_num=%d error\n", data_num);
+            DEBUG_LOG("update request data_num=%d error\n", data_num);
         }
         send_buf[1]=buffer_1k[0+(data_num)*2];
         send_buf[2]=buffer_1k[1+(data_num)*2];
@@ -381,29 +384,46 @@ static void recv_data_process_ear(bitserial_handle handle, uint8 *buf)
         break;
     }
 }
+#endif
 
 void singlebus_itr_process(void)
 {
-//    uint8 i;
+#if TEST_ITR
+    uint8 i;
+#endif
     uint8 value_a[0x13];
     bitserial_handle handle;
     handle = max20340Enable();
 
     max20340ReadRegister_withlen(handle, 0x0, value_a, 0x13);
-//    for(i=0; i<0x13; i++){
-//        printf("reg 0x%x = 0x%x\n", i, value_a[i]);
-//    }
-//    printf("over\n");
+#if TEST_ITR
+    for(i=0; i<0x13; i++){
+        DEBUG_LOG("reg 0x%x = 0x%x\n", i, value_a[i]);
+    }
+    DEBUG_LOG("over\n");
+    max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x7f);
+    max20340WriteRegister(handle, MX20340_REG_PLC_MASK, 0xff);
+#endif
 
-    if( (value_a[MX20340_REG_STA_IRQ]&0x1) &&
-            ((value_a[MX20340_REG_STA1]&0x1c) == (5<<2)) ){//说明是插入动作,可能是芯片bug需要重写mask寄存器
-        max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x2);
+#if REAL_ITR
+    if( (value_a[MX20340_REG_STA_IRQ]&0x1) ){
+        if( ((value_a[MX20340_REG_STA1]&0x1c) == (5<<2)) ){
+            //说明是插入动作,可能是芯片bug需要重写mask寄存器
+            DEBUG_LOG("plc in\n");
+        }else if( ((value_a[MX20340_REG_STA1]&0x1c) == (3<<2)) ){
+            //说明是拔出动作,可能是芯片bug需要重写mask寄存器
+            DEBUG_LOG("plc out\n");
+        }
+        //max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x2);
+        max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x7f);
         max20340WriteRegister(handle, MX20340_REG_PLC_MASK, 0x0e);
-    }//else if(value_a[MX20340_REG_STA_IRQ]&0x2){
-    else{
+        //max20340WriteRegister(handle, MX20340_REG_PLC_MASK, 0xff);
+    }else if(value_a[MX20340_REG_PLC_IRQ] & 0x08){//总线接收数据出错，不做回应，master会重发
+        ;
+    }else if(value_a[MX20340_REG_PLC_IRQ] & 0x06){//总线接收到数据
         recv_data_process_ear(handle, value_a);
     }
-
+#endif
     max20340Disable(handle);
 }
 
@@ -422,7 +442,7 @@ void singlebus_itr_handler(Task task, MessageId id, Message msg)
             }
             break;
         default:
-            printf("id=%d(0x%x\n", id, id);
+            DEBUG_LOG("id=%d(0x%x\n", id, id);
             break;
     }
 }
@@ -438,25 +458,27 @@ void singlebus_key_itr_handler(Task task, MessageId id, Message msg)
     MessagePioChanged *pioMsg = (MessagePioChanged*)msg;
     pin = PIO2MASK(MAX20340_TEST_PIN);
     pio_state = pioMsg->state16to31 << 16 | pioMsg->state;
-    printf("max20340 itr happened pio_state = 0x%x\n", pio_state);
+    DEBUG_LOG("max20340 itr happened pio_state = 0x%x\n", pio_state);
     switch(id) {
         case MESSAGE_PIO_CHANGED:
             if( !(pin&pio_state) ){
                 handle = max20340Enable();
                 max20340ReadRegister_withlen(handle, 0x0, value_a, 0x13);
                 for(i=0; i<0x13; i++){
-                    printf("reg 0x%x = 0x%x\n", i, value_a[i]);
+                    DEBUG_LOG("reg 0x%x = 0x%x\n", i, value_a[i]);
                 }
-                printf("over\n");
+                DEBUG_LOG("over\n");
                 max20340Disable(handle);
             }
             break;
         default:
-            printf("id=%d(0x%x\n", id, id);
+            DEBUG_LOG("id=%d(0x%x\n", id, id);
             break;
     }
 }
 #endif
+
+#define TIME_READ_MAX20340_REG
 
 typedef struct tagSHELLCMDINFO {
     TaskData       task;
@@ -465,6 +487,27 @@ typedef struct tagSHELLCMDINFO {
 static singlebus_funcInfoTask *psbfuncTask = NULL;
 #ifdef MAX20340_TEST
 static singlebus_funcInfoTask *psbtest_funcTask = NULL;
+#endif
+#ifdef TIME_READ_MAX20340_REG
+static singlebus_funcInfoTask *time_funcTask = NULL;
+#endif
+
+#ifdef TIME_READ_MAX20340_REG
+#define MESSAGE_MAX20340_TIME_TRIGGER 1
+static void max20340_time_handle_msg(Task task, MessageId id, Message message)
+{
+    (void)message;(void)task;
+    switch (id)
+    {
+        case MESSAGE_MAX20340_TIME_TRIGGER:
+            singlebus_itr_process();
+            //DEBUG_LOG("lalalala\n");
+            MessageSendLater(&time_funcTask->task,
+                             MESSAGE_MAX20340_TIME_TRIGGER, NULL,
+                             1000);
+        break;
+    }
+}
 #endif
 
 int max20340_get_left_or_right(void)
@@ -480,7 +523,7 @@ int max20340_get_left_or_right(void)
         max20340ReadRegister(handle, 0x00, &value);
         max20340Disable(handle);
         if(value == 0x10){
-            printf("max20340 i2c addr = 0x%x\n",MAX20340_LEFTEAR_I2C_ADDR);
+            DEBUG_LOG("max20340 i2c addr = 0x%x\n",MAX20340_LEFTEAR_I2C_ADDR);
             ret_value = 1;
             return 1;
         }
@@ -492,11 +535,11 @@ int max20340_get_left_or_right(void)
         max20340ReadRegister(handle, 0x00, &value);
         max20340Disable(handle);
         if(value == 0x10){
-            printf("max20340 i2c addr = 0x%x\n",MAX20340_RIGHTEAR_I2C_ADDR);
+            DEBUG_LOG("max20340 i2c addr = 0x%x\n",MAX20340_RIGHTEAR_I2C_ADDR);
             ret_value = 2;
             return 2;
         }
-        printf("max20340 i2c addr error\n");
+        DEBUG_LOG("max20340 i2c addr error\n");
         return 0;
     }else{
         return ret_value;
@@ -508,14 +551,16 @@ typedef struct{
     uint8 value;
 }max20340_str;
 max20340_str max20340_init_array[] = {
-    {MX20340_REG_CTRL1, 0xe0},
+    //{MX20340_REG_CTRL1, 0xe0},
+    {MX20340_REG_CTRL1, 0xe1},
     //{MX20340_REG_CTRL2, 0xe1},
     {MX20340_REG_CTRL2, 0xe2},
     {MX20340_REG_CTRL3, 0xa4},
     {MX20340_REG_CTRL4, 0x0},
-    {MX20340_REG_STA_MASK, 0x2},
-    //{MX20340_REG_STA_MASK, 0x7f},
+    //{MX20340_REG_STA_MASK, 0x2},
+    {MX20340_REG_STA_MASK, 0x7f},
     {MX20340_REG_PLC_CTL, 0x94},
+    //{MX20340_REG_PLC_CTL, 0x14},
     //{MX20340_REG_PLC_CTL, 0xa4},
     {MX20340_REG_PLC_MASK, 0x0e},
     //{MX20340_REG_PLC_MASK, 0xff},
@@ -545,14 +590,14 @@ void max20340_init(void)
     }
     max20340ReadRegister(handle, 0x00, &value);
     max20340ReadRegister(handle, 0x00, &value);
-    printf("max20340 id = 0x%x\n", value);
+    DEBUG_LOG("max20340 id = 0x%x\n", value);
 
     for(i=0; i<ARRAY_DIM(max20340_init_array); i++){
         max20340WriteRegister(handle, max20340_init_array[i].reg, max20340_init_array[i].value);
     }
     for(i=0; i<ARRAY_DIM(max20340_init_array); i++){
         max20340ReadRegister(handle, max20340_init_array[i].reg, &value);
-        printf("max20340 reg 0x%x = 0x%x\n", max20340_init_array[i].reg, value);
+        DEBUG_LOG("max20340 reg 0x%x = 0x%x\n", max20340_init_array[i].reg, value);
     }
     max20340ReadRegister_withlen(handle, 0x0, value_a, 0x13);//read clear itr
 
@@ -568,6 +613,16 @@ void max20340_init(void)
     psbtest_funcTask->task.handler = singlebus_key_itr_handler;
     InputEventManagerRegisterTask(&psbtest_funcTask->task, MAX20340_TEST_PIN);
 #endif
+
+#ifdef TIME_READ_MAX20340_REG
+    time_funcTask = PanicUnlessNew(singlebus_funcInfoTask);
+    memset(time_funcTask, 0, sizeof(singlebus_funcInfoTask));
+    time_funcTask->task.handler = max20340_time_handle_msg;
+    MessageSendLater(&time_funcTask->task,
+                     MESSAGE_MAX20340_TIME_TRIGGER, NULL,
+                     6000);
+#endif
+
     max20340Disable(handle);
     return;
 }

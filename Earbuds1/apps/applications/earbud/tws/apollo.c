@@ -190,6 +190,10 @@ void apollo_check_wakeup(void) {
     MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
 }
 
+
+int apolloGetStatus(void);
+int apolloGetStatus(void) { return 0; }
+
 static void init(void) {
     uint8 reg;
     bitserial_handle handle = hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ);
