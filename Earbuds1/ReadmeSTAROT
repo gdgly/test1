@@ -1,10 +1,88 @@
 debuglog.poll_debug_log()
+apps1.core.fw.call.
 stream.create_live_graph_img()
+apps1.fw.pmalloc.debug(); apps1.fw.pmalloc.info();
 
 appKymeraHandleInternalScoStart
+appKymeraHandleInternalRecordStart
 appSmHandleInternalBredrConnected
 
-20190927 BLE几台IPHONE速度测试(仅BLE运行)
+
+20191020 CHARGE/BATTERY/POWER
+    1. battery里面实现电量的读取。通过client_task发送给HFP及POWER模块
+    2. power里面实现电量底的处理。
+    3.
+
+
+
+
+
+20191014 升级
+   upgradeCtx保存升级相关的信息，升级过程并不从上层的av_headset_gaia走，而是直接从底层走了,这儿也运行一个状态机 从 UPGRADE_STATE_CHECK_STATUS 开始 UPGRADE_STATE_SYNC
+       upgradeCtx.mainTask      = appUpgradeMessageHandler
+       upgradeCtx.clientTask    = SMHandler;
+       upgradeCtx.transportTask = gaia->task_data = message_handler(GAIA)
+   appUpgradeInit(appUpgradeMessageHandler)-->UpgradeInit(SMHandler)-->UpgradeHostIFClientConnect(设置clientTask 后面分发消息的Handle-->SMHandler)
+   Rule中的检测是SM模块(appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CHECK_DFU);)中的，因此处理CONN_RULES_DFU_ALLOW也是在SM模块中。
+     -->appUpgradeAllowUpgrades-->UpgradePermit-->UpgradeSMHandleMsg(UPGRADE_VM_PERMIT_UPGRADE, 0);
+   gaia库中，message_handler分发了升级相关的消息 appGaiaMessageHandler
+      message_handler-->GaiaRwcpProcessCommand-->gaiaProcessCommand-->gaia_handle_data_transfer_command
+      gaia_handle_data_transfer_command(接收数据处理）-->命令为字GAIA_COMMAND_VM_UPGRADE_CONNECT/DISCONNECT/CONTRL为底层的接口
+     message_handler(中的UPGRADE_TRANSPORT_XXX 消息都是upgrade模块中处理的消息，反馈回来的)
+   GAIA_COMMAND_VM_UPGRADE_CONNECT-->upgrade_connect-->UpgradeTransportConnectRequest-->UpgradeHostIFTransportConnect-->UPGRADE_TRANSPORT_CONNECT_CFM-->gaia-->headset_gaia
+   GAIA_COMMAND_VM_UPGRADE_DISCONNECT-->upgrade_disconnect-->UpgradeTransportDisconnectRequest-->UpgradeHostIFTransportDisconnect-->UPGRADE_TRANSPORT_DISCONNECT_CFM-->gaia...
+   GAIA_COMMAND_VM_UPGRADE_CONTROL-->upgrade_control-->isLargeDataUpgrade-->getNextUpgradeData/UpgradeProcessDataRequest
+      getNextUpgradeData-->createUpgradeDataReq-->UpgradeProcessDataRequest-->UpgradeHostIFProcessDataRequest-->
+          UpgradeHostIFDataBuildIncomingMsg-->分发消息(SMHandler)或反馈UPGRADE_TRANSPORT_DATA_CFM
+  数据路径(NoRWCP)：gaiaHandleGattManagerAccessInd-->process_command-->gaiaProcessCommand-->gaia_handle_data_transfer_command-->upgrade_control
+  数据路径(RWCP)：message_handler-->gaiaTransportHandleMessage-->gaiaTransportGattProcessSource-->process_data-->gaiaProcessData-->RwcpServerHandleMessage-->
+                  handleDataSegment-->GaiaRwcpProcessCommand-->gaiaProcessCommand-->gaia_handle_data_transfer_command-->upgrade_control
+
+
+
+
+
+
+20191009
+   蓝牙电话本访问协议(PBAP)   https://blog.csdn.net/ylangeia/article/details/87706965
+   初始化 initPbap-->PbapcInit-->PBAPC_INT_REG_SDP-->pbapcInitHandler-->pbapcIntHandler-->pbapcRegisterSdpRecord-->CL_SDP_REGISTER_CFM-->handleSDPRegisterCfm-->PBAPC_INT_TASK_DELETE
+   连接 pbapConnect-->PbapcConnectRequest(pbapcCreateTask新的TASK）-->pbapcMsgSendConnectCfm-->PBAPC_INT_CONNECT
+        -->PBAPC_CONNECT_CFM-->handlePbapMessages-->handlePbapConnectCfm
+
+
+
+
+20190926 修改连接间隔
+    ConnectionDmBleSetConnectionParametersReq
+      sinkBleSetMasterConnectionParamsDefault/
+    ConnectionDmBleConnectionParametersUpdateReq(进一步的确认需要使用这个涵数,可以在连接成功之后调用)
+      sinkBleSetMasterConnectionParamsUpdate/sinkBleSetSlaveConnectionParamsUpdate/sinkBleSetSlaveConnectionParamsForUpgrade
+    发送：ConnectionDmBleConnectionParametersUpdateReq-->CL_INTERNAL_DM_BLE_CONNECTION_PARAMETERS_UPDATE_REQ-->
+        connectionHandleDmBleConnectionParametersUpdateReq-->DM_BLE_UPDATE_CONNECTION_PARAMETERS_REQ
+    返回: DM_BLE_UPDATE_CONNECTION_PARAMETERS_CFM-->connectionHandleDmBleUpdateConnectionParametersCfm-->CL_DM_BLE_CONNECTION_PARAMETERS_UPDATE_CFM
+
+
+
+20190926 模拟耳反（注意释放的时候需要关闭它)
+    av_headset_kymera_a2dp.c 255行增加
+    #ifdef CONFIG_STAROT /* 播放音频时候混合MIC中的数据 */
+	audio_mic_params audio_mic = theKymera->mic_params[0];
+	audio_mic.gain  = 13;
+	Source mic_src = AudioPluginMicSetup(appConfigLeftAudioChannel(), audio_mic, rate);
+
+	ChainConnectInput(theKymera->chainu.output_vol_handle, mic_src, EPR_VOLUME_AUX);
+	Operator op = ChainGetOperatorByRole(theKymera->chainu.output_vol_handle, OPR_VOLUME_CONTROL);
+	OperatorsVolumeSetAuxGain(op, -80);
+    #endif
+
+
+20190926
+  appAdvManagerHandleConnectionLibraryMessages. Unhandled message. Id: 0x5053 (20563) 0x13954  CL_DM_MODE_CHANGE_EVENT
+  appAdvManagerHandleConnectionLibraryMessages. Unhandled message. Id: 0x5072 (20594) 0x13a04
+  这个打印是  connectionHandleDmUlpPhyUpdateInd发送过来的 CL_DM_ULP_PHY_UPDATE_IND 没有处理
+
+
+20190926 BLE几台IPHONE速度测试(仅BLE运行)
                PACKET41            PACKET81
 IPHONE7          8.2KBps            14KBps
 IPHONE8          8.4KBps            16KBps
@@ -19,6 +97,7 @@ IPHONE6S         3.9KBps            4.1KBps
        -->GATT_MANAGER_REMOTE_CLIENT_NOTIFICATION_CFM-->(gaia[message_handler])-->gaiaTransportHandleMessage
       我们增加： gaiaHandleGattSendPacketCfm-->gaiaTransportCommonSendGaiaSendPacketCfm-->GAIA_SEND_PACKET_CFM(appGaiaMessageHandler)
     3.   测试中gattHandleAttHandleValueNtfCfm可能会返回出错信(status=257)
+    4.  ATT_HANDLE_VALUE_NTF_CFM/ATT_HANDLE_VALUE_NTF 应该可以带一个context（4BYTE)来做命令标记
 
 
 
@@ -69,7 +148,7 @@ IPHONE6S         3.9KBps            4.1KBps
 
 20190902 USB插入时信号（获取实际状态还是需要IPC）
     1. app0-->appChargerCheck(7)
-       app0->MESSAGE_CHARGER_DETECTED-->appChargerHandleChargerDetected()-->appChargerHandleChargerAttachStatus()->appChargerCheck()-->CHARGER_MESSAGE_ATTACHED-->appPhyStateInCaseEvent()
+       app0->MESSAGE_CHARGER_DETECTED-->appChargerHandleChargerDetected()-->appChargerHandleChargerAOttachStatus()->appChargerCheck()-->CHARGER_MESSAGE_ATTACHED-->appPhyStateInCaseEvent()
     2. appPhyStateInCaseEvent()-->PHY_STATE_INTERNAL_IN_CASE_EVENT-->appPhyStateHandleInternalInCaseEvent()-->PHY_STATE_OUT_OF_EAR/PHY_STATE_IN_CASE-->appSmHandlePhyStateChangedInd()/appScoFwdHandlePhyStateChangedInd()
     3.
 
@@ -159,11 +238,11 @@ IPHONE6S         3.9KBps            4.1KBps
         获取保存的对方蓝牙地址及attributes信息。
         发送-->CL_INTERNAL_SDP_REGISTER_RECORD_REQ
 	返回<--CL_SDP_REGISTER_CFM-->appPairingSetState(PAIRING_STATE_IDLE)
-
+ 
   1、首先执行appInitTable中的所有的初始化,结束之后发送INIT_CFM消息 MessageSend(appGetAppTask(), INIT_CFM, NULL);
        appSmInit会启动(RULE_EVENT_PAGE_SCAN_UPDATE），返回消息：CONN_RULES_PAGE_SCAN_UPDATE->appScanManagerEnablePageScan-->CL_INTERNAL_DM_WRITE_SCAN_ENABLE_REQ
   2、appHandleMessage(INIT_CFM)-->appHandleInitCfm-->appSmHandleMessage(appGetSmTask(), INIT_CFM, message);
-  3、appSmHandleMessage(INIT_CFM)-->appSmHandlppPairingSetState(thePairing, PAIRING_STATE_IDLE)eInitConfirm-->appSetState(APP_STATE_DFU_CHECK)-->appEnterDfuCheck-->MessageSend(appGetSmTask(), SM_INTERNAL_NO_DFU, NULL);
+  3、appSmHandleMessage(INIT_CFM)-->appSmHandleInitConfirm-->appSetState(APP_STATE_DFU_CHECK)-->appEnterDfuCheck-->MessageSend(appGetSmTask(), SM_INTERNAL_NO_DFU, NULL);
                                        这儿会检查一下DFU,返回消息（CONN_RULES_DFU_ALLOW）
   4、appSmHandleMessage(SM_INTERNAL_NO_DFU)-->appSmHandleNoDfu-->appSetState(APP_STATE_STARTUP)-->appEnterStartup-->appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_STARTUP);
   5、RULE_EVENT_STARTUP-->rulePeerPair/rulePeerSync(两个都执行） -->CONN_RULES_PEER_PAIR(没配对，开始配对)/CONN_RULES_SEND_PEER_SYNC
