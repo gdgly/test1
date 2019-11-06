@@ -18,7 +18,7 @@
 #define HOST_COMMS_PAYLOAD_OFFSET_WORD 2
 
 #define COMMU_INTERVAL_TIMER      (2000)
-enum { GET_VER=0, TYPE_BTADDR, LIS25, EM20168, LIS2DW12, MAX20340, APOLLO, };
+enum { TYPE_GET_VER=0, TYPE_BTADDR, TYPE_LIS25, TYPE_EM20168, TYPE_LIS2DW12, TYPE_MAX20340, TYPE_APOLLO, TYPE_LAST};
 
 typedef struct tagCOMMUINFO {
     TaskData  task;
@@ -40,7 +40,7 @@ static void CheckAllItem(CommuInfo *com)
     com->outsize = 0;
     memset(com->outbuf, 0, sizeof(com->outbuf));
     switch(com->type){
-        case GET_VER:                               // 获取版本信息
+        case TYPE_GET_VER:                               // 获取版本信息
             SystemGetVersion((appConfigIsLeft()? 1 : 2), (uint8*)ver);
             memcpy(com->outbuf, ver, sizeof(ver));
             com->outsize = sprintf(com->outbuf, "check %sVERSION %02X.%02X.%02X-%02X.%02X.%02X.%02X",
@@ -52,27 +52,33 @@ static void CheckAllItem(CommuInfo *com)
             com->outsize = sprintf(com->outbuf, "check BTADDR %02X:%02X:%02X:%02X:%02X:%02X",
                     addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
             break;
-        case LIS25:
+        case TYPE_LIS25:
             status = lis25GetStatus();
             com->outsize = sprintf(com->outbuf, "check LIS25 %s",
                     (status == 0) ? "PASS" : "FAIL");
             break;
-        case EM20168:
+#ifdef HAVE_EM20168
+        case TYPE_EM20168:
             status = EM20168_GetStatus();
             com->outsize = sprintf(com->outbuf, "check EM20168 %s",
                     (status == 0) ? "PASS" : "FAIL");
             break;
-        case LIS2DW12:
+#endif
+#ifdef HAVE_LIS2DW12
+        case TYPE_LIS2DW12:
             status = lis2dw12_GetStatus();
             com->outsize = sprintf(com->outbuf, "check LIS2DW12 %s",
                     (status == 0) ? "PASS" : "FAIL");
             break;
-        case MAX20340:
+#endif
+#ifdef HAVE_MAX20340
+        case TYPE_MAX20340:
             status = max20340_GetStatus();
             com->outsize = sprintf(com->outbuf, "check MAX20340 %s",
                     (status == 0) ? "PASS" : "FAIL");
             break;
-        case APOLLO:
+#endif
+        case TYPE_APOLLO:
             status = apolloGetStatus();
             com->outsize = sprintf(com->outbuf, "check APOLLO %s",
                     (status == 0) ? "PASS" : "FAIL");
@@ -126,10 +132,11 @@ static void CummuHandler(Task task, MessageId id, Message message)
             pComu->outsize = 0;
             CheckAllItem(pComu);
             if(pComu->outsize > 0) {
-                handleTransportSendData(task, (uint8 *)pComu->outbuf, pComu->outsize);
-                pComu->type  += 1;
+                handleTransportSendData(task, (uint8 *)pComu->outbuf, pComu->outsize);                
                 MessageSendLater(task, COMMU_INTERVAL_TIMER, NULL, 10);
             }
+            if(pComu->type < TYPE_LAST)
+                pComu->type  += 1;
             break;
         }
     }
