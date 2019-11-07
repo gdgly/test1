@@ -123,7 +123,7 @@ void appKymeraHandleInternalTonePromptPlay(const KYMERA_INTERNAL_TONE_PROMPT_PLA
     if (appKymeraGetState() == KYMERA_STATE_AUDIO_RECORD){
         disable_audio_forward(TRUE);
         appKymeraRecordStop();
-        MessageSend(&appGetUi()->task, STAROT_DEV_STOP_STATUS_REPORT, 0);
+        MessageSend(&appGetUi()->task, STAROT_RECORD_STOP_STATUS_REPORT, 0);
     }
 #endif
 

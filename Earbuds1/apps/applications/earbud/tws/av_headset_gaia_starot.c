@@ -32,6 +32,8 @@ static void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message);
 static void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message);//APP主动获取耳机版本
 static void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message);//App获取设备的耳机的双击配置信息
 static void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message);//App设置设备的耳机的双击配置信息
+static void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message);//上报电量-位置-连接状态信息
+static void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message);//App主动获取电量-位置-连接状态信息
 
 static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App请求录音
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
@@ -137,6 +139,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
     }
 
     switch (message->command) {
+        case STAROT_DIALOG_TYPE:
+            gaiaParseDialogStatus(message);
+            break;
         case STAROT_DIALOG_STATUS:
             gaiaParseDialogStatus(message);
             break;
@@ -151,6 +156,12 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_VERSION:
             gaiaGetHeadsetVer(message);
+            break;
+        case GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_POWER_POSITION_CONNECTION:
+            gaiaGetNotifyPowPositionConn(message);
+            break;
+        case GAIA_COMMAND_STAROT_BASE_INFO_APPGET_POWER_POSITION_CONNECTION:
+            gaiaAppGetNotifyPowPositionConncet(message);
             break;
     }
 
@@ -601,6 +612,50 @@ void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
     }
 
     attrFree(body, NULL);
+}
+
+void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message)
+{
+    StarotAttr *head = NULL;
+    StarotAttr *attr = NULL;
+
+    if(message->payload[0] >= 0) {
+        attr = attrMalloc(&head, 1);
+        attr->attr = 0X01;
+        attr->payload[0] = message->payload[0];
+    }
+    if(message->payload[1] >= 0) {
+        attr = attrMalloc(&head, 1);
+        attr->attr = 0X02;
+        attr->payload[0] = message->payload[1];
+    }
+    if(message->payload[2] >= 0) {
+        attr = attrMalloc(&head, 1);
+        attr->attr = 0X03;
+        attr->payload[0] = message->payload[2];
+    }
+    if(message->payload[3] >= 0) {
+        attr = attrMalloc(&head, 1);
+        attr->attr = 0X04;
+        attr->payload[0] = message->payload[3];
+    }
+    if(message->payload[4] >= 0) {
+        attr = attrMalloc(&head, 1);
+        attr->attr = 0X05;
+        attr->payload[0] = message->payload[4];
+    }
+    if (NULL != head) {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_POWER_POSITION_CONNECTION, 0xfe, len, data);
+        attrFree(head, data);
+    }
+}
+
+void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message)
+{
+    gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
 void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message) {

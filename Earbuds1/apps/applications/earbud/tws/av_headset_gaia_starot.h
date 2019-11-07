@@ -61,6 +61,7 @@ enum {
     GAIA_COMMAND_STAROT_BASE_INFO_SET_DOUBLE_CLIENT_CONFIG= 0X5502,           // 设置双击设置
     GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_CASE_STATUS = 0X5503,                // 通知充电盒状态
     GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_POWER_POSITION_CONNECTION = 0X5504,  // 通知电量、位置、连接信息
+    GAIA_COMMAND_STAROT_BASE_INFO_APPGET_POWER_POSITION_CONNECTION = 0X5505,  // app获取电量、位置、连接信息
 };
 /////////////////////////////助手控制////////////////////////////////
 enum {
@@ -161,7 +162,8 @@ enum {
     STAROT_DIALOG_CASE_VER,                               // ui -> gaia 盒子当前版本
     STAROT_AI_USER_START_RECORD,                          // ui -> (ui & dsp) AI请求录音
     STAROT_AI_USER_STOP_RECORD,                           // ui -> (ui & dsp) AI停止录音
-    STAROT_DEV_STOP_STATUS_REPORT,                        // ui -> (ui & dsp) 上报停止录音状态
+    STAROT_RECORD_STOP_STATUS_REPORT,                     // dsp -> ui 上报停止录音状态
+    STAROT_RECORD_RETURN_THREE_POWER,                     // App主动获取电量状态
 };
 
 #define STAROT_COMMAND_TIMEOUT 1000 // 命令超时时间

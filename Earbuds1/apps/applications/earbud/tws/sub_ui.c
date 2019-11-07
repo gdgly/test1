@@ -18,6 +18,7 @@ extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
 extern void disable_audio_forward(bool disable);
 void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
+void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
 
 ProgRunInfo gProgRunInfo;
 
@@ -163,6 +164,7 @@ static int16 subUiCasever2Gaia(MessageId id, ProgRIPtr  progRun)
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
     return 0;
 }
+
 //上报stop停止状态
 static void subUiStopReport2Gaia(void)
 {
@@ -174,9 +176,71 @@ static void subUiStopReport2Gaia(void)
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 }
 
-static int16 subUiChargeStat2Gaia(MessageId id, ProgRIPtr  progRun)
+static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
 {
-    (void)id,(void)progRun;
+    (void)id;
+    phyState state = appPhyStateGetState();
+    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 5);
+
+    message->command = GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_POWER_POSITION_CONNECTION;
+    message->payload[2] = (uint8)progRun->caseElectrity;
+    message->payload[3] = 0x00;
+    message->payload[4] = 0X00;
+    if(appConfigIsLeft()){
+        message->payload[0] = (uint8)progRun->iElectrity;
+        message->payload[1] = (uint8)progRun->peerElectrity;
+        if((uint8)progRun->gaiaStat)
+            message->payload[4] |= 0X80;
+        if((uint8)progRun->bredrconnect)
+            message->payload[4] |= 0X40;
+        if((uint8)progRun->peerconnect)
+            message->payload[4] |= 0X20;
+        switch(state) {
+        case PHY_STATE_IN_CASE:
+            message->payload[3] |= 0x80;
+            break;
+        case PHY_STATE_OUT_OF_EAR:
+        case PHY_STATE_OUT_OF_EAR_AT_REST:
+            message->payload[3] |= 0x40;
+            break;
+        case PHY_STATE_IN_EAR:
+            message->payload[3] |= 0x20;
+            break;
+        case PHY_STATE_UNKNOWN:
+            break;
+        }
+        message->payload[3] |= (progRun->peerPlace >> 3);
+        message->payload[4] |= ((message->payload[4] & 0XE0) >> 3);
+
+    }
+    else {
+        message->payload[0] = (uint8)progRun->peerElectrity;
+        message->payload[1] = (uint8)progRun->iElectrity;
+        if((uint8)progRun->gaiaStat)
+            message->payload[4] |= 0X10;
+        if((uint8)progRun->bredrconnect)
+            message->payload[4] |= 0X08;
+        if((uint8)progRun->peerconnect)
+            message->payload[4] |= 0X04;
+        switch(state) {
+        case PHY_STATE_IN_CASE:
+            message->payload[3] |= 0x10;
+            break;
+        case PHY_STATE_OUT_OF_EAR:
+        case PHY_STATE_OUT_OF_EAR_AT_REST:
+            message->payload[3] |= 0x08;
+            break;
+        case PHY_STATE_IN_EAR:
+            message->payload[3] |= 0x04;
+            break;
+        case PHY_STATE_UNKNOWN:
+            break;
+        }
+        message->payload[3] |= /*progRun->peerPlace*/((message->payload[3] & 0X1C) << 3);
+        message->payload[4] |= ((message->payload[4] & 0X1C) << 3);
+    }
+    message->payloadLen = 5;
+    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
     return 0;
 }
@@ -222,6 +286,9 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_DIALOG_USER_REJECT_RECORD:
         disable_audio_forward(TRUE);
         break;
+    case STAROT_RECORD_RETURN_THREE_POWER:
+        subUiStat2Gaia(ind->command, progRun);
+        break;
     }
 }
 
@@ -236,6 +303,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         if(progRun->iElectrity == ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent)
             break;
         progRun->iElectrity = ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent;
+        subUiStat2Gaia(id, progRun);
         DEBUG_LOG("appSubUiHandleMessage iElectrity=%d", progRun->iElectrity);
         break;
 
@@ -305,16 +373,18 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
-
+    case APP_THREE_POWER:         // 电量变化
+        subUiStat2Gaia(id, progRun);
+        break;
     case APP_CHARGE_STATUS:                 // 充电状态变化
         RETURN_APP_NOT_INIT();
 
         if(BLE_CONNECTED_PHONE())
-            subUiChargeStat2Gaia(id, progRun);
+            subUiStat2Gaia(id, progRun);
         else
             appUiRestartBle();
         break;
-    case STAROT_DEV_STOP_STATUS_REPORT:
+    case STAROT_RECORD_STOP_STATUS_REPORT:
         subUiStopReport2Gaia();
         break;
      default:
@@ -539,6 +609,27 @@ void appUiHfpCallInactive(void)
     MessageSend(&appGetUi()->task, APP_CALL_INACTIVE, 0);
 }
 
+/*EDR connect state*/
+void appUiAvConnected(unsigned cad)
+{
+    (void)cad;
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    progRun->bredrconnect = 1;
+
+    MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
+}
+
+/*EDR disconnect state*/
+void appUiAvDisconnected(void)
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    progRun->bredrconnect = 0;
+
+    MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///  盒子状态变化
@@ -558,7 +649,7 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
         progRun->caseKeyLong = (1 == keyLong) ? 1 : 0;
 
     if(iElectrity >= 0)
-        progRun->caseElectrity = iElectrity;
+        appUiBatteryStat(-1, -1, iElectrity);
 
     MessageSend(&appGetUi()->task, APP_CASE_REPORT_INFO, 0);
 }
@@ -573,18 +664,19 @@ void appUiCaseVersion(uint16 hwVer, uint16 swVer)
     MessageSend(&appGetUi()->task, APP_CASE_REPORT_VERSION, 0);
 }
 
-
-/*
-void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt){
+void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt)
+{
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    progRun->iElectrity = lbatt;
-    progRun->peerElectrity = rbatt;
-    progRun->caseElectrity = cbatt;
+    if(lbatt >= 0)
+        progRun->iElectrity = lbatt;
+    if(rbatt >= 0)
+        progRun->peerElectrity = rbatt;
+    if(cbatt >= 0)
+        progRun->caseElectrity = cbatt;
 
-    MessageSend(&appGetUi()->task, , 0);
+    MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
 }
-*/
 
 // 临时停止BLE广播，以便开始新的广播内容
 bool appUiIsStopBle(void)

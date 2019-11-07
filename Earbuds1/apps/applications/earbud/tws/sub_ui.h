@@ -27,6 +27,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 
 #define APP_INTERNAL_HANDSET_PAIR  (2090)           // 内部消息，启动广播连接手机
 
+#define APP_THREE_POWER            (2099)           // ui -> ui 电量状态
+
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
 //#define APP_CASE_GET_BTINFO        (2011)           // 盒子获取耳机经典蓝牙地址
 //#define APP_CASE_GET_BLEINFO       (2013)           // 获取BLE信息
@@ -58,13 +60,15 @@ typedef struct tagPROGRUNINFO {
     uint16         caseLidOpen:1;           // 盒子盖状态 0:close 1:opened
     uint16         caseKeyDown:1;           // 按键按下   0:up 1:down
     uint16         caseKeyLong:1;           // 按键按下长按键
-    uint16         stopBle:1;              // BLE更新广播内容时，需要先停止广播
+    uint16         stopBle:1;               // BLE更新广播内容时，需要先停止广播
 
     uint16         gaiaStat:1;              // GAIA与手机是否连接0：disconect, 1:connect
+    uint16         bredrconnect:1;           // 与经典蓝牙建立连接0：disconect, 1:connect
+    uint16         peerconnect:1;            // 与对方耳机建立连接0：disconect, 1:connect
     uint16         recStat:1;               // 当前是否正在录音
     uint16         chargeStat:3;            // 当前充电状态 CHARGE_ST_XXX
 
-
+    uint8          peerPlace:3;             // 对方耳机状态 Bit0:盒子中 Bit1：空中 Bit2：佩戴
     uint8          peerElectrity;           // 对方耳机电量 0...100    
     uint8          iElectrity;              // 自己耳机电量 0...100
 
@@ -95,6 +99,10 @@ void appUiHfpCallOutcomingInactive(int16 isEnd);
 void appUiHfpCallActive(void);
 /* Show HFP call imactive */
 void appUiHfpCallInactive(void);
+/*EDR connect state*/
+void appUiAvConnected(unsigned cad);
+/*EDR disconnect state*/
+void appUiAvDisconnected(void);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///  盒子状态变化

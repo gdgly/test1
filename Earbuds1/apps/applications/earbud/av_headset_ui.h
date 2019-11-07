@@ -328,17 +328,21 @@ extern const ringtone_note app_tone_av_link_loss[];
 #define appUiAvRemoteControl() \
     appUiPlayToneNotQueueable(app_tone_av_remote_control)
 
+#ifndef CONFIG_STAROT
 /*! \brief Play AV connected prompt */
 #define appUiAvConnected(silent) \
     { if (!(silent)) appUiPlayPrompt(PROMPT_CONNECTED);}
+#endif
 
 /*! \brief Play AV peer connected indication */
 #define appUiAvPeerConnected(silent) \
     { if (!(silent)) appUiPlayTone(app_tone_av_connected);}
 
+#ifndef CONFIG_STAROT
 /*! \brief Play AV disconnected prompt */
 #define appUiAvDisconnected() \
     appUiPlayPrompt(PROMPT_DISCONNECTED)
+#endif
 
 /*! \brief Play AV link-loss tone */
 #define appUiAvLinkLoss() \
