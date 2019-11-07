@@ -182,7 +182,7 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
     phyState state = appPhyStateGetState();
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 5);
 
-    message->command = GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_POWER_POSITION_CONNECTION;
+    message->command = STAROT_NOTIFY_STATUS;
     message->payload[2] = (uint8)progRun->caseElectrity;
     message->payload[3] = 0x00;
     message->payload[4] = 0X00;

@@ -13,7 +13,9 @@ uint16 bufferSendUnit = 40;
 
 
 extern void gaiaClearDropAudioSize(void);
+
 extern int gaiaGetDropAudioSize(void);
+
 StarotAttr *attrDecode(uint8 *data, int len);
 
 extern void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 status,
@@ -23,12 +25,15 @@ extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status
                               uint16 payload_length, uint8 *payload);
 
 static void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message);
-static void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T* message);
-static void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T* message);
+
+static void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T *message);
+
+static void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T *message);
 
 static void gaiaNotifyAudioAcceptStatus(Task task, int command);
 
 static void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message);
+
 static void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message);//APP主动获取耳机版本
 static void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message);//App获取设备的耳机的双击配置信息
 static void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message);//App设置设备的耳机的双击配置信息
@@ -39,17 +44,24 @@ static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
 static void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message);//接受设备传过来的停止信息
 
-static void gaiaControlCallDialog(GAIA_STAROT_IND_T* mess);
-static void gaiaControlAcceptDialog(GAIA_STAROT_IND_T* message);
-static void gaiaControlRejectDialog(GAIA_STAROT_IND_T* message);
-static void gaiaControlPreviousMusic(GAIA_STAROT_IND_T* message);
-static void gaiaControlNextMusic(GAIA_STAROT_IND_T* message);
-static void gaiaControlVolumeSet(GAIA_STAROT_IND_T* message);
+static void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess);
 
-static void gaiaSetBondCode(GAIA_STAROT_IND_T* message);
-static void gaiaCheckBondCode(GAIA_STAROT_IND_T* message);
+static void gaiaControlAcceptDialog(GAIA_STAROT_IND_T *message);
+
+static void gaiaControlRejectDialog(GAIA_STAROT_IND_T *message);
+
+static void gaiaControlPreviousMusic(GAIA_STAROT_IND_T *message);
+
+static void gaiaControlNextMusic(GAIA_STAROT_IND_T *message);
+
+static void gaiaControlVolumeSet(GAIA_STAROT_IND_T *message);
+
+static void gaiaSetBondCode(GAIA_STAROT_IND_T *message);
+
+static void gaiaCheckBondCode(GAIA_STAROT_IND_T *message);
 
 static void starotGaiaParseTestCfm(const GAIA_SEND_PACKET_CFM_T *m);
+
 static void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m);
 
 static void starotSpeedSendIntervalParse(void);
@@ -75,6 +87,23 @@ void starotGaiaInit(void) {
 }
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
+    /// 内部消息处理
+    switch (message->command) {
+        case STAROT_NOTIFY_STATUS:
+            gaiaGetNotifyPowPositionConn(message);
+            break;
+        case STAROT_DIALOG_TYPE:
+            gaiaParseDialogStatus(message);
+            break;
+        case STAROT_DIALOG_STATUS:
+            gaiaParseDialogStatus(message);
+            break;
+        case STAROT_DIALOG_AUDIO_DATA:
+            starotGaiaSendAudio(NULL);
+            break;
+    }
+
+    /// 处理来自APP的消息
     switch (message->command) {
         case GAIA_COMMAND_STAROT_FIRST_COMMAND: {
             appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
@@ -138,16 +167,8 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
     }
 
+    /// 版本信息，状态，双击配置
     switch (message->command) {
-        case STAROT_DIALOG_TYPE:
-            gaiaParseDialogStatus(message);
-            break;
-        case STAROT_DIALOG_STATUS:
-            gaiaParseDialogStatus(message);
-            break;
-        case STAROT_DIALOG_AUDIO_DATA:
-            starotGaiaSendAudio(NULL);
-            break;
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_DOUBLE_CLIENT_CONFIG:
             gaiaGetDoubleClickSet(message);
             break;
@@ -157,14 +178,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_VERSION:
             gaiaGetHeadsetVer(message);
             break;
-        case GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_POWER_POSITION_CONNECTION:
-            gaiaGetNotifyPowPositionConn(message);
-            break;
         case GAIA_COMMAND_STAROT_BASE_INFO_APPGET_POWER_POSITION_CONNECTION:
             gaiaAppGetNotifyPowPositionConncet(message);
             break;
     }
-
+    /// app控制耳机，发送相应蓝牙指令
     switch (message->command) {
         case GAIA_COMMAND_STAROT_CONTROL_CALL_DIALOG:
             gaiaControlCallDialog(message);
@@ -210,9 +228,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
     return TRUE;
 }
 
+/// 主要处理设备内部的消息
 void starotGaiaDefaultParse(MessageId id, Message message) {
     switch (id) {
-
         case GAIA_STAROT_COMMAND_IND:
             starotGaiaHandleCommand((GAIA_STAROT_IND_T *) message);
             break;
@@ -293,8 +311,8 @@ void starotNotifyAudioForward(bool st, uint8 flag) {
             gaiaStarotPrivateData.speakerDropNum += bufferSendUnit;
             SourceDrop(gaiaStarotPrivateData.dialogSpeaker, bufferSendUnit);
         }
-        if ((flag & GAIA_AUDIO_MIC) > 0 && NULL !=  gaiaStarotPrivateData.dialogMic) {
-             gaiaStarotPrivateData.micDropNum += bufferSendUnit;
+        if ((flag & GAIA_AUDIO_MIC) > 0 && NULL != gaiaStarotPrivateData.dialogMic) {
+            gaiaStarotPrivateData.micDropNum += bufferSendUnit;
             SourceDrop(gaiaStarotPrivateData.dialogMic, bufferSendUnit);
         }
     }
@@ -324,7 +342,7 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
     static uint8 payload[256];
     uint16 flag = 0, pos = 1;
 
-    if (NULL !=  gaiaStarotPrivateData.dialogSpeaker) {
+    if (NULL != gaiaStarotPrivateData.dialogSpeaker) {
         int size = SourceSize(gaiaStarotPrivateData.dialogSpeaker);
         if (size >= bufferSendUnit) {
             flag |= GAIA_AUDIO_SPEAKER;
@@ -334,7 +352,7 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
         }
     }
 
-    if (NULL !=  gaiaStarotPrivateData.dialogMic) {
+    if (NULL != gaiaStarotPrivateData.dialogMic) {
         int size = SourceSize(gaiaStarotPrivateData.dialogMic);
         if (size >= bufferSendUnit) {
             flag |= GAIA_AUDIO_MIC;
@@ -614,32 +632,31 @@ void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
     attrFree(body, NULL);
 }
 
-void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message)
-{
+void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message) {
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
 
-    if(message->payload[0] >= 0) {
+    if (message->payload[0] >= 0) {
         attr = attrMalloc(&head, 1);
         attr->attr = 0X01;
         attr->payload[0] = message->payload[0];
     }
-    if(message->payload[1] >= 0) {
+    if (message->payload[1] >= 0) {
         attr = attrMalloc(&head, 1);
         attr->attr = 0X02;
         attr->payload[0] = message->payload[1];
     }
-    if(message->payload[2] >= 0) {
+    if (message->payload[2] >= 0) {
         attr = attrMalloc(&head, 1);
         attr->attr = 0X03;
         attr->payload[0] = message->payload[2];
     }
-    if(message->payload[3] >= 0) {
+    if (message->payload[3] >= 0) {
         attr = attrMalloc(&head, 1);
         attr->attr = 0X04;
         attr->payload[0] = message->payload[3];
     }
-    if(message->payload[4] >= 0) {
+    if (message->payload[4] >= 0) {
         attr = attrMalloc(&head, 1);
         attr->attr = 0X05;
         attr->payload[0] = message->payload[4];
@@ -652,8 +669,7 @@ void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message)
     }
 }
 
-void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message)
-{
+void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message) {
     gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
@@ -695,11 +711,11 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
         return;
     }
     uint8 leftKey = 0XFF, rightKey = 0XFF;
-    StarotAttr* head = body;
+    StarotAttr *head = body;
     while (NULL != head) {
         if (0X01 == head->attr) {
             leftKey = head->payload[0];
-        } else if(0X02 == head->attr) {
+        } else if (0X02 == head->attr) {
             rightKey = head->payload[0];
         }
         head = head->next;
@@ -749,69 +765,70 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
     }
 }
 
-void gaiaControlCallDialog(GAIA_STAROT_IND_T* mess) {
-   StarotAttr *body = attrDecode(mess->payload, mess->payloadLen);
-   if (NULL == body) {
-       return;
-   }
-   if (0X01 == body->attr) {
-       uint16 length = 0;
-       /// 电话号码长度不会大于16
-       const int MaxPhoneNuberLen = 16;
-       if (body->len <= MaxPhoneNuberLen) {
-           length = body->len;
-       } else {
-           length = MaxPhoneNuberLen;
-       }
+void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess) {
+    StarotAttr *body = attrDecode(mess->payload, mess->payloadLen);
+    if (NULL == body) {
+        return;
+    }
+    if (0X01 == body->attr) {
+        uint16 length = 0;
+        /// 电话号码长度不会大于16
+        const int MaxPhoneNuberLen = 16;
+        if (body->len <= MaxPhoneNuberLen) {
+            length = body->len;
+        } else {
+            length = MaxPhoneNuberLen;
+        }
 
-       MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_IND, length);
-       message->command = GAIA_COMMAND_STAROT_CONTROL_CALL_DIALOG;
-       message->payloadLen = length;
-       memcpy(message->payload, body->payload, length);
-       MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
-   }
-   appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
-   attrFree(body, NULL);
+        MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_IND, length);
+        message->command = GAIA_COMMAND_STAROT_CONTROL_CALL_DIALOG;
+        message->payloadLen = length;
+        memcpy(message->payload, body->payload, length);
+        MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
+    }
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
+    attrFree(body, NULL);
 }
 
-void gaiaControlAcceptDialog(GAIA_STAROT_IND_T* message) {
+void gaiaControlAcceptDialog(GAIA_STAROT_IND_T *message) {
     gaiaNotifyAudioAcceptStatus(appGetUiTask(), GAIA_COMMAND_STAROT_CONTROL_ACCEPT_DIALOG);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
-void gaiaControlRejectDialog(GAIA_STAROT_IND_T* message) {
+void gaiaControlRejectDialog(GAIA_STAROT_IND_T *message) {
 //    appHfpCallReject();
     gaiaNotifyAudioAcceptStatus(appGetUiTask(), GAIA_COMMAND_STAROT_CONTROL_REJECT_DIALOG);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
-void gaiaControlPreviousMusic(GAIA_STAROT_IND_T* message) {
+void gaiaControlPreviousMusic(GAIA_STAROT_IND_T *message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
-void gaiaControlNextMusic(GAIA_STAROT_IND_T* message) {
+void gaiaControlNextMusic(GAIA_STAROT_IND_T *message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
-void gaiaControlVolumeSet(GAIA_STAROT_IND_T* message) {
+void gaiaControlVolumeSet(GAIA_STAROT_IND_T *message) {
     StarotAttr *body = attrDecode(message->payload, message->payloadLen);
     if (NULL == body) {
         return;
     }
-    if(0X01 == body->attr){
+    if (0X01 == body->attr) {
         //
 
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
-static void gaiaSetBondCode(GAIA_STAROT_IND_T* message) {
+static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {
     if (!appBleIsBond()) {
         uint8 *data = message->payload;
         uint16 advCode = (((uint16) data[0]) << 8) | data[1];
         uint32 bindCode = (((uint32) data[2]) << 24) | (((uint32) data[3]) << 16) | (((uint32) data[4]) << 8) | data[5];
         appBleSetBond(advCode, bindCode);
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+        gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
         GattManagerCancelWaitForRemoteClient();
         /// 取消超时如果没有发送bondCode断开连接的定时器
     } else {
@@ -819,13 +836,14 @@ static void gaiaSetBondCode(GAIA_STAROT_IND_T* message) {
     }
 }
 
-static void gaiaCheckBondCode(GAIA_STAROT_IND_T* message) {
+static void gaiaCheckBondCode(GAIA_STAROT_IND_T *message) {
     do {
         if (appBleIsBond()) {
             uint8 *data = message->payload;
             uint32 bindCode = (((uint32) data[0]) << 24) | (((uint32) data[1]) << 16) | (((uint32) data[2]) << 8) | data[3];
             if (bindCode == appBleGetBondCode()) {
                 appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+                gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
                 /// 取消超时如果没有发送bondCode断开连接的定时器
                 break;
             }
@@ -871,7 +889,7 @@ void starotGaiaParseTestCfm(const GAIA_SEND_PACKET_CFM_T *m) {
 }
 
 void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
-    uint8* packet = m->packet;
+    uint8 *packet = m->packet;
     uint16 vendor_id = W16(packet + GAIA_OFFS_VENDOR_ID);
     uint16 command_id = W16(packet + GAIA_OFFS_COMMAND_ID);
 
@@ -908,7 +926,7 @@ void starotGaiaSetTransportType(gaia_transport_type gaiaTransportType) {
     gaiaStarotPrivateData.gaiaTransportType = gaiaTransportType;
 }
 
-void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T* message) {
+void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T *message) {
     if (appGetGaia()->transformAudioFlag == TRANSFORM_COMING) {
         gaiaStarotPrivateData.testSpeedIndex = 0;
         appGetGaia()->transformAudioFlag = DIALOG_CAN_TRANSFORM;
@@ -923,7 +941,7 @@ void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T* message) {
                         0, NULL);
 }
 
-void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T* message) {
+void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T *message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
                         ((appGetGaia()->transformAudioFlag == DIALOG_CAN_TRANSFORM) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE), 0, NULL);
     if (appGetGaia()->transformAudioFlag == DIALOG_CAN_TRANSFORM) {
