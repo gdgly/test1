@@ -40,8 +40,8 @@ static void CheckAllItem(CommuInfo *com)
     com->outsize = 0;
     memset(com->outbuf, 0, sizeof(com->outbuf));
     switch(com->type){
-        case TYPE_GET_VER:                               // 获取版本信息
-            SystemGetVersion((appConfigIsLeft()? 1 : 2), (uint8*)ver);
+        case TYPE_GET_VER:                               // 获取当前耳机版本信息
+            SystemGetCurrentVersion((uint8*)ver);
             memcpy(com->outbuf, ver, sizeof(ver));
             com->outsize = sprintf(com->outbuf, "check %sVERSION %02X.%02X.%02X-%02X.%02X.%02X.%02X",
                     appConfigIsLeft()? "RIGHT" : "LEFT",ver[0], ver[1], ver[2], ver[4], ver[5], ver[6], ver[7]);

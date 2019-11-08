@@ -199,36 +199,60 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
 
 // 获取软硬件版本信息
 // hwVer[3]+rev[1]+swVer[4]
-// type: 0：盒子， 1：对方耳机(右），2：设备自身(左）
+// type: 0：盒子， 1：LEFT，2：RIGTH
 int16 SystemGetVersion(DevType type, uint8 *buffer)
 {
     uint8 *ptr = (uint8*)buffer;
 
-    if(DEV_CASE == type)
+    switch(type) {
+    case DEV_CASE:
         memcpy(ptr, gBtAddrParam.caseVer, DEV_HWSWVER_LEN);
-    else if((DEV_LEFT == type && appConfigIsLeft())||(DEV_RIGHT == type && appConfigIsRight())) {
-        memcpy(ptr, gFixParam.hw_ver, DEV_HWVER_LEN);
-        ptr[DEV_HWVER_LEN] = ' ';
-        memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
-    }
-    else {
-        memcpy(ptr, gBtAddrParam.peerVer, DEV_HWSWVER_LEN);
+        break;
+    case DEV_LEFT:
+        if(appConfigIsLeft()) {
+            memcpy(ptr, gFixParam.hw_ver, DEV_HWVER_LEN);
+            ptr[DEV_HWVER_LEN] = ' ';
+            memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
+        }
+        else {
+            memcpy(ptr, gBtAddrParam.peerVer, DEV_HWSWVER_LEN);
+        }
+        break;
+    case DEV_RIGHT:
+        if(appConfigIsRight() ) {
+            memcpy(ptr, gFixParam.hw_ver, DEV_HWVER_LEN);
+            ptr[DEV_HWVER_LEN] = ' ';
+            memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
+        }
+        else {
+            memcpy(ptr, gBtAddrParam.peerVer, DEV_HWSWVER_LEN);
+        }
+        break;
     }
 
     return DEV_HWSWVER_LEN;       // BYTE
 }
 
+int16 SystemGetCurrentVersion(uint8 *buffer)             // Get Current Earbuds version
+{
+    return SystemGetVersion(appConfigIsLeft() ? DEV_LEFT : DEV_RIGHT, buffer);
+}
+
 int16 SystemSetVersion(DevType type, uint8 *buffer)
 {
     uint8 *ptr = (uint8*)buffer;
-    if(DEV_CASE == type)
+    switch(type) {
+    case DEV_CASE:
         memcpy(gBtAddrParam.caseVer, ptr, DEV_HWSWVER_LEN);
-    else if((DEV_LEFT == type && appConfigIsLeft())||(DEV_RIGHT == type && appConfigIsRight())) {
-       // 自己的版本号不能更改
-       // memcpy(gFixParam.hw_ver, ptr, DEV_HWVER_LEN);
-    }
-    else {
-        memcpy(gBtAddrParam.peerVer, ptr, DEV_HWSWVER_LEN);
+        break;
+    case DEV_LEFT:   // 设备自身的版本号不能被修改
+        if(appConfigIsRight())
+            memcpy(gBtAddrParam.peerVer, ptr, DEV_HWSWVER_LEN);
+        break;
+    case DEV_RIGHT:
+        if(appConfigIsLeft())
+            memcpy(gBtAddrParam.peerVer, ptr, DEV_HWSWVER_LEN);
+        break;
     }
     return DEV_HWSWVER_LEN;
 

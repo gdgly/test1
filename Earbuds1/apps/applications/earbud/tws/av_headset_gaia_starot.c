@@ -588,6 +588,7 @@ void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message) {
     }
 }
 
+// APP主动获取盒子耳机版本
 void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
     StarotAttr *body = attrDecode(message->payload, message->payloadLen);
     if (NULL == body) {
@@ -596,11 +597,11 @@ void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
 
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
-    if ((body->payload[0] & 0X01) > 0) {
+    if ((body->payload[0] & 0X01) > 0) {   // LEFT
         attr = attrMalloc(&head, 8);
         attr->attr = 0X01;
         uint8 buffer[8] = {0};
-        SystemGetVersion(2, buffer);
+        SystemGetVersion(DEV_LEFT, buffer);
         memcpy(attr->payload, buffer, 8);
     }
 
@@ -608,7 +609,7 @@ void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
         attr = attrMalloc(&head, 8);
         attr->attr = 0X02;
         uint8 buffer[8] = {0};
-        SystemGetVersion(1, buffer);
+        SystemGetVersion(DEV_RIGHT, buffer);
         memcpy(attr->payload, buffer, 8);
     }
 
@@ -616,7 +617,7 @@ void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
         attr = attrMalloc(&head, 8);
         attr->attr = 0X04;
         uint8 buffer[8] = {0};
-        SystemGetVersion(0, buffer);
+        SystemGetVersion(DEV_CASE, buffer);
         memcpy(attr->payload, buffer, 8);
     }
 
@@ -632,6 +633,7 @@ void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
     attrFree(body, NULL);
 }
 
+// ui主动上报电量-位置-连接状态信息
 void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message) {
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
@@ -669,11 +671,13 @@ void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message) {
     }
 }
 
+// App主动获取电量-位置-连接状态信息
 void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message) {
     gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
+// App获取设备的耳机的双击配置信息
 void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     StarotAttr *body = attrDecode(message->payload, message->payloadLen);
     if (NULL == body) {
@@ -705,6 +709,7 @@ void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     attrFree(body, NULL);
 }
 
+// App设置设备的耳机的双击配置信息
 void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     StarotAttr *body = attrDecode(message->payload, message->payloadLen);
     if (NULL == body) {
@@ -727,6 +732,7 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     attrFree(body, NULL);
 }
 
+// App请求录音
 void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin) {
     if (TRUE == isBegin) {
         if (TRANSFORM_NONE == appGetGaia()->transformAudioFlag) {
@@ -747,6 +753,7 @@ void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
+// 接受设备传过来的停止信息
 void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
@@ -765,6 +772,7 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
     }
 }
 
+// APP中拨打电话
 void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess) {
     StarotAttr *body = attrDecode(mess->payload, mess->payloadLen);
     if (NULL == body) {
@@ -790,11 +798,13 @@ void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess) {
     attrFree(body, NULL);
 }
 
+// APP中接听电话
 void gaiaControlAcceptDialog(GAIA_STAROT_IND_T *message) {
     gaiaNotifyAudioAcceptStatus(appGetUiTask(), GAIA_COMMAND_STAROT_CONTROL_ACCEPT_DIALOG);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
+// APP中拒接电话
 void gaiaControlRejectDialog(GAIA_STAROT_IND_T *message) {
 //    appHfpCallReject();
     gaiaNotifyAudioAcceptStatus(appGetUiTask(), GAIA_COMMAND_STAROT_CONTROL_REJECT_DIALOG);

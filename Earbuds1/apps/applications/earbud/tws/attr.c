@@ -2,7 +2,7 @@
 #include "av_headset.h"
 #include "tws/attr.h"
 
-#define MAKE_ATTR_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) PanicUnlessMalloc(((sizeof(TYPE) + LEN) / 4 * 4) + ((sizeof(TYPE) + LEN) % 4 > 0 ? 4 : 0));
+#define MAKE_ATTR_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) PanicUnlessMalloc(((sizeof(TYPE) + LEN) / 8 * 8) + ((sizeof(TYPE) + LEN) % 8 > 0 ? 8 : 0));
 
 //#define MAKE_ATTR_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) PanicUnlessMalloc(sizeof(TYPE) + LEN);
 

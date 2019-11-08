@@ -331,10 +331,10 @@ static void ShellDoCommand(char *buffer, int len)
         appSmReboot();
         sprintf(outbuf, "reboot System\n");
     }
-    else if(strstr(buffer, "getver")) {       // 获取版本信息
+    else if(strstr(buffer, "getver")) {       // 获取当前耳机版本信息
         uint8 ver[8];
         memset(outbuf, 0, sizeof(outbuf));
-        SystemGetVersion(1, (uint8*)ver);
+        SystemGetCurrentVersion((uint8*)ver);
         sprintf(outbuf, "DEVver:%02X %02X %02X %02X %02X %02X %02X %02X\n",
                 ver[0],  ver[1],  ver[2],  ver[3],  ver[4],  ver[5],  ver[6],  ver[7]);
     }
@@ -381,10 +381,10 @@ static void ShellDoCommand(char *buffer, int len)
     else if(strstr(buffer, "setver")) {        // 设置peerver版本信息
         memset(outbuf, 0, sizeof(outbuf));
         uint8 leftver[8], rightver[8], casever[8];
-        SystemGetVersion(2, (uint8*)leftver);
-        SystemSetVersion(1, (uint8*)leftver);
-        SystemGetVersion(1, (uint8*)rightver);
-        SystemGetVersion(0, (uint8*)casever);
+        SystemGetVersion(DEV_RIGHT, (uint8*)leftver);
+        SystemSetVersion(DEV_LEFT, (uint8*)leftver);
+        SystemGetVersion(DEV_LEFT, (uint8*)rightver);
+        SystemGetVersion(DEV_CASE, (uint8*)casever);
         sprintf(outbuf, "leftver %02X %02X %02X %02X %02X %02X %02X %02X\n"
                         "rightver%02X %02X %02X %02X %02X %02X %02X %02X\n"
                         "casever %02X %02X %02X %02X %02X %02X %02X %02X\n",

@@ -85,9 +85,10 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
 
     if(1 != progRun->gaiaStat)
         return -1;
+    (void)id;
 
-    if(id == APP_CALLIN_INACT )
-        return -1;
+//    if(id == APP_CALLIN_INACT )
+//        return -1;
 
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
 
@@ -136,6 +137,9 @@ static int16 subUiCallType2Gaia(MessageId id, ProgRIPtr  progRun)
 // payload=[盒盖[1]+ 按键[1] + 长按键[1] + 电量[]]
 static int16 subUiCasestat2Gaia(MessageId id, ProgRIPtr  progRun)
 {
+    if(1 != progRun->gaiaStat)
+        return -1;
+
     (void)id;
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
 
@@ -154,6 +158,9 @@ static int16 subUiCasestat2Gaia(MessageId id, ProgRIPtr  progRun)
 // payload=[HwVer[2] + SwVer[2]]
 static int16 subUiCasever2Gaia(MessageId id, ProgRIPtr  progRun)
 {
+    if(1 != progRun->gaiaStat)
+        return -1;
+
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
     (void)id;
 
@@ -178,6 +185,9 @@ static void subUiStopReport2Gaia(void)
 
 static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
 {
+    if(1 != progRun->gaiaStat)
+        return -1;
+
     (void)id;
     phyState state = appPhyStateGetState();
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 5);
@@ -236,7 +246,7 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
         case PHY_STATE_UNKNOWN:
             break;
         }
-        message->payload[3] |= /*progRun->peerPlace*/((message->payload[3] & 0X1C) << 3);
+        message->payload[3] |= progRun->peerPlace;
         message->payload[4] |= ((message->payload[4] & 0X1C) << 3);
     }
     message->payloadLen = 5;

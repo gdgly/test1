@@ -65,8 +65,9 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo);
 int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
 
 // 获取软硬件版本信息
-// type: 盒子，自身(左）， 耳机(右）
+// type: 0:盒子，1:LEFT， 2耳机(右）
 int16 SystemGetVersion(DevType type, uint8 *buffer);
+int16 SystemGetCurrentVersion(uint8 *buffer);             // Get Current Earbuds version
 int16 SystemSetVersion(DevType type, uint8 *buffer);
 int16 UserGetKeyFunc(uint8 *lKeyFunc, uint8 *rKeyFunc);   // 获取功能键
 int16 UserSetKeyFunc(uint8 lKeyFunc, uint8 rKeyFunc);     // 设置功能键

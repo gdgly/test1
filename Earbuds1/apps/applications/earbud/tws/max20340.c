@@ -202,7 +202,7 @@ static void box_get_earsoft_version(uint8 *get_buf, uint8 *send_buf)
     uint8 type;
     type = (get_buf[0] & 0x3);
     if(type == 0){//开始包，获取版本号
-        SystemGetVersion(1,version);
+        SystemGetCurrentVersion(version);
     }
     box_get_data_process(get_buf, send_buf, version, 8/2);
 }
@@ -214,7 +214,7 @@ static void box_send_earsoft_version(uint8 *get_buf, uint8 *send_buf)
     uint8 type;
     type = (get_buf[0] & 0x3);
     if(type == 2){//版本号接收完整，可以通知出去了
-        SystemSetVersion(2,version);
+        SystemSetVersion(DEV_RIGHT,version);
     }
     box_send_data_process(get_buf, send_buf, version, 8/2, &offset);
 }
@@ -226,7 +226,7 @@ static void box_send_boxhwsoft_version(uint8 *get_buf, uint8 *send_buf)
     uint8 type;
     type = (get_buf[0] & 0x3);
     if(type == 2){//版本号接收完整，可以通知出去了
-        SystemSetVersion(0,version);
+        SystemSetVersion(DEV_CASE,version);
     }
     box_send_data_process(get_buf, send_buf, version, 8/2, &offset);
 }
