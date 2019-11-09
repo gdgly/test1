@@ -11,171 +11,43 @@
 
 #include "apollo.h"
 
-#define APOLLO_CHIPADDR         (0x10) // (0x68)
-#define APOLLO_I2C_FREQ         (400)
-
-#define APOLLO_INT_IO           (0x06)
-
-#define APOLLO_GET_SW_VER       (0x06) // get software version
-
-#define APOLLO_FEEDBACK         (0x00)
-#define APOLLO_COMMAND          (0x80)
-#define APOLLO_DATA             (0x84)
-
-#define APOLLO_UPDATE_MESSAGE_BASE (0x11)
-
-static void apollo_upgrade_handler(Task appTask, MessageId id, Message msg);
-static void upgrade(void);
-static uint32 get_int(void);
-
-static uint8 apollo_buf[128];
-
-#define  APOLLO_UPGRADE_MESSAGE_BASE (0x11)
-
+#define GET_INT (PioGet32Bank(0) & (1<<APOLLO_INT_IO))
+#define WAIT_INT_LOW while(0 != GET_INT){}
+#define WAIT_INT_HIGH while (0 == GET_INT){}
 #define MAKE_APOLLO_MESSAGE(TYPE) TYPE##_T *message = PanicUnlessNew(TYPE##_T)
 
-typedef struct {
-    uint32 command;
-} APOLLO_COMMAND_T;
+static void apollo_task_handler(Task appTask, MessageId id, Message msg);
+static void apollo_send_cmd(uint32 cmd, bitserial_handle handle);
+static void apollo_send_data(uint8* data, int length, bitserial_handle handle);
+static void init(void);
+static void start_boot_mode(void);
+static void write_image_param(bitserial_handle handle, uint32 addr, uint32 size, uint32 crc);
+static int  start_new_image(void);
+static void transfer_image_1(void);
+static void transfer_image_2(void);
+static int  transfer_image_3(void);
+static int  read_fw_version(uint8 *fw_ver);
+static const uint8* map_image(void);
+static void reset(void);
+static void delay_ms(uint16 v_msec_16);
 
-typedef enum apollo_upgrade_state {
-    APOLLO_UPGRADE_STAGE1 = APOLLO_UPGRADE_MESSAGE_BASE,
-    APOLLO_UPGRADE_STAGE2,
-    APOLLO_UPGRADE_CMD,
-    APOLLO_MESSAGE_CMD
-} apollo_upgrade_state_t;
 
-static ApolloTaskData apolloTaskData =
-{
-    .data = {.handler = apollo_upgrade_handler},
-};
-
+static ApolloTaskData apolloTaskData = {.data = {.handler = apollo_task_handler}};
 static Task apolloTask = &(apolloTaskData.data);
 
-void apollo_int_io_init(void){
+static uint32 upgrade_remain_bytes;
+static uint32 upgrade_offset;
+static uint8* apollo_img_fptr = NULL;
+static uint32 fw_version;
+
+/*
+ * APIs
+ */
+
+void apollo_int_io_init(void) {
     PioSetMapPins32Bank(0, (1<<APOLLO_INT_IO), (1<<APOLLO_INT_IO));
     PioSetDir32Bank(0, (1<<APOLLO_INT_IO), (0<<APOLLO_INT_IO));
     DEBUG_LOG("apollo_int_io_init");
-#ifdef CONFIG_KEY_INTERRUPT
-    InputEventManagerInit(&gKeyData.task, InputEventActions,
-                          sizeof(InputEventActions), &InputEventConfig);
-    gKeyData.keyvalue = (PioGet32Bank(0) & (1<<APOLLO_INT_IO));
-    PanicNotZero(PioSet32Bank(0, (1<<APOLLO_INT_IO), (1<<APOLLO_INT_IO)));
-    InputEventManagerRegisterTask(&gKeyData.task, APOLLO_INT_IO);
-#endif
-}
-
-static uint32 get_int(void){
-#ifdef CONFIG_KEY_INTERRUPT
-    return gKeyData.keyvalue;
-#else
-    return (PioGet32Bank(0) & (1<<APOLLO_INT_IO));
-#endif
-}
-
-static void read_sw_version(void) {
-    uint8 reg;
-    bitserial_handle handle = hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ);
-
-    while (get_int() == 0);
-
-    reg = APOLLO_COMMAND;
-    apollo_buf[0] = reg;
-    apollo_buf[1] = 0x06;
-    hwi2cWrite(handle, apollo_buf, 5);
-
-    while (get_int() != 0);
-
-    reg = APOLLO_FEEDBACK;
-    hwi2cRead(handle, &reg, 1, apollo_buf, 8);
-
-    DEBUG_LOG("sw version: %x, %x, %x, %x, %x, %x, %x, %x",
-              apollo_buf[0], apollo_buf[1], apollo_buf[2], apollo_buf[3],
-              apollo_buf[4], apollo_buf[5], apollo_buf[6], apollo_buf[7]);
-
-    reg = APOLLO_COMMAND;
-    apollo_buf[0] = reg;
-    apollo_buf[1] = 0x00;
-    hwi2cWrite(handle, apollo_buf, 5);
-
-    while (get_int() == 0);
-
-    hwi2cClose(handle);
-}
-
-static void check_wakeup(void) {
-    uint8 reg;
-    bitserial_handle handle = hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ);
-
-    if (get_int() != 0) {
-        DEBUG_LOG("no wakeup interrupt");
-        return;
-    }
-
-    reg = APOLLO_FEEDBACK;
-    hwi2cRead(handle, &reg, 1, apollo_buf, 4);
-
-    DEBUG_LOG("wakeup data: %x, %x, %x, %x", apollo_buf[0], apollo_buf[1], apollo_buf[2], apollo_buf[3]);
-
-    hwi2cClose(handle);
-}
-
-static void upgrade(void) {
-    uint8 reg;
-
-    bitserial_handle handle = hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ);
-
-    while (get_int() == 0);
-
-    reg = APOLLO_COMMAND;
-    apollo_buf[0] = reg;
-    apollo_buf[1] = 0x10;       /*擦除头部准备进入升级模式*/
-    hwi2cWrite(handle, apollo_buf, 5);
-
-    while (get_int() != 0);
-
-    reg = APOLLO_FEEDBACK;
-    hwi2cRead(handle, &reg, 1, apollo_buf, 8);
-
-    DEBUG_LOG("sversion: %x, %x, %x, %x",
-              apollo_buf[4], apollo_buf[5], apollo_buf[6], apollo_buf[7]);
-
-    if (0x10 != apollo_buf[0]) {
-        DEBUG_LOG("enter boot mode fail: 0x%x, return!", apollo_buf[0]);
-        return;
-    }
-
-    reg = APOLLO_COMMAND;
-    apollo_buf[0] = reg;
-    apollo_buf[1] = 0x00;
-    hwi2cWrite(handle, apollo_buf, 5);
-    while (get_int() == 0);
-
-#if 0
-    DEBUG_LOG("======== reset apollo ======");
-
-    reg = APOLLO_COMMAND;
-    apollo_buf[0] = reg;
-    apollo_buf[1] = 0x09;
-    hwi2cWrite(handle, apollo_buf, 5);
-
-    while (get_int() != 0);
-#endif
-
-    hwi2cClose(handle);
-}
-
-
-void apollo_read_sw_version(void) {
-    MAKE_APOLLO_MESSAGE(APOLLO_COMMAND);
-    message->command = 0x01;
-    MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
-}
-
-void apollo_upgrade(void) {
-    MAKE_APOLLO_MESSAGE(APOLLO_COMMAND);
-    message->command = 0x02;
-    MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
 }
 
 void apollo_init(void) {
@@ -184,43 +56,44 @@ void apollo_init(void) {
     MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
 }
 
-void apollo_check_wakeup(void) {
+void apollo_start_boot_mode(void) {
     MAKE_APOLLO_MESSAGE(APOLLO_COMMAND);
-    message->command = 0x04;
+    message->command = 0x05;
     MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
 }
 
-
-int apolloGetStatus(void);
-int apolloGetStatus(void) { return 0; }
-
-static void init(void) {
-    uint8 reg;
-    bitserial_handle handle = hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ);
-
-    if(get_int() != 0)
-    {
-        reg = APOLLO_COMMAND;
-        apollo_buf[0] = reg;
-        apollo_buf[1] = 0x06;
-        hwi2cWrite(handle, apollo_buf, 5);
-
-        while (get_int() != 0);
-
-        reg = APOLLO_FEEDBACK;
-        hwi2cRead(handle, &reg, 1, apollo_buf, 8);
-    }
-
-    reg = APOLLO_COMMAND;
-    apollo_buf[0] = reg;
-    apollo_buf[1] = 0x00;
-    hwi2cWrite(handle, apollo_buf, 5);
-    while (get_int() == 0);
-
-    hwi2cClose(handle);
+void apollo_start_new_image(void) {
+    MAKE_APOLLO_MESSAGE(APOLLO_COMMAND);
+    message->command = 0x06;
+    MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
 }
 
-static void apollo_upgrade_handler(Task appTask, MessageId id, Message msg)
+void apollo_transfer_image(void) {
+    MAKE_APOLLO_MESSAGE(APOLLO_COMMAND);
+    message->command = 0x07;
+    MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
+}
+
+void apollo_read_fw_version(void) {
+    MAKE_APOLLO_MESSAGE(APOLLO_COMMAND);
+    message->command = 0x01;
+    MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
+}
+
+void apollo_reset(void) {
+    MAKE_APOLLO_MESSAGE(APOLLO_COMMAND);
+    message->command = 0x12;
+    MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
+}
+
+int apolloGetStatus(void) { return 0; }
+
+/*
+ * static functions
+ */
+
+/* apollo task handler */
+static void apollo_task_handler(Task appTask, MessageId id, Message msg)
 {
     UNUSED(msg);
     UNUSED(appTask);
@@ -238,24 +111,247 @@ static void apollo_upgrade_handler(Task appTask, MessageId id, Message msg)
         {
             APOLLO_COMMAND_T *message = (APOLLO_COMMAND_T*)msg;
             switch (message->command) {
-            case 0x01:
-                DEBUG_LOG("apollo get sw version.");
-                init();
-                read_sw_version();
-                break;
-            case 0x02:
-                DEBUG_LOG("apollo upgrade.");
-                upgrade();
-                break;
-            case 0x03:
-                init();
-                break;
-            case 0x04:
-                check_wakeup();
-                break;
+                case 0x01: {
+                    uint8 ver[8];
+                    read_fw_version(ver);
+                    DEBUG_LOG("fwv: %d, %d, %d, %d, %d, %d, %d, %d",
+                              ver[0], ver[1], ver[2], ver[3], ver[4], ver[5], ver[6], ver[7]);
+                    break;
+                }
+                case 0x03:
+                    init();
+                    break;
+                case 0x05:
+                    start_boot_mode();
+                    break;
+                case 0x06: {
+                    if (start_new_image())
+                        DEBUG_LOG("start new image fail!");
+                    else
+                        DEBUG_LOG("start new image succ!");
+                    break;
+                }
+                case 0x07:
+                    transfer_image_1();
+                    break;
+                case 0x08:
+                    transfer_image_2();
+                    break;
+                case 0x09:{
+                    if (transfer_image_3())
+                        DEBUG_LOG("apollo upgrade fail!");
+                    else
+                        DEBUG_LOG("apollo upgrade succ!");
+                    break;
+                }
+                case 0x12:
+                    reset();
+                    break;
             }
             break;
         }
     }
 }
 
+/* general utilities */
+static void apollo_send_cmd(uint32 cmd, bitserial_handle handle)
+{
+    if (0 != handle) {
+        uint32 cmd_buf_w[2];
+        uint8 *cmd_buf = (uint8*)cmd_buf_w;
+
+        cmd_buf[3] = APOLLO_COMMAND;
+        cmd_buf_w[1] = cmd;
+
+        hwi2cWrite(handle, cmd_buf + 3, 5);
+    }
+}
+
+static void apollo_send_data(uint8* data, int length, bitserial_handle handle)
+{
+    uint8 buf[112 + 4 + 4];
+    uint32 *data_w = (uint32*)buf;
+
+    if (0 != handle) {
+        data_w[1] = length;
+        buf[3] = APOLLO_DATA;
+        memcpy(buf + 8, data, length);
+        hwi2cWrite(handle, buf + 3, length + 4 + 1);
+    }
+}
+
+static void reset(void) {
+
+}
+
+static int apollo_read_feedback(uint8 *ret, uint32 length, bitserial_handle handle)
+{
+    uint8 reg = APOLLO_FEEDBACK;
+    int r = -1;
+
+    if (handle) r = hwi2cRead(handle, &reg, 1, ret, length);
+
+    return r;
+}
+
+static void delay_ms(uint16 v_msec_16)
+{
+    uint32 v_delay = VmGetTimerTime() + (v_msec_16 * 1000) + 1;
+    while (((int32)(VmGetTimerTime() - v_delay)) < 0);
+}
+
+static const uint8* map_image(void) {
+    const char apollo_image_name[] = "update_binary_apollo2_blue.bin";
+
+    FILE_INDEX idx = FileFind(FILE_ROOT, apollo_image_name, strlen(apollo_image_name));
+
+    return (FILE_NONE == idx) ? NULL : FileMap(idx, 0, FILE_MAP_SIZE_ALL);
+}
+
+/* peripheral init */
+static void init(void)
+{
+    WAIT_INT_LOW;
+}
+
+/* sw upgrade process */
+static void start_boot_mode(void)
+{
+    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+
+    WAIT_INT_LOW;
+    apollo_send_cmd(0x00, handle);
+
+    WAIT_INT_HIGH;
+    apollo_send_cmd(0x10, handle);
+
+    WAIT_INT_LOW;
+    apollo_send_cmd(0x09, handle);
+
+    delay_ms(3);
+
+    WAIT_INT_LOW;
+    hwi2cClose(handle);
+}
+
+static void write_image_param(bitserial_handle handle,
+                              uint32 addr, uint32 size, uint32 crc)
+{
+    if (0 != handle) {
+        uint32 cmd_buf_w[4] = {APOLLO_DATA, addr, size, crc};
+        uint8 *cmd_buf = (uint8*) cmd_buf_w;
+        cmd_buf[3] = APOLLO_DATA;
+        hwi2cWrite(handle, cmd_buf + 3, 12 + 1);
+    }
+}
+
+static int start_new_image(void)
+{
+    uint32 ret = 0;
+
+    const apollo_image_header_t *header = (const apollo_image_header_t*) map_image();
+    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+
+    if (NULL == header) return -1;
+
+    upgrade_offset = 0;
+    upgrade_remain_bytes = header->image_len;
+    apollo_img_fptr = (uint8*)&(header->image);
+    fw_version = header->version;
+
+    WAIT_INT_LOW;
+    apollo_send_cmd(0x00, handle);
+
+    WAIT_INT_HIGH;
+    write_image_param(handle, header->image_addr, upgrade_remain_bytes, header->crc);
+    apollo_send_cmd(0x02, handle);
+
+    WAIT_INT_LOW;
+    apollo_read_feedback((uint8*)&ret, 4, handle);
+
+    hwi2cClose(handle);
+
+    DEBUG_LOG("apollo image: addr: %d, len: %d, crc: 0x%x",
+              header->image_addr, header->image_len, header->crc);
+
+    return (0x02 == ret) ? 0 : -1;
+}
+
+static void transfer_image_1(void)
+{
+    MAKE_APOLLO_MESSAGE(APOLLO_COMMAND);
+    message->command = 0x08;
+    MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
+}
+
+static void transfer_image_2(void)
+{
+    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+    MAKE_APOLLO_MESSAGE(APOLLO_COMMAND);
+
+    if (upgrade_remain_bytes > 0)
+    {
+        /* prepare data packet */
+        uint32 trans_bytes = upgrade_remain_bytes > 112 ? 112 : upgrade_remain_bytes;
+
+        WAIT_INT_LOW;
+        apollo_send_cmd(0x00, handle);
+
+        WAIT_INT_HIGH;
+        apollo_send_data(apollo_img_fptr + upgrade_offset, trans_bytes, handle);
+        apollo_send_cmd(0x03, handle);
+
+        upgrade_remain_bytes -= trans_bytes;
+        upgrade_offset += trans_bytes;
+
+        message->command = 0x08;
+    } else {
+        message->command = 0x09;
+    }
+
+    hwi2cClose(handle);
+
+    MessageSend(apolloTask, APOLLO_MESSAGE_CMD, message);
+}
+
+static int transfer_image_3(void)
+{
+    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+    uint32 ret = 0;
+
+    WAIT_INT_LOW;
+    apollo_read_feedback((uint8*)&ret, 4, handle);
+
+    DEBUG_LOG("transfer_image ret: %d, restarting apollo", ret);
+
+    apollo_send_cmd(0x00, handle);
+
+    WAIT_INT_HIGH;
+    apollo_send_cmd(0x04, handle);
+
+    WAIT_INT_LOW;
+
+    hwi2cClose(handle);
+
+    return (3 == ret) ? 0 : -1;
+}
+
+/* read firmware version */
+static int read_fw_version(uint8 *fw_ver)
+{
+    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+    uint8 ret;
+
+    WAIT_INT_LOW;
+    apollo_send_cmd(0x00, handle);
+
+    WAIT_INT_HIGH;
+    apollo_send_cmd(0x06, handle);
+
+    WAIT_INT_LOW;
+    ret = apollo_read_feedback(fw_ver, 8, handle);
+
+    hwi2cClose(handle);
+
+    return ret;
+}

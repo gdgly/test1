@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<project name="customer_ro_filesystem" path="">
+<project name="customer_ro_filesystem" path="D:/projects/gemini/QCC5126/earbuds/Earbuds1/apps/applications/earbud/qcc512x_rom_v21/common/">
     <configurations defaultKit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}">
         <configuration name="filesystem" kit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}" options="build|deploy|default">
             <deployProject>deploy</deployProject>
             <devkitConfiguration>filesystem</devkitConfiguration>
             <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
-            <devkitPath>D:/QCC512X/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
+            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
             <devkitRevision>1565343019</devkitRevision>
             <property name="BUILD_TYPE"></property>
             <property name="DBG_CORE"></property>
