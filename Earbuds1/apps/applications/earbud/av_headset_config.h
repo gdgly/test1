@@ -24,7 +24,7 @@
 
 
 /*! Can BREDR be used to perform upgrades when not in the case */
-#define appConfigDfuAllowBredrUpgradeOutOfCase()    FALSE
+#define appConfigDfuAllowBredrUpgradeOutOfCase()    TRUE
 
 
 /*! Only allow upgrades when the request has been made by the user (through the UI)
