@@ -480,31 +480,29 @@ static int16 appUiHfpSaveId(uint8 *number, uint16 size_number,
 
     pCall = progRun->callInfo[progRun->callIndex];
     if(number && size_number > 0) {
-        size_number += 1;
         if(pCall->number && pCall->size_number < size_number)
             pfree(pCall->number), pCall->number = NULL;
 
         if(pCall->number == NULL)
-            pCall->number = PanicUnlessMalloc(size_number);
+            pCall->number = PanicUnlessMalloc(size_number+1);
 
         pCall->size_number = size_number;
         pCall->income      = income;
-        memcpy(pCall->number, number, size_number-1);
+        memcpy(pCall->number, number, size_number);
         pCall->number[size_number] = 0;
         DEBUG_LOG("Call[%d]Number[%d]: %c %c %c %c", progRun->callIndex, size_number,
             number[7], number[8], number[9], number[10]);
     }
 
     if(name && size_name > 0) {
-        size_name += 1;
         if(pCall->name && pCall->size_name < size_name)
             pfree(pCall->name), pCall->name = NULL;
 
         if(pCall->name == NULL)
-            pCall->name = PanicUnlessMalloc(size_name);
+            pCall->name = PanicUnlessMalloc(size_name+1);
 
         pCall->size_name = size_name;
-        memcpy(pCall->name, name, size_name-1);
+        memcpy(pCall->name, name, size_name);
         pCall->name[size_name] = 0;
         DEBUG_LOG("CallName[%d]: %c %c %c %c", size_name,
             name[0], name[1], name[2], name[3]);
