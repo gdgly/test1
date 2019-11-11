@@ -185,6 +185,16 @@ int Lis2dw12Power(bool isOn);//1 打开，0关闭
 #define CONFIG_STAROT_PEERPAIR              // 左右耳相互保存BT地址用于配对
 #define CONFIG_STAROT_SINGLE                // 独立使用
 
+// 打电话时的双MIC使用
+#define CONFIG_MIC_SELECT          // 动态选择使用MIC1 或 MIC2 或两个都使用
+extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
+#undef appConfigScoMic1()
+#define appConfigScoMic1()                    (g_appConfigSocMic1)
+#undef appConfigScoMic2()
+#define appConfigScoMic2()                    (g_appConfigSocMic2)
+
+
+
 // 充电电流及电压使用
 #undef  appConfigChargerFastCurrent()
 #define appConfigChargerFastCurrent()         (50)

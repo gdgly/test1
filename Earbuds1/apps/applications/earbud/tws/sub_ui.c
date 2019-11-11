@@ -21,6 +21,7 @@ void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
 
 ProgRunInfo gProgRunInfo;
+uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
 
 /* BLE 已经连接到手机，则不需要修改广播内容, 没有连接到手机则信息不需要发送出去 */
 #define BLE_CONNECTED_PHONE()  (NULL != appGetGaiaTransport())

@@ -293,7 +293,11 @@ static void appKymeraScoStartHelper(Sink audio_sink, const appKymeraScoChainInfo
 bool appKymeraScoStart(Sink audio_sink, appKymeraScoMode mode, bool *allow_scofwd, bool *allow_micfwd,
                        uint8 wesco, uint16 volume, uint8 pre_start_delay)
 {     
+#ifdef CONFIG_MIC_SELECT
+    const bool cvc_2_mic = (appConfigScoMic1() != NO_MIC) && (appConfigScoMic2() != NO_MIC);
+#else
     const bool cvc_2_mic = appConfigScoMic2() != NO_MIC;
+#endif
     const appKymeraScoChainInfo *info = appKymeraScoFindChain(appKymeraScoChainTable,
                                                               mode, *allow_scofwd, *allow_micfwd,
                                                               cvc_2_mic);
@@ -340,7 +344,11 @@ void appKymeraScoSlaveStartHelper(Source link_source, uint8 volume, const appKym
 void appKymeraScoSlaveStart(Source link_source, uint8 volume, bool allow_micfwd, uint16 pre_start_delay)
 {
     DEBUG_LOGF("appKymeraScoSlaveStart, source 0x%x", link_source);
+#ifdef CONFIG_MIC_SELECT
+    const bool cvc_2_mic = (appConfigScoMic1() != NO_MIC) && (appConfigScoMic2() != NO_MIC);
+#else
     const bool cvc_2_mic = appConfigScoMic2() != NO_MIC;
+#endif
     
     const appKymeraScoChainInfo *info = appKymeraScoFindChain(appKymeraScoSlaveChainTable,
                                                               SCO_WB, FALSE, allow_micfwd,

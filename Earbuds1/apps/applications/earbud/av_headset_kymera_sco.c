@@ -391,8 +391,13 @@ void appKymeraHandleInternalScoStop(void)
 
     /* Disconnect microphones from chain microphone endpoints */
     StreamDisconnect(NULL, mic_1a_ep_snk);
+#ifdef CONFIG_MIC_SELECT
+    if((appConfigScoMic1() != NO_MIC) && (appConfigScoMic2() != NO_MIC))
+        StreamDisconnect(NULL, mic_1b_ep_snk);
+#else
     if (appConfigScoMic2() != NO_MIC)
         StreamDisconnect(NULL, mic_1b_ep_snk);
+#endif
 
     /* Disconnect chain speaker endpoint to speaker */
     StreamDisconnect(spk_ep_src, NULL);

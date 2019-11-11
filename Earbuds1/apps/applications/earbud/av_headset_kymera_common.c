@@ -477,6 +477,59 @@ void appKymeraMicInit(void)
     PioCommonSetMap(&mask, &mask);
 }
 
+#ifdef CONFIG_MIC_SELECT
+void appKymeraMicSetup(uint8 mic_1a,Source *p_mic_src_1a, uint8 mic_1b,Source *p_mic_src_1b, uint16 rate)
+{
+    kymeraTaskData  *theKymera = appGetKymera();
+    DEBUG_LOG("appKymeraMicSetup Select");
+
+    Source mic_src_0 = (mic_1a != NO_MIC) ? AudioPluginMicSetup(theKymera->mic_params[mic_1a].channel, theKymera->mic_params[mic_1a], rate) : 0;
+    Source mic_src_1 = (mic_1b != NO_MIC) ? AudioPluginMicSetup(theKymera->mic_params[mic_1b].channel, theKymera->mic_params[mic_1b], rate) : 0;
+    if (mic_src_0 && mic_src_1)
+        SourceSynchronise(mic_src_0, mic_src_1);
+    *p_mic_src_1a = mic_src_0;
+    *p_mic_src_1b = mic_src_1;
+
+    // 如果只有一路，需要将对应的一路设置到第一路上
+    if(0 == mic_src_0 && mic_src_1 ) {
+        *p_mic_src_1a  = mic_src_1;
+        *p_mic_src_1b  = 0;
+    }
+
+    /* Default to 0 gain */
+    if (mic_src_0 && !theKymera->mic_params[mic_1a].is_digital)
+        PanicFalse(SourceConfigure(mic_src_0, STREAM_CODEC_RAW_INPUT_GAIN, 0x8020));
+    if (mic_src_1 && !theKymera->mic_params[mic_1b].is_digital)
+        PanicFalse(SourceConfigure(mic_src_1, STREAM_CODEC_RAW_INPUT_GAIN, 0x8020));
+}
+
+void appKymeraMicCleanup(uint8 mic_1a, uint8 mic1b)
+{
+    kymeraTaskData *theKymera = appGetKymera();
+    DEBUG_LOG("appKymeraMicCleanup SELECT");
+
+    Source mic_src_0 = (mic_1a != NO_MIC) ? AudioPluginGetMicSource(theKymera->mic_params[mic_1a], theKymera->mic_params[mic_1a].channel) : 0;
+    Source mic_src_1 = (mic1b != NO_MIC) ? AudioPluginGetMicSource(theKymera->mic_params[mic1b], theKymera->mic_params[mic1b].channel) : 0;
+    SourceClose(mic_src_0);
+    if (mic_src_1)
+        SourceClose(mic_src_1);
+
+    /* Disable microphone bias if ANC is not enabled */
+    if (!appKymeraAncIsEnabled())
+    {
+        if(mic_1a != NO_MIC) {
+            DEBUG_LOG("appKymeraMicCleanup, disable MIC bias for SCO MIC 1");
+            AudioPluginSetMicBiasDrive(theKymera->mic_params[appConfigScoMic1()], FALSE);
+        }
+        if (mic1b != NO_MIC)
+        {
+            DEBUG_LOG("appKymeraMicCleanup, disable MIC bias for SCO MIC 2");
+            AudioPluginSetMicBiasDrive(theKymera->mic_params[appConfigScoMic2()], FALSE);
+        }
+    }
+}
+
+#else
 void appKymeraMicSetup(uint8 mic_1a, Source *p_mic_src_1a, uint8 mic_1b, Source *p_mic_src_1b, uint16 rate)
 {
     kymeraTaskData *theKymera = appGetKymera();
@@ -522,6 +575,7 @@ void appKymeraMicCleanup(uint8 mic_1a, uint8 mic1b)
         }
     }
 }
+#endif
 
 
 unsigned AudioConfigGetMicrophoneBiasVoltage(mic_bias_id id)
