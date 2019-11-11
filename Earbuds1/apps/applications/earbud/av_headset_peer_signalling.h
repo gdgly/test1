@@ -227,6 +227,11 @@ typedef enum
     /*! Message to send AVRCP_PEER_CMD_CONNECT_HANDSET to peer. */
     PEER_SIG_INTERNAL_CONNECT_HANDSET_REQ,
 
+#ifdef CONFIG_STAROT
+    PEER_SIG_INTERNAL_BLE_CONFIG_REQ,
+    PEER_SIG_INTERNAL_DOUBLE_CLICK_SETTING_REQ,
+#endif
+
     /*! Message to send message to peer, channel ID is added to message ID
      * to make unique message ID per channel, hence this must be last message
      * in enum */
@@ -375,5 +380,14 @@ void appPeerSigMsgChannelTxRequest(Task task,
  ******************************************************************************/
 /*! \brief TEST FUNCTION to force a link to peer device */
 void appPeerSigForceLinkToPeer(void);
+
+
+#ifdef CONFIG_STAROT
+appPeerSigState appPeerSigGetState(void);
+uint16 *appPeerSigStartup(const bdaddr *peer_addr);
+void appPeerSigVendorPassthroughRequest(Task client_task, avc_operation_id op_id,
+                                        uint16 size_payload, const uint8 *payload);
+void appPeerSigMsgConnectHandsetConfirmation(Task task, peerSigStatus status);
+#endif
 
 #endif /* AV_HEADSET_PEER_SIGNALLING_H */

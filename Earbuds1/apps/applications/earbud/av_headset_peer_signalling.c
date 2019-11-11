@@ -13,10 +13,13 @@
 #include "av_headset_config.h"
 #include "av_headset_scan_manager.h"
 #include "av_headset_log.h"
-
+#ifdef CONFIG_STAROT
+#include "tws/peer.h"
+#endif
 #include <panic.h>
 #include <message.h>
 #include <bdaddr.h>
+
 
 /******************************************************************************
  * General Definitions
@@ -177,8 +180,11 @@ static void appPeerSigExitDisconnected(void)
 
     appScanManagerDisablePageScan(SCAN_MAN_USER_PEERSIG);
 }
-
+#ifdef CONFIG_STAROT
+appPeerSigState appPeerSigGetState(void)
+#else
 static appPeerSigState appPeerSigGetState(void)
+#endif
 {
     peerSigTaskData *peer_sig = appGetPeerSig();
     return peer_sig->state;
@@ -277,7 +283,11 @@ static void appPeerSigMsgPairHandsetConfirmation(Task task, peerSigStatus status
 }
 
 /*! \brief Send PEER_SIG_CONNECT_HANDSET_CFM message. */
+#ifdef CONFIG_STAROT
+void appPeerSigMsgConnectHandsetConfirmation(Task task, peerSigStatus status)
+#else
 static void appPeerSigMsgConnectHandsetConfirmation(Task task, peerSigStatus status)
+#endif
 {
     MAKE_MESSAGE(PEER_SIG_CONNECT_HANDSET_CFM);
     message->status = status;
@@ -338,7 +348,14 @@ static void appPeerSigCancelInProgressOperation(void)
             appPeerSigMsgChannelTxConfirmation(peer_sig->client_task, peerSigStatusMsgChannelTxFail,
                                                peer_sig->current_msg_channel);
             break;
+#ifdef CONFIG_STAROT
+        case AVRCP_PEER_CMD_BLE_CONFIG:
+            appPeerSigMsgBleConfigConfirmation(peer_sig->client_task, peerSigStatusPairHandsetTxFail);
+            break;
 
+        case AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG:
+            appPeerSigMsgDoubleClickConfigConfirmation(peer_sig->client_task, peerSigStatusPairHandsetTxFail);
+#endif
         default:
             break;
     }
@@ -357,7 +374,11 @@ static void appPeerSigCancelInProgressOperation(void)
 
     @return uint16 Lock with which to conditionally post messages requests against.
 */
+#ifdef CONFIG_STAROT
+uint16 *appPeerSigStartup(const bdaddr *peer_addr)
+#else
 static uint16 *appPeerSigStartup(const bdaddr *peer_addr)
+#endif
 {
     peerSigTaskData *peer_sig = appGetPeerSig();
 
@@ -837,7 +858,15 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughInd(AV_AVRCP_VENDOR_PASSTHRO
             rc = appPeerSigHandleConnectHandsetCommand(ind);
             break;
 
-        /* add handlers for new incoming peer signalling message types here */
+            /* add handlers for new incoming peer signalling message types here */
+#ifdef CONFIG_STAROT
+        case AVRCP_PEER_CMD_BLE_CONFIG:
+            rc = appPeerSigHandleBleConfigCommand(ind);
+            break;
+        case AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG:
+            rc = appPeerSigHandleDoubleClickConfigCommand(ind);
+            break;
+#endif
 
         default:
         break;
@@ -886,6 +915,16 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughConfirm(AV_AVRCP_VENDOR_PASS
             break;
 
         /* add handlers for new outgoing peer signalling message confirmations here */
+#ifdef CONFIG_STAROT
+        case AVRCP_PEER_CMD_BLE_CONFIG:
+            appPeerSigMsgBleConfigConfirmation(peer_sig->client_task, cfm->status == avrcp_success ?
+                                               peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
+            break;
+        case AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG:
+            appPeerSigMsgDoubleClickConfigConfirmation(peer_sig->client_task, cfm->status == avrcp_success ?
+                                                       peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
+            break;
+#endif
 
         default:
             DEBUG_LOGF("appPeerSigHandleAvAvrcpVendorPassthroughConfirm unknown opid:%x", cfm->opid);
@@ -904,9 +943,14 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughConfirm(AV_AVRCP_VENDOR_PASS
         appPeerSigStartInactivityTimer();
 }
 
+#ifdef CONFIG_STAROT
+void appPeerSigVendorPassthroughRequest(Task client_task, avc_operation_id op_id,
+                                        uint16 size_payload, const uint8 *payload)
+#else
 static void appPeerSigVendorPassthroughRequest(Task client_task,
                                                avc_operation_id op_id,
                                                uint16 size_payload, const uint8 *payload)
+#endif
 {
     peerSigTaskData *peer_sig = appGetPeerSig();
 
@@ -1149,7 +1193,15 @@ static void appPeerSigHandleMessage(Task task, MessageId id, Message message)
         case PEER_SIG_INTERNAL_SHUTDOWN_REQ:
             appPeerSigHandleInternalShutdownReq();
             break;
+#ifdef CONFIG_STAROT
+        case PEER_SIG_INTERNAL_BLE_CONFIG_REQ:
+            appPeerSigHandleInternalBleConfigRequest((PEER_SIG_INTERNAL_BLE_CONFIG_REQ_T*) message);
+            break;
 
+        case PEER_SIG_INTERNAL_DOUBLE_CLICK_SETTING_REQ:
+            appPeerSigHandleInternalDoubleClickConfigRequest((PEER_SIG_INTERNAL_DOBULE_CLICK_CONFIG_REQ_T *)message);
+            break;
+#endif
         default:
             if ((id >= PEER_SIG_INTERNAL_MSG_CHANNEL_TX_REQ) &&
                 (id <= (PEER_SIG_INTERNAL_MSG_CHANNEL_TX_REQ + PEER_SIG_MSG_CHANNEL_MAX)))
