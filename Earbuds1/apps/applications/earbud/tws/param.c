@@ -122,6 +122,8 @@ void UserParamDefault(void)
     UserPrmPtr prm = &gUserParam;
 
     memset(prm, 0, sizeof(UserParam));
+    prm->lKeyFunc = 0X04;
+    prm->rKeyFunc = 0X05;
 }
 
 int16 ParamSaveUserPrm(UserPrmPtr pParam)
