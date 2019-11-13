@@ -5,7 +5,7 @@
 #include <logging.h>
 #include "tws/adv_manager.h"
 
-#define CONFIG_BOARD_V1        // V1版本
+//#define CONFIG_BOARD_V1        // V1版本
 //#define CONFIG_BOARD_V1_EARBARD //v1耳机板与demo板io不一样，打开此宏表示是耳机
 
 //==============================================================================================

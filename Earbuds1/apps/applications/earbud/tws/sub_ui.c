@@ -340,7 +340,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");
         appSubUISetMicbias(TRUE);
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
-        MessageSendLater(task, APP_INTERNAL_HANDSET_PAIR, NULL, 500);  // 启动广播(没有手机连接时)
+        /// todo hjs 暂时不启用自动配对
+//        MessageSendLater(task, APP_INTERNAL_HANDSET_PAIR, NULL, 500);  // 启动广播(没有手机连接时)
         break;
     case APP_INTERNAL_HANDSET_PAIR:
         if(ConnectionTrustedDeviceListSize() > 0)
@@ -762,6 +763,24 @@ void appUiChargerComplete(void)
 
     appSubGetProgRun()->chargeStat = CHARGE_ST_FIN;
     MessageSendLater(&appGetUi()->task, APP_CHARGE_STATUS, 0, 500);
+}
+
+void appUIBudsPosition(int type) {
+    DEBUG_LOG("call appUIBudsPosition type is :%d", type);
+    phyStateTaskData* phy_state = appGetPhyState();
+    if (1 == type) {
+        MessageSend(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL);
+    } else if (2 == type) {
+        MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
+    }
+}
+
+void appUICaseEvent(int type) {
+    DEBUG_LOG("call appUICaseEvent type is :%d", type);
+    if (1 == type) {
+    } else if (2 == type) {
+    } else if (3 == type) {
+    }
 }
 
 #endif

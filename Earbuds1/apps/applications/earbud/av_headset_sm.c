@@ -105,6 +105,7 @@ static appState appSmCalcCoreState(void)
 static void appSmSetCoreState(void)
 {
     appState state = appSmCalcCoreState();
+    printf("appSmCalcCoreState is %d, appSetState is %d\n", state, appGetState());
     if (state != appGetState())
         appSetState(state);
 }
@@ -1125,6 +1126,7 @@ static void appSmHandlePhyStateChangedInd(smTaskData* sm, PHY_STATE_CHANGED_IND_
         default:
             break;
     }
+    DEBUG_LOGF("appSmHandlePhyStateChangedInd end state = 0x%x", appGetState());
 }
 
 /*! \brief Take action following power's indication of imminent sleep.

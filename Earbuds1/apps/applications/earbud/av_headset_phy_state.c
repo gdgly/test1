@@ -420,6 +420,7 @@ void appPhyStatePrepareToEnterDormant(void)
  */
 void appPhyStateSetState(phyStateTaskData* phy_state, phyState new_state)
 {
+    DEBUG_LOG("call appPhyStateSetState before :%04x, now:%04x", phy_state->state, new_state);
     switch (phy_state->state)
     {
         case PHY_STATE_UNKNOWN:
@@ -477,6 +478,7 @@ phyState appPhyStateGetState(void)
 /*! \brief Handle notification that Earbud is now in the case. */
 void appPhyStateInCaseEvent(void)
 {
+    DEBUG_LOG("call appPhyStateInCaseEvent");
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT);
     MessageSend(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT, NULL);
@@ -486,6 +488,7 @@ void appPhyStateInCaseEvent(void)
 /*! \brief Handle notification that Earbud is now out of the case. */
 void appPhyStateOutOfCaseEvent(void)
 {
+    DEBUG_LOG("call appPhyStateOutOfCaseEvent");
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT);
     MessageSend(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT, NULL);
@@ -495,6 +498,7 @@ void appPhyStateOutOfCaseEvent(void)
 /*! \brief Handle notification that Earbud is now in ear. */
 void appPhyStateInEarEvent(void)
 {
+    DEBUG_LOG("call appPhyStateInEarEvent");
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_IN_EAR_EVENT);
     MessageSend(&phy_state->task, PHY_STATE_INTERNAL_IN_EAR_EVENT, NULL);
@@ -504,6 +508,7 @@ void appPhyStateInEarEvent(void)
 /*! \brief Handle notification that Earbud is now out of the ear. */
 void appPhyStateOutOfEarEvent(void)
 {
+    DEBUG_LOG("call appPhyStateOutOfEarEvent");
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_EAR_EVENT);
     MessageSend(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_EAR_EVENT, NULL);
@@ -513,6 +518,7 @@ void appPhyStateOutOfEarEvent(void)
 /*! \brief Handle notification that Earbud is now moving */
 void appPhyStateMotionEvent(void)
 {
+    DEBUG_LOG("call appPhyStateMotionEvent");
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_MOTION);
     MessageSend(&phy_state->task, PHY_STATE_INTERNAL_MOTION, NULL);
@@ -522,6 +528,7 @@ void appPhyStateMotionEvent(void)
 /*! \brief Handle notification that Earbud is now not moving. */
 void appPhyStateNotInMotionEvent(void)
 {
+    DEBUG_LOG("call appPhyStateNotInMotionEvent");
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_NOT_IN_MOTION);
     MessageSend(&phy_state->task, PHY_STATE_INTERNAL_NOT_IN_MOTION, NULL);

@@ -5,6 +5,8 @@
 #ifndef EARBUDS1_PEER_H
 #define EARBUDS1_PEER_H
 
+#include "av_headset_av.h"
+
 ////////////////////////////////////ble配对信息////////////////////////////////////////////
 
 /******************************************************************************
@@ -12,8 +14,6 @@
  ******************************************************************************/
 #define AVRCP_PEER_CMD_BLE_CONFIG                 0xA0
 #define AVRCP_PEER_CMD_BLE_CONFIG_SIZE            8    /// advCode + bondCode
-
-#include "av_headset_av.h"
 
 typedef struct
 {

@@ -797,7 +797,7 @@ bool appConfigBleGetAdvertisingRate(appConfigBleAdvertisingMode rate, uint16 *mi
 */
 #include "tws/public.h"
 
-#define DISABLE_IN_CASE_PHY_STATE
+//#define DISABLE_IN_CASE_PHY_STATE
 #define DISABLE_TWS_PLUS
 #endif
 

@@ -2428,12 +2428,12 @@ static ruleAction ruleBleConnectionUpdate(void)
     {
         RULE_LOG("ruleBleConnectionUpdate, run, need to allow new BLE connections");
     }
-    else 
+    else
     {
         RULE_LOG("ruleBleConnectionUpdate, run, need to disallow new BLE connections");
     }
-    return RULE_ACTION_RUN_PARAM(connectable);
 
+    return RULE_ACTION_RUN_PARAM(connectable);
 }
 
 
