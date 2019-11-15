@@ -246,7 +246,7 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
         appKymeraTonePromptStop();
     }
 #ifdef CONFIG_REC_ASSISTANT
-    if (appKymeraGetState() == KYMERA_STATE_AUDIO_RECORD)
+    if (appKymeraRecordIsRun())
         appKymeraRecordStop();
 #endif
 

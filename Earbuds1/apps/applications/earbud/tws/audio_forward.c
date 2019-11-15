@@ -102,7 +102,7 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 }
 
 void disable_audio_forward(bool disable) {
-    DEBUG_LOG("call disable_audio_forward(%s)", disable);
+    DEBUG_LOG("call disable_audio_forward(%d)", disable);
     audio_forward  = !disable;
     MAKE_FWD_MESSAGE(AUDIO_FWD_DISABLE);
 	message->disable = disable;
@@ -231,10 +231,25 @@ static void initSetSpeechDataSource(Source src)
 static bool __disable_audio_forward(void)
 {
 #if (FORWARD_AUDIO_TYPE & (FORWARD_AUDIO_MIC | FORWARD_AUDIO_SCO))
+    kymeraTaskData *theKymera = appGetKymera();
     uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD, !audio_forward };
     Operator passthrough = INVALID_OPERATOR;
-    kymera_chain_handle_t sco_chain = appKymeraGetScoChain();
-    if (!sco_chain) return FALSE;
+    kymera_chain_handle_t sco_chain = NULL;
+    switch(appKymeraGetState()) {
+    case KYMERA_STATE_A2DP_STREAMING:
+        sco_chain = theKymera->chain_record_handle;
+        if(!sco_chain) return FALSE;
+        break;
+    case KYMERA_STATE_SCO_ACTIVE:
+    case KYMERA_STATE_SCO_ACTIVE_WITH_FORWARDING:
+        sco_chain == appKymeraGetScoChain();
+        if(!sco_chain) return FALSE;
+        break;
+    default:
+        if(appKymeraRecordIsRun() == TRUE)
+            sco_chain = theKymera->chain_record_handle;
+        break;
+    }
 #endif
 
 #if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_SCO)

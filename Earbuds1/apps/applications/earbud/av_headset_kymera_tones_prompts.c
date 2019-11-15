@@ -120,7 +120,7 @@ void appKymeraHandleInternalTonePromptPlay(const KYMERA_INTERNAL_TONE_PROMPT_PLA
                 msg->prompt, msg->tone, msg->interruptible, msg->client_lock, msg->client_lock_mask);
 
 #ifdef CONFIG_REC_ASSISTANT
-    if (appKymeraGetState() == KYMERA_STATE_AUDIO_RECORD){
+    if (appKymeraRecordIsRun()){
         disable_audio_forward(TRUE);
         appKymeraRecordStop();
         MessageSend(&appGetUi()->task, STAROT_RECORD_STOP_STATUS_REPORT, 0);

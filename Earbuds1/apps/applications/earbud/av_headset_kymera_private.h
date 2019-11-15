@@ -188,6 +188,7 @@ typedef struct {
 
 void appKymeraRecordStart(void);   // 其它模块调用这个函数来开启模块
 void appKymeraRecordStop(void);
+bool appKymeraRecordIsRun(void);
 void appKymeraHandleInternalRecordStart(const KYMERA_INTERNAL_RECORD_T *msg);
 #endif
 

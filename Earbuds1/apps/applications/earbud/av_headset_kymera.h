@@ -46,8 +46,6 @@ typedef enum app_kymera_states
     KYMERA_STATE_TONE_PLAYING,
     /*! Kymera is performing ANC tuning. */
     KYMERA_STATE_ANC_TUNING,
-    /*! Record for assistant */
-    KYMERA_STATE_AUDIO_RECORD,
 } appKymeraState;
 
 /*! \brief ANC state */
@@ -128,6 +126,9 @@ typedef struct
         /*! Used for SCO audio. */
         kymera_chain_handle_t sco_handle;
     } chainu;
+
+
+    kymera_chain_handle_t chain_record_handle;    // 保存当前的 record CHAIN
 
     /*! The TWS master packetiser transform packs compressed audio frames
         (SBC, AAC, aptX) from the audio subsystem into TWS packets for transmission

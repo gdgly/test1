@@ -14,7 +14,11 @@
 
 #ifdef CONFIG_REC_ASSISTANT
 
-#define chain_record_handle   chainu.sco_handle     // 使用soc来保存当前的CHAIN
+bool appKymeraRecordIsRun(void)
+{
+    kymeraTaskData *theKymera = appGetKymera();
+    return (theKymera->chain_record_handle != NULL) ? TRUE : FALSE;
+}
 
 
 static void appKymeraCreateRecordChain(uint32 rate)
@@ -49,23 +53,23 @@ void appKymeraHandleInternalRecordStart(const KYMERA_INTERNAL_RECORD_T *msg)
 {
     kymeraTaskData *theKymera = appGetKymera();
 
-    DEBUG_LOGF("appKymeraHandleInternalRecord");
+    DEBUG_LOGF("appKymeraHandleInternalRecord curstate=%d", appKymeraGetState());
 
     /* If there is a tone still playing at this point, it must be an interruptable tone, so cut it off */
-    appKymeraRecordStop();
+    if (appKymeraRecordIsRun() == TRUE)
+        return;
 
     switch (appKymeraGetState())
     {
+        case KYMERA_STATE_A2DP_STREAMING:
         case KYMERA_STATE_IDLE:
             /* Need to set up audio output chain to play tone from scratch */
             appKymeraCreateRecordChain(msg->rate);
 
             forwardAudioAndMic(theKymera->chain_record_handle);
 
-            appKymeraExternalAmpControl(TRUE);
             ChainStart(theKymera->chain_record_handle);
 
-            appKymeraSetState(KYMERA_STATE_AUDIO_RECORD);
             /* May need to exit low power mode to play tone simultaneously */
             appKymeraConfigureDspPowerMode(TRUE);
             break;
@@ -73,7 +77,7 @@ void appKymeraHandleInternalRecordStart(const KYMERA_INTERNAL_RECORD_T *msg)
         default:
             /* Unknown state / not supported */
             DEBUG_LOGF("appKymeraHandleInternalRecord, unsupported state %u", appKymeraGetState());
-            Panic();
+//            Panic(); //音乐必须停止才启动录音，先注释掉
             break;
     }
 
@@ -84,13 +88,14 @@ void appKymeraRecordStop(void)
     kymeraTaskData *theKymera = appGetKymera();
 
     /* Exit if there isn't a tone or prompt playing */
-    if (!theKymera->chain_record_handle)
+    if (appKymeraRecordIsRun() == FALSE)
         return;
 
     DEBUG_LOGF("appKymeraRecordStop, state %u", appKymeraGetState());
     switch (appKymeraGetState())
     {
-        case KYMERA_STATE_AUDIO_RECORD:
+        case KYMERA_STATE_A2DP_STREAMING:
+        default:
         {
             Operator op = ChainGetOperatorByRole(theKymera->chain_record_handle, OPR_VOLUME_CONTROL);
             uint16 volume = volTo60thDbGain(0);
@@ -102,21 +107,12 @@ void appKymeraRecordStop(void)
             appKymeraMicCleanup(appConfigScoMic1(), appConfigScoMic2());
 
             /* Disable external amplifier if required */
-            appKymeraExternalAmpControl(FALSE);
             ChainDestroy(theKymera->chain_record_handle);
             theKymera->chain_record_handle = NULL;
-
-            /* Move back to idle state */
-            appKymeraSetState(KYMERA_STATE_IDLE);
+            theKymera->mic_params[0].gain = appConfigMic0Gain();
+            theKymera->mic_params[1].gain = appConfigMic0Gain();
         }
         break;
-
-        case KYMERA_STATE_IDLE:
-            break;
-        default:
-            /* Unknown state / not supported */
-            DEBUG_LOGF("appKymeraRecordStop, unsupported state %u", appKymeraGetState());
-            break;
     }
 
 }
