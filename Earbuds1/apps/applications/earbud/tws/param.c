@@ -88,6 +88,8 @@ void BtAddrParamDefault(void)
 
     memset(prm, 0, sizeof(BtAddrParam));
     prm->single_era      = TRUE;
+    //// todo hjs 使用tws模式
+    prm->single_era      = FALSE;
 
     // 其它版本信息设置为无效
     memset(prm->peerVer, 0xFF, DEV_HWSWVER_LEN);

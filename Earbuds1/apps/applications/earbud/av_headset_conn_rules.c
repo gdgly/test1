@@ -107,7 +107,7 @@ typedef struct
 /*! Macro used to create an entry in the rules table that requires additional
     flags. */
 #define RULE_WITH_FLAGS(event, name, message, flags) \
-    { event, RULE_STATUS_NOT_DONE, flags, name, message } 
+    { event, RULE_STATUS_NOT_DONE, flags, name, message }
 
 /*! \{
     Rule function prototypes, so we can build the rule tables below. */
@@ -568,7 +568,7 @@ static ruleAction ruleConnectBatteryVoltage(ruleConnectReason reason)
 static ruleAction ruleConnectHandsetStandard(ruleConnectReason reason)
 {
     if ((reason == RULE_CONNECT_USER) || (reason == RULE_CONNECT_LINK_LOSS))
-    {     
+    {
         RULE_LOG("ruleConnectHandsetStandard, run as standard handset and user requested connection/link-loss");
         return RULE_ACTION_RUN;
     }
@@ -611,14 +611,14 @@ static ruleAction ruleConnectHandsetStandard(ruleConnectReason reason)
                 else
                 {
                     RULE_LOG("ruleConnectHandsetStandard, ignore as standard handset and both out of case");
-                    return RULE_ACTION_IGNORE;                    
+                    return RULE_ACTION_IGNORE;
                 }
             }
         }
         else
         {
             RULE_LOG("ruleConnectHandsetStandard, ignore as in case");
-            return RULE_ACTION_IGNORE;                                
+            return RULE_ACTION_IGNORE;
         }
     }
     else
@@ -1048,7 +1048,7 @@ static ruleAction ruleConnectPeerHandset(ruleConnectReason reason)
                     if ((reason == RULE_CONNECT_USER) ||
                         (reason == RULE_CONNECT_PAIRING) ||
                         (reason == RULE_CONNECT_OUT_OF_CASE)
-                        || (conn_rules->allow_connect_after_pairing && 
+                        || (conn_rules->allow_connect_after_pairing &&
                             appDeviceHasJustPaired(&handset_addr))
                         )
                     {
@@ -1255,13 +1255,13 @@ static ruleAction ruleConnectPeer(ruleConnectReason reason)
                 {
                     bdaddr peer_addr;
                     uint8 profiles;
-                    
+
                     appDeviceGetPeerBdAddr(&peer_addr);
                     profiles = appDeviceWasConnectedProfiles(&peer_addr);
 
                     /* Always attempt to connect A2DP and SCOFWD if user initiated connect,
                      * out-of-case connect or sync connect */
-                    if ((reason == RULE_CONNECT_OUT_OF_CASE) || 
+                    if ((reason == RULE_CONNECT_OUT_OF_CASE) ||
                         (reason == RULE_CONNECT_USER) ||
                         (reason == RULE_CONNECT_PEER_SYNC))
                     {
@@ -1503,7 +1503,7 @@ static ruleAction ruleInEarScoTransferToEarbud(void)
         RULE_LOG("ruleInEarScoTransferToEarbud, ignore as this earbud already has SCO");
         return RULE_ACTION_IGNORE;
     }
-    
+
     /* Peer sync must be complete as this rule uses peer state */
     if (!appPeerSyncIsComplete())
     {
@@ -1580,7 +1580,7 @@ static bool handsetDisconnectAllowed(void)
 {
     /* Handset disconnect not allows if SCO forwarding is sending.  
      * Disconnecting is allowed if DFU is pending as disconnect only affects
-     * HFP and A2DP/AVRCP */    
+     * HFP and A2DP/AVRCP */
     return appDeviceIsHandsetConnected() && !appScoFwdIsSending();
 }
 
@@ -1744,12 +1744,12 @@ static ruleAction ruleBothConnectedDisconnect(void)
          * only 1 profile is connected, but there is active audio this will
          * count higher than all profiles being connected. */
         int this_earbud_score = (appDeviceIsHandsetA2dpConnected() ? 1 : 0) +
-                                (appDeviceIsHandsetAvrcpConnected() ? 1 : 0) + 
+                                (appDeviceIsHandsetAvrcpConnected() ? 1 : 0) +
                                 (appDeviceIsHandsetHfpConnected() ? 1 : 0) +
                                 (appHfpIsScoActive() ? 3 : 0) +
                                 (appDeviceIsHandsetA2dpStreaming() ? 3 : 0);
         int other_earbud_score = (appPeerSyncIsPeerHandsetA2dpConnected() ? 1 : 0) +
-                                (appPeerSyncIsPeerHandsetAvrcpConnected() ? 1 : 0) + 
+                                (appPeerSyncIsPeerHandsetAvrcpConnected() ? 1 : 0) +
                                 (appPeerSyncIsPeerHandsetHfpConnected() ? 1 : 0) +
                                 (appPeerSyncIsPeerScoActive() ? 3 : 0) +
                                 (appPeerSyncIsPeerHandsetA2dpStreaming() ? 3 : 0);
@@ -1803,7 +1803,7 @@ static ruleAction ruleBothConnectedDisconnect(void)
 */
 static ruleAction ruleInCaseDisconnectPeer(void)
 {
-    if (appSmIsInCase() && (appDeviceIsPeerA2dpConnected() || 
+    if (appSmIsInCase() && (appDeviceIsPeerA2dpConnected() ||
                             appDeviceIsPeerAvrcpConnectedForAv() ||
                             appDeviceIsPeerScoFwdConnected()))
     {
@@ -2288,7 +2288,7 @@ static ruleAction ruleScoForwardingControl(void)
         RULE_LOG("ruleScoForwardingControl, run and enable forwarding as peer in ear");
         return RULE_ACTION_RUN_PARAM(forwarding_enabled);
     }
-    
+
     RULE_LOG("ruleScoForwardingControl, ignore");
     return RULE_ACTION_IGNORE;
 }
@@ -2327,114 +2327,365 @@ static ruleAction ruleHandoverConnectHandsetAndPlay(void)
     \todo include UML documentation. 
 
 */
-static ruleAction ruleBleConnectionUpdate(void)
-{
-    bool peer = appDeviceIsPeerConnected();
-    bool peer_sync = appPeerSyncIsComplete();
-    bool peer_handset = appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected() || appPeerSyncIsPeerHandsetHfpConnected();
-    bool peer_handset_paired = appPeerSyncHasPeerHandsetPairing();
-    bool peer_ble_advertising = appPeerSyncIsPeerAdvertising();
-    bool peer_ble_connected = appPeerSyncIsPeerBleConnected();
-    bool left = appConfigIsLeft();
-    bool peer_dfu = appPeerSyncPeerDfuInProgress();
-    bool in_case = appSmIsInCase();
-    bool peer_in_case = appPeerSyncIsPeerInCase();
-#ifdef CONFIG_STAROT
-    /// note： todo 当前没有盒子，如果想在配对的时候，也能开启ble广播，只能临时修改这里
-    bool ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState()) | (APP_STATE_HANDSET_PAIRING == appGetState());
-#else
-    bool ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
-#endif
-    bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
-    bool paired_with_handset = appDeviceGetHandsetBdAddr(NULL);
+//static ruleAction ruleBleConnectionUpdate(void)
+//{
+//    bool peer = appDeviceIsPeerConnected();
+//    bool peer_sync = appPeerSyncIsComplete();
+//    bool peer_handset = appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected() || appPeerSyncIsPeerHandsetHfpConnected();
+//    bool peer_handset_paired = appPeerSyncHasPeerHandsetPairing();
+//    bool peer_ble_advertising = appPeerSyncIsPeerAdvertising();
+//    bool peer_ble_connected = appPeerSyncIsPeerBleConnected();
+//    bool left = appConfigIsLeft();
+//    bool peer_dfu = appPeerSyncPeerDfuInProgress();
+//    bool in_case = appSmIsInCase();
+//    bool peer_in_case = appPeerSyncIsPeerInCase();
+//#ifdef CONFIG_STAROT
+//    /// note： todo 当前没有盒子，如果想在配对的时候，也能开启ble广播，只能临时修改这里
+//    bool ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState()) | (APP_STATE_HANDSET_PAIRING == appGetState());
+//#else
+//    bool ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
+//#endif
+//    bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
+//    bool paired_with_handset = appDeviceGetHandsetBdAddr(NULL);
+//
+//    bool has_ble_connection = appSmHasBleConnection();
+//    bool is_ble_connecting = appSmIsBleAdvertising();
+//
+//    bool connectable;
+//
+//    printf("paired_with_peer %d && paired_with_handset %d && ble_connectable %d && has_ble_connection %d\n",
+//           paired_with_peer, paired_with_handset, ble_connectable, has_ble_connection);
+//        /* Use our own status to decide if we should be connectable */
+//    connectable = paired_with_peer && paired_with_handset && ble_connectable && !has_ble_connection;
+//#ifdef CONFIG_STAROT
+//    connectable = paired_with_peer && ble_connectable && !has_ble_connection && (FALSE==appUiIsStopBle());
+//#endif
+//    DEBUG_LOG("ruleBleConnectionUpdate Paired(peer:%d, handset:%d). BLE(allowed:%d,allowed_out_case:%d,has:%d,is_trying:%d)",
+//                    paired_with_peer,paired_with_handset,
+//                    ble_connectable, appConfigBleAllowedOutOfCase(),
+//                    has_ble_connection, is_ble_connecting);
+//
+//        /* Now take the peer status into account */
+//    if (connectable && peer)
+//    {
+//        /* We know that we have a peer connection, but waiting for synchronisation */
+//        if (!peer_sync)
+//        {
+//            DEBUG_LOG("ruleBleConnectionUpdate Connected to peer, so wait until Peer synchronised IGNORE for now");
+//            return RULE_ACTION_IGNORE;
+//        }
+//
+//        if (peer_handset || peer_dfu || (peer_ble_advertising && ! peer_in_case) || peer_ble_connected)
+//        {
+//            DEBUG_LOG("ruleBleConnectionUpdate Peer has handset connection:%d, DFU:%d, BLE-adv:%d (out of case), or BLE-connection. We don't want to do BLE",
+//                        peer_handset, peer_dfu, peer_ble_advertising, peer_ble_connected);
+//
+//            connectable = FALSE;
+//        }
+//        else if (!peer_handset_paired)
+//        {
+//            DEBUG_LOG("ruleBleConnectionUpdate Peer has no handset.");
+//        }
+//        else if (in_case)
+//        {
+//            /* Do nothing. We want both to be connectable, unless DFU/BLE
+//               which were eliminated above */
+//            DEBUG_LOG("ruleBleConnectionUpdate In case, ignore excuses not to advertise");
+//        }
+//        else if (!peer_in_case)
+//        {
+//            uint16 our_battery;
+//            uint16 peer_battery;
+//
+//            appPeerSyncGetPeerBatteryLevel(&our_battery,&peer_battery);
+//            if (our_battery < peer_battery)
+//            {
+//                DEBUG_LOG("ruleBleConnectionUpdate Peer (out of case) has stronger battery.");
+//                connectable = FALSE;
+//            }
+//            else if (our_battery == peer_battery)
+//            {
+//                if (!left)
+//                {
+//                    DEBUG_LOG("ruleBleConnectionUpdate we have same battery, and are right handset. Don't do BLE.");
+//                    connectable = FALSE;
+//                }
+//            }
+//        }
+//    }
+//    else if (connectable)
+//    {
+//        DEBUG_LOG("ruleBleConnectionUpdate No peer connection, just using local values");
+//    }
+//
+//    if (connectable == is_ble_connecting)
+//    {
+//        RULE_LOG("ruleBleConnectionUpdate, IGNORE - no change");
+//        return RULE_ACTION_IGNORE;
+//    }
+//
+//    if (connectable)
+//    {
+//        RULE_LOG("ruleBleConnectionUpdate, run, need to allow new BLE connections");
+//    }
+//    else
+//    {
+//        RULE_LOG("ruleBleConnectionUpdate, run, need to disallow new BLE connections");
+//    }
+//
+//    return RULE_ACTION_RUN_PARAM(connectable);
+//}
 
+static bool bleBattery(bool left) {
+    uint16 self_battery;
+    uint16 peer_battery;
+
+    appPeerSyncGetPeerBatteryLevel(&self_battery,&peer_battery);
+    if (self_battery < peer_battery)
+    {
+        DEBUG_LOG("ruleBleConnectionUpdate Peer (out of case) has stronger battery.");
+        return FALSE;
+    }
+    else if (self_battery == peer_battery)
+    {
+        if (!left)
+        {
+            DEBUG_LOG("ruleBleConnectionUpdate we have same battery, and are right handset. Don't do BLE.");
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+static ruleAction bleEnable(void) {
     bool has_ble_connection = appSmHasBleConnection();
     bool is_ble_connecting = appSmIsBleAdvertising();
+    if (TRUE == has_ble_connection || TRUE == is_ble_connecting) {
+        return RULE_ACTION_IGNORE;
+    } else {
+        bool connectable = TRUE;
+        return RULE_ACTION_RUN_PARAM(connectable);
+    }
+}
 
-    bool connectable;
+static ruleAction bleDisable(void) {
+    bool st = FALSE;
+    return RULE_ACTION_RUN_PARAM(st);
+}
 
-    printf("paired_with_peer %d && paired_with_handset %d && ble_connectable %d && has_ble_connection %d\n",
-           paired_with_peer, paired_with_handset, ble_connectable, has_ble_connection);
-        /* Use our own status to decide if we should be connectable */
-    connectable = paired_with_peer && paired_with_handset && ble_connectable && !has_ble_connection;
-#ifdef CONFIG_STAROT
-    connectable = paired_with_peer && ble_connectable && !has_ble_connection && (FALSE==appUiIsStopBle());
-#endif
-    DEBUG_LOG("ruleBleConnectionUpdate Paired(peer:%d, handset:%d). BLE(allowed:%d,allowed_out_case:%d,has:%d,is_trying:%d)",
-                    paired_with_peer,paired_with_handset,
-                    ble_connectable, appConfigBleAllowedOutOfCase(),
-                    has_ble_connection, is_ble_connecting);
+static ruleAction ruleBleConnectionUpdate(void)
+{
+    bool left = appConfigIsLeft();
 
-        /* Now take the peer status into account */
-    if (connectable && peer)
-    {
-        /* We know that we have a peer connection, but waiting for synchronisation */
-        if (!peer_sync)
-        {
-            DEBUG_LOG("ruleBleConnectionUpdate Connected to peer, so wait until Peer synchronised IGNORE for now");
+    bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
+    /// 没有和另一只耳机交换地址
+    if (FALSE == paired_with_peer) {
+        DEBUG_LOG("tws ble status ---------------------------0");
+        return bleDisable();
+    }
+    appState state = appGetState();
+    bool allow_ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
+    DEBUG_LOG("ble connect, app get state is %04X all_ble_connectable is : %02X", state, allow_ble_connectable);
+    if (FALSE == allow_ble_connectable) { /// 状态不允许连接
+        DEBUG_LOG("tws ble status ---------------------------not allow ble connectable");
+        return bleDisable();
+    }
+
+    bool peer_connected = appDeviceIsPeerConnected();
+
+    if (TRUE == peer_connected) {   /// Peer连接建立
+        bool peer_sync = appPeerSyncIsComplete();
+        /// 正在同步数据，等待
+        if (FALSE == peer_sync) {
+            DEBUG_LOG("tws ble status ---------------------------peer sync ing");
             return RULE_ACTION_IGNORE;
-        }
-
-        if (peer_handset || peer_dfu || (peer_ble_advertising && ! peer_in_case) || peer_ble_connected)
-        {
-            DEBUG_LOG("ruleBleConnectionUpdate Peer has handset connection:%d, DFU:%d, BLE-adv:%d (out of case), or BLE-connection. We don't want to do BLE",
-                        peer_handset, peer_dfu, peer_ble_advertising, peer_ble_connected);
-
-            connectable = FALSE;
-        }
-        else if (!peer_handset_paired)
-        {
-            DEBUG_LOG("ruleBleConnectionUpdate Peer has no handset.");
-        }
-        else if (in_case)
-        {
-            /* Do nothing. We want both to be connectable, unless DFU/BLE
-               which were eliminated above */
-            DEBUG_LOG("ruleBleConnectionUpdate In case, ignore excuses not to advertise");
-        }
-        else if (!peer_in_case)
-        {
-            uint16 our_battery;
-            uint16 peer_battery;
-
-            appPeerSyncGetPeerBatteryLevel(&our_battery,&peer_battery);
-            if (our_battery < peer_battery)
-            {
-                DEBUG_LOG("ruleBleConnectionUpdate Peer (out of case) has stronger battery.");
-                connectable = FALSE;
+        } else {
+            bool peer_dfu = appPeerSyncPeerDfuInProgress();
+            if (TRUE == peer_dfu) {
+                DEBUG_LOG("tws ble status ---------------------------dfu");
+                return bleDisable();
             }
-            else if (our_battery == peer_battery)
-            {
-                if (!left)
-                {
-                    DEBUG_LOG("ruleBleConnectionUpdate we have same battery, and are right handset. Don't do BLE.");
-                    connectable = FALSE;
+
+            bool self_in_case = appSmIsInCase();
+            if (TRUE == self_in_case) { /// 当前耳机在充电盒中
+                bool peer_in_case = appPeerSyncIsPeerInCase();
+                if (TRUE == peer_in_case) {
+                    uint8 powerCaseState = appUIGetPowerCaseState();
+                    if (0 != powerCaseState) { /// 充电盒打开
+                        if(bleBattery(left)) {  /// 电量多
+                            DEBUG_LOG("tws ble status ---------------------------battery more");
+                            return bleEnable();
+                        } else { /// 电量少
+                            DEBUG_LOG("tws ble status ---------------------------battery less");
+                            return bleDisable();
+                        }
+                    } else {/// 充电盒关闭
+                        DEBUG_LOG("tws ble status ---------------------------power case close");
+                        return bleEnable();
+                    }
+                } else {
+                    DEBUG_LOG("tws ble status ---------------------------only one in case");
+                    return bleDisable();
+                }
+            } else {  /// 当前耳机在空中
+//                const uint8 state = (PEER_SYNC_STATE_SET_A2DP_CONNECTED(appDeviceIsHandsetA2dpConnected())) +
+//                                    (PEER_SYNC_STATE_SET_A2DP_STREAMING(appDeviceIsHandsetA2dpStreaming())) +
+//                                    (PEER_SYNC_STATE_SET_AVRCP_CONNECTED(appDeviceIsHandsetAvrcpConnected())) +
+//                                    (PEER_SYNC_STATE_SET_HFP_CONNECTED(appDeviceIsHandsetHfpConnected())) +
+                bool bredrHaveConnected = appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetA2dpStreaming() ||
+                        appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected();
+                if (TRUE == bredrHaveConnected) {
+                    DEBUG_LOG("tws ble status ---------------------------bredr have connected");
+                    return bleEnable();
+                } else {
+                    DEBUG_LOG("tws ble status ---------------------------bredr don't connected");
+                    return bleDisable();
                 }
             }
         }
+    } else { /// Peer连接未建立
+        bool self_in_case = appSmIsInCase();
+        if (TRUE == self_in_case) { /// 盒子中
+            uint8 powerCaseState = appUIGetPowerCaseState();
+            if (0 != powerCaseState) { /// 充电盒打开
+                DEBUG_LOG("tws ble status ---------------------------6");
+                return bleEnable();
+            } else {/// 充电盒关闭
+                DEBUG_LOG("tws ble status ---------------------------7");
+                return bleEnable();
+            }
+        } else { /// 不在盒子中
+            DEBUG_LOG("tws ble status ---------------------------8");
+            return bleEnable();
+        }
     }
-    else if (connectable)
-    {
-        DEBUG_LOG("ruleBleConnectionUpdate No peer connection, just using local values");
-    }
+//    DEBUG_LOG("tws ble status ---------------------------9999");
+//    return RULE_ACTION_IGNORE;
 
-    if (connectable == is_ble_connecting)
-    {
-        RULE_LOG("ruleBleConnectionUpdate, IGNORE - no change");
-        return RULE_ACTION_IGNORE;
-    }
-
-    if (connectable)
-    {
-        RULE_LOG("ruleBleConnectionUpdate, run, need to allow new BLE connections");
-    }
-    else
-    {
-        RULE_LOG("ruleBleConnectionUpdate, run, need to disallow new BLE connections");
-    }
-
-    return RULE_ACTION_RUN_PARAM(connectable);
+//
+//    //// 运行ble连接
+//    bool allow_ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
+//    //// ble已经连接
+//    bool has_ble_connection = appSmHasBleConnection();
+//    //// ble正在广播
+//    bool is_ble_connecting = appSmIsBleAdvertising();
+//
+//    connectable = (allow_ble_connectable && !has_ble_connection);
+//
+//    uint8 powerCaseState = appUIGetPowerCaseState();
+//    /// 两只耳机都在盒子中，并且充电盒是关闭的
+//    if ((0 == powerCaseState) && self_in_case && self_in_case) {
+//        if (TRUE == allow_ble_connectable) {
+//            connectable = TRUE;
+//            return RULE_ACTION_RUN_PARAM(connectable);
+//        } else if (all)
+//    }
+//
+//
+//    bool peer_connected = appDeviceIsPeerConnected();
+//    bool peer_sync = appPeerSyncIsComplete();
+//    bool peer_handset = appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected() || appPeerSyncIsPeerHandsetHfpConnected();
+//    bool peer_handset_paired = appPeerSyncHasPeerHandsetPairing();
+//    bool peer_ble_advertising = appPeerSyncIsPeerAdvertising();
+//    bool peer_ble_connected = appPeerSyncIsPeerBleConnected();
+//    bool peer_dfu = appPeerSyncPeerDfuInProgress();
+//    bool in_case = appSmIsInCase();
+//    bool peer_in_case = appPeerSyncIsPeerInCase();
+//#ifdef CONFIG_STAROT
+//    /// note： todo 当前没有盒子，如果想在配对的时候，也能开启ble广播，只能临时修改这里
+//    bool ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState()) | (APP_STATE_HANDSET_PAIRING == appGetState());
+//#else
+//    bool ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
+//#endif
+////    bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
+//    bool paired_with_handset = appDeviceGetHandsetBdAddr(NULL);
+//
+//    bool has_ble_connection = appSmHasBleConnection();
+//    bool is_ble_connecting = appSmIsBleAdvertising();
+//
+//    bool connectable;
+//
+//    printf("paired_with_peer %d && paired_with_handset %d && ble_connectable %d && has_ble_connection %d\n",
+//           paired_with_peer, paired_with_handset, ble_connectable, has_ble_connection);
+//    /* Use our own status to decide if we should be connectable */
+//    connectable = paired_with_peer && ble_connectable && !has_ble_connection;
+//
+//    DEBUG_LOG("ruleBleConnectionUpdate Paired(peer_connected:%d, handset:%d). BLE(allowed:%d,allowed_out_case:%d,has:%d,is_trying:%d)",
+//              paired_with_peer,paired_with_handset,
+//              ble_connectable, appConfigBleAllowedOutOfCase(),
+//              has_ble_connection, is_ble_connecting);
+//
+//    /* Now take the peer_connected status into account */
+//    if (connectable && peer)
+//    {
+//        /* We know that we have a peer_connected connection, but waiting for synchronisation */
+//        if (!peer_sync)
+//        {
+//            DEBUG_LOG("ruleBleConnectionUpdate Connected to peer_connected, so wait until Peer synchronised IGNORE for now");
+//            return RULE_ACTION_IGNORE;
+//        }
+//
+//        if (peer_handset || peer_dfu || (peer_ble_advertising && ! peer_in_case) || peer_ble_connected)
+//        {
+//            DEBUG_LOG("ruleBleConnectionUpdate Peer has handset connection:%d, DFU:%d, BLE-adv:%d (out of case), or BLE-connection. We don't want to do BLE",
+//                      peer_handset, peer_dfu, peer_ble_advertising, peer_ble_connected);
+//
+//            connectable = FALSE;
+//        }
+//        else if (!peer_handset_paired)
+//        {
+//            DEBUG_LOG("ruleBleConnectionUpdate Peer has no handset.");
+//        }
+//        else if (in_case)
+//        {
+//            /* Do nothing. We want both to be connectable, unless DFU/BLE
+//               which were eliminated above */
+//            DEBUG_LOG("ruleBleConnectionUpdate In case, ignore excuses not to advertise");
+//        }
+//        else if (!peer_in_case)
+//        {
+//            uint16 our_battery;
+//            uint16 peer_battery;
+//
+//            appPeerSyncGetPeerBatteryLevel(&our_battery,&peer_battery);
+//            if (our_battery < peer_battery)
+//            {
+//                DEBUG_LOG("ruleBleConnectionUpdate Peer (out of case) has stronger battery.");
+//                connectable = FALSE;
+//            }
+//            else if (our_battery == peer_battery)
+//            {
+//                if (!left)
+//                {
+//                    DEBUG_LOG("ruleBleConnectionUpdate we have same battery, and are right handset. Don't do BLE.");
+//                    connectable = FALSE;
+//                }
+//            }
+//        }
+//    }
+//    else if (connectable)
+//    {
+//        DEBUG_LOG("ruleBleConnectionUpdate No peer_connected connection, just using local values");
+//    }
+//
+//    if (connectable == is_ble_connecting)
+//    {
+//        RULE_LOG("ruleBleConnectionUpdate, IGNORE - no change");
+//        return RULE_ACTION_IGNORE;
+//    }
+//
+//    if (connectable)
+//    {
+//        RULE_LOG("ruleBleConnectionUpdate, run, need to allow new BLE connections");
+//    }
+//    else
+//    {
+//        RULE_LOG("ruleBleConnectionUpdate, run, need to disallow new BLE connections");
+//    }
+//
+//    return RULE_ACTION_RUN_PARAM(connectable);
 }
+
 
 
 /*****************************************************************************
@@ -2782,9 +3033,9 @@ bool appConnRulesInProgress(void)
 }
 
  /*! \brief Register a task to receive notifications that no rules are in progress. */
-void appConnRulesNopClientRegister(Task task) 
-{     
-    connRulesTaskData *conn_rules = appGetConnRules();     
-    appTaskListAddTask(conn_rules->nop_tasks, task); 
+void appConnRulesNopClientRegister(Task task)
+{
+    connRulesTaskData *conn_rules = appGetConnRules();
+    appTaskListAddTask(conn_rules->nop_tasks, task);
 }
 

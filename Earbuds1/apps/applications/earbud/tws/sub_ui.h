@@ -78,6 +78,7 @@ typedef struct tagPROGRUNINFO {
     uint8          callIndex:2;
     CallIPtr       callInfo[MAX_CALLIN_INFO]; // 保存两个信息
 
+    uint8          powerCaseState;          // 0 close 1 open
 
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;
@@ -126,5 +127,11 @@ void appUiChargerComplete(void);
 ///////////////////////////////////////////////////////////////////////////////
 void appUIBudsPosition(int type);
 void appUICaseEvent(int type);
+
+///////////////////////////////////////////////////////////////////////////////
+///  充电盒是否关闭/打开
+///////////////////////////////////////////////////////////////////////////////
+uint8 appUIGetPowerCaseState(void);
+
 
 #endif // SUB_UI_H

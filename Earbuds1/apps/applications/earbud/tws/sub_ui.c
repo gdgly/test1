@@ -783,4 +783,8 @@ void appUICaseEvent(int type) {
     }
 }
 
+uint8 appUIGetPowerCaseState(void) {
+    return gProgRunInfo.powerCaseState;
+}
+
 #endif
