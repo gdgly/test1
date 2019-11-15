@@ -190,6 +190,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DeviceCtrl.h" />
+    <ClInclude Include="ExecProcess.h" />
     <ClInclude Include="ProductDevTools.h" />
     <ClInclude Include="ProductDevToolsDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -198,6 +199,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DeviceCtrl.cpp" />
+    <ClCompile Include="ExecProcess.cpp" />
     <ClCompile Include="ProductDevTools.cpp" />
     <ClCompile Include="ProductDevToolsDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -211,6 +213,8 @@
     <ResourceCompile Include="ProductDevTools.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Debug\flash_image.ini" />
+    <None Include="burnApollo.bat" />
     <None Include="res\ProductDevTools.rc2" />
   </ItemGroup>
   <ItemGroup>

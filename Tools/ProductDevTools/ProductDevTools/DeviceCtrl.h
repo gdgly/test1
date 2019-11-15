@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ExecProcess.h"
+
 #include "bluesite\\include\\TestFlash.h"
 #include "bluesite\\include\\TestEngine.h"
 
@@ -24,6 +26,8 @@ enum {
 	ERROR_WRITE_DEVNAME,
 	ERROR_WRITE_CACHE,
 	ERROR_WRITE_FIXPARAM,
+
+	ERROR_APOLLO,
 
 	ERROR_COMMU_FAIL=70,              // COMMU
 
@@ -54,11 +58,13 @@ enum {
 	REPORT_COMMU_OPEN,
 	RERROT_COMMU_TIMEOUT,
 
+	REPORT_APOLLO,
+
 	REPORT_USER_EXIT,
 	REPORT_LAST,
 };
 
-#define PSKEY_BUFFER_LEN            (128)
+#define PSKEY_BUFFER_LEN            (640)
 #define MSG_BUFFER_COUNT            (31)
 
 #define  DEV_HWVER_LEN            (3)
@@ -70,11 +76,27 @@ typedef struct tagFIXPARAM {
 	uint8          rev[8];
 }FixParam, *FixPrmPtr;
 
+
+// 烧写及检测相关参数
+typedef struct tagINIPARAM {
+	unsigned char  mode;            // 0： 烧写  1:测试
+	CString        btName;          // 蓝牙名称
+	CString        hwVer, swVer;    // 硬件版本 软件版本
+
+	CString        sJlinkPath;       // APO使用JLINK烧写
+	
+}IniParam, *IniPrmPtr;
+
+
 class CDeviceCtrl
 {
 public:
 	CDeviceCtrl();
 	~CDeviceCtrl();
+
+public:       // 其它关函数
+	static int LoadIniParam(CString sFile, IniPrmPtr param);
+	int LoadIniParam(CString sFile);
 
 public:
 	int Start(HWND hWnd);
@@ -94,6 +116,7 @@ public:
 	int SetBtAddr(CString addr);       // {0x00ff09, 0x5b, 0x02}
 	void SetBtName(CString sName);
 private:
+	IniParam m_iniParam;
 	CString m_sFlashImage;
 	UINT m_checkStatus;
 	char m_bdAddr[32], m_bdName[32];
@@ -101,9 +124,13 @@ private:
 	BOOL  m_bEnableErase;
 
 	int Burning(void);
+	int BurningApollo(void);
+	int Recording(void);
 	int SetAllParam(void);
 	int CheckDevice(void);
 
+	int teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp);
+public:
 	int OpenEngine(void);
 	int CloseEngine(void);
 	

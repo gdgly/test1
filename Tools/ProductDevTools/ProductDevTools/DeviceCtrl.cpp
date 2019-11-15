@@ -6,6 +6,55 @@
 
 #define  MESSAGE2DIALOG         PostMessage
 
+// sFile: ini文件位置，或固件文件位置xuv
+int CDeviceCtrl::LoadIniParam(CString sFile, IniPrmPtr param)
+{
+	int tmp;
+	int  keysize;	char keybuf[512];
+	CString iniFile;
+
+	if (sFile.IsEmpty() || !param)
+		return -1;
+
+	keysize = sizeof(keybuf);
+	if ((tmp = sFile.Find(".xuv", 0)) > 0) {
+		iniFile = sFile.Left(tmp) + ".ini";
+	}
+	else if ((tmp = sFile.Find(".ini")) > 0) {
+		iniFile = sFile;
+	}
+
+	if ((tmp = GetPrivateProfileString("VERSION", "HWVER", "", keybuf, keysize, iniFile)) < 1)
+		return -2;
+	keybuf[tmp] = '\0';
+	param->hwVer.Format("%s", keybuf);
+
+	if ((tmp = GetPrivateProfileString("VERSION", "SWVER", "", keybuf, keysize, iniFile)) < 1)
+		return -4;
+	keybuf[tmp] = '\0';
+	param->swVer.Format("%s", keybuf);
+
+	if ((tmp = GetPrivateProfileString("SYSTEM", "BTNAME", "", keybuf, keysize, iniFile)) < 1)
+		return -6;
+	keybuf[tmp] = '\0';
+	param->btName.Format("%s", keybuf);
+
+	param->mode = GetPrivateProfileInt("SYSTEM", "MODE", 0, iniFile);
+	
+	if ((tmp = GetPrivateProfileString("SYSTEM", "JLINKPATH", "", keybuf, keysize, iniFile)) < 1)
+		return -7;
+	keybuf[tmp] = '\0';
+	param->sJlinkPath.Format("%s", keybuf);
+
+	return 0;
+}
+
+int CDeviceCtrl::LoadIniParam(CString sFile)
+{
+	return LoadIniParam(sFile, &m_iniParam);
+}
+
+
 CDeviceCtrl::CDeviceCtrl()
 {
 	m_bEnableErase = FALSE;
@@ -72,6 +121,8 @@ static CString _sReport[] = {
 	"REPORT_COMMU_OPEN",
 	"RERROT_COMMU_TIMEOUT",
 
+	"RERROT_APOLLO",
+
 	"REPORT_USER_EXIT",
 	"REPORT_LAST",
 };
@@ -123,6 +174,9 @@ int CDeviceCtrl::RuningProc(void)
 	int ret = 0;
 
 	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_THREAD_START, (LPARAM)0);
+	
+//	BurningApollo();
+
 
 	if (!m_sFlashImage.IsEmpty()) {
 		if ((ret = Burning()) < 0)
@@ -333,6 +387,45 @@ out:
 	return ret;
 }
 
+int CDeviceCtrl::BurningApollo(void)
+{
+	int rdlen;
+	char sText[256], *msgbuf;
+	CString sCommand, sTmp;
+	CExecProcess  *execProg = new CExecProcess();
+
+	sCommand.Format("%s -CommanderScript burnApollo.bat", m_iniParam.sJlinkPath);
+
+	execProg->Create(CExecProcess::ASYNC);
+	execProg->Execute(sCommand);
+
+	while (true) {
+		memset(sText, 0, sizeof(sText));
+		if ((rdlen = execProg->ReadLine(sText, 256)) > 0) {
+			TRACE("Get%d:%s", rdlen, (char*)sText);
+
+			sTmp.Format("%s", sText);
+			if (sTmp.Find("SEGGER J-Link ") >= 0) {  // SEGGER J-Link Commander V6.42d (Compiled Feb 15 2019 13:54:42)
+				msgbuf = (char*)GetMsgBuffer();
+				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "Start J-Link Success");
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_APOLLO, (LPARAM)msgbuf);				
+			}
+			else if (sTmp.Find("Could not open J-Link Command File") >= 0) { //  Could not open J-Link Command File 'burnApollo.bat'
+				msgbuf = (char*)GetMsgBuffer();
+				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "No Found burnApollo.bat");
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_APOLLO, (LPARAM)msgbuf);
+				break;
+			}
+			else if (sTmp.Find("SS") >= 0) {
+			}
+		}
+	}
+
+	delete execProg;
+
+	return 0;
+}
+
 
 int CDeviceCtrl::SetAllParam(void)
 {
@@ -461,7 +554,37 @@ out:
 //
 enum {
 	CHECK_ST_INFO, CHECK_ST_INFO_WAIT,             // check deviceinfo
+
+	CHECK_ST_SENDREC, CHECK_ST_RECDAT,
 };
+
+// 写命令并等待返回
+int CDeviceCtrl::teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp)
+{
+	int ret;
+	uint8 channel;
+	UINT32 g_rdCount = 0, tickStart = 0;
+
+	if (m_devHandle < 0)
+		return -1;
+
+	ret = teAppWrite(m_devHandle, 0, (const uint16*)cmdbuf, cmdlen / 2);
+	if (ret != TE_OK)
+		return -2;
+
+	if (readresp) {
+		UINT16 rdbuf[PSKEY_BUFFER_LEN/2], rdlen;
+		memset(rdbuf, 0, sizeof(rdbuf));
+		ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 2000);
+		if (ret != TE_OK)
+			return -3;
+
+		if (!strstr((char*)rdbuf, readresp))
+			return -11;
+	}
+
+	return 0;
+}
 
 int CDeviceCtrl::CheckDevice(void)
 {
@@ -470,6 +593,7 @@ int CDeviceCtrl::CheckDevice(void)
 	UINT16 *cmdbuf, cmdlen;
 	uint8 channel;
 	UINT16 *rdbuf, rdlen;
+	INT32 g_rdCount = 0, tickStart = 0;
 
 	m_checkStatus = 0;
 	if (OpenEngine() < 0) {
@@ -483,9 +607,8 @@ int CDeviceCtrl::CheckDevice(void)
 		switch (m_checkStatus) {
 		case CHECK_ST_INFO:
 			cmdbuf = (UINT16*)GetMsgBuffer();
-			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check deviceinfo");
-			ret = teAppWrite(m_devHandle, 0, cmdbuf, cmdlen / 2);
-			if (ret == TE_OK) {
+			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check DEVICEINFO");
+			if(0 == teWriteAndRead(cmdbuf, cmdlen, "checkresp DEVICEINFO")) {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
 			}
 			else {
@@ -493,12 +616,41 @@ int CDeviceCtrl::CheckDevice(void)
 				TRACE("ERROR Send Cmd\n");
 				break;
 			}
+			tickStart = ::GetTickCount();
 			break;
 		case CHECK_ST_INFO_WAIT:
 			rdbuf = (UINT16*)GetMsgBuffer();
 			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN/2, &rdlen, 500);
 			if (ret == TE_OK) {
+				if (strstr((char*)rdbuf, "check") == NULL) {    // 速度测试，一返一回的情况下，可以达到80K BYTE
+					static UINT16 g_rdNo = 0;
+
+					CFile h;
+					if (TRUE == h.Open("Recv.dat", CFile::modeReadWrite | CFile::modeNoTruncate | CFile::modeCreate)) {
+						h.SeekToEnd();
+						h.Write(rdbuf, rdlen * 2);
+						h.Close();
+					}
+
+					TRACE("g_rdNo=0x%x REcv[%d]%d Cnt=0x%x Start: 0x%04x (%d)\n", g_rdNo,
+						(::GetTickCount()- tickStart)/1000,rdlen, g_rdCount, rdbuf[0], rdbuf[0]);
+					g_rdCount += rdlen * 2;
+					for (int i = 0; i < rdlen; i++) {
+						if (rdbuf[i] == g_rdNo)
+							g_rdNo += 1;
+						else {
+							TRACE("Error No i=%d(offset=0x%x) %d(0x%x --->%d(0x%x\n", i, g_rdCount-rdlen * 2 +i, g_rdNo, g_rdNo, rdbuf[i], rdbuf[i]);
+							g_rdNo = rdbuf[i] + 1;
+						}
+					}
+
+					cmdbuf = (UINT16*)GetMsgBuffer();
+					cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check ACCEPT");
+					teAppWrite(m_devHandle, 0, cmdbuf, cmdlen / 2);
+				}
+				else
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_READ, (LPARAM)rdbuf);
+
 				conneted = 1;
 			}
 			break;
@@ -524,6 +676,80 @@ int CDeviceCtrl::CheckDevice(void)
 
 	return 0;
 }
+
+int CDeviceCtrl::Recording(void)
+{
+	int ret, opened = 0;
+	unsigned char channel;
+	UINT16 *cmdbuf, cmdlen;
+	UINT16 *rdbuf, rdlen;
+	UINT32 tickStart = ::GetTickCount();
+
+	// OPened
+	if (m_devHandle < 0) {
+		if (OpenEngine() < 0)
+			return -1;
+
+		opened = 1;
+	}
+
+	m_checkStatus = CHECK_ST_SENDREC;
+	while (1) {
+		if (m_bExit) break;
+
+		switch (m_checkStatus) {
+		case CHECK_ST_SENDREC:
+			cmdbuf = (UINT16*)GetMsgBuffer();
+			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check STARTRECORD");
+			if(teWriteAndRead(cmdbuf, cmdlen, "checkresp STARTRECORD") == 0) {
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
+				m_checkStatus = CHECK_ST_RECDAT;
+				tickStart = ::GetTickCount();
+			}
+			else {
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_COMMU_FAIL, (LPARAM)cmdbuf);
+				TRACE("ERROR Send Cmd\n");
+				break;
+			}
+			break;
+		
+		case CHECK_ST_RECDAT:
+			rdbuf = (UINT16*)GetMsgBuffer();
+			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 500);
+			if (ret == TE_OK) {
+					CFile h;
+					if (TRUE == h.Open("Recv.dat", CFile::modeReadWrite | CFile::modeNoTruncate | CFile::modeCreate)) {
+						h.SeekToEnd();
+						h.Write(rdbuf, rdlen * 2);
+						h.Close();
+					}
+
+					cmdbuf = (UINT16*)GetMsgBuffer();
+					cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check ACCEPT");
+					teAppWrite(m_devHandle, 0, cmdbuf, cmdlen / 2);
+
+					tickStart = ::GetTickCount();
+			}
+			else
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_READ, (LPARAM)rdbuf);
+			break;
+
+		default:
+			break;
+
+		}
+
+		if (::GetTickCount() - tickStart > 5 * 1000)      // N秒接收不到数据退出
+			break;
+	}
+
+	// Close
+	if (opened)
+		CloseEngine();
+
+	return 0;
+}
+
 
 int CDeviceCtrl::OpenEngine(void)
 {

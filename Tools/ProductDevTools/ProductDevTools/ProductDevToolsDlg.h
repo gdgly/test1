@@ -8,6 +8,7 @@
 #include "DeviceCtrl.h"
 #include "afxcmn.h"
 
+
 // CProductDevToolsDlg 对话框
 class CProductDevToolsDlg : public CDialogEx
 {
@@ -26,9 +27,15 @@ public:
 public:
 	uint32  m_devHandle;
 	CDeviceCtrl m_devCtrl;
+	IniParam    m_Param;
+
+	void CheckItemInit(void);
 
 	afx_msg LRESULT OnDevCtrlError(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnDevCtrlReport(WPARAM wParam, LPARAM lParam);
+
+public:
+	int OnReportCheck(CString sText, int rows = -1);
 
 // 实现
 protected:
@@ -59,6 +66,8 @@ public:
 	BOOL m_bEraseAll;
 	CEdit m_edName;
 	afx_msg void OnBnClickedButtonPswrite();
+	CListCtrl m_ListCheck;
+	afx_msg void OnBnClickedBtnReset();
 };
 
 

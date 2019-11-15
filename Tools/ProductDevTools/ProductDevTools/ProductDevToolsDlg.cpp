@@ -70,6 +70,7 @@ void CProductDevToolsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_HWVER, m_edHWver);
 	DDX_Check(pDX, IDC_CHECK_ERASE, m_bEraseAll);
 	DDX_Control(pDX, IDC_EDIT_NAME, m_edName);
+	DDX_Control(pDX, IDC_LIST_CHECK, m_ListCheck);
 }
 
 BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
@@ -87,6 +88,7 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_STOP, &CProductDevToolsDlg::OnBnClickedBtnStop)
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDC_BUTTON_PSWRITE, &CProductDevToolsDlg::OnBnClickedButtonPswrite)
+	ON_BN_CLICKED(IDC_BTN_RESET, &CProductDevToolsDlg::OnBnClickedBtnReset)
 END_MESSAGE_MAP()
 
 
@@ -121,24 +123,40 @@ BOOL CProductDevToolsDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
+
 	CString sText;
-	m_edHWver.SetWindowText("000102");
-	m_edAddr.SetWindowTextA("{0x00ff0F, 0x5b, 0x02}");
-	m_edName.SetWindowTextA("\"TWS-F\"");
-	m_edSend.SetWindowTextA("abcdefg测试数据1234567");
 	sText = ::AfxGetApp()->GetProfileString("PRODUCT_CONFIG", "IMAGENAME", "");
 	m_edFirmName.SetWindowTextA(sText);
+	CDeviceCtrl::LoadIniParam("./flash_image.ini", &m_Param);
+	CDeviceCtrl::LoadIniParam(sText, &m_Param);
+	m_devCtrl.LoadIniParam(sText);
+
+
+	m_edHWver.SetWindowText(m_Param.hwVer);
+	m_edAddr.SetWindowTextA("{0x00ff0F, 0x5b, 0x02}");
+	sText.Format("\"%s\"", m_Param.btName);
+	m_edName.SetWindowTextA(sText);
+	m_edSend.SetWindowTextA("abcdefg测试数据1234567");
 
 	int nCol = 0;
 	DWORD dwStyle = m_ListCtrl.GetExtendedStyle();
-	dwStyle |= LVS_EX_FULLROWSELECT;       //
-	dwStyle |= LVS_EX_GRIDLINES;           //
+	dwStyle |= LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES;           //
 	m_ListCtrl.SetExtendedStyle(dwStyle);  //
 
 	m_ListCtrl.InsertColumn(nCol++, _T("序号"), LVCFMT_CENTER, 60);
 	m_ListCtrl.InsertColumn(nCol++, _T("项目"), LVCFMT_CENTER, 100);
 	m_ListCtrl.InsertColumn(nCol++, _T("测试"), LVCFMT_LEFT, 200);
 	m_ListCtrl.InsertColumn(nCol++, _T("其它"), LVCFMT_LEFT, 300);
+
+	dwStyle = m_ListCheck.GetExtendedStyle();
+	dwStyle |= LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES;           //
+	m_ListCheck.SetExtendedStyle(dwStyle);  //
+
+	m_ListCheck.InsertColumn(nCol++, _T("序号"), LVCFMT_CENTER, 60);
+	m_ListCheck.InsertColumn(nCol++, _T("测试项目"), LVCFMT_CENTER, 100);
+	m_ListCheck.InsertColumn(nCol++, _T("结果"), LVCFMT_LEFT, 200);
+	m_ListCheck.InsertColumn(nCol++, _T("其它"), LVCFMT_LEFT, 300);
+	CheckItemInit();
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -190,6 +208,49 @@ void CProductDevToolsDlg::OnPaint()
 HCURSOR CProductDevToolsDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
+}
+
+typedef struct tagCHTECKITEMINFO {
+	unsigned short result;       // CHECK result, 1 success
+	unsigned short uID;          // 通过 ID 或IDString 来查找对应的条目
+	char           *sIDStr;
+
+	char           *sPrompt;
+}CheckItem, *CheckIPtr;
+
+CheckItem gItems[] = {
+	{ 0,  1, "BurnApo",     "Apo烧写"},
+	{ 0,  2, "BurnQCC",     "主芯片烧写"},
+
+	{ 0,  3, "FirmVer",     "固件版本"},
+	{ 0,  4, "ApoVer",      "Apo固件版本" },
+
+
+	{ 0,  51, "MIC1",       "主MIC测试" },
+	{ 0,  52, "MIC2",       "附MIC测试" },
+
+	{ 0,  0, NULL, NULL}, // Last
+};
+
+void CProductDevToolsDlg::CheckItemInit(void)
+{
+	int index = 0;
+	CString sText;
+	CheckIPtr pItem;
+
+	m_ListCheck.DeleteAllItems();
+	while (TRUE) {
+		pItem = &gItems[index];
+		if (pItem->result != 0 || pItem->uID == 0)
+			break;
+
+		sText.Format("%d", index + 1);
+		m_ListCheck.InsertItem(index, sText);
+
+		m_ListCheck.SetItemText(index, 1, pItem->sPrompt);
+
+		index += 1;
+	}
 }
 
 INT flmGetPorts(void)
@@ -646,7 +707,6 @@ void CProductDevToolsDlg::OnBnClickedBtnStop()
 	m_devCtrl.Stop();
 }
 
-
 void CProductDevToolsDlg::OnDestroy()
 {
 	CDialogEx::OnDestroy();
@@ -666,8 +726,6 @@ void CProductDevToolsDlg::OnDestroy()
 		Sleep(3);
 	}
 }
-
-
 
 LRESULT CProductDevToolsDlg::OnDevCtrlError(WPARAM wParam, LPARAM lParam)
 {
@@ -706,7 +764,9 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 		sText.Format("%02d%%", (int)lParam);
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 		break;
-	case REPORT_COMMU_READ:
+
+	case REPORT_APOLLO:
+
 	case REPORT_RDBD_NAME:
 	case REPORT_WRBD_NAME:
 	case REPORT_RDBD_ADDR:
@@ -715,9 +775,79 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 		sText.Format("%s", (char*)lParam);
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 		break;
+	case REPORT_COMMU_READ:
+		sText.Format("%s", (char*)lParam);
+		OnReportCheck(sText, count);
+		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
+		break;
 	}
 
 	m_ListCtrl.EnsureVisible(count, FALSE);
+
+	return 0;
+}
+
+CString _sCheckString[] = { "DEVICEINFO", "VERSION", "BTADDR", "BTNAM",
+	"LIS25", "EM20168","LIS2WD12", "MAX20340", "APOLLO",
+	"",
+};
+
+
+int CProductDevToolsDlg::OnReportCheck(CString sText, int rows)
+{	
+	int ret, index;
+	CString sTmp;
+	CString sResult[] = { "PASS", "fail" };
+
+	if (sText.IsEmpty())
+		return -1;
+
+	ret = sText.Find("check");
+	if(ret < 0 || ret > 2)     // maybe blank
+		return -2;
+
+	index = 0;
+	while (1) {
+		if (_sCheckString[index].IsEmpty())
+			break;
+
+		if (sText.Find(_sCheckString[index]) < 0) {
+			index += 1;
+			continue;
+		}
+
+		ret = -1;
+		switch (index) {
+		case 0:           // 开始
+			break;
+		case 1:           // 版本
+			sTmp.Format("%s.%s.%s-%s.%s.%s.%s",
+				m_Param.hwVer.Mid(0, 2), m_Param.hwVer.Mid(2, 2), m_Param.hwVer.Mid(4, 2),
+				m_Param.swVer.Mid(0, 2), m_Param.swVer.Mid(2, 2), m_Param.swVer.Mid(4, 2), m_Param.swVer.Mid(6, 2));
+			ret = (sText.Find(sTmp) > 0 ) ? 0 : 1;
+			break;
+		case 2:           // 地址 [{0x00ff0F, 0x5b, 0x02}     00:02:5B:00:ff:0F
+			ret = 0;
+			break;
+		case 3:
+			break;
+
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		case 8:
+			ret = (sText.Find("PASS") > 0) ? 0 : 1;
+			break;
+		}
+
+		if(ret >= 0 && ret < 2)
+			m_ListCtrl.SetItemText(rows, 2, sResult[ret]);
+
+		break;
+	}
+
+
 
 	return 0;
 }
@@ -736,5 +866,10 @@ void CProductDevToolsDlg::OnBnClickedBtnOpenFile()
 	m_edFirmName.SetWindowTextA(sPath);
 }
 
-
-
+void CProductDevToolsDlg::OnBnClickedBtnReset()
+{
+	if (m_devCtrl.OpenEngine() >= 0) {
+		m_devCtrl.CloseEngine();
+		AfxMessageBox("ResetOK");
+	}	
+}

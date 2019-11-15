@@ -36,6 +36,9 @@
     <ClInclude Include="DeviceCtrl.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="ExecProcess.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProductDevTools.cpp">
@@ -50,6 +53,9 @@
     <ClCompile Include="DeviceCtrl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="ExecProcess.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ProductDevTools.rc">
@@ -58,6 +64,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ProductDevTools.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="burnApollo.bat">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\Debug\flash_image.ini">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>
