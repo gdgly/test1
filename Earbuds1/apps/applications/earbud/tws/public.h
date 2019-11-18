@@ -77,8 +77,10 @@ int8 hwi2cRead(bitserial_handle handle, uint8 *addr, uint16 addrlen, uint8 *buff
 //==============================================================================================
 #define UART_RX_PIO   (4)
 #define UART_TX_PIO   (3)
+#if 0
 #define CONFIG_HW_UART
 #define CONFIG_SHELL_UART
+#endif
 typedef signed (*UartRxProc)(const uint8 *ptr, int len);
 void uartInit(void);
 void UartTxData(const uint8 *data, uint16 length);
@@ -160,6 +162,10 @@ int EM20168_GetStatus(void);//0 表示初始化ok, -1 wrong
 int max20340_get_left_or_right(void);//返回0没找到，1左耳，2右耳
 void max20340_init(void);
 int max20340_GetStatus(void);//0 表示初始化ok, -1 wrong
+
+#if (defined(CONFIG_HW_UART) && defined(HAVE_MAX20340))
+#error "UART and MAX20340 conflict in PIO3"
+#endif
 
 /*tap*/
 #define HAVE_LIS2DW12

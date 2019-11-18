@@ -18,6 +18,7 @@
 #include "param.h"
 
 #ifdef CONFIG_PSRAM_TEST
+#ifdef CONFIG_SHELL_UART
 static int psram_power(bool isOn)
 {
     int ret = 0;
@@ -30,6 +31,7 @@ static int psram_power(bool isOn)
 
     return ret;
 }
+#endif
 #endif
 
 
