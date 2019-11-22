@@ -6,6 +6,7 @@
 #include "audio_forward.h"
 #include "tws/attr.h"
 #include "tws/audio_forward.h"
+#include "tws/peer.h"
 
 uint16 bufferSendUnit = 40;
 
@@ -840,6 +841,11 @@ static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
         gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
         GattManagerCancelWaitForRemoteClient();
+        /// 查找对方地址
+        bdaddr peer_addr;
+        if (appDeviceGetPeerBdAddr(&peer_addr)) {
+            appPeerSigTxBleConfigRequest(appGetGaiaTask(), &peer_addr, advCode, (int) bindCode);
+        }
         /// 取消超时如果没有发送bondCode断开连接的定时器
     } else {
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_NOT_SUPPORTED, 0, NULL);

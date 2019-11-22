@@ -91,6 +91,10 @@ void BtAddrParamDefault(void)
     //// todo hjs 使用tws模式
     prm->single_era      = FALSE;
 
+    // 默认ble配对码和双击配置，已经同步至另一只耳机
+    // todo 后期如果有要同步的消息标识位，需要在这里添加
+    prm->ble_pair.bleIsSync = TRUE;
+
     // 其它版本信息设置为无效
     memset(prm->peerVer, 0xFF, DEV_HWSWVER_LEN);
     memset(prm->caseVer, 0xFF, DEV_HWSWVER_LEN);

@@ -17,7 +17,8 @@ void appPrivateBleSetRandomCode(uint16 advCode);
 bool appBleIsBond(void);
 
 struct BlePairInfo_T {
-    uint16 bleIsBond;
+    uint8 bleIsBond;
+    uint8 bleIsSync;
     uint16 advCode;
     uint32 bondCode;
 };
@@ -25,6 +26,7 @@ typedef struct BlePairInfo_T BlePairInfo;
 
 void appBleClearBond(void);
 void appBleSetBond(uint16 advCode, uint32 bondCode);
+void appBleSetSync(bool status);
 uint32 appBleGetBondCode(void);
 
 #endif

@@ -12,7 +12,7 @@
 /******************************************************************************
  * Peer Signalling Message Definitions
  ******************************************************************************/
-#define AVRCP_PEER_CMD_BLE_CONFIG                 0xA0
+#define AVRCP_PEER_CMD_BLE_CONFIG                 0x70
 #define AVRCP_PEER_CMD_BLE_CONFIG_SIZE            8    /// advCode + bondCode
 
 typedef struct
@@ -36,7 +36,7 @@ void appPeerSigMsgBleConfigConfirmation(Task task, peerSigStatus status);
 /******************************************************************************
  * Peer Signalling Message Definitions
  ******************************************************************************/
-#define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG                 0xA1
+#define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG                 0x71
 #define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE            2    /// 左+有
 
 typedef struct

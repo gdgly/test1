@@ -106,6 +106,7 @@ void appAdvParamSave(void) {
 void appBleClearBond(void) {
     DEBUG_LOG("call appBleClearBond");
     advTaskData.bleBondInfo.bleIsBond = FALSE;
+    advTaskData.bleBondInfo.bleIsSync = FALSE;
     advTaskData.bleBondInfo.advCode = 0X00;
     advTaskData.bleBondInfo.bondCode = 0X00;
     appAdvParamSave();
@@ -115,10 +116,16 @@ void appBleClearBond(void) {
 void appBleSetBond(uint16 advCode, uint32 bondCode) {
     DEBUG_LOG("set pair ble code is : adv %04X, bond %04X", advCode, bondCode);
     advTaskData.bleBondInfo.bleIsBond = TRUE;
+    advTaskData.bleBondInfo.bleIsSync = FALSE;
     advTaskData.bleBondInfo.advCode = advCode;
     advTaskData.bleBondInfo.bondCode = bondCode;
     appAdvParamSave();
     appPrivateBleSetRandomCode(advCode);
+}
+
+void appBleSetSync(bool status) {
+    advTaskData.bleBondInfo.bleIsSync = status;
+    appAdvParamSave();
 }
 
 uint32 appBleGetBondCode(void) {

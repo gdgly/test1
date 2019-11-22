@@ -1,6 +1,4 @@
-//
-// Created by Administrator on 2019/11/11.
-//
+
 #include "av_headset.h"
 #include "peer.h"
 
@@ -8,6 +6,9 @@
 #define STAROT_MAKE_MESSAGE(TYPE) TYPE *message = (TYPE *) PanicUnlessMalloc(STAROT_MAKE_SIZE(TYPE))
 
 void appPeerSigTxBleConfigRequest(Task task, const bdaddr *peer_addr, int advCode, int bondCode) {
+    if (NULL == peer_addr) {
+        return;
+    }
     peerSigTaskData *peer_sig = appGetPeerSig();
     STAROT_MAKE_MESSAGE(PEER_SIG_INTERNAL_BLE_CONFIG_REQ_T);
     message->client_task = task;
@@ -23,10 +24,8 @@ void appPeerSigHandleInternalBleConfigRequest(PEER_SIG_INTERNAL_BLE_CONFIG_REQ_T
     switch (appPeerSigGetState()) {
         case PEER_SIG_STATE_CONNECTED: {
             uint8 message[AVRCP_PEER_CMD_BLE_CONFIG_SIZE];
-            /* Build data for message  */
             *((int *) (message + 0)) = req->advCode;
             *((int *) (message + 4)) = req->bondCode;
-            /* Send the handset address over AVRCP */
             appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_BLE_CONFIG,
                                                AVRCP_PEER_CMD_BLE_CONFIG_SIZE, message);
         }
@@ -43,22 +42,19 @@ void appPeerSigHandleInternalBleConfigRequest(PEER_SIG_INTERNAL_BLE_CONFIG_REQ_T
 bool appPeerSigHandleBleConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
     peerSigTaskData *peer_sig = appGetPeerSig();
 
+    DEBUG_LOG("call appPeerSigHandleBleConfigCommand");
+
     /* validate message */
     if ((ind->size_payload != AVRCP_PEER_CMD_BLE_CONFIG_SIZE)
         || !peer_sig->rx_handset_commands_task) {
         return FALSE;
     } else {
-//        MAKE_MESSAGE(PEER_SIG_CONNECT_HANDSET_IND);
-//        message->play_media = !!(ind->payload[0] & AVRCP_PEER_CMD_CONNECT_HANDSET_FLAG_PLAY_MEDIA);
-//        /* tell client to connect to handset */
-//        MessageSend(peer_sig->rx_handset_commands_task, PEER_SIG_CONNECT_HANDSET_IND, message);
-//        DEBUG_LOG("appPeerSigHandleConnectHandsetCommand %d", message->play_media);
         int *data = (int *) (ind->payload);
         int advCode = data[0];
         int bondCode = data[1];
-        UNUSED(advCode);
-        UNUSED(bondCode);
         /// 是直接存储，还是调用ui
+        appBleSetBond(advCode, bondCode);
+        appBleSetSync(TRUE);
         return TRUE;
     }
 }
@@ -66,9 +62,10 @@ bool appPeerSigHandleBleConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
 void appPeerSigMsgBleConfigConfirmation(Task task, peerSigStatus status) {
     /// todo : 发送消息至指定task，告知同步情况
     UNUSED(task), UNUSED(status);
-//    MAKE_MESSAGE(PEER_SIG_CONNECT_HANDSET_CFM);
-//    message->status = status;
-//    MessageSend(task, PEER_SIG_CONNECT_HANDSET_CFM, message);
+    DEBUG_LOG("call appPeerSigMsgBleConfigConfirmation:%d", status);
+    if (peerSigStatusSuccess == status) {
+        appBleSetSync(TRUE);
+    }
 }
 
 ////-------------------------------------------华丽的分割线-------------------------------------------------
