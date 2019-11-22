@@ -339,9 +339,12 @@ static void apollo_common_handler(Task appTask, MessageId id, Message msg)
             if (0 == GET_INT) {
                 switch (apollo_state) {
                     case APOLLO_STATE_IDLE: {
-                        uint32 feedback = 0;
+                        uint32 feedback[2];
                         PanicNotZero(apollo_fb((uint8*)feedback, 8));
-                        APOLLO_DBG_LOG("fake wakeup: 0x%x", feedback);
+                        if (APOLLO_ACK_WAKEUP == feedback[0]) {
+                            APOLLO_DBG_LOG("apollo wakeup.");
+                            if (apollo_wakeup_cb) apollo_wakeup_cb();
+                        }
                         break;
                     }
                     case APOLLO_STATE_READING_FW_VER: {
