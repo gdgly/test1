@@ -597,7 +597,9 @@ static void appPairingHandsetComplete(pairingTaskData *thePairing, pairingStatus
         else
             BdaddrSetZero(&message->handset_bd_addr);
         message->status = status;
-        MessageSend(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message);
+//        MessageSend(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message);
+        MessageSendLater(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message, D_SEC(1));
+
     }
 
     if (pairingHandsetSuccess == status)
