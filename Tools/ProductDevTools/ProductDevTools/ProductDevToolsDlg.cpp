@@ -94,6 +94,7 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_CHECK, &CProductDevToolsDlg::OnBnClickedBtnCheck)
 	ON_BN_CLICKED(IDC_BTN_RECORD, &CProductDevToolsDlg::OnBnClickedBtnRecord)
 	ON_BN_CLICKED(IDC_BTN_CRITRIM, &CProductDevToolsDlg::OnBnClickedBtnCritrim)
+	ON_BN_CLICKED(IDC_BTN_RECORD_1, &CProductDevToolsDlg::OnBnClickedBtnRecord1)
 END_MESSAGE_MAP()
 
 
@@ -734,7 +735,12 @@ void CProductDevToolsDlg::OnBnClickedBtnCheck()
 
 void CProductDevToolsDlg::OnBnClickedBtnRecord()
 {
-	StartDevContrl(THREAD_RECORD);
+	StartDevContrl(THREAD_RECORD_0);
+}
+
+void CProductDevToolsDlg::OnBnClickedBtnRecord1()
+{
+	StartDevContrl(THREAD_RECORD_1);
 }
 
 void CProductDevToolsDlg::OnBnClickedBtnCritrim()
@@ -919,3 +925,5 @@ void CProductDevToolsDlg::OnBnClickedBtnReset()
 		AfxMessageBox("ResetOK");
 	}	
 }
+
+

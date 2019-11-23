@@ -76,6 +76,7 @@ public:
 	afx_msg void OnBnClickedBtnCheck();
 	afx_msg void OnBnClickedBtnRecord();
 	afx_msg void OnBnClickedBtnCritrim();
+	afx_msg void OnBnClickedBtnRecord1();
 };
 
 

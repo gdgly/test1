@@ -93,7 +93,7 @@ typedef struct tagINIPARAM {
 
 enum {THREAD_NONE=0, THREAD_BURN=0x01, THREAD_BURN_APO=0x02,
 	THREAD_BT_ADDR=0x04, THREAD_FIX_PARAM=0x08,
-	THREAD_CHECK=0x10, THREAD_RECORD=0x20,
+	THREAD_CHECK=0x10, THREAD_RECORD_0=0x20, THREAD_RECORD_1 = 0x40,
 	THREAD_CRYSTGALTRIM=0x100,
 };
 class CDeviceCtrl
@@ -134,7 +134,7 @@ private:
 
 	int Burning(void);
 	int BurningApollo(void);
-	int Recording(int sec = 5);
+	int Recording(int mic, int sec = 5);
 	int SetAllParam(void);
 	int SetFixParam(void);
 	int CheckDevice(void);

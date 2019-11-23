@@ -184,7 +184,7 @@ int CDeviceCtrl::RuningProc(void)
 	if ((m_iThreadFunc & THREAD_BURN)) {
 		if (!m_sFlashImage.IsEmpty()) {
 			if ((ret = Burning()) < 0)
-				return ret;
+				goto out;
 
 			if (m_bExit == TRUE) goto out;
 		}
@@ -214,8 +214,13 @@ int CDeviceCtrl::RuningProc(void)
 		if (m_bExit == TRUE) goto out;
 	}
 
-	if ((m_iThreadFunc & THREAD_RECORD)) {
-		Recording();
+	if ((m_iThreadFunc & THREAD_RECORD_0)) {
+		Recording(0);
+		if (m_bExit == TRUE) goto out;
+	}
+
+	if ((m_iThreadFunc & THREAD_RECORD_1)) {
+		Recording(1);
 		if (m_bExit == TRUE) goto out;
 	}
 
@@ -412,6 +417,8 @@ int CDeviceCtrl::Burning(void)
 out:
 
 	flClose();
+	TRACE("End Burn\n");
+
 	return ret;
 }
 
@@ -720,7 +727,7 @@ int CDeviceCtrl::CheckDevice(void)
 	return 0;
 }
 
-int CDeviceCtrl::Recording(int sec)
+int CDeviceCtrl::Recording(int mic, int sec)
 {
 	int ret, opened = 0;
 	unsigned char channel;
@@ -746,18 +753,15 @@ int CDeviceCtrl::Recording(int sec)
 		switch (m_checkStatus) {
 		case CHECK_ST_RECSTART:
 			cmdbuf = (UINT16*)GetMsgBuffer();
-			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check STARTRECORD0");
-			if(teWriteAndRead(cmdbuf, cmdlen, "checkresp STARTRECORD0") == 0) {
+			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check STARTRECORD%d", mic);
+			if(teWriteAndRead(cmdbuf, cmdlen, "checkresp STARTRECORD") == 0) {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
 				m_checkStatus = CHECK_ST_RECDAT;
 				tickStart = ::GetTickCount();
 				datacnt = 0;
 
 
-				CFile h;   // Truncate
-				if (TRUE == h.Open("Recv.dat", CFile::modeReadWrite | CFile::modeCreate)) {
-					h.Close();
-				}
+				DeleteFile("Recv.g722");
 			}
 			else {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_COMMU_FAIL, (LPARAM)cmdbuf);
@@ -772,7 +776,7 @@ int CDeviceCtrl::Recording(int sec)
 			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 1000);
 			if (ret == TE_OK) {
 					CFile h;
-					if (TRUE == h.Open("Recv.dat", CFile::modeReadWrite | CFile::modeNoTruncate | CFile::modeCreate)) {
+					if (TRUE == h.Open("Recv.g722", CFile::modeReadWrite | CFile::modeNoTruncate | CFile::modeCreate)) {
 						h.SeekToEnd();
 						h.Write(rdbuf, rdlen * 2);
 						h.Close();
@@ -780,10 +784,10 @@ int CDeviceCtrl::Recording(int sec)
 					}
 
 					cmdbuf = (UINT16*)GetMsgBuffer();
-					cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check ACCEPT");
+					cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check RECVREC");
 					teAppWrite(m_devHandle, 0, cmdbuf, cmdlen / 2);
 
-					TRACE("Recv Audio:%d\n", rdlen*2);
+					TRACE("Recv Audio:%d/%d %s\n", rdlen*2, datacnt,(char*)rdbuf);
 					tickStart = ::GetTickCount();
 					MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_RECORD, (LPARAM)datacnt);
 
@@ -797,8 +801,9 @@ int CDeviceCtrl::Recording(int sec)
 
 		case CHECK_ST_RECSTOP:
 			cmdbuf = (UINT16*)GetMsgBuffer();
-			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check STOPRECORD0");
-			if (teWriteAndRead(cmdbuf, cmdlen, "checkresp STOPRECORD0") == 0) {
+			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check STOPRECORD%d", mic);
+			
+			if (teWriteAndRead(cmdbuf, cmdlen, "checkresp STOPRECORD") == 0) {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
 				m_checkStatus = CHECK_ST_RECFIN;
 				tickStart = ::GetTickCount();
