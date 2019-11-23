@@ -9,6 +9,13 @@ void appPeerSigTxBleConfigRequest(Task task, const bdaddr *peer_addr, int advCod
     if (NULL == peer_addr) {
         return;
     }
+#ifdef CONFIG_STAROT_PEERPAIR
+    if(ParamUsingSingle()) {    // 检测是否为独立使用
+        appBleSetSync(TRUE);
+        return;
+    }
+#endif
+
     peerSigTaskData *peer_sig = appGetPeerSig();
     STAROT_MAKE_MESSAGE(PEER_SIG_INTERNAL_BLE_CONFIG_REQ_T);
     message->client_task = task;
