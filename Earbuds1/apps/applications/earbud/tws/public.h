@@ -189,8 +189,8 @@ int Lis2dw12Power(bool isOn);//1 打开，0关闭
 //==============================================================================================
 #define GAIA_TEST                           // 电话数据传输到APP
 /// todo hjs 调试的时候，走原来的代码，配对方面
-//#define CONFIG_STAROT_PEERPAIR              // 左右耳相互保存BT地址用于配对
-//#define CONFIG_STAROT_SINGLE                // 独立使用
+#define CONFIG_STAROT_PEERPAIR              // 左右耳相互保存BT地址用于配对
+#define CONFIG_STAROT_SINGLE                // 独立使用
 
 // 打电话时的双MIC使用
 #define CONFIG_MIC_SELECT          // 动态选择使用MIC1 或 MIC2 或两个都使用

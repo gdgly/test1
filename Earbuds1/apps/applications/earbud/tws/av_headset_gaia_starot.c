@@ -100,6 +100,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             gaiaParseDialogStatus(message);
             break;
         case STAROT_DIALOG_AUDIO_DATA:
+            DEBUG_LOG("call STAROT_DIALOG_AUDIO_DATA EVENT ");
             starotGaiaSendAudio(NULL);
             break;
     }
