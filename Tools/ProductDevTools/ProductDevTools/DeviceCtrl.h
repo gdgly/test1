@@ -29,6 +29,8 @@ enum {
 
 	ERROR_APOLLO,
 
+	ERROR_READ_RECORD,
+
 	ERROR_COMMU_FAIL=70,              // COMMU
 
 };
@@ -60,6 +62,8 @@ enum {
 
 	REPORT_APOLLO,
 
+	REPORT_READ_RECORD,
+
 	REPORT_USER_EXIT,
 	REPORT_LAST,
 };
@@ -87,7 +91,11 @@ typedef struct tagINIPARAM {
 	
 }IniParam, *IniPrmPtr;
 
-
+enum {THREAD_NONE=0, THREAD_BURN=0x01, THREAD_BURN_APO=0x02,
+	THREAD_BT_ADDR=0x04, THREAD_FIX_PARAM=0x08,
+	THREAD_CHECK=0x10, THREAD_RECORD=0x20,
+	THREAD_CRYSTGALTRIM=0x100,
+};
 class CDeviceCtrl
 {
 public:
@@ -112,6 +120,7 @@ public:
 	CString Report2String(int rCode);
 	void SetFlashImage(CString sFile) { m_sFlashImage = sFile; }	
 	void SetEraseAll(int bErase) { m_bEnableErase = bErase;  }
+	void SetThreadFunc(int iFunc) { m_iThreadFunc = iFunc; }
 	int SetHwVersion(CString sText);
 	int SetBtAddr(CString addr);       // {0x00ff09, 0x5b, 0x02}
 	void SetBtName(CString sName);
@@ -125,9 +134,12 @@ private:
 
 	int Burning(void);
 	int BurningApollo(void);
-	int Recording(void);
+	int Recording(int sec = 5);
 	int SetAllParam(void);
+	int SetFixParam(void);
 	int CheckDevice(void);
+
+	int CrystalTrimming(int value);
 
 	int teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp);
 public:
@@ -142,6 +154,7 @@ private:
 	UINT m_curTick;
 	HWND m_hWnd;
 	BOOL m_bExit;
+	UINT m_iThreadFunc;
 	HANDLE m_ctrlThread;
 	static int DeviceCtrlProc(void *param);
 

@@ -89,6 +89,11 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDC_BUTTON_PSWRITE, &CProductDevToolsDlg::OnBnClickedButtonPswrite)
 	ON_BN_CLICKED(IDC_BTN_RESET, &CProductDevToolsDlg::OnBnClickedBtnReset)
+	ON_BN_CLICKED(IDC_BTN_BURN_APO, &CProductDevToolsDlg::OnBnClickedBtnBurnApo)
+	ON_BN_CLICKED(IDC_BTN_BURN_ADDR, &CProductDevToolsDlg::OnBnClickedBtnBurnAddr)
+	ON_BN_CLICKED(IDC_BTN_CHECK, &CProductDevToolsDlg::OnBnClickedBtnCheck)
+	ON_BN_CLICKED(IDC_BTN_RECORD, &CProductDevToolsDlg::OnBnClickedBtnRecord)
+	ON_BN_CLICKED(IDC_BTN_CRITRIM, &CProductDevToolsDlg::OnBnClickedBtnCritrim)
 END_MESSAGE_MAP()
 
 
@@ -680,14 +685,13 @@ void CProductDevToolsDlg::OnBnClickedButtonPswrite()
 	m_devCtrl.PsWrite(9742 + 141, buf, sizeof(buf));
 }
 
-
-void CProductDevToolsDlg::OnBnClickedBtnStart()
+void CProductDevToolsDlg::StartDevContrl(UINT type)
 {
 	CString sText;
-
 	UpdateData(TRUE);
+
 	m_edFirmName.GetWindowText(sText);	m_devCtrl.SetFlashImage(sText);
-	if (!sText.IsEmpty()){
+	if (!sText.IsEmpty()) {
 		DWORD dwAttrib = GetFileAttributes(sText);
 		if (INVALID_FILE_ATTRIBUTES != dwAttrib) {
 			BOOL ret = ::AfxGetApp()->WriteProfileString("PRODUCT_CONFIG", "IMAGENAME", sText);
@@ -698,9 +702,46 @@ void CProductDevToolsDlg::OnBnClickedBtnStart()
 	m_edAddr.GetWindowText(sText); m_devCtrl.SetBtAddr(sText);
 	m_edHWver.GetWindowTextA(sText); m_devCtrl.SetHwVersion(sText);
 	m_devCtrl.SetEraseAll(m_bEraseAll);
-	
+
+	m_devCtrl.SetThreadFunc(type);
 	m_devCtrl.Start(this->m_hWnd);
+
+
 }
+
+void CProductDevToolsDlg::OnBnClickedBtnStart()
+{
+	StartDevContrl(THREAD_BURN);
+}
+
+void CProductDevToolsDlg::OnBnClickedBtnBurnApo()
+{
+	StartDevContrl(THREAD_BURN_APO);
+}
+
+
+void CProductDevToolsDlg::OnBnClickedBtnBurnAddr()
+{
+	StartDevContrl(THREAD_BT_ADDR);
+}
+
+
+void CProductDevToolsDlg::OnBnClickedBtnCheck()
+{
+	StartDevContrl(THREAD_CHECK);
+}
+
+
+void CProductDevToolsDlg::OnBnClickedBtnRecord()
+{
+	StartDevContrl(THREAD_RECORD);
+}
+
+void CProductDevToolsDlg::OnBnClickedBtnCritrim()
+{
+	StartDevContrl(THREAD_CRYSTGALTRIM);
+}
+
 
 void CProductDevToolsDlg::OnBnClickedBtnStop()
 {
@@ -777,6 +818,11 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 		break;
 	case REPORT_COMMU_READ:
 		sText.Format("%s", (char*)lParam);
+		OnReportCheck(sText, count);
+		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
+		break;
+	case REPORT_READ_RECORD:
+		sText.Format("Recv=%d", (int)lParam);
 		OnReportCheck(sText, count);
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 		break;

@@ -6,6 +6,9 @@
 
 #define  MESSAGE2DIALOG         PostMessage
 
+
+const char* const CFG_DB_PARAM = "hydracore_config.sdb:QCC512X_CONFIG";
+
 // sFile: ini文件位置，或固件文件位置xuv
 int CDeviceCtrl::LoadIniParam(CString sFile, IniPrmPtr param)
 {
@@ -63,6 +66,7 @@ CDeviceCtrl::CDeviceCtrl()
 	m_devHandle = 0;
 	memset(m_bdAddr, 0, sizeof(m_bdAddr));
 	m_sFlashImage.Empty();
+	m_iThreadFunc = THREAD_NONE;
 	m_ctrlThread = INVALID_HANDLE_VALUE;
 }
 
@@ -123,6 +127,8 @@ static CString _sReport[] = {
 
 	"RERROT_APOLLO",
 
+	"REPORT_READ_RECORD",
+
 	"REPORT_USER_EXIT",
 	"REPORT_LAST",
 };
@@ -175,31 +181,53 @@ int CDeviceCtrl::RuningProc(void)
 
 	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_THREAD_START, (LPARAM)0);
 	
-//	BurningApollo();
+	if ((m_iThreadFunc & THREAD_BURN)) {
+		if (!m_sFlashImage.IsEmpty()) {
+			if ((ret = Burning()) < 0)
+				return ret;
 
+			if (m_bExit == TRUE) goto out;
+		}
+	}
 
-	if (!m_sFlashImage.IsEmpty()) {
-		if ((ret = Burning()) < 0)
-			return ret;
-
-		if (m_bExit == TRUE) goto out;
-
-		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WAIT_RESTART, (LPARAM)0);
-		Sleep(500);
+	if ((m_iThreadFunc & THREAD_BURN_APO)) {
+		BurningApollo();
 		if (m_bExit == TRUE) goto out;
 	}
 
-	if (m_bdAddr[0] != '\0') {
-		if ((ret = SetAllParam()) < 0)
-			return ret;
+	if ((m_iThreadFunc & THREAD_BT_ADDR)) {
+		if (m_bdAddr[0] != '\0')
+			if (SetAllParam() < 0)
+				goto out;
 
 		if (m_bExit == TRUE) goto out;
 	}
 
-	if ((ret=CheckDevice()) < 0)
-		return ret;
+	if ((m_iThreadFunc & THREAD_FIX_PARAM)) {
+		SetFixParam();
+	}
+
+	if ((m_iThreadFunc & THREAD_CHECK)) {
+		if ((ret = CheckDevice()) < 0)
+			goto out;
+
+		if (m_bExit == TRUE) goto out;
+	}
+
+	if ((m_iThreadFunc & THREAD_RECORD)) {
+		Recording();
+		if (m_bExit == TRUE) goto out;
+	}
+
+	if ((m_iThreadFunc & THREAD_CRYSTGALTRIM)) {
+		CrystalTrimming(0);
+		if (m_bExit == TRUE) goto out;
+	}
+		
 
 out:
+	CloseEngine();
+
 	if (m_bExit == TRUE)
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_USER_EXIT, (LPARAM)0);
 
@@ -429,9 +457,8 @@ int CDeviceCtrl::BurningApollo(void)
 
 int CDeviceCtrl::SetAllParam(void)
 {
-	char *msgbuf;  uint32 datalen; uint16 datalen16;
+	char *msgbuf;  uint32 datalen;
 	int status, ret;
-	const char* const CFG_DB_PARAM = "hydracore_config.sdb:QCC512X_CONFIG";
 	CString sText;
 
 	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_OPEN_ENGINE, (LPARAM)0);	
@@ -502,6 +529,25 @@ int CDeviceCtrl::SetAllParam(void)
 	}
 	TRACE("LINE:%d ret=%d\n", __LINE__, ret);
 
+out:
+	CloseEngine();
+
+	return ret;
+}
+
+// 没有调用 CloseEngine，可以最后一次性调用
+int CDeviceCtrl::SetFixParam(void)
+{
+	int ret = 0;
+	char *msgbuf;  uint16 datalen16;
+
+	if (m_devHandle <= 1) {
+		if (OpenEngine() < 0) {
+			TRACE("Error openTestEngine\n");
+			ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
+		}
+	}
+
 	// 写固定参数区域
 	datalen16 = 64;
 	msgbuf = (char*)GetMsgBuffer();
@@ -509,20 +555,17 @@ int CDeviceCtrl::SetAllParam(void)
 	TRACE("LINE:%d ret=%d ERROR=%d\n", __LINE__, ret, teGetLastError(m_devHandle));
 
 	FixPrmPtr prm = (FixPrmPtr)msgbuf;
-	TRACE("FIXPRM adr=%d hwVER=%02x %02x %02x -->%02x %02x %02x\n", prm->aud_adj, 
+	TRACE("FIXPRM adr=%d hwVER=%02x %02x %02x -->%02x %02x %02x\n", prm->aud_adj,
 		prm->hw_ver[0], prm->hw_ver[1], prm->hw_ver[2], m_FixParam.hw_ver[0], m_FixParam.hw_ver[1], m_FixParam.hw_ver[2]);
 	memcpy(prm->hw_ver, m_FixParam.hw_ver, 3);
 	ret = tePsWrite(m_devHandle, 10192, sizeof(FixParam) / 2, (uint16*)msgbuf);
 	if (ret != TE_OK) {
-		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_FIXPARAM, status, -7);
+		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_FIXPARAM, ret, -7);
 	}
 	else
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRITE_FIXPARAM, (LPARAM)0);
 
-
 out:
-	CloseEngine();
-
 	return ret;
 }
 
@@ -555,7 +598,7 @@ out:
 enum {
 	CHECK_ST_INFO, CHECK_ST_INFO_WAIT,             // check deviceinfo
 
-	CHECK_ST_SENDREC, CHECK_ST_RECDAT,
+	CHECK_ST_RECSTART, CHECK_ST_RECDAT, CHECK_ST_RECSTOP, CHECK_ST_RECFIN,
 };
 
 // 写命令并等待返回
@@ -565,7 +608,7 @@ int CDeviceCtrl::teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp)
 	uint8 channel;
 	UINT32 g_rdCount = 0, tickStart = 0;
 
-	if (m_devHandle < 0)
+	if (m_devHandle == 0)
 		return -1;
 
 	ret = teAppWrite(m_devHandle, 0, (const uint16*)cmdbuf, cmdlen / 2);
@@ -579,7 +622,7 @@ int CDeviceCtrl::teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp)
 		if (ret != TE_OK)
 			return -3;
 
-		if (!strstr((char*)rdbuf, readresp))
+		if (strstr((char*)rdbuf, readresp) < 0)
 			return -11;
 	}
 
@@ -677,63 +720,99 @@ int CDeviceCtrl::CheckDevice(void)
 	return 0;
 }
 
-int CDeviceCtrl::Recording(void)
+int CDeviceCtrl::Recording(int sec)
 {
 	int ret, opened = 0;
 	unsigned char channel;
 	UINT16 *cmdbuf, cmdlen;
 	UINT16 *rdbuf, rdlen;
-	UINT32 tickStart = ::GetTickCount();
+	UINT32 tickStart = ::GetTickCount(), datacnt = 0;
 
 	// OPened
-	if (m_devHandle < 0) {
-		if (OpenEngine() < 0)
+	if (m_devHandle == 0) {
+		if (OpenEngine() < 0) {
 			return -1;
+		}
 
 		opened = 1;
 	}
 
-	m_checkStatus = CHECK_ST_SENDREC;
+	TRACE("LINE:%d\n", __LINE__);
+	m_checkStatus = CHECK_ST_RECSTART;
+	tickStart = ::GetTickCount();
 	while (1) {
 		if (m_bExit) break;
 
 		switch (m_checkStatus) {
-		case CHECK_ST_SENDREC:
+		case CHECK_ST_RECSTART:
 			cmdbuf = (UINT16*)GetMsgBuffer();
-			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check STARTRECORD");
-			if(teWriteAndRead(cmdbuf, cmdlen, "checkresp STARTRECORD") == 0) {
+			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check STARTRECORD0");
+			if(teWriteAndRead(cmdbuf, cmdlen, "checkresp STARTRECORD0") == 0) {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
 				m_checkStatus = CHECK_ST_RECDAT;
 				tickStart = ::GetTickCount();
+				datacnt = 0;
+
+
+				CFile h;   // Truncate
+				if (TRUE == h.Open("Recv.dat", CFile::modeReadWrite | CFile::modeCreate)) {
+					h.Close();
+				}
 			}
 			else {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_COMMU_FAIL, (LPARAM)cmdbuf);
 				TRACE("ERROR Send Cmd\n");
+				Sleep(200);
 				break;
 			}
 			break;
 		
 		case CHECK_ST_RECDAT:
 			rdbuf = (UINT16*)GetMsgBuffer();
-			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 500);
+			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 1000);
 			if (ret == TE_OK) {
 					CFile h;
 					if (TRUE == h.Open("Recv.dat", CFile::modeReadWrite | CFile::modeNoTruncate | CFile::modeCreate)) {
 						h.SeekToEnd();
 						h.Write(rdbuf, rdlen * 2);
 						h.Close();
+						datacnt += rdlen * 2;
 					}
 
 					cmdbuf = (UINT16*)GetMsgBuffer();
 					cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check ACCEPT");
 					teAppWrite(m_devHandle, 0, cmdbuf, cmdlen / 2);
 
+					TRACE("Recv Audio:%d\n", rdlen*2);
 					tickStart = ::GetTickCount();
+					MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_RECORD, (LPARAM)datacnt);
+
+					if(datacnt >= (UINT32)(2000* sec))
+						m_checkStatus = CHECK_ST_RECSTOP;
+
 			}
 			else
-				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_READ, (LPARAM)rdbuf);
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_READ_RECORD, (LPARAM)rdbuf);
 			break;
 
+		case CHECK_ST_RECSTOP:
+			cmdbuf = (UINT16*)GetMsgBuffer();
+			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check STOPRECORD0");
+			if (teWriteAndRead(cmdbuf, cmdlen, "checkresp STOPRECORD0") == 0) {
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
+				m_checkStatus = CHECK_ST_RECFIN;
+				tickStart = ::GetTickCount();
+			}
+			else {
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_COMMU_FAIL, (LPARAM)cmdbuf);
+				TRACE("ERROR Send Cmd\n");
+				Sleep(200);
+				break;
+			}
+			break;
+		case CHECK_ST_RECFIN:
+			tickStart = 0;       // Finish, end for next break
+			break;
 		default:
 			break;
 
@@ -750,10 +829,188 @@ int CDeviceCtrl::Recording(void)
 	return 0;
 }
 
+double ReadFreqOffsetHz(int value)
+{
+
+	return 2000.0;
+}
+
+int CDeviceCtrl::CrystalTrimming(int value)
+{
+	// radiotestTxStart transmit settings
+	const uint32 KEY_WRITE_BUFFER_LEN = 128;
+
+	const uint16 TX_FREQ = 2441;
+	const uint16 INTPA = 50;
+	const uint16 EXTPA = 255;
+	const uint16 MODULATION = 0;
+
+	const uint16 MAX_TRIM_STEPS = 32;
+	const uint16 MAX_XTAL_LCAP = 31;
+	const uint16 MIN_XTAL_LCAP = 0;
+	const int16 MAX_XTAL_TRIM = 15;
+	const int16 MIN_XTAL_TRIM = -16;
+
+	// modify values for MAX_COARSE_OFFSET_HZ and MAX_FINE_OFFSET_HZ
+	// to 7500.0 and -7500.0 if devices cannot be trimmed
+	const double MAX_COARSE_OFFSET_HZ = 5000.0;
+	const double MIN_COARSE_OFFSET_HZ = -5000.0;
+	const double MAX_FINE_OFFSET_HZ = 1000.0;
+	const double MIN_FINE_OFFSET_HZ = -1000.0;
+
+	if (OpenEngine() < 0)
+		return -2;
+
+	UINT32  handle = m_devHandle;
+
+	int16 mibValue = 0;
+	uint16 xtalLoadCap = 16;      	// xtalLoadCap has range 0 - 31 so start mid-range
+	int16 xtalTrim = 0;	// xtalTrim has range -16 to 15 so start mid-range
+	int32 success = radiotestTxstart(handle, TX_FREQ, INTPA, EXTPA,	MODULATION);
+	if (success != TE_OK)	{
+		TRACE("radiotestTxstart returned error\n");
+	}
+	else { 	// Init fine trim value prior to coarse value trim
+		success = teMcSetXtalFreqTrim(handle,	(uint16)(xtalTrim), &mibValue);
+		if (success != TE_OK) {
+			TRACE("teMcSetXtalFreqTrim returned error\n");
+		}
+	}
+	
+	double measuredFreqOffset = 0.0;
+	bool xtalLoadCapFound = false;
+	bool xtalTrimFound = false;
+
+	// find xtalLoadCap value for device
+	if (success == TE_OK) {
+		for (uint16 i = 0; i < MAX_TRIM_STEPS; ++i) {
+			success = teMcSetXtalLoadCapacitance(handle, xtalLoadCap);
+			if (success != TE_OK)
+			{
+				TRACE("teMcSetXtalLoadCapacitance returned error\n");
+				break;
+			}
+			else {
+				measuredFreqOffset = ReadFreqOffsetHz(TX_FREQ);
+				if ((measuredFreqOffset < MAX_COARSE_OFFSET_HZ) && (measuredFreqOffset > MIN_COARSE_OFFSET_HZ)) {
+					// found correct XtalLoadCapacitance value
+					xtalLoadCapFound = true;
+					break;
+				}
+				else {
+					if (measuredFreqOffset > 0.0) {
+						++xtalLoadCap;
+					}
+					else {
+						--xtalLoadCap;
+					}
+				}
+
+				if ((xtalLoadCap > MAX_XTAL_LCAP) || (xtalLoadCap < MIN_XTAL_LCAP)) {
+					// xtalLoadCap value out of range, correct value not	found
+					TRACE("xtalLoadCap value not found\n");
+					break;
+				}
+			}
+		}
+	}
+	
+	// find Xtal Trim for device
+	if (success == TE_OK && xtalLoadCapFound) {
+		for (uint16 i = 0; i < MAX_TRIM_STEPS; ++i)	{
+			success = teMcSetXtalFreqTrim(handle, (uint16)(xtalTrim), &mibValue);
+			if (success != TE_OK)		{
+				TRACE("teMcSetXtalFreqTrim returned error\n");
+				break;
+			}
+			else	{
+				measuredFreqOffset = ReadFreqOffsetHz(TX_FREQ);
+				if ((measuredFreqOffset < MAX_FINE_OFFSET_HZ) &&	(measuredFreqOffset > MIN_FINE_OFFSET_HZ))
+				{			// correct xtalTrim value found
+					xtalTrimFound = true;
+					break;
+				}
+				else	{
+					if (measuredFreqOffset > 0.0)		{
+						--xtalTrim;
+					}
+					else	{
+						++xtalTrim;
+					}
+				}
+				
+				if ((xtalTrim > MAX_XTAL_TRIM) || (xtalTrim < MIN_XTAL_TRIM))
+				{		// xtal trim value out of range, correct value notfound
+					TRACE("xtal trim value not found\n");
+					break;
+				}
+			}
+		}
+	}
+
+	// stop the device from transmitting
+	radiotestPause(handle);
+	// write xtal value to device
+	if (success == TE_OK && xtalLoadCapFound && xtalTrimFound)	{
+		uint16 unused = 0;
+		TRACE("xtalLoadCap and xtalTrim found\n");
+
+		// Initialise the configuration cache
+		success = teConfigCacheInit(handle, CFG_DB_PARAM);
+		if (success != TE_OK)		{
+			TRACE("teConfigCacheInit returned error\n");
+		}
+		else	{
+			// Read the configuration into the cache from the device
+			success = teConfigCacheRead(handle, NULL, unused);
+		}
+			
+		if (success != TE_OK)	{
+			TRACE("teConfigCacheRead returned error\n");
+		}
+		else	{
+			// write updated XTAL Load Cap value
+			char xtalCapWriteValue[KEY_WRITE_BUFFER_LEN];
+			snprintf(xtalCapWriteValue, KEY_WRITE_BUFFER_LEN, "%d",		xtalLoadCap);
+			success = teConfigCacheWriteItem(handle,"curator15:XtalLoadCapacitance", xtalCapWriteValue);
+		}
+
+		if (success != TE_OK)	{
+			TRACE("Failed to write XtalLoadCapacitance value to config	cache\n");
+		}
+		else	{
+			// Write updated XTAL trim value
+			char xtalTrimWriteValue[KEY_WRITE_BUFFER_LEN];
+			snprintf(xtalTrimWriteValue, KEY_WRITE_BUFFER_LEN, "%d", xtalTrim);
+			success = teConfigCacheWriteItem(handle,"curator15:XtalFreqTrim", xtalTrimWriteValue);
+		}
+
+		if (success != TE_OK)	{
+			TRACE("failed to write XtalFreqTrim value to config cache\n");
+		}
+		else	{
+			// Write the configuration cache to the device
+			success = teConfigCacheWrite(handle, NULL, unused);
+		}
+
+		if (success != TE_OK)	{
+			TRACE("teConfigCacheWrite returned error\n");
+		}
+		else	{
+			TRACE("XtalCap and XtalTrim written to device\n");
+		}
+	}
+		
+	closeTestEngine(handle);
+
+
+	return 0;
+}
+
 
 int CDeviceCtrl::OpenEngine(void)
 {
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < 100; i++) {
 		m_devHandle = openTestEngine(USBDBG, "1", 0, 5000, 1000);
 		if (m_devHandle > 0)
 			break;
@@ -761,12 +1018,13 @@ int CDeviceCtrl::OpenEngine(void)
 		TRACE("openTestEngine FAILE,loops=%d\n", i);
 		if (m_bExit == TRUE)
 			return -2;
-		Sleep(300);
+		Sleep(1000);
 	}
 
 	if (m_devHandle > 0)
 		return 0;
 
+	MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, (WPARAM)ERROR_OPEN_ENGINE, (LPARAM)0);
 	return -1;
 }
 

@@ -29,6 +29,9 @@ public:
 	CDeviceCtrl m_devCtrl;
 	IniParam    m_Param;
 
+
+	void StartDevContrl(UINT type);
+
 	void CheckItemInit(void);
 
 	afx_msg LRESULT OnDevCtrlError(WPARAM wParam, LPARAM lParam);
@@ -68,6 +71,11 @@ public:
 	afx_msg void OnBnClickedButtonPswrite();
 	CListCtrl m_ListCheck;
 	afx_msg void OnBnClickedBtnReset();
+	afx_msg void OnBnClickedBtnBurnApo();
+	afx_msg void OnBnClickedBtnBurnAddr();
+	afx_msg void OnBnClickedBtnCheck();
+	afx_msg void OnBnClickedBtnRecord();
+	afx_msg void OnBnClickedBtnCritrim();
 };
 
 
