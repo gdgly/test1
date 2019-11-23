@@ -102,8 +102,8 @@ static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
 
         pCall = progRun->callInfo[progRun->callIndex];
         if(pCall && (NULL != pCall->number)) {
-            memcpy(&message->payload[2], pCall->number, pCall->size_number-1);
-            count += pCall->size_number-1;
+            memcpy(&message->payload[2], pCall->number, pCall->size_number);
+            count += pCall->size_number;
         }
     }
     message->payloadLen    = count;

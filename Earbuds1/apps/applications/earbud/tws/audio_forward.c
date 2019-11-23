@@ -242,7 +242,7 @@ static bool __disable_audio_forward(void)
         break;
     case KYMERA_STATE_SCO_ACTIVE:
     case KYMERA_STATE_SCO_ACTIVE_WITH_FORWARDING:
-        sco_chain == appKymeraGetScoChain();
+        sco_chain = appKymeraGetScoChain();
         if(!sco_chain) return FALSE;
         break;
     default:
