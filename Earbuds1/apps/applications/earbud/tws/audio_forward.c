@@ -22,8 +22,8 @@
 
 
 #ifdef GAIA_TEST
-#define sco_msg_handler() do {sendDataMessage(message->source, GAIA_AUDIO_SPEAKER, audioFwdTaskData.data_source_sco, audioFwdTaskData.data_source_mic); }while(0)
-#define mic_msg_handler() do {sendDataMessage(message->source, GAIA_AUDIO_MIC, audioFwdTaskData.data_source_sco, audioFwdTaskData.data_source_mic); }while(0)
+#define sco_msg_handler() do {sendDataMessage(message->source, GAIA_AUDIO_SPEAKER, audioFwdTaskData.data_source_sco, audioFwdTaskData.data_source_mic, audioFwdTaskData.data_client); }while(0)
+#define mic_msg_handler() do {sendDataMessage(message->source, GAIA_AUDIO_MIC, audioFwdTaskData.data_source_sco, audioFwdTaskData.data_source_mic, audioFwdTaskData.data_client); }while(0)
 #else
 #define sco_msg_handler() do {show_msg(source, 0);}while(0)
 #define mic_msg_handler() do {show_msg(source, 1);}while(0)
@@ -44,6 +44,7 @@ static AudioForwardTaskData audioFwdTaskData =
     .data = {.handler = msg_handler},
     .data_source_sco = NULL,
     .data_source_mic = NULL,
+    .data_client = DATA_CLIENT_GAIA,
 #ifndef GAIA_TEST
     .msg_cnt_sco = 0,
     .msg_cnt_mic = 0
@@ -99,6 +100,7 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
 //    gaiaStartNotify();
     __disable_audio_forward();
 #endif
+    audioFwdTaskData.data_client = DATA_CLIENT_GAIA;
 }
 
 void disable_audio_forward(bool disable) {
@@ -131,6 +133,11 @@ void disconnectAudioForward(kymera_chain_handle_t sco_chain) {
 Task getAudioForwardTask(void)
 {
     return audioForwardTask;
+}
+
+void forwardSetDataClient(uint16 data_client)
+{
+    audioFwdTaskData.data_client = data_client;
 }
 
 /*

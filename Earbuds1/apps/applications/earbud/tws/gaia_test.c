@@ -13,6 +13,8 @@
 #include "audio_forward.h"
 #include "gaia_test.h"
 
+#include "public.h"
+
 unsigned nowSendStatus = 0;
 int dissNum = 0;
 extern uint16 bufferSendUnit;
@@ -20,7 +22,7 @@ extern uint16 bufferSendUnit;
 /// true：发送数据到GAIA的TASK
 /// false：没有发送消息到GAIA的TASK
 bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
-                     Source data_source_sco, Source data_source_mic) {
+                     Source data_source_sco, Source data_source_mic, uint16 data_client) {
     UNUSED(data_source_mic);
     UNUSED(data_source_sco);
     int size = SourceSize(source);
@@ -53,6 +55,15 @@ bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
         DEBUG_LOG("drop size %d", drop);
         SourceDrop(source, drop);
     }
+
+    if(data_client == DATA_CLIENT_COMMUPC) {  //输出到comm2pc
+        GAIA_STAROT_AUDIO_IND_T* starot = PanicUnlessMalloc(sizeof(GAIA_STAROT_AUDIO_IND_T));
+        starot->source = source;
+        starot->len = size;
+        MessageSend(GetCommuTask(), GAIA_STAROT_COMMAND_IND, starot);
+        return TRUE;
+    }
+
 
     if (NULL == appGetGaia()->transport) {
         DEBUG_LOG("sendDataMessage,type=%d Drop:%d no connect", type, size);

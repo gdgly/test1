@@ -277,6 +277,8 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_AI_USER_START_RECORD:               ///设备开始录音
         progRun->recStat  = 1;
 #ifdef CONFIG_REC_ASSISTANT
+        g_appConfigSocMic1 = 0;
+        g_appConfigSocMic2 = NO_MIC;
         appKymeraRecordStart();
         disable_audio_forward(FALSE);
 #endif

@@ -15,7 +15,7 @@ void gaiaStartNotify(void);
 //void handle_starot_gaia_msg(MessageId id, Message msg,
 //                            Source* data_source_sco, Source* data_source_mic);
 bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
-                     Source data_source_sco, Source data_source_mic);
+                     Source data_source_sco, Source data_source_mic, uint16 data_client);
 
 void gaiaClearDropAudioSize(void);
 int gaiaGetDropAudioSize(void);

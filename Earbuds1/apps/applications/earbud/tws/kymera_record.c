@@ -24,7 +24,7 @@ bool appKymeraRecordIsRun(void)
 static void appKymeraCreateRecordChain(uint32 rate)
 {
     kymeraTaskData *theKymera = appGetKymera();
-    Source mic;
+    Source mic, mic2;
     kymera_chain_handle_t chain;
 
     /* Create chain */
@@ -34,7 +34,7 @@ static void appKymeraCreateRecordChain(uint32 rate)
 
 #if 1
     /* Get microphone sources */
-    appKymeraMicSetup(appConfigScoMic1(), &mic, appConfigScoMic2(), NULL, rate);
+    appKymeraMicSetup(appConfigScoMic1(), &mic, appConfigScoMic2(), &mic2, rate);
 #else
     /* Configure the DAC channel */
     mic = StreamAudioSource(appConfigLeftAudioHardware(), appConfigLeftAudioInstance(), appConfigLeftAudioChannel());
@@ -111,6 +111,8 @@ void appKymeraRecordStop(void)
             theKymera->chain_record_handle = NULL;
             theKymera->mic_params[0].gain = appConfigMic0Gain();
             theKymera->mic_params[1].gain = appConfigMic0Gain();
+            appConfigScoMic1() = 0;
+            appConfigScoMic2() = 1;
         }
         break;
     }
