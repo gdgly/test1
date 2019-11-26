@@ -798,7 +798,9 @@ bool appConfigBleGetAdvertisingRate(appConfigBleAdvertisingMode rate, uint16 *mi
 #include "tws/public.h"
 
 /// todo hjs 默认在盒子中
+#ifndef TWS_DEBUG
 #define DISABLE_IN_CASE_PHY_STATE
+#endif
 
 #define DISABLE_TWS_PLUS
 #endif

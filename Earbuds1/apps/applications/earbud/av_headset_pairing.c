@@ -444,7 +444,7 @@ static void appPairingEnterHandsetSdpSearchAuthenticated(pairingTaskData *thePai
 */
 static void appPairingSetState(pairingTaskData *thePairing, pairingState state)
 {
-    DEBUG_LOGF("appPairSetState(%d)", state);
+    DEBUG_LOGF("appPairSetState(%d) before state is :%d", state, thePairing->state);
 
     switch (thePairing->state)
     {
@@ -597,8 +597,12 @@ static void appPairingHandsetComplete(pairingTaskData *thePairing, pairingStatus
         else
             BdaddrSetZero(&message->handset_bd_addr);
         message->status = status;
+#ifndef TWS_DEBUG
+        MessageSend(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message);
+#else        
 //        MessageSend(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message);
-        MessageSendLater(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message, D_SEC(2));
+       MessageSendLater(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message, D_SEC(5));
+#endif
 
     }
 
@@ -636,6 +640,11 @@ static void appPairingHandsetUpdate(bdaddr* handset_addr, uint16 tws_version, ui
     attributes.type = DEVICE_TYPE_HANDSET;
     attributes.tws_version = tws_version;
     attributes.flags |= flags | DEVICE_FLAGS_JUST_PAIRED;
+#ifdef TWS_DEBUG
+    attributes.supported_profiles |= DEVICE_PROFILE_HFP;
+    attributes.supported_profiles |= DEVICE_PROFILE_A2DP;
+    attributes.supported_profiles |= DEVICE_PROFILE_AVRCP;
+#endif
     appDeviceSetAttributes(handset_addr, &attributes);
 }
 

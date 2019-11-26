@@ -343,7 +343,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appSubUISetMicbias(TRUE);
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
         /// todo hjs 暂时不启用自动配对
+#ifndef TWS_DEBUG
         MessageSendLater(task, APP_INTERNAL_HANDSET_PAIR, NULL, 500);  // 启动广播(没有手机连接时)
+#endif
         break;
     case APP_INTERNAL_HANDSET_PAIR:
         if(ConnectionTrustedDeviceListSize() > 0)
