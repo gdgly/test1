@@ -600,8 +600,9 @@ static void appPairingHandsetComplete(pairingTaskData *thePairing, pairingStatus
 #ifndef TWS_DEBUG
         MessageSend(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message);
 #else        
-//        MessageSend(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message);
-       MessageSendLater(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message, D_SEC(5));
+        MessageSend(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message);
+        /// 只能延缓，不是治疗
+//       MessageSendLater(thePairing->client_task, PAIRING_HANDSET_PAIR_CFM, message, D_SEC(5));
 #endif
 
     }

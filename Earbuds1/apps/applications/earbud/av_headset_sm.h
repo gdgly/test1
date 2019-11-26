@@ -154,6 +154,8 @@ typedef enum sm_application_states
 /*! \brief Return TRUE if the state is in the case */
 #define appSmStateInCase(state) (0 != ((state) & APP_STATE_IN_CASE))
 
+
+
 /*! \brief Return TRUE if the state is out of case 
     \note this means in one of the "out of case" states, and does not
     include "in ear".

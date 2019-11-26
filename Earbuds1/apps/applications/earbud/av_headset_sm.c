@@ -748,7 +748,8 @@ void appSetState(appState new_state)
     }
 
     /* if entering the APP_STATE_IN_CASE parent state */
-    if (!appSmStateInCase(previous_state) && appSmStateInCase(new_state))
+//    if (!appSmStateInCase(previous_state) && appSmStateInCase(new_state))
+    if (((APP_STATE_HANDSET_PAIRING & previous_state) == 0) && !appSmStateInCase(previous_state) && appSmStateInCase(new_state))
         appEnterInCase();
 
     /* if entering the APP_STATE_OUT_OF_CASE parent state */

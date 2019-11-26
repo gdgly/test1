@@ -769,13 +769,21 @@ void appUiChargerComplete(void)
     MessageSendLater(&appGetUi()->task, APP_CHARGE_STATUS, 0, 500);
 }
 
+static bool deviceRealInCase = TRUE;
+
+bool  appUIDeviceRealInCase(void) {
+    return deviceRealInCase;
+}
+
 void appUIBudsPosition(int type) {
     DEBUG_LOG("call appUIBudsPosition type is :%d", type);
     phyStateTaskData* phy_state = appGetPhyState();
     if (1 == type) {
         MessageSend(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL);
+        deviceRealInCase = TRUE;
     } else if (2 == type) {
         MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
+        deviceRealInCase = FALSE;
     }
 }
 

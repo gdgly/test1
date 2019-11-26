@@ -133,5 +133,6 @@ void appUICaseEvent(int type);
 ///////////////////////////////////////////////////////////////////////////////
 uint8 appUIGetPowerCaseState(void);
 
+bool appUIDeviceRealInCase(void);
 
 #endif // SUB_UI_H

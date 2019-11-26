@@ -159,6 +159,7 @@ DEFINE_RULE(ruleSelectMicrophone);
 DEFINE_RULE(ruleScoForwardingControl);
 
 DEFINE_RULE(ruleBothConnectedDisconnect);
+DEFINE_RULE(ruleRealInCaseDisconnect);
 
 DEFINE_RULE(rulePairingConnectTwsPlusA2dp);
 DEFINE_RULE(rulePairingConnectTwsPlusHfp);
@@ -209,6 +210,14 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_HANDSET_A2DP_CONNECTED,     ruleBothConnectedDisconnect,CONN_RULES_DISCONNECT_HANDSET),
     RULE(RULE_EVENT_HANDSET_AVRCP_CONNECTED,    ruleBothConnectedDisconnect,CONN_RULES_DISCONNECT_HANDSET),
     RULE(RULE_EVENT_HANDSET_HFP_CONNECTED,      ruleBothConnectedDisconnect,CONN_RULES_DISCONNECT_HANDSET),
+
+#ifdef TWS_DEBUG
+    /// 如果真实的在盒子中，连上了，也要马上断开; todo 考虑影响范围
+    // 如果auth完了，但是没有连接上，此时的异常的处理
+    RULE(RULE_EVENT_HANDSET_A2DP_CONNECTED,     ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
+    RULE(RULE_EVENT_HANDSET_AVRCP_CONNECTED,    ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
+    RULE(RULE_EVENT_HANDSET_HFP_CONNECTED,      ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
+#endif
     /*! \} */
 
     /*! \{
@@ -252,7 +261,7 @@ ruleEntry appConnRules[] =
         Rules that are run on physical state changes */
     RULE(RULE_EVENT_OUT_CASE,                   rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseAllowHandsetConnect,   CONN_RULES_ALLOW_HANDSET_CONNECT),
-    RULE(RULE_EVENT_OUT_CASE,                   ruleAutoHandsetPair,                CONN_RULES_HANDSET_PAIR),
+//    RULE(RULE_EVENT_OUT_CASE,                   ruleAutoHandsetPair,                CONN_RULES_HANDSET_PAIR),
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseConnectPeer,           CONN_RULES_CONNECT_PEER),
     RULE_WITH_FLAGS(RULE_EVENT_OUT_CASE,        ruleOutOfCaseConnectHandset,        CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseAncTuning,             CONN_RULES_ANC_TUNING_STOP),
@@ -1709,6 +1718,14 @@ static ruleAction rulePairingConnectTwsPlusHfp(void)
     uint8 profiles = DEVICE_PROFILE_HFP;
     RULE_LOG("rulePairingConnectTwsPlusA2dp, connect HFP");
     return RULE_ACTION_RUN_PARAM(profiles);
+}
+
+static ruleAction ruleRealInCaseDisconnect(void) {
+    bool realInCase = appUIDeviceRealInCase();
+    if (TRUE == realInCase) {
+        return RULE_ACTION_RUN;
+    }
+    return RULE_ACTION_IGNORE;
 }
 
 /*! @brief Rule to decide if one Earbud should disconnect from handset, if both connected.
