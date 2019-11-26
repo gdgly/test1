@@ -134,6 +134,8 @@
     <file path="../../chains/chain_forwarding_input_aptx_right.chain"/>
     <file path="../../chains/chain_forwarding_input_sbc_left.chain"/>
     <file path="../../chains/chain_forwarding_input_sbc_right.chain"/>
+    <file path="../../chains/chain_micfwd1_wb.chain"/>
+    <file path="../../chains/chain_micfwd2_wb.chain"/>
     <file path="../../chains/chain_micfwd_nb.chain"/>
     <file path="../../chains/chain_micfwd_nb_2mic.chain"/>
     <file path="../../chains/chain_micfwd_send.chain"/>
