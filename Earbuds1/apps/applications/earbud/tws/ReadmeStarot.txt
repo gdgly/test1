@@ -1,22 +1,35 @@
 
+20191121
+单MIC及双MIC的使用
+uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
+1、经典蓝牙正常通话时， 使用双MIC                                       g_appConfigSocMic1 = 0,      g_appConfigSocMic2 = 1
+2、BLE录音助手时，      使用单MIC, 选择主MIC                            g_appConfigSocMic1 = 0,      g_appConfigSocMic2 = NO_MIC
+3、经典蓝牙生产测试时， 使用单MIC，选择主MIC                            g_appConfigSocMic1 = 0,      g_appConfigSocMic2 = NO_MIC
+                        使用单MIC，选择副MIC                            g_appConfigSocMic1 = NO_MIC, g_appConfigSocMic2 = 1
+4、USB传输生产测试时，  使用单MIC，选择主MIC                            g_appConfigSocMic1 = 0,      g_appConfigSocMic2 = NO_MIC
+                        使用单MIC，选择副MIC                            g_appConfigSocMic1 = NO_MIC, g_appConfigSocMic2 = 1
 
-
-
+20191104
+  ConnectionEnterDutMode();
 
 
 
 20191015
   升级命令格式，主要就是命令GAIA_COMMAND_VM_UPGRADE_CONTROL(0x642) + 字命令（1byte UPGRADE_HOST_XXX）
-  UPGRADE_HOST_SYNC + 长度(2Byte) + progID（4Byte)
+  UPGRADE_HOST_SYNC(state=1) + 长度(2Byte) + progID（4Byte)
   -->000a0642    13 0004 a0a51c09
   <--000a4003 12 14 0006 00 a0a51c09 03        进入UPGRADE_STATE_READY
-  UPGRADE_HOST_START_REQ
+  UPGRADE_HOST_START_REQ(state=2)
   -->000a0642    01 0000
   <--000a4003 12 020003 000666                 进入UPGRADE_STATE_DATA_READY
-  UPGRADE_HOST_START_DATA_REQ
+  UPGRADE_HOST_START_DATA_REQ(state=6)
   -->000a0642    15 0000
-    注意接收到这条命令，会准备并擦除分区，是需要时间的，分区不正确会导致系统重启(PANIC 0xb6 4108 (PANIC_P0_PANICKED)。
-    擦除成功会获取底层 MESSAGE_IMAGE_UPGRADE_ERASE_STATUS 消息。
+    0.注意接收到这条命令，会准备并擦除分区，是需要时间的，分区不正确会导致系统重启(PANIC 0xb6 4108 (PANIC_P0_PANICKED)。
+      擦除成功会获取底层 MESSAGE_IMAGE_UPGRADE_ERASE_STATUS 消息。
+      UpgradePartitionDataInit-->UpgradePartitionDataRequestData 设置了需要块数据的大小
+    1.UpgradeSendStartUpgradeDataInd 会向上层升级处发送UPGRADE_START_DATA_IND appUpgradeMessageHandler
+    2.系统会接收到底层发送过来的 Flash擦除完成消息 MESSAGE_IMAGE_UPGRADE_ERASE_STATUS appUpgradeMessageHandler,
+    3.进入UpgradeSMEraseStatus, 设置需要接收的数据位置及大小
   <--            03 0008 size offset           进入UPGRADE_STATE_DATA_TRANSFER
   UPGRADE_HOST_DATA
   -->000a0642    04                            写数据，再次

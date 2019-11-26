@@ -204,6 +204,7 @@
     <file path="../../tws/param.h"/>
     <file path="../../tws/peer.c"/>
     <file path="../../tws/peer.h"/>
+    <file path="../../tws/productcmd.c"/>
     <file path="../../tws/public.h"/>
     <file path="../../tws/sub_ui.c"/>
     <file path="../../tws/sub_ui.h"/>
