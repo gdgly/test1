@@ -51,8 +51,13 @@ const appKymeraScoChainInfo appKymeraScoChainTable[] =
   { SCO_WB,   TRUE,   FALSE,  FALSE,    &chain_scofwd_wb2_config,      16000 },
 #endif
   { SCO_NB,   TRUE,   TRUE,   FALSE,    &chain_micfwd_nb_config,       8000 },
-  { SCO_WB,   TRUE,   TRUE,   FALSE,    &chain_micfwd_wb_config,      16000 },
-
+#if (FORWARD_AUDIO_TYPE == (FORWARD_AUDIO_SCO | FORWARD_AUDIO_MIC))
+  { SCO_WB,	TRUE,	TRUE,	FALSE,	  &chain_micfwd_wb_config,		16000 },
+#elif (FORWARD_AUDIO_TYPE == FORWARD_AUDIO_SCO)
+  { SCO_WB,	TRUE,	TRUE,	FALSE,	  &chain_micfwd1_wb_config,		16000 },
+#elif (FORWARD_AUDIO_TYPE == FORWARD_AUDIO_MIC)
+  { SCO_WB,	TRUE,	TRUE,	FALSE,	  &chain_micfwd2_wb_config,		16000 },
+#endif
   { SCO_NB,   FALSE,  FALSE,  TRUE,     &chain_sco_nb_2mic_config,     8000 },
   { SCO_WB,   FALSE,  FALSE,  TRUE,     &chain_sco_wb_2mic_config,    16000 },
 /*  { SCO_SWB,  FALSE,  FALSE,  TRUE,     &chain_sco_swb_2mic_config,   32000 },*/
