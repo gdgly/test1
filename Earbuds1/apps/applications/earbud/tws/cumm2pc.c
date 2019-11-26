@@ -42,7 +42,8 @@ extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
 extern void disable_audio_forward(bool disable);
 
-static void CommuForwardSetDataTime(void)
+/* 延时赋值数据消息转发方向 */
+static void CommuForwardSetDataClient(void)
 {
     forwardSetDataClient(DATA_CLIENT_COMMUPC);
 }
@@ -152,9 +153,9 @@ static void CummuHandler(Task task, MessageId id, Message message)
 
                 CummuhandleSendData(task, (uint8*)"checkresp DEVICEINFO", 21);
             }
-            if(strstr((char *)payload, "check ACCEPT")){
-                MessageSendLater(task, COMMU_INTERVAL_TIMER, NULL, 0);
-            }
+//            if(strstr((char *)payload, "check ACCEPT")){
+//                MessageSendLater(task, COMMU_INTERVAL_TIMER, NULL, 0);
+//            }
             if(strstr((char *)payload, "check STARTRECORD0")){
                 g_appConfigSocMic1 = 0;
                 g_appConfigSocMic2 = NO_MIC;
@@ -194,15 +195,17 @@ static void CummuHandler(Task task, MessageId id, Message message)
             outsize = CummuCheckAllItem(pComu, outbuf, sizeof(outbuf));
             if(outsize > 0){
                 CummuhandleSendData(task, (uint8 *)outbuf, outsize);
-                MessageSendLater(task, COMMU_INTERVAL_TIMER, NULL, 0);
+                MessageSendLater(task, COMMU_INTERVAL_TIMER, NULL, 10);
             }
             if(pComu->type < TYPE_LAST)
                 pComu->type  += 1;
+            if(pComu->type == TYPE_LAST)
+                CummuhandleSendData(task, (uint8*)"check ENDCHECK", 15);
             break;
 
         case COMMU_INTERVAL_RECORD:
             outsize = 0;
-            CommuForwardSetDataTime();
+            CommuForwardSetDataClient();
             break;
 
         case GAIA_STAROT_COMMAND_IND:
