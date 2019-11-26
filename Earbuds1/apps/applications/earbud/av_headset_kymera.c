@@ -312,6 +312,7 @@ bool appKymeraScoStart(Sink audio_sink, appKymeraScoMode mode, bool *allow_scofw
     
     if (info)
     {
+        DEBUG_LOGF("appKymeraScoStart: selected chain: %d", info - appKymeraScoChainTable);
         DEBUG_LOGF("appKymeraScoStart, queue sink 0x%x", audio_sink);
         *allow_scofwd = info->sco_fwd;
         *allow_micfwd = info->mic_fwd;
