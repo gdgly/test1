@@ -476,7 +476,7 @@ int CDeviceCtrl::SetAllParam(int bCloseEng)
 	CString sText;
 
 	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_OPEN_ENGINE, (LPARAM)0);	
-	if (m_devHandle <= 1) {
+	if (m_devHandle == 0) {
 		if (OpenEngine() < 0) {
 			TRACE("Error openTestEngine\n");
 			ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
@@ -560,7 +560,7 @@ int CDeviceCtrl::SetFixParam(int bCloseEng)
 	int ret = 0;
 	char *msgbuf;  uint16 datalen16;
 
-	if (m_devHandle <= 1) {
+	if (m_devHandle == 1) {
 		if (OpenEngine() < 0) {
 			TRACE("Error openTestEngine\n");
 			ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
@@ -661,7 +661,7 @@ int CDeviceCtrl::CheckDevice(int bCloseEng)
 	
 	m_curTick = ::GetTickCount();
 	m_checkStatus = 0;
-	if (m_devHandle <= 1) {
+	if (m_devHandle == 1) {
 		if (OpenEngine() < 0) {
 			MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_OPEN_ENGINE, (LPARAM)0);
 			return -1;
