@@ -95,6 +95,7 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_RECORD, &CProductDevToolsDlg::OnBnClickedBtnRecord)
 	ON_BN_CLICKED(IDC_BTN_CRITRIM, &CProductDevToolsDlg::OnBnClickedBtnCritrim)
 	ON_BN_CLICKED(IDC_BTN_RECORD_1, &CProductDevToolsDlg::OnBnClickedBtnRecord1)
+	ON_BN_CLICKED(IDC_BTN_CLEAR, &CProductDevToolsDlg::OnBnClickedBtnClear)
 END_MESSAGE_MAP()
 
 
@@ -832,6 +833,11 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 		OnReportCheck(sText, count);
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 		break;
+
+	case REPORT_END_ALL:
+		sText.Format("result=%d", (int)lParam);
+		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
+		break;
 	}
 
 	m_ListCtrl.EnsureVisible(count, FALSE);
@@ -840,7 +846,7 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 }
 
 CString _sCheckString[] = { "DEVICEINFO", "VERSION", "BTADDR", "BTNAM",
-	"LIS25", "EM20168","LIS2WD12", "MAX20340", "APOLLO",
+	"LIS25", "EM20168","LIS2DW12", "MAX20340", "APOLLO",
 	"",
 };
 
@@ -927,3 +933,9 @@ void CProductDevToolsDlg::OnBnClickedBtnReset()
 }
 
 
+
+
+void CProductDevToolsDlg::OnBnClickedBtnClear()
+{
+	m_ListCtrl.DeleteAllItems();
+}

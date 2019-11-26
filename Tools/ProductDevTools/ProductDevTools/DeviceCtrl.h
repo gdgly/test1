@@ -65,6 +65,7 @@ enum {
 	REPORT_READ_RECORD,
 
 	REPORT_USER_EXIT,
+	REPORT_END_ALL,
 	REPORT_LAST,
 };
 
@@ -134,10 +135,10 @@ private:
 
 	int Burning(void);
 	int BurningApollo(void);
-	int Recording(int mic, int sec = 5);
-	int SetAllParam(void);
-	int SetFixParam(void);
-	int CheckDevice(void);
+	int Recording(int mic, int sec = 5, int bCloseEng = 0);
+	int SetAllParam(int bCloseEng = 0);
+	int SetFixParam(int bCloseEng = 0);
+	int CheckDevice(int bCloseEng = 0);
 
 	int CrystalTrimming(int value);
 

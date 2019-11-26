@@ -130,6 +130,7 @@ static CString _sReport[] = {
 	"REPORT_READ_RECORD",
 
 	"REPORT_USER_EXIT",
+	"REPORT_END_ALL",
 	"REPORT_LAST",
 };
 
@@ -191,7 +192,8 @@ int CDeviceCtrl::RuningProc(void)
 	}
 
 	if ((m_iThreadFunc & THREAD_BURN_APO)) {
-		BurningApollo();
+		if ((ret = BurningApollo()) < 0)
+			goto out;
 		if (m_bExit == TRUE) goto out;
 	}
 
@@ -215,12 +217,15 @@ int CDeviceCtrl::RuningProc(void)
 	}
 
 	if ((m_iThreadFunc & THREAD_RECORD_0)) {
-		Recording(0);
+		if ((ret = Recording(0)) < 0)
+			goto out;
 		if (m_bExit == TRUE) goto out;
 	}
 
 	if ((m_iThreadFunc & THREAD_RECORD_1)) {
-		Recording(1);
+		if ((ret = Recording(1)) < 0)
+			goto out;
+
 		if (m_bExit == TRUE) goto out;
 	}
 
@@ -235,6 +240,8 @@ out:
 
 	if (m_bExit == TRUE)
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_USER_EXIT, (LPARAM)0);
+	
+	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_END_ALL, (LPARAM)ret);
 
 	return 0;
 }
@@ -424,7 +431,7 @@ out:
 
 int CDeviceCtrl::BurningApollo(void)
 {
-	int rdlen;
+	int ret = 0, rdlen;
 	char sText[256], *msgbuf;
 	CString sCommand, sTmp;
 	CExecProcess  *execProg = new CExecProcess();
@@ -458,20 +465,22 @@ int CDeviceCtrl::BurningApollo(void)
 
 	delete execProg;
 
-	return 0;
+	return ret;
 }
 
 
-int CDeviceCtrl::SetAllParam(void)
+int CDeviceCtrl::SetAllParam(int bCloseEng)
 {
 	char *msgbuf;  uint32 datalen;
-	int status, ret;
+	int status, ret = 0;
 	CString sText;
 
 	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_OPEN_ENGINE, (LPARAM)0);	
-	if (OpenEngine() < 0) {
-		TRACE("Error openTestEngine\n");
-		ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
+	if (m_devHandle <= 1) {
+		if (OpenEngine() < 0) {
+			TRACE("Error openTestEngine\n");
+			ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
+		}
 	}
 
 	//  注意需要 D:\QCC512X\BlueSuite 3.2.2
@@ -534,16 +543,19 @@ int CDeviceCtrl::SetAllParam(void)
 	if (status != TE_OK) {
 		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_CACHE, status, -6);
 	}
+
 	TRACE("LINE:%d ret=%d\n", __LINE__, ret);
+	ret = 0;
 
 out:
-	CloseEngine();
+	if(bCloseEng)
+		CloseEngine();
 
 	return ret;
 }
 
 // 没有调用 CloseEngine，可以最后一次性调用
-int CDeviceCtrl::SetFixParam(void)
+int CDeviceCtrl::SetFixParam(int bCloseEng)
 {
 	int ret = 0;
 	char *msgbuf;  uint16 datalen16;
@@ -571,6 +583,8 @@ int CDeviceCtrl::SetFixParam(void)
 	}
 	else
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRITE_FIXPARAM, (LPARAM)0);
+
+	ret = 0;
 
 out:
 	return ret;
@@ -601,7 +615,7 @@ out:
 //   <----- check LIS25 PASS/FAIL
 //   <----- check DM430 PASS/FAIL
 //   <----- check BTADDR xx:xx
-//
+//   <----- check ENDCHECK        结束
 enum {
 	CHECK_ST_INFO, CHECK_ST_INFO_WAIT,             // check deviceinfo
 
@@ -636,42 +650,61 @@ int CDeviceCtrl::teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp)
 	return 0;
 }
 
-int CDeviceCtrl::CheckDevice(void)
+int CDeviceCtrl::CheckDevice(int bCloseEng)
 {
-	int ret,conneted = 0;
+	int ret = -11, successEnd = 0;
 	CString sText;
 	UINT16 *cmdbuf, cmdlen;
 	uint8 channel;
 	UINT16 *rdbuf, rdlen;
-	INT32 g_rdCount = 0, tickStart = 0;
-
+	INT32 g_rdCount = 0;
+	
+	m_curTick = ::GetTickCount();
 	m_checkStatus = 0;
-	if (OpenEngine() < 0) {
-		MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_OPEN_ENGINE, (LPARAM)0);
-		return -1;
+	if (m_devHandle <= 1) {
+		if (OpenEngine() < 0) {
+			MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_OPEN_ENGINE, (LPARAM)0);
+			return -1;
+		}
 	}
 	
 	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_OPEN, (LPARAM)0);
+	m_curTick = ::GetTickCount();
 	while (1) {
 		if (m_bExit) break;
+
 		switch (m_checkStatus) {
 		case CHECK_ST_INFO:
 			cmdbuf = (UINT16*)GetMsgBuffer();
 			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check DEVICEINFO");
 			if(0 == teWriteAndRead(cmdbuf, cmdlen, "checkresp DEVICEINFO")) {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
+				m_checkStatus = CHECK_ST_INFO_WAIT;
+				m_curTick = ::GetTickCount();
 			}
 			else {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_COMMU_FAIL, (LPARAM)cmdbuf);
 				TRACE("ERROR Send Cmd\n");
+				Sleep(1000);
 				break;
 			}
-			tickStart = ::GetTickCount();
 			break;
+
 		case CHECK_ST_INFO_WAIT:
 			rdbuf = (UINT16*)GetMsgBuffer();
 			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN/2, &rdlen, 500);
 			if (ret == TE_OK) {
+				m_curTick = ::GetTickCount();
+
+				if (strstr((char*)rdbuf, "check ENDCHECK")) {   // 结束
+					successEnd = 1;
+					break;
+				}
+
+				TRACE("CHECK %d:%s\n", rdlen, rdbuf);
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_READ, (LPARAM)rdbuf);
+
+#if 0
 				if (strstr((char*)rdbuf, "check") == NULL) {    // 速度测试，一返一回的情况下，可以达到80K BYTE
 					static UINT16 g_rdNo = 0;
 
@@ -683,7 +716,7 @@ int CDeviceCtrl::CheckDevice(void)
 					}
 
 					TRACE("g_rdNo=0x%x REcv[%d]%d Cnt=0x%x Start: 0x%04x (%d)\n", g_rdNo,
-						(::GetTickCount()- tickStart)/1000,rdlen, g_rdCount, rdbuf[0], rdbuf[0]);
+						(::GetTickCount()- m_curTick)/1000,rdlen, g_rdCount, rdbuf[0], rdbuf[0]);
 					g_rdCount += rdlen * 2;
 					for (int i = 0; i < rdlen; i++) {
 						if (rdbuf[i] == g_rdNo)
@@ -698,10 +731,7 @@ int CDeviceCtrl::CheckDevice(void)
 					cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check ACCEPT");
 					teAppWrite(m_devHandle, 0, cmdbuf, cmdlen / 2);
 				}
-				else
-				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_READ, (LPARAM)rdbuf);
-
-				conneted = 1;
+#endif
 			}
 			break;
 
@@ -710,43 +740,45 @@ int CDeviceCtrl::CheckDevice(void)
 
 		}
 
-		if (m_checkStatus % 2 == 0) {
-			m_curTick = ::GetTickCount();
-			m_checkStatus += 1;
+		if (successEnd) {     // 检测结束
+			ret = 0;
+			break;
 		}
-		else {
-			if ((::GetTickCount() - m_curTick) > (5 * 1000) && (conneted == 0)) {
-				m_checkStatus -= 1;
-				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, RERROT_COMMU_TIMEOUT, (LPARAM)0);
-				TRACE("Time out\n");
-			}
+
+		// 长时间出错
+		if ((::GetTickCount() - m_curTick) > (5 * 1000)){
+			MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, RERROT_COMMU_TIMEOUT, (LPARAM)0);
+			TRACE("Time out\n");
+			ret = -110;
+			break;
 		}
+		Sleep(1);
 	}
 
+	if (bCloseEng)
+		CloseEngine();
 
-	return 0;
+	return ret;
 }
 
-int CDeviceCtrl::Recording(int mic, int sec)
+int CDeviceCtrl::Recording(int mic, int sec, int bCloseEng)
 {
-	int ret, opened = 0;
+	int ret = -2, successEnd = 0;
 	unsigned char channel;
 	UINT16 *cmdbuf, cmdlen;
 	UINT16 *rdbuf, rdlen;
-	UINT32 tickStart = ::GetTickCount(), datacnt = 0;
+	UINT32 datacnt = 0;
 
 	// OPened
 	if (m_devHandle == 0) {
 		if (OpenEngine() < 0) {
 			return -1;
 		}
-
-		opened = 1;
 	}
 
 	TRACE("LINE:%d\n", __LINE__);
 	m_checkStatus = CHECK_ST_RECSTART;
-	tickStart = ::GetTickCount();
+	m_curTick = ::GetTickCount();
 	while (1) {
 		if (m_bExit) break;
 
@@ -757,16 +789,14 @@ int CDeviceCtrl::Recording(int mic, int sec)
 			if(teWriteAndRead(cmdbuf, cmdlen, "checkresp STARTRECORD") == 0) {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
 				m_checkStatus = CHECK_ST_RECDAT;
-				tickStart = ::GetTickCount();
+				m_curTick = ::GetTickCount();
 				datacnt = 0;
-
-
 				DeleteFile("Recv.g722");
 			}
 			else {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_COMMU_FAIL, (LPARAM)cmdbuf);
 				TRACE("ERROR Send Cmd\n");
-				Sleep(200);
+				Sleep(1000);
 				break;
 			}
 			break;
@@ -787,8 +817,8 @@ int CDeviceCtrl::Recording(int mic, int sec)
 					cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check RECVREC");
 					teAppWrite(m_devHandle, 0, cmdbuf, cmdlen / 2);
 
-					TRACE("Recv Audio:%d/%d %s\n", rdlen*2, datacnt,(char*)rdbuf);
-					tickStart = ::GetTickCount();
+				//	TRACE("Recv Audio:%d/%d %s\n", rdlen*2, datacnt,(char*)rdbuf);
+					m_curTick = ::GetTickCount();
 					MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_RECORD, (LPARAM)datacnt);
 
 					if(datacnt >= (UINT32)(2000* sec))
@@ -806,7 +836,7 @@ int CDeviceCtrl::Recording(int mic, int sec)
 			if (teWriteAndRead(cmdbuf, cmdlen, "checkresp STOPRECORD") == 0) {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
 				m_checkStatus = CHECK_ST_RECFIN;
-				tickStart = ::GetTickCount();
+				m_curTick = ::GetTickCount();
 			}
 			else {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_COMMU_FAIL, (LPARAM)cmdbuf);
@@ -816,22 +846,28 @@ int CDeviceCtrl::Recording(int mic, int sec)
 			}
 			break;
 		case CHECK_ST_RECFIN:
-			tickStart = 0;       // Finish, end for next break
+			successEnd = 1;       // Finish, end for next break
 			break;
 		default:
 			break;
-
 		}
 
-		if (::GetTickCount() - tickStart > 5 * 1000)      // N秒接收不到数据退出
+		if (1 == successEnd) {
+			ret = 0;
 			break;
+		}
+
+		if (::GetTickCount() - m_curTick > 5 * 1000) {      // N秒接收不到数据退出
+			ret = -2;
+			break;
+		}
 	}
 
 	// Close
-	if (opened)
+	if (bCloseEng)
 		CloseEngine();
 
-	return 0;
+	return ret;
 }
 
 double ReadFreqOffsetHz(int value)
