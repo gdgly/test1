@@ -560,7 +560,7 @@ int CDeviceCtrl::SetFixParam(int bCloseEng)
 	int ret = 0;
 	char *msgbuf;  uint16 datalen16;
 
-	if (m_devHandle == 1) {
+	if (m_devHandle == 0) {
 		if (OpenEngine() < 0) {
 			TRACE("Error openTestEngine\n");
 			ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
@@ -592,11 +592,14 @@ out:
 
 int CDeviceCtrl::PsWrite(int psKey, void *buffer, int buflen)
 {
-	int ret = 0;
+	int ret = 0, opened = 0;
 
-	if (OpenEngine() < 0) {
-		TRACE("Error openTestEngine\n");
-		ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
+	if (m_devHandle == 0) {
+		if (OpenEngine() < 0) {
+			TRACE("Error openTestEngine\n");
+			ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
+		}
+		opened = 1;
 	}
 
 	ret = tePsWrite(m_devHandle, psKey, (buflen + 1) / 2, (uint16*)buffer);
@@ -606,7 +609,8 @@ int CDeviceCtrl::PsWrite(int psKey, void *buffer, int buflen)
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRITE_FIXPARAM, (LPARAM)0);
 
 out:
-	CloseEngine();
+	if(opened)
+		CloseEngine();
 	return ret;
 }
 
@@ -661,7 +665,7 @@ int CDeviceCtrl::CheckDevice(int bCloseEng)
 	
 	m_curTick = ::GetTickCount();
 	m_checkStatus = 0;
-	if (m_devHandle == 1) {
+	if (m_devHandle == 0) {
 		if (OpenEngine() < 0) {
 			MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_OPEN_ENGINE, (LPARAM)0);
 			return -1;
@@ -1012,7 +1016,7 @@ int CDeviceCtrl::CrystalTrimming(int value)
 		else	{
 			// write updated XTAL Load Cap value
 			char xtalCapWriteValue[KEY_WRITE_BUFFER_LEN];
-			snprintf(xtalCapWriteValue, KEY_WRITE_BUFFER_LEN, "%d",		xtalLoadCap);
+			_snprintf_s(xtalCapWriteValue, KEY_WRITE_BUFFER_LEN, "%d",		xtalLoadCap);
 			success = teConfigCacheWriteItem(handle,"curator15:XtalLoadCapacitance", xtalCapWriteValue);
 		}
 
@@ -1022,7 +1026,7 @@ int CDeviceCtrl::CrystalTrimming(int value)
 		else	{
 			// Write updated XTAL trim value
 			char xtalTrimWriteValue[KEY_WRITE_BUFFER_LEN];
-			snprintf(xtalTrimWriteValue, KEY_WRITE_BUFFER_LEN, "%d", xtalTrim);
+			_snprintf_s(xtalTrimWriteValue, KEY_WRITE_BUFFER_LEN, "%d", xtalTrim);
 			success = teConfigCacheWriteItem(handle,"curator15:XtalFreqTrim", xtalTrimWriteValue);
 		}
 
