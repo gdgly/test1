@@ -574,6 +574,8 @@ void appUiHfpCallOutcomingActive(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
+    progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
+
     progRun->dial_stat  &= ~DIAL_ST_INACT;
     progRun->dial_stat  |= DIAL_ST_OUT;
 
