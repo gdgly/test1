@@ -436,7 +436,9 @@ int CDeviceCtrl::BurningApollo(void)
 	CString sCommand, sTmp;
 	CExecProcess  *execProg = new CExecProcess();
 
-	sCommand.Format("%s -CommanderScript burnApollo.bat", m_iniParam.sJlinkPath);
+	//sCommand.Format("%s -CommanderScript burnApollo.bat", m_iniParam.sJlinkPath);
+	sCommand.Format("%s -CommanderScript ", m_iniParam.sJlinkPath);
+	sCommand = sCommand + m_iniParam.apollo_burn_bat;
 
 	execProg->Create(CExecProcess::ASYNC);
 	execProg->Execute(sCommand);
@@ -450,7 +452,7 @@ int CDeviceCtrl::BurningApollo(void)
 			if (sTmp.Find("SEGGER J-Link ") >= 0) {  // SEGGER J-Link Commander V6.42d (Compiled Feb 15 2019 13:54:42)
 				msgbuf = (char*)GetMsgBuffer();
 				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "Start J-Link Success");
-				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_APOLLO, (LPARAM)msgbuf);				
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_APOLLO, (LPARAM)msgbuf);	
 			}
 			else if (sTmp.Find("Could not open J-Link Command File") >= 0) { //  Could not open J-Link Command File 'burnApollo.bat'
 				msgbuf = (char*)GetMsgBuffer();
@@ -458,7 +460,23 @@ int CDeviceCtrl::BurningApollo(void)
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_APOLLO, (LPARAM)msgbuf);
 				break;
 			}
-			else if (sTmp.Find("SS") >= 0) {
+			else if (sTmp.Find("File is of unknown") >= 0) {//File is of unknown / supported format.
+				msgbuf = (char*)GetMsgBuffer();
+				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "unknown burn file");
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_APOLLO, (LPARAM)msgbuf);
+				break;
+			}
+			else if (sTmp.Find("Failed to open file.") >= 0) {//Failed to open file.
+				msgbuf = (char*)GetMsgBuffer();
+				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "unknown burn file");
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_APOLLO, (LPARAM)msgbuf);
+				break;
+			}
+			else if (sTmp.Find("Script processing completed.") >= 0) {//Script processing completed.
+				msgbuf = (char*)GetMsgBuffer();
+				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "Script completed");
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_APOLLO, (LPARAM)msgbuf);
+				break;
 			}
 		}
 	}

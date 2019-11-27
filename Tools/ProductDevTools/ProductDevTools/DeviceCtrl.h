@@ -89,7 +89,7 @@ typedef struct tagINIPARAM {
 	CString        hwVer, swVer;    // 硬件版本 软件版本
 
 	CString        sJlinkPath;       // APO使用JLINK烧写
-	
+	CString		apollo_burn_bat;	//APO烧写脚本路径
 }IniParam, *IniPrmPtr;
 
 enum {THREAD_NONE=0, THREAD_BURN=0x01, THREAD_BURN_APO=0x02,
@@ -125,6 +125,8 @@ public:
 	int SetHwVersion(CString sText);
 	int SetBtAddr(CString addr);       // {0x00ff09, 0x5b, 0x02}
 	void SetBtName(CString sName);
+	void SetJlinkPath(CString path) { m_iniParam.sJlinkPath = path; }	
+	void SetApolloBurnfile(CString path) { m_iniParam.apollo_burn_bat = path; }	
 private:
 	IniParam m_iniParam;
 	CString m_sFlashImage;
