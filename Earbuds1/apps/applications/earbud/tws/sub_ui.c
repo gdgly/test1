@@ -13,12 +13,14 @@
 #include "av_headset_log.h"
 #include "sub_ui.h"
 #include "av_headset_gaia_starot.h"
+#include "apollo.h"
 
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
 extern void disable_audio_forward(bool disable);
 void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
+int apolloWakeup(void);
 
 ProgRunInfo gProgRunInfo;
 uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
@@ -184,6 +186,19 @@ static void subUiStopReport2Gaia(void)
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 }
 
+static int16 subUiStartAssistant2Gaia(MessageId id, ProgRIPtr  progRun)
+{
+    if(1 != progRun->gaiaStat)
+        return -1;
+
+    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
+    (void)id;
+
+    message->command = GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START;
+    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+    return 0;
+}
+
 static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
 {
     if(1 != progRun->gaiaStat)
@@ -339,6 +354,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
 
     case INIT_CFM:
+        register_apollo_wakeup_cb(apolloWakeup);                       //注册apollo唤醒函数
+
         DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");
         appSubUISetMicbias(TRUE);
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
@@ -402,6 +419,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
     case STAROT_RECORD_STOP_STATUS_REPORT:
         subUiStopReport2Gaia();
+        break;
+    case APP_ASSISTANT_AWAKEN:
+        subUiStartAssistant2Gaia(id, progRun);
         break;
      default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
@@ -799,7 +819,8 @@ void appUIBudsPosition(int type) {
     }
 }
 
-void appUICaseEvent(int type) {
+void appUICaseEvent(int type)
+{
     DEBUG_LOG("call appUICaseEvent type is :%d", type);
     if (1 == type) {
     } else if (2 == type) {
@@ -807,8 +828,28 @@ void appUICaseEvent(int type) {
     }
 }
 
-uint8 appUIGetPowerCaseState(void) {
+uint8 appUIGetPowerCaseState(void)
+{
     return gProgRunInfo.powerCaseState;
+}
+
+/*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
+#define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
+const ringtone_note app_tone_wakeup[];
+const ringtone_note app_tone_wakeup[] =
+{
+    RINGTONE_TIMBRE(sine), RINGTONE_DECAY(16),
+    RINGTONE_NOTE(A7, SEMIQUAVER),
+    RINGTONE_NOTE(B7, SEMIQUAVER),
+    RINGTONE_NOTE(C7, SEMIQUAVER),
+    RINGTONE_STOP
+};
+
+int apolloWakeup(void)
+{
+    MessageSend(&appGetUi()->task, APP_ASSISTANT_AWAKEN, 0);
+    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
+    return 0;
 }
 
 #endif

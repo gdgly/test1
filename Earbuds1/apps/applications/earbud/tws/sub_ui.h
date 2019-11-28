@@ -24,6 +24,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_CALLOUT_INACT          (2023)           // 拨号相关信息 拨出断开
 #define APP_CALL_ACTIVE            (2024)           // 拨号相关信息 接听
 #define APP_CALL_INACTIVE          (2025)           // 拨号相关信息 断开
+#define APP_ASSISTANT_AWAKEN       (2026)           // apollo启动语音助手
 
 #define APP_INTERNAL_HANDSET_PAIR  (2090)           // 内部消息，启动广播连接手机
 

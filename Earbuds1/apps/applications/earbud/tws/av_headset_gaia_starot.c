@@ -42,6 +42,7 @@ static void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message);//上报电
 static void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message);//App主动获取电量-位置-连接状态信息
 
 static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App请求录音
+static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message);//ui上报gaia助手唤醒消息
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
 static void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message);//接受设备传过来的停止信息
 
@@ -207,6 +208,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
     }
     /// 助手52NN
     switch (message->command) {
+        case GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START:
+            gaiaAssistantAwake(message);
+            break;
         case GAIA_COMMAND_STAROT_AI_BEGIN_RECORD:
             gaiaSetRequestRecord(message, TRUE);
             break;
@@ -748,6 +752,26 @@ void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin) {
         }
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+    forwardSetDataClient(DATA_CLIENT_GAIA);
+}
+
+void gaiaAssistantAwake(GAIA_STAROT_IND_T *message)
+{
+    StarotAttr *head = NULL;
+    StarotAttr *attr = NULL;
+
+    DEBUG_LOG("gaiaDevRecordStopInfo");
+    attr = attrMalloc(&head, 1);
+    attr->attr = 0X01;
+    attr->payload[0] = 0X01;
+
+    if (NULL != head) {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, message->command, 0xfe, len, data);
+        attrFree(head, data);
+        DEBUG_LOG("call GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START");
+    }
 }
 
 void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message) {

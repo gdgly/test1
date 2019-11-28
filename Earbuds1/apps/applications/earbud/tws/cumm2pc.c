@@ -22,7 +22,7 @@
 
 #define COMMU_INTERVAL_TIMER      (2000)
 #define COMMU_INTERVAL_RECORD     (2001)
-enum { TYPE_GET_VER, TYPE_BTADDR, TYPE_LIS25, TYPE_EM20168, TYPE_LIS2DW12, TYPE_MAX20340, TYPE_APOLLO, TYPE_LAST};
+enum { TYPE_GET_VER, TYPE_BTADDR, TYPE_LIS25, TYPE_EM20168, TYPE_LIS2DW12, TYPE_MAX20340, TYPE_APOLLO, TYPE_APO_VER, TYPE_LAST};
 
 
 typedef struct tagCOMMUINFO {
@@ -38,6 +38,7 @@ void CommpcParse(GAIA_STAROT_AUDIO_IND_T *message);
 
 extern int lis25GetStatus(void);
 extern int apolloGetStatus(void);
+extern void comGetApolloVer(uint8 *arr);
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
 extern void disable_audio_forward(bool disable);
@@ -98,6 +99,11 @@ static int CummuCheckAllItem(CommuInfo *com, char *outbuf, int bufize)
             outsize = sprintf(outbuf, "check APOLLO %s",
                     (status == 0) ? "PASS" : "FAIL");
             break;
+        case TYPE_APO_VER:
+            comGetApolloVer((uint8*)ver);
+            outsize = sprintf(outbuf, "check APOLLOVERSION %02X.%02X.%02X.%02X",
+                    ver[0], ver[1], ver[2], ver[3]);
+            break;
         default:
             return 0;
     }
@@ -115,6 +121,7 @@ void CummuhandleSendData(Task task, uint8* message, uint16 messageSize)
     host_msg_size_in_words += messageSize / sizeof(uint16) + messageSize % sizeof(uint16);
     /* Transfer the message payload to a new Host Comms message and pass toHostSendMessage. */
     byte_data = PanicUnlessMalloc(host_msg_size_in_words * sizeof(uint16));
+    memset(byte_data, 0, host_msg_size_in_words * sizeof(uint16));
     word_data = (uint16 *)byte_data;
     word_data[HOST_COMMS_SIZE_OFFSET_WORD] = host_msg_size_in_words;
     word_data[HOST_COMMS_CHANNEL_OFFSET_WORD] = 0;

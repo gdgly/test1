@@ -80,6 +80,8 @@ static int io_init_timeout_times = 0;
 static int io_init_times = 0;
 static int upgrade_times = 0;
 
+void comGetApolloVer(uint8 *arr);
+
 /*
  * APIs
  */
@@ -152,9 +154,14 @@ void apollo_reset(void) {
     MessageSend(apolloTask, APOLLO_CMD_RESET, message);
 }
 
+/*Return 0 for Apollo startup success*/
 int apolloGetStatus(void) {
-    return ((apollo_state == APOLLO_STATE_IDLE)
-            || (apollo_state == APOLLO_STATE_ERR));
+    return !(apollo_state > APOLLO_STATE_INIT_END);
+}
+
+/*get Apollo version*/
+void comGetApolloVer(uint8 *arr) {
+    memcpy(arr, (uint8*)&apollo_fw_ver, 8);
 }
 
 /*
