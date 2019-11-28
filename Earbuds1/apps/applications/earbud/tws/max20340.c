@@ -242,8 +242,9 @@ static void box_send_boxpower(uint8 *get_buf, uint8 *send_buf)
 static void box_get_earpower(uint8 *get_buf, uint8 *send_buf)
 {
     send_buf[0] = get_buf[0];
-    send_buf[1] = 100;
+    send_buf[1] = appUiGetPower();
     send_buf[2] = 0;
+    DEBUG_LOG("Case GetPower=%d", send_buf[1]);
 }
 
 static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
@@ -254,10 +255,10 @@ static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
     if_key = (get_buf[2] & 0x80) >> 7;
     key_time = (get_buf[2] & 0x7f);
     if(if_cap == 0x1){//盒盖
-        appUiCaseStatus(0,0,0,0);
+        appUiCaseStatus(0,-1,-1,-1);
     }
     if(if_cap == 0x2){//开盖
-        appUiCaseStatus(1,0,0,0);
+        appUiCaseStatus(1,-1,-1,-1);
     }
     if(if_usb == 0x1){//插入
 
@@ -267,9 +268,9 @@ static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
     }
     if(if_key == 0x1){//按键事件
         if(key_time<4){
-            appUiCaseStatus(0,1,0,0);
+            appUiCaseStatus(-1,1,-1,-1);
         }else{
-            appUiCaseStatus(0,0,1,0);
+            appUiCaseStatus(-1,-1,1,-1);
         }
     }
     send_buf[0] = get_buf[0];
@@ -568,7 +569,7 @@ max20340_str max20340_init_array[] = {
 
 int max20340_GetStatus(void)
 {
-    if(psbfuncTask->status == TRUE){
+    if(psbfuncTask && psbfuncTask->status == TRUE){
         return 0;
     }else{
         return -1;

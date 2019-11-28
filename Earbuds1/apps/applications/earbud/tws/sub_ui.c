@@ -655,6 +655,8 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
+    DEBUG_LOG("CASE:%d key=%d %d %d\n", lidOpen, keyDown, keyLong, iElectrity);
+
     if(lidOpen >= 0)
         progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
 
@@ -769,6 +771,14 @@ void appUiChargerComplete(void)
 
     appSubGetProgRun()->chargeStat = CHARGE_ST_FIN;
     MessageSendLater(&appGetUi()->task, APP_CHARGE_STATUS, 0, 500);
+}
+
+uint8 appUiGetPower(void)      // 获取当前耳机电量
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+//    if(CHARGE_ST_FIN == progRun->chargeStat)   // XXX 是否需要考虑当前充电状态 ？
+    return progRun->iElectrity;
 }
 
 static bool deviceRealInCase = TRUE;

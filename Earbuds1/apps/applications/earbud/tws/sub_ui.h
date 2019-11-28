@@ -121,6 +121,7 @@ void appUiChargerDisconnected(void);
 void appUiChargerChargingLow(void);
 void appUiChargerChargingOk(void);
 void appUiChargerComplete(void);
+uint8 appUiGetPower(void);          // 获取当前耳机电量
 
 ///////////////////////////////////////////////////////////////////////////////
 ///  耳机连接
