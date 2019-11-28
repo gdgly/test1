@@ -460,6 +460,12 @@ int CDeviceCtrl::BurningApollo(void)
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_APOLLO, (LPARAM)msgbuf);
 				break;
 			}
+			else if (sTmp.Find("Failed to prepare for programming.") >= 0) {//****** Error: Failed to download RAMCode. Failed to prepare for programming.
+				msgbuf = (char*)GetMsgBuffer();
+				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "not poweron");
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_APOLLO, (LPARAM)msgbuf);
+				break;
+			}
 			else if (sTmp.Find("File is of unknown") >= 0) {//File is of unknown / supported format.
 				msgbuf = (char*)GetMsgBuffer();
 				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "unknown burn file");
