@@ -11,6 +11,7 @@
 
 #include "chains/chain_assistant.h"
 #include "tws/audio_forward.h"
+#include "cap_id_prim.h"
 
 #ifdef CONFIG_REC_ASSISTANT
 
@@ -49,8 +50,14 @@ static void appKymeraCreateRecordChain(uint32 rate)
     return;
 }
 
+extern bool VmalOperatorMessage(uint16 opid, const void * send_msg, uint16 send_len,
+                                void * recv_msg, uint16 recv_len);
+#define GAIN_DB_TO_Q6N_SF (11146541)
+#define GAIN_DB(x)      ((int32)(GAIN_DB_TO_Q6N_SF * (x)))
+
 void appKymeraHandleInternalRecordStart(const KYMERA_INTERNAL_RECORD_T *msg)
 {
+    const int32 initial_gain = GAIN_DB(18);
     kymeraTaskData *theKymera = appGetKymera();
 
     DEBUG_LOGF("appKymeraHandleInternalRecord curstate=%d", appKymeraGetState());
@@ -65,6 +72,10 @@ void appKymeraHandleInternalRecordStart(const KYMERA_INTERNAL_RECORD_T *msg)
         case KYMERA_STATE_IDLE:
             /* Need to set up audio output chain to play tone from scratch */
             appKymeraCreateRecordChain(msg->rate);
+
+            Operator passthrough = ChainGetOperatorByRole(theKymera->chain_record_handle, OPR_SWITCHED_PASSTHROUGH_CONSUMER);
+            uint16 set_gain[] = { OPMSG_COMMON_ID_SET_PARAMS, 1, 1, 1, UINT32_MSW(initial_gain), UINT32_LSW(initial_gain) };
+            PanicFalse(VmalOperatorMessage(passthrough, set_gain, sizeof(set_gain)/sizeof(set_gain[0]), NULL, 0));
 
             forwardAudioAndMic(theKymera->chain_record_handle);
 
@@ -97,9 +108,11 @@ void appKymeraRecordStop(void)
         case KYMERA_STATE_A2DP_STREAMING:
         default:
         {
+#if 0
             Operator op = ChainGetOperatorByRole(theKymera->chain_record_handle, OPR_VOLUME_CONTROL);
             uint16 volume = volTo60thDbGain(0);
             OperatorsVolumeSetAuxGain(op, volume);
+#endif
 
             ChainStop(theKymera->chain_record_handle);
             disconnectAudioForward(theKymera->chain_record_handle);

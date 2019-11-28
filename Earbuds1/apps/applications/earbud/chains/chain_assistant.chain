@@ -6,7 +6,7 @@
 
     <include_header name="../av_headset_chain_roles.h"/>
 
-    <operator name="OPR_VOLUME_CONTROL" id="CAP_ID_VOL_CTRL_VOL">
+    <operator name="OPR_SWITCHED_PASSTHROUGH_CONSUMER" id="CAP_ID_BASIC_PASS">
         <sink name="IN" terminal="0"/>
         <source name="OUT" terminal="0"/>
     </operator>
@@ -16,9 +16,10 @@
         <source name="OUT" terminal="0"/>
     </operator>
 
-    <input sink="OPR_VOLUME_CONTROL.IN" role="EPR_VOLUME_AUX"/>
+    <input sink="OPR_SWITCHED_PASSTHROUGH_CONSUMER.IN" role="EPR_VOLUME_AUX"/>
     <output source="OPR_CUSTOM_MIC_PASSTHROUGH.OUT" role="EPR_AUDIO_MICFWD_OUT"/>
 
-    <connection source="OPR_VOLUME_CONTROL.OUT" sink="OPR_CUSTOM_MIC_PASSTHROUGH.IN"/>
+    <!--connection source="OPR_VOLUME_CONTROL.OUT" sink="OPR_CUSTOM_MIC_PASSTHROUGH.IN"/-->
+    <connection source="OPR_SWITCHED_PASSTHROUGH_CONSUMER.OUT" sink="OPR_CUSTOM_MIC_PASSTHROUGH.IN"/>
 </chain>
 
