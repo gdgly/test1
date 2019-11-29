@@ -177,7 +177,7 @@ static void box_get_btaddr(uint8 *get_buf, uint8 *send_buf)
     uint8 type;
     type = (get_buf[0] & 0x3);
     if(type == 0){//开始包，获取一下蓝牙地址
-        ;
+        SystemGetEarAddr( btaddr );
     }
     box_get_data_process(get_buf, send_buf, btaddr, 6/2);
 }
@@ -280,6 +280,7 @@ static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
 
 static void box_update(uint8 *get_buf, uint8 *send_buf)
 {
+    uint8 num_k;
     static uint8 buffer_1k[1024];
     uint8 type,start_flag;
     uint16 checksum=0,i,data_num;
@@ -288,25 +289,33 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
     case 0://开始包
         start_flag = get_buf[1];
         if(start_flag == 1){//开始包1 回复总共需要多少个1k字节
-            send_buf[1] = 10;//先假设是10个之后计算出确认值
+//            send_buf[1] = 10;//先假设是10个之后计算出确认值
+//            send_buf[2] = 0;
+            send_buf[1] = sizeof(AP)/1024;//先假设是10个之后计算出确认值
             send_buf[2] = 0;
         }else if(start_flag == 2){//开始包2 表示接下来要开始发送第几个1k
             //u8 num_k = get_buf[2];
             //memcpy(buffer_1k, buf, 1024);
+            num_k = get_buf[2];
+            memcpy(buffer_1k, AP+num_k*1024, 1024);
+        }else if(start_flag == 3){//开始包3 耳机需回复1k字节的校验码
             for(i=0; i<1024; i++){
                 checksum += buffer_1k[i];
             }
-        }else if(start_flag == 3){//开始包3 耳机需回复1k字节的校验码
             send_buf[1] = ((checksum>>8) & 0xff);
             send_buf[2] = (checksum & 0xff);
+            DEBUG_LOG("checksum buf1=%d, buf2=%d\n", send_buf[1], send_buf[2]);
         }else{
             DEBUG_LOG("update request start_flag error! start_flag = %d\n", start_flag);
         }
         break;
     case 1://数据包
-        data_num = (get_buf[1]<<8 + get_buf[2]);//0-511
+        //data_num = (get_buf[1]<<8 + get_buf[2]);//0-511
+        data_num = get_buf[1]<<8;
+        data_num += get_buf[2];
         if(data_num>511){
-            DEBUG_LOG("update request data_num=%d error\n", data_num);
+            DEBUG_LOG("update request data_num=%d buf1=%d buf2=%d error\n",
+                      data_num, get_buf[1], get_buf[2]);
         }
         send_buf[1]=buffer_1k[0+(data_num)*2];
         send_buf[2]=buffer_1k[1+(data_num)*2];
@@ -318,6 +327,16 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
         break;
     }
     send_buf[0] = get_buf[0];
+}
+
+static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
+{
+    uint8 status = 1;//广播成功
+    uint8 peer_status = 1;//已peer
+    send_buf[0] = get_buf[0];
+    //status 高两位 1广播成功 2广播失败 3手机连接成功； 第5，6位 1表示已peer， 2表示未peer
+    send_buf[1] = ( (status<<6) & 0xc0 ) + ( (peer_status<<4) & 0x30 );
+    send_buf[2] = 0;
 }
 
 static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
@@ -352,6 +371,9 @@ static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
         break;
     case 9://升级
         box_update(&buf[MX20340_REG_RX_DATA0], send_buf);
+        break;
+    case 10://查询耳机状态
+        box_get_ear_status(&buf[MX20340_REG_RX_DATA0], send_buf);
         break;
     }
     max20340WriteRegister_withlen(handle, MX20340_REG_TX_DATA0, send_buf, 3);
