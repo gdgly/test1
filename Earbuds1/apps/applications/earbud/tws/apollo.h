@@ -48,6 +48,7 @@ int apolloGetStatus(void);
 #define APOLLO_I2C_FREQ         (400)
 
 #define APOLLO_INT_IO           (0x06)
+#define APOLLO_RESET_IO         (0x04)
 #define APOLLO_START_UPGRADE    (0x02)
 #define APOLLO_TRANS_ONE_PACKET (0x03)
 

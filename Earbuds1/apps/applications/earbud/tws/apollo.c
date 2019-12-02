@@ -99,6 +99,13 @@ void apollo_int_io_init(void) {
     PioSetMapPins32Bank(0, (1<<APOLLO_INT_IO), (1<<APOLLO_INT_IO));
     PioSetDir32Bank(0, (1<<APOLLO_INT_IO), (0<<APOLLO_INT_IO));
     InputEventManagerRegisterTask(apolloTask, APOLLO_INT_IO);
+
+    uint32 bank = PIO2BANK(APOLLO_RESET_IO);
+    uint32 mask = PIO2MASK(APOLLO_RESET_IO);
+    PioSetMapPins32Bank(bank, mask, mask);
+    PioSetDir32Bank(bank, mask, mask);
+    PioSet32Bank(bank, mask, mask);
+
     wait_for_int_low(50);
 }
 
