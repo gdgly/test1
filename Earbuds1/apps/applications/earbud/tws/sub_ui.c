@@ -176,12 +176,17 @@ static int16 subUiCasever2Gaia(MessageId id, ProgRIPtr  progRun)
 }
 
 //上报stop停止状态
-static void subUiStopReport2Gaia(void)
+static void subUiStopReport2Gaia(MessageId id)
 {
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 1);
 
     message->command = GAIA_CONNECT_STAROT_RECORD_STOP_REPORT;
-    message->payload[0] = 0X01;
+    if(STAROT_RECORD_STOP_STATUS_REPORT == id)
+        message->payload[0] = 0X01;
+    if(STAROT_RECORD_CALLIN_STOP_STATUS_REPORT == id)
+        message->payload[0] = 0X02;
+    if(STAROT_RECORD_CALLOUT_STOP_STATUS_REPORT == id)
+        message->payload[0] = 0X03;
     message->payloadLen = 1;
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 }
@@ -417,8 +422,10 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         else
             appUiRestartBle();
         break;
+    case STAROT_RECORD_CALLIN_STOP_STATUS_REPORT:
+    case STAROT_RECORD_CALLOUT_STOP_STATUS_REPORT:
     case STAROT_RECORD_STOP_STATUS_REPORT:
-        subUiStopReport2Gaia();
+        subUiStopReport2Gaia(id);
         break;
     case APP_ASSISTANT_AWAKEN:
         subUiStartAssistant2Gaia(id, progRun);
@@ -587,6 +594,10 @@ void appUiHfpCallIncomingActive(void)
     progRun->dial_stat  |= DIAL_ST_IN;
 
     MessageSend(&appGetUi()->task, APP_CALLIN_ACT, 0);
+
+    if(1 == progRun->recStat)
+        MessageSend(&appGetUi()->task, STAROT_RECORD_CALLIN_STOP_STATUS_REPORT, 0);
+
 }
 
 /* Show HFP outcoming call */
@@ -600,6 +611,10 @@ void appUiHfpCallOutcomingActive(void)
     progRun->dial_stat  |= DIAL_ST_OUT;
 
     MessageSend(&appGetUi()->task, APP_CALLOUT_ACT, 0);
+
+    if(1 == progRun->recStat)
+        MessageSend(&appGetUi()->task, STAROT_RECORD_CALLOUT_STOP_STATUS_REPORT, 0);
+
 }
 
 /* Cancel HFP incoming call */

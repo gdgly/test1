@@ -163,6 +163,8 @@ enum {
     STAROT_AI_USER_START_RECORD,                          // ui -> (ui & dsp) AI请求录音
     STAROT_AI_USER_STOP_RECORD,                           // ui -> (ui & dsp) AI停止录音
     STAROT_RECORD_STOP_STATUS_REPORT,                     // dsp -> ui 上报停止录音状态
+    STAROT_RECORD_CALLIN_STOP_STATUS_REPORT,              // ui -> ui 拨打上报停止录音状态
+    STAROT_RECORD_CALLOUT_STOP_STATUS_REPORT,             // ui -> ui 接听上报停止录音状态
     STAROT_RECORD_RETURN_THREE_POWER,                     // gaia -> ui App主动获取电量状态
     STAROT_NOTIFY_STATUS,                                 // ui -> gaia 状态发生变化
 };
