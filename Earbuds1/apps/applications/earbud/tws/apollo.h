@@ -44,18 +44,23 @@ void apollo_reset(void);
 
 int apolloGetStatus(void);
 
+/* hw i2c/io def*/
 #define APOLLO_CHIPADDR         (0x10) // (0x68)
 #define APOLLO_I2C_FREQ         (400)
+#define APOLLO_INT_IO           (6)
+#define APOLLO_RESET_IO         (4)
+#define APOLLO_OVERRIDE_IO      (54)
 
-#define APOLLO_INT_IO           (0x06)
-#define APOLLO_RESET_IO         (0x04)
+/* command and feedback */
 #define APOLLO_START_UPGRADE    (0x02)
 #define APOLLO_TRANS_ONE_PACKET (0x03)
 
 #define APOLLO_GET_FW_VER       (0x06) // get firmware version
 #define APOLLO_ERASE_HEADER     (0x10)
 #define APOLLO_RESET            (0x09)
+#define APOLLO_RESET_2          (0x04)
 
+/* i2c access address */
 #define APOLLO_FEEDBACK         (0x00)
 #define APOLLO_COMMAND          (0x80)
 #define APOLLO_DATA             (0x84)
@@ -76,11 +81,10 @@ int apolloGetStatus(void);
 #define    APOLLO_STATE_INIT_END                    (APOLLO_STATE_UNINIT + 3)
 /* state before APOLLO_STATE_INIT_END are all used for initialise */
 #define    APOLLO_STATE_ENTERING_BOOT_MODE_S1       (APOLLO_STATE_INIT_END + 1)
-#define    APOLLO_STATE_ENTERING_BOOT_MODE_S2       (APOLLO_STATE_INIT_END + 2)
-#define    APOLLO_STATE_ENTERING_BOOT_MODE_S3       (APOLLO_STATE_INIT_END + 3)
 #define    APOLLO_STATE_UPGRADE_S1                  (APOLLO_STATE_INIT_END + 5)
 #define    APOLLO_STATE_UPGRADE_S2                  (APOLLO_STATE_INIT_END + 6)
-#define    APOLLO_STATE_UPGRADE_END                 (APOLLO_STATE_INIT_END + 7)
+#define    APOLLO_STATE_UPGRADE_S3                  (APOLLO_STATE_INIT_END + 7)
+#define    APOLLO_STATE_UPGRADE_END                 (APOLLO_STATE_INIT_END + 8)
 /* state before APOLLO_STATE_UPGRADE_STAR are all used for image upgrade */
 #define    APOLLO_STATE_IDLE                        (APOLLO_STATE_UPGRADE_END + 1)
 #define    APOLLO_STATE_READING_FW_VER              (APOLLO_STATE_UPGRADE_END + 2)
@@ -92,6 +96,14 @@ int apolloGetStatus(void);
 #define APOLLO_CMD_WAIT_INT_LOW (0)
 #define APOLLO_CMD_READ_FW_VER  (1)
 #define APOLLO_CMD_RESET        (2)
+#define APOLLO_CMD_WAIT_TIMEOUT (3)
+
+/*
+ * apollo fw version def
+ */
+#define RUNNING_FW_NV       (-1)
+#define RUNNING_IN_BOOT     (1)
+#define RUNNING_IN_APP      (2)
 
 /*
  * apollo message definition
