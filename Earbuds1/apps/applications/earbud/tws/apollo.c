@@ -13,7 +13,7 @@
 #include "apollo.h"
 
 static void apollo_task_handler(Task appTask, MessageId id, Message msg);
-static void apollo_send_cmd(uint32 cmd, bitserial_handle handle);
+static int apollo_send_cmd(uint32 cmd, bitserial_handle handle);
 static void apollo_send_data(uint8* data, int length, bitserial_handle handle);
 static int apollo_read_fb(uint8 *ret, uint32 length, bitserial_handle handle);
 static int apollo_fb(uint8 *ret, uint32 length);
@@ -80,8 +80,6 @@ static int io_init_i2c_rd_err_times = 0;
 static int io_init_rd_fw_err_times = 0;
 static int enter_boot_int_times = 0;
 static int upgrade_times = 0;
-
-void comGetApolloVer(uint8 *arr);
 
 /*
  * APIs
@@ -171,10 +169,24 @@ int apollo_read_fw_version(void) {
     return 0;
 }
 
-void apollo_reset(void) {
-    MAKE_APOLLO_MESSAGE(APOLLO_COMMAND);
-    message->command = APOLLO_CMD_RESET;
-    MessageSend(apolloTask, APOLLO_CMD_RESET, message);
+int apollo_sleep(void) {
+    if (APOLLO_STATE_IDLE != apollo_state) return -1;
+
+    apollo_state = APOLLO_STATE_ENTERING_SLEEP;
+    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+    apollo_send_cmd(APOLLO_SLEEP, handle);
+    hwi2cClose(handle);
+
+    return 0;
+}
+
+int apollo_evoke(void) {
+    if (APOLLO_STATE_SLEEP != apollo_state) return -1;
+
+    apollo_state = APOLLO_STATE_AWAKING;
+    IO_HIGH(APOLLO_INT_IO);
+    wait_for_timeout(10);
+    return 0;
 }
 
 /*Return 0 for Apollo startup success*/
@@ -413,6 +425,34 @@ static void apollo_common_handler(MessageId id, Message msg)
 
                         break;
                     }
+                    case APOLLO_STATE_ENTERING_SLEEP: {
+                        uint32 feedback[2];
+                        int ret = apollo_fb((uint8*)feedback, 8);
+
+                        if (!ret && (0x01 != feedback[0])) {
+                            APOLLO_DBG_LOG("get other int, try enter sleep again.");
+                            bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+                            if (0 == apollo_send_cmd(APOLLO_SLEEP, handle)){
+                                /* wait for another int. */
+                                hwi2cClose(handle);
+                                return;
+                            }
+                            hwi2cClose(handle);
+                        }
+
+                        APOLLO_DBG_LOG("enter sleep.");
+                        apollo_state = APOLLO_STATE_SLEEP;
+
+                        InputEventManagerUnregisterTask(apolloTask, APOLLO_INT_IO);
+
+                        uint32 bank = PIO2BANK(APOLLO_INT_IO);
+                        uint32 mask = PIO2MASK(APOLLO_INT_IO);
+                        PioSetMapPins32Bank(bank, mask, mask);
+                        PioSetDir32Bank(bank, mask, mask);
+                        IO_LOW(APOLLO_INT_IO);
+
+                        break;
+                    }
                     default:
                         break;
                 }
@@ -430,6 +470,18 @@ static void apollo_common_handler(MessageId id, Message msg)
                 }
                 case APOLLO_CMD_RESET: {
                     APOLLO_DBG_LOG("dummy reset");
+                    break;
+                }
+                case APOLLO_CMD_WAIT_TIMEOUT: {
+                    if (APOLLO_STATE_AWAKING == apollo_state) {
+                        APOLLO_DBG_LOG("exit sleep");
+                        apollo_state = APOLLO_STATE_IDLE;
+                        uint32 bank = PIO2BANK(APOLLO_INT_IO);
+                        uint32 mask = PIO2MASK(APOLLO_INT_IO);
+                        PioSetMapPins32Bank(bank, mask, mask);
+                        PioSetDir32Bank(bank, mask, 0);
+                        InputEventManagerRegisterTask(apolloTask, APOLLO_INT_IO);
+                    }
                     break;
                 }
                 default:
@@ -585,8 +637,9 @@ static void wait_for_timeout(int delay) {
     MessageSendLater(apolloTask, APOLLO_MESSAGE_CMD, message, delay);
 }
 
-static void apollo_send_cmd(uint32 cmd, bitserial_handle handle)
+static int apollo_send_cmd(uint32 cmd, bitserial_handle handle)
 {
+    int ret = -1;
     if (0 != handle) {
         uint32 cmd_buf_w[2];
         uint8 *cmd_buf = (uint8*)cmd_buf_w;
@@ -594,8 +647,9 @@ static void apollo_send_cmd(uint32 cmd, bitserial_handle handle)
         cmd_buf[3] = APOLLO_COMMAND;
         cmd_buf_w[1] = cmd;
 
-        hwi2cWrite(handle, cmd_buf + 3, 5);
+        ret = hwi2cWrite(handle, cmd_buf + 3, 5);
     }
+    return ret;
 }
 
 static void apollo_send_data(uint8* data, int length, bitserial_handle handle)
