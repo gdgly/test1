@@ -31,6 +31,9 @@ enum {
 
 	ERROR_READ_RECORD,
 
+	ERROR_READ_SENSOR,
+	ERROR_WRITE_SENSOR,
+
 	ERROR_COMMU_FAIL=70,              // COMMU
 
 };
@@ -64,6 +67,9 @@ enum {
 
 	REPORT_READ_RECORD,
 
+	REPORT_READ_SENSOR,
+	REPORT_WRITE_SENSOR,
+
 	REPORT_USER_EXIT,
 	REPORT_END_ALL,
 	REPORT_LAST,
@@ -94,9 +100,13 @@ typedef struct tagINIPARAM {
 
 enum {THREAD_NONE=0, THREAD_BURN=0x01, THREAD_BURN_APO=0x02,
 	THREAD_BT_ADDR=0x04, THREAD_FIX_PARAM=0x08,
-	THREAD_CHECK=0x10, THREAD_RECORD_0=0x20, THREAD_RECORD_1 = 0x40,
+	THREAD_CHECK=0x10, THREAD_RECORD_0=0x20, THREAD_RECORD_1 = 0x40,	
 	THREAD_CRYSTGALTRIM=0x100,
+	THREAD_WAKEUP = 0x1000, THREAD_SENSOR=0x2000, THREAD_PLC=0x4000, THREAD_TAP=0x8000,
 };
+
+typedef enum {INTR_T_WAKEUP = 0, INTR_T_SENSOR, INTR_T_PLC, INTR_T_TAP} IntrType;
+
 class CDeviceCtrl
 {
 public:
@@ -125,6 +135,7 @@ public:
 	int SetHwVersion(CString sText);
 	int SetBtAddr(CString addr);       // {0x00ff09, 0x5b, 0x02}
 	void SetBtName(CString sName);
+	void SetRecordTime(int sec);
 	void SetJlinkPath(CString path) { m_iniParam.sJlinkPath = path; }	
 	void SetApolloBurnfile(CString path) { m_iniParam.apollo_burn_bat = path; }	
 private:
@@ -141,15 +152,21 @@ private:
 	int SetAllParam(int bCloseEng = 0);
 	int SetFixParam(int bCloseEng = 0);
 	int CheckDevice(int bCloseEng = 0);
+	int CheckInterrupt(IntrType type, int timeout=6, int bCloseEnable = 0);
+	int CheckSensorRead(int &value);
+	int CheckSensorWrite(int value);
 
 	int CrystalTrimming(int value);
 
 	int teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp);
 public:
+	int OpenEngineNeed(void);
 	int OpenEngine(void);
 	int CloseEngine(void);
 	
 private:
+	INT   m_secTimeout, m_secRecord;
+	INT   m_SensorDiff;
 	uint8 m_msgNo;
 	uint8 m_msgData[MSG_BUFFER_COUNT][PSKEY_BUFFER_LEN];
 	uint8 * GetMsgBuffer();

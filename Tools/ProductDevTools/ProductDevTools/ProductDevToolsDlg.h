@@ -78,6 +78,10 @@ public:
 	afx_msg void OnBnClickedBtnCritrim();
 	afx_msg void OnBnClickedBtnRecord1();
 	afx_msg void OnBnClickedBtnClear();
+	afx_msg void OnBnClickedBtnWakeup();
+	afx_msg void OnBnClickedBtnSensor();
+	afx_msg void OnBnClickedBtnCaseplc();
+	afx_msg void OnBnClickedBtnTap();
 };
 
 

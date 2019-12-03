@@ -62,6 +62,10 @@ CDeviceCtrl::CDeviceCtrl()
 {
 	m_bEnableErase = FALSE;
 
+	m_secRecord = 6;
+	m_secTimeout = 6;
+	m_SensorDiff = -200;
+
 	m_curTick = 0;
 	m_devHandle = 0;
 	memset(m_bdAddr, 0, sizeof(m_bdAddr));
@@ -128,6 +132,9 @@ static CString _sReport[] = {
 	"RERROT_APOLLO",
 
 	"REPORT_READ_RECORD",
+
+	"REPORT_READ_SENSOR",
+	"REPORT_WRITE_SENSOR",
 
 	"REPORT_USER_EXIT",
 	"REPORT_END_ALL",
@@ -216,14 +223,43 @@ int CDeviceCtrl::RuningProc(void)
 		if (m_bExit == TRUE) goto out;
 	}
 
+	if ((m_iThreadFunc & THREAD_WAKEUP)) {
+		if (((ret = CheckInterrupt(INTR_T_WAKEUP, m_secTimeout)) < 0) || (m_bExit == TRUE))
+			goto out;
+	}
+
+	if ((m_iThreadFunc & THREAD_SENSOR)) {
+		int sensor_val = 0;
+
+		if ((ret = CheckSensorRead(sensor_val)) < 0)
+			goto out;
+
+		sensor_val += m_SensorDiff;
+		if ((ret = CheckSensorWrite(sensor_val)) < 0)
+			goto out;
+
+		if (((ret = CheckInterrupt(INTR_T_SENSOR, m_secTimeout)) < 0) || (m_bExit == TRUE))
+			goto out;
+	}
+
+	if ((m_iThreadFunc & THREAD_PLC)) {
+		if (((ret = CheckInterrupt(INTR_T_PLC, m_secTimeout)) < 0) || (m_bExit == TRUE))
+			goto out;
+	}
+
+	if ((m_iThreadFunc & THREAD_TAP)) {
+		if (((ret = CheckInterrupt(INTR_T_TAP, m_secTimeout)) < 0) || (m_bExit == TRUE))
+			goto out;
+	}
+
 	if ((m_iThreadFunc & THREAD_RECORD_0)) {
-		if ((ret = Recording(0)) < 0)
+		if ((ret = Recording(0, m_secRecord)) < 0)
 			goto out;
 		if (m_bExit == TRUE) goto out;
 	}
 
 	if ((m_iThreadFunc & THREAD_RECORD_1)) {
-		if ((ret = Recording(1)) < 0)
+		if ((ret = Recording(1, m_secRecord)) < 0)
 			goto out;
 
 		if (m_bExit == TRUE) goto out;
@@ -233,6 +269,8 @@ int CDeviceCtrl::RuningProc(void)
 		CrystalTrimming(0);
 		if (m_bExit == TRUE) goto out;
 	}
+
+
 		
 
 out:
@@ -324,8 +362,8 @@ int CDeviceCtrl::Burning(void)
 	char sVer[32];
 	//	atlTraceGeneral - PORT:USBDBG(112) | SPITRANS = USBDBG SPIPORT = 1
 
-#if 0
-	if (flOpen(devMask, 10, 26, TFL_USBDBG) != TFL_OK) {
+#if 10
+	if (flOpen(1, 0, 0, TFL_USBDBG) != TFL_OK) {
 		TRACE("Failed to open devices %d err:%d\n", flGetBitErrorField(),
 			flGetLastError());
 	}
@@ -372,7 +410,7 @@ int CDeviceCtrl::Burning(void)
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_ERASE_START, (LPARAM)0);
 		if ((status = flErase()) == TFL_OK) {
 			while (status >= 0 && status < 100) {
-				Sleep(500);
+				Sleep(5);
 				status = flGetProgress();
 				TRACE("ERASE %d percent\n", status);
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_ERASE_PROGRESS, (LPARAM)status);
@@ -668,6 +706,7 @@ enum {
 	CHECK_ST_INFO, CHECK_ST_INFO_WAIT,             // check deviceinfo
 
 	CHECK_ST_RECSTART, CHECK_ST_RECDAT, CHECK_ST_RECSTOP, CHECK_ST_RECFIN,
+	CHECK_ST_WAKEUP, CHECK_ST_WAKEUP_WAIT,
 };
 
 // 写命令并等待返回
@@ -809,6 +848,11 @@ int CDeviceCtrl::CheckDevice(int bCloseEng)
 	return ret;
 }
 
+void CDeviceCtrl::SetRecordTime(int sec)
+{
+	m_secRecord = sec;
+}
+
 int CDeviceCtrl::Recording(int mic, int sec, int bCloseEng)
 {
 	int ret = -2, successEnd = 0;
@@ -816,6 +860,13 @@ int CDeviceCtrl::Recording(int mic, int sec, int bCloseEng)
 	UINT16 *cmdbuf, cmdlen;
 	UINT16 *rdbuf, rdlen;
 	UINT32 datacnt = 0;
+	CString sName;
+	CTime tNow = CTime::GetCurrentTime();
+
+	CreateDirectory("audio", NULL);
+	sName.Format("audio\\Mic%dRec_%04d%02d%02d_%02d%02d%02d.g722",mic,
+		tNow.GetYear(), tNow.GetMonth(), tNow.GetDay(),
+		tNow.GetHour(), tNow.GetMinute(), tNow.GetSecond());
 
 	// OPened
 	if (m_devHandle == 0) {
@@ -839,7 +890,7 @@ int CDeviceCtrl::Recording(int mic, int sec, int bCloseEng)
 				m_checkStatus = CHECK_ST_RECDAT;
 				m_curTick = ::GetTickCount();
 				datacnt = 0;
-				DeleteFile("Recv.g722");
+				DeleteFile(sName);
 			}
 			else {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_COMMU_FAIL, (LPARAM)cmdbuf);
@@ -854,7 +905,7 @@ int CDeviceCtrl::Recording(int mic, int sec, int bCloseEng)
 			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 1000);
 			if (ret == TE_OK) {
 					CFile h;
-					if (TRUE == h.Open("Recv.g722", CFile::modeReadWrite | CFile::modeNoTruncate | CFile::modeCreate)) {
+					if (TRUE == h.Open(sName, CFile::modeReadWrite | CFile::modeNoTruncate | CFile::modeCreate)) {
 						h.SeekToEnd();
 						h.Write(rdbuf, rdlen * 2);
 						h.Close();
@@ -913,6 +964,145 @@ int CDeviceCtrl::Recording(int mic, int sec, int bCloseEng)
 
 	// Close
 	if (bCloseEng)
+		CloseEngine();
+
+	return ret;
+}
+
+// ------> check RDSENSOR
+// <------ checkresp RDSENSOR=%d
+int CDeviceCtrl::CheckSensorRead(int &value)
+{
+	int ret = -2;
+	unsigned char channel;
+	UINT16 *cmdbuf, cmdlen;
+	UINT16 *rdbuf, rdlen;
+
+	if (OpenEngineNeed() < 0)
+		return -1;
+
+	TRACE("LINE:%d\n", __LINE__);
+	cmdbuf = (UINT16*)GetMsgBuffer();
+	cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check RDSENSOR");
+
+	ret = teAppWrite(m_devHandle, 0, (const uint16*)cmdbuf, cmdlen / 2);
+	if (ret == TE_OK) {
+		rdbuf = (UINT16*)GetMsgBuffer();
+		ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 4000);
+		if (ret == TE_OK) {
+			char *ptr;
+			if ((ptr = strstr((char*)rdbuf, "="))) {
+				ptr += 1;
+				value = atoi(ptr);
+			}
+			ret = 0;
+
+			MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_SENSOR, (LPARAM)rdbuf);
+		}
+	}
+	if(ret < 0)
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_READ_SENSOR, (LPARAM)cmdbuf);
+
+	return ret;
+}
+
+// ------> check WRSENSOR=%d
+int CDeviceCtrl::CheckSensorWrite(int value)
+{
+	int ret = -2;
+	UINT16 *cmdbuf, cmdlen;
+	char strResp[64];
+
+	if (OpenEngineNeed() < 0)
+		return -1;
+
+	TRACE("LINE:%d\n", __LINE__);
+	cmdbuf = (UINT16*)GetMsgBuffer();
+	cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check WRSENSOR=%d", value);
+	memset(strResp, 0, sizeof(strResp));
+	sprintf_s(strResp, sizeof(strResp), "checkresp %s", "WRSENSOR");
+
+	if (teWriteAndRead(cmdbuf, cmdlen, strResp) == 0) {
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_SENSOR, (LPARAM)cmdbuf);
+		ret = 0;
+	}
+	else
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_READ_SENSOR, (LPARAM)cmdbuf);
+
+	return ret;
+}
+
+//   -----> check WAKEUP/SENSOR/PLC
+//   <----- check WAKEUP/SENSOR/PLC FAIL/SUCC/TRY        结束
+int CDeviceCtrl::CheckInterrupt(IntrType type, int timeout, int bCloseEnable)
+{
+	int ret = -2, isEnd = 0;
+	unsigned char channel;
+	UINT16 *cmdbuf, cmdlen;
+	UINT16 *rdbuf, rdlen;
+	UINT32 datacnt = 0;
+	char strResp[64];
+	const char *strType[] = { "WAKEUP", "SENSOR", "PLC", "TAP",};            // IntrType
+	
+	if (OpenEngineNeed() < 0)
+		return -1;
+
+	TRACE("LINE:%d\n", __LINE__);
+	m_checkStatus = CHECK_ST_RECSTART;
+	m_curTick = ::GetTickCount();
+	memset(strResp, 0, sizeof(strResp));
+	while (1) {
+		if (m_bExit) break;
+
+		switch (m_checkStatus) {
+		case CHECK_ST_WAKEUP:
+			cmdbuf = (UINT16*)GetMsgBuffer();
+			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check %s", strType[type]);			
+			sprintf_s(strResp, sizeof(strResp), "checkresp %s", strType[type]);
+			if (teWriteAndRead(cmdbuf, cmdlen, strResp) == 0) {
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
+				m_checkStatus = CHECK_ST_WAKEUP_WAIT;
+				m_curTick = ::GetTickCount();
+				datacnt = 0;
+			}
+			else {
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_COMMU_FAIL, (LPARAM)cmdbuf);
+				TRACE("ERROR Send Cmd:%s\n", (char*)cmdbuf);
+				Sleep(1000);
+				break;
+			}
+			break;
+
+		case CHECK_ST_WAKEUP_WAIT:
+			rdbuf = (UINT16*)GetMsgBuffer();
+			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 1000);
+			if (ret == TE_OK) {
+				if (strstr((char*)rdbuf, strType[type]) >= 0) {
+					isEnd = (strstr((char*)rdbuf, "SUCC") >= 0) ? 2 : 1;
+					MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_RECORD, (LPARAM)datacnt);
+				}
+				else {
+					TRACE("Read: %s\n", (char *)rdbuf);
+				}
+			}
+			break;
+
+		default:
+			break;
+		}
+
+		if (isEnd > 0)
+			break;
+
+		if (::GetTickCount() - m_curTick > (UINT)(timeout * 1000)) {      // N秒接收不到数据退出
+			ret = -2;
+			break;
+		}
+	}
+
+	if (isEnd == 2)	ret = 0;
+	
+	if (bCloseEnable)
 		CloseEngine();
 
 	return ret;
@@ -1096,6 +1286,16 @@ int CDeviceCtrl::CrystalTrimming(int value)
 	return 0;
 }
 
+int CDeviceCtrl::OpenEngineNeed(void)
+{
+	if (m_devHandle == 0) {	// OPened
+		if (OpenEngine() < 0) {
+			return -1;
+		}
+	}
+
+	return m_devHandle;
+}
 
 int CDeviceCtrl::OpenEngine(void)
 {

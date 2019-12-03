@@ -96,6 +96,10 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_CRITRIM, &CProductDevToolsDlg::OnBnClickedBtnCritrim)
 	ON_BN_CLICKED(IDC_BTN_RECORD_1, &CProductDevToolsDlg::OnBnClickedBtnRecord1)
 	ON_BN_CLICKED(IDC_BTN_CLEAR, &CProductDevToolsDlg::OnBnClickedBtnClear)
+	ON_BN_CLICKED(IDC_BTN_WAKEUP, &CProductDevToolsDlg::OnBnClickedBtnWakeup)
+	ON_BN_CLICKED(IDC_BTN_SENSOR, &CProductDevToolsDlg::OnBnClickedBtnSensor)
+	ON_BN_CLICKED(IDC_BTN_CASEPLC, &CProductDevToolsDlg::OnBnClickedBtnCaseplc)
+	ON_BN_CLICKED(IDC_BTN_TAP, &CProductDevToolsDlg::OnBnClickedBtnTap)
 END_MESSAGE_MAP()
 
 
@@ -749,6 +753,27 @@ void CProductDevToolsDlg::OnBnClickedBtnCritrim()
 	StartDevContrl(THREAD_CRYSTGALTRIM);
 }
 
+void CProductDevToolsDlg::OnBnClickedBtnWakeup()
+{
+	StartDevContrl(THREAD_WAKEUP);
+}
+
+
+void CProductDevToolsDlg::OnBnClickedBtnSensor()
+{
+	StartDevContrl(THREAD_SENSOR);
+}
+
+
+void CProductDevToolsDlg::OnBnClickedBtnCaseplc()
+{
+	StartDevContrl(THREAD_PLC);
+}
+
+void CProductDevToolsDlg::OnBnClickedBtnTap()
+{
+	StartDevContrl(THREAD_TAP);
+}
 
 void CProductDevToolsDlg::OnBnClickedBtnStop()
 {
@@ -939,3 +964,6 @@ void CProductDevToolsDlg::OnBnClickedBtnClear()
 {
 	m_ListCtrl.DeleteAllItems();
 }
+
+
+
