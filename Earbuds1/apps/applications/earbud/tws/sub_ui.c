@@ -321,12 +321,13 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_RECORD_RETURN_THREE_POWER:
         subUiStat2Gaia(ind->command, progRun);
         break;
-    case GAIA_COMMAND_STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB:  ///App设置语言唤醒是否使能
+    case STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB:  ///App设置语言唤醒是否使能
         gUserParam.apolloEnable = ind->payload[0];
         ParamSaveUserPrm(&gUserParam);
         break;
-    case GAIA_COMMAND_STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB:
+    case STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB:
         gUserParam.sensorEnable = ind->payload[0];
+        EM20168Power(gUserParam.sensorEnable);   ///App设置是否佩戴使能
         ParamSaveUserPrm(&gUserParam);
         break;
     }
@@ -880,7 +881,7 @@ int apolloWakeupCallback(void)
             ((progRun->dial_stat & (DIAL_ST_IN|DIAL_ST_OUT|DIAL_ST_ACT)) == 0)){
         MessageSend(&appGetUi()->task, APP_ASSISTANT_AWAKEN, 0);
     }
-    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);//播放提示音会把录音停止掉
+    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
     return 0;
 }
 

@@ -38,7 +38,7 @@ static void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message);
 static void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message);//APP主动获取耳机版本
 static void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message);//App获取设备的耳机的双击配置信息
 static void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message);//App设置设备的耳机的双击配置信息
-static void gaiaAppSetParameter(GAIA_STAROT_IND_T *mess);//App设置语言唤醒或者佩戴检测是否使能
+static void gaiaAppSetParameter(GAIA_STAROT_IND_T *mess, uint16 type);//App设置语言唤醒或者佩戴检测是否使能
 static void gaiaAppGetParameter(GAIA_STAROT_IND_T *message, uint16 type);//App获取语言type=1唤醒或type=0者佩戴检测是否使能
 static void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message);//上报电量-位置-连接状态信息
 static void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message);//App主动获取电量-位置-连接状态信息
@@ -189,11 +189,13 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             gaiaAppGetNotifyPowPositionConncet(message);
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB:
+            gaiaAppSetParameter(message, 1);
+            break;
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_APOLLO_WAKEUP_ENB:
-            gaiaAppSetParameter(message);
+            gaiaAppGetParameter(message, 0);
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB:
-            gaiaAppGetParameter(message, 1);
+            gaiaAppSetParameter(message, 1);
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_ADORN_CHEAK_ENB:
             gaiaAppGetParameter(message, 0);
@@ -755,7 +757,7 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
 }
 
 //App设置语言唤醒或者佩戴检测是否使能
-void gaiaAppSetParameter(GAIA_STAROT_IND_T *mess){
+void gaiaAppSetParameter(GAIA_STAROT_IND_T *mess, uint16 type){
     StarotAttr *body = attrDecode(mess->payload, mess->payloadLen);
     if (NULL == body) {
         return;
@@ -764,7 +766,10 @@ void gaiaAppSetParameter(GAIA_STAROT_IND_T *mess){
         MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_IND, body->len);
         message->payloadLen = body->len;
         message->payload[0] = body->payload[0];
-        message->command = mess->command;
+        if(1 == type)
+            message->command = STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB;
+        if(0 == type)
+            message->command = STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB;
         MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);

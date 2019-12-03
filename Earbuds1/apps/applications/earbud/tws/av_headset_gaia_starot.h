@@ -173,6 +173,8 @@ enum {
     STAROT_RECORD_CALLOUT_STOP_STATUS_REPORT,             // ui -> ui 接听上报停止录音状态
     STAROT_RECORD_RETURN_THREE_POWER,                     // gaia -> ui App主动获取电量状态
     STAROT_NOTIFY_STATUS,                                 // ui -> gaia 状态发生变化
+    STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB,               // gaia -> ui App设置语言唤醒是否使能
+    STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB,                 // gaia -> ui App设置是否佩戴使能
 };
 
 #define STAROT_COMMAND_TIMEOUT 1000 // 命令超时时间
