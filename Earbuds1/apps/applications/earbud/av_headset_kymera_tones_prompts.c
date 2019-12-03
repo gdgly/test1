@@ -110,7 +110,7 @@ static Source appKymeraCreateTonePromptChain(const KYMERA_INTERNAL_TONE_PROMPT_P
     }
     return ChainGetOutput(chain, EPR_TONE_PROMPT_CHAIN_OUT);
 }
-extern void disable_audio_forward(bool disable);
+//extern void disable_audio_forward(bool disable);
 void appKymeraHandleInternalTonePromptPlay(const KYMERA_INTERNAL_TONE_PROMPT_PLAY_T *msg)
 {
     kymeraTaskData *theKymera = appGetKymera();
@@ -119,7 +119,8 @@ void appKymeraHandleInternalTonePromptPlay(const KYMERA_INTERNAL_TONE_PROMPT_PLA
     DEBUG_LOGF("appKymeraHandleInternalTonePromptPlay, prompt %x, tone %p, int %u, lock 0x%x, mask 0x%x",
                 msg->prompt, msg->tone, msg->interruptible, msg->client_lock, msg->client_lock_mask);
 
-#ifdef CONFIG_REC_ASSISTANT
+//#ifdef CONFIG_REC_ASSISTANT
+#if 0
     if (appKymeraRecordIsRun()){
         disable_audio_forward(TRUE);
         appKymeraRecordStop();
