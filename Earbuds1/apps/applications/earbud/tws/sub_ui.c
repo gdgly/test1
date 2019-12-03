@@ -327,7 +327,9 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         break;
     case STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB:
         gUserParam.sensorEnable = ind->payload[0];
+#ifdef HAVE_EM20168
         EM20168Power(gUserParam.sensorEnable);   ///App设置是否佩戴使能
+#endif
         ParamSaveUserPrm(&gUserParam);
         break;
     }

@@ -792,7 +792,7 @@ void gaiaAppGetParameter(GAIA_STAROT_IND_T *message, uint16 type){
     if (NULL != head) {
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, message->command, 0xfe, len, data);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
         attrFree(head, data);
     }
 }
