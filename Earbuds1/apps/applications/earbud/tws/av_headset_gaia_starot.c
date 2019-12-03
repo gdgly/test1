@@ -70,6 +70,8 @@ static void starotSpeedSendIntervalParse(void);
 
 static void gaiaTestProductRest(GAIA_STAROT_IND_T *message);
 
+static void gaiaSendDialogActiveStatus(int command, uint8* phone, int len);
+
 struct GaiaStarotPrivateData_T {
     Source dialogSpeaker;
     Source dialogMic;
@@ -469,12 +471,14 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
     }
 
     /// 电话号码
+    uint8* phoneInfo = NULL;
+    int phoneLen = 0;
     if (message->payloadLen > 2) {
-        uint8 *phone = message->payload + 2;
-        int len = message->payloadLen - 2;
-        StarotAttr *attr = attrMalloc(&head, len);
+        phoneInfo = message->payload + 2;
+        phoneLen = message->payloadLen - 2;
+        StarotAttr *attr = attrMalloc(&head, phoneLen);
         attr->attr = 0X01;
-        memcpy(attr->payload, phone, len);
+        memcpy(attr->payload, phoneInfo, phoneLen);
     }
 
     /// 发送通话属性
@@ -489,7 +493,9 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
 
     /// 电话接通
     if ((status & dialogActive) > 0) {
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ACTIVE, 0xfe, 0, NULL);
+        gaiaSendDialogActiveStatus(GAIA_COMMAND_STAROT_CALL_ACTIVE, phoneInfo, phoneLen);
+    } else if ((status & dialogInActive) > 0) {
+        gaiaSendDialogActiveStatus(GAIA_COMMAND_STAROT_CALL_INACTIVE, phoneInfo, phoneLen);
     }
 
     if (TRUE == needSendEnd) {
@@ -997,6 +1003,21 @@ void gaiaTestProductRest(GAIA_STAROT_IND_T *message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 // }
+
+void gaiaSendDialogActiveStatus(int command, uint8* phone, int len) {
+    const uint8 CallerAttr = 0X01;
+    StarotAttr *starotAttr = NULL;
+    if ((NULL != phone) && (len > 0)) {
+        StarotAttr *attr = attrMalloc(&starotAttr, len);
+        attr->attr = CallerAttr;
+        memcpy(attr->payload, phone, len);
+    }
+    uint16 attrLen = 0;
+    uint8 *attrData = attrEncode(starotAttr, &attrLen);
+    appGaiaSendPacket(GAIA_VENDOR_STAROT, command, 0xfe, attrLen, attrData);
+    attrFree(starotAttr, attrData);
+}
+
 
 #endif
 

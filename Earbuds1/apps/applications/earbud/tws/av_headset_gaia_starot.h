@@ -37,6 +37,7 @@ enum {
     GAIA_COMMAND_STAROT_CALL_DEVICE_TRANS_AUDIO_REQUEST = 0X500E,       // xxx
     GAIA_COMMAND_STAROT_CALL_ATTR = 0X500F,                             // xxx
     GAIA_COMMAND_STAROT_CALL_ACTIVE = 0X5010,                           // 电话接通
+    GAIA_COMMAND_STAROT_CALL_INACTIVE = 0X5011,                         // 电话结束
 };
 
 
