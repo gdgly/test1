@@ -64,6 +64,10 @@ enum {
     GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_CASE_STATUS = 0X5503,                // 通知充电盒状态
     GAIA_COMMAND_STAROT_BASE_INFO_NOTIFY_POWER_POSITION_CONNECTION = 0X5504,  // 通知电量、位置、连接信息
     GAIA_COMMAND_STAROT_BASE_INFO_APPGET_POWER_POSITION_CONNECTION = 0X5505,  // app获取电量、位置、连接信息
+    GAIA_COMMAND_STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB = 0X5506,             // App设置语言唤醒是否使能
+    GAIA_COMMAND_STAROT_BASE_INFO_GET_APOLLO_WAKEUP_ENB = 0X5507,             // App获取语言唤醒是否使能
+    GAIA_COMMAND_STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB = 0X5508,               // App设置佩戴检测是否使能
+    GAIA_COMMAND_STAROT_BASE_INFO_GET_ADORN_CHEAK_ENB = 0X5509,               // App获取佩戴检测是否使能
 };
 /////////////////////////////助手控制////////////////////////////////
 enum {

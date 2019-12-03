@@ -67,6 +67,7 @@ typedef struct tagPROGRUNINFO {
     uint16         bredrconnect:1;           // 与经典蓝牙建立连接0：disconect, 1:connect
     uint16         peerconnect:1;            // 与对方耳机建立连接0：disconect, 1:connect
     uint16         recStat:1;               // 当前是否正在录音
+    uint16         apolloWakeup:1;          // 当前apollo是否启动0:未启动, 1:启动
     uint16         chargeStat:3;            // 当前充电状态 CHARGE_ST_XXX
 
     uint8          peerPlace:3;             // 对方耳机状态 Bit0:盒子中 Bit1：空中 Bit2：佩戴
@@ -105,6 +106,12 @@ void appUiHfpCallInactive(void);
 void appUiAvConnected(unsigned cad);
 /*EDR disconnect state*/
 void appUiAvDisconnected(void);
+
+///////////////////////////////////////////////////////////////////////////////
+///  APOLLO
+///////////////////////////////////////////////////////////////////////////////
+int apolloWakeupCallback(void);
+bool appKymeraApolloIsRun(void);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///  盒子状态变化

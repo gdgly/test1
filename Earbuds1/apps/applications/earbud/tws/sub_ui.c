@@ -20,7 +20,6 @@ extern void appKymeraRecordStop(void);
 extern void disable_audio_forward(bool disable);
 void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
-int apolloWakeup(void);
 
 ProgRunInfo gProgRunInfo;
 uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
@@ -215,7 +214,7 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
 
     message->command = STAROT_NOTIFY_STATUS;
     message->payload[2] = (uint8)progRun->caseElectrity;
-    message->payload[3] = 0x00;
+    message->payload[3] = 0X00;
     message->payload[4] = 0X00;
     if(appConfigIsLeft()){
         message->payload[0] = (uint8)progRun->iElectrity;
@@ -228,14 +227,14 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
             message->payload[4] |= 0X20;
         switch(state) {
         case PHY_STATE_IN_CASE:
-            message->payload[3] |= 0x80;
+            message->payload[3] |= 0X80;
             break;
         case PHY_STATE_OUT_OF_EAR:
         case PHY_STATE_OUT_OF_EAR_AT_REST:
-            message->payload[3] |= 0x40;
+            message->payload[3] |= 0X40;
             break;
         case PHY_STATE_IN_EAR:
-            message->payload[3] |= 0x20;
+            message->payload[3] |= 0X20;
             break;
         case PHY_STATE_UNKNOWN:
             break;
@@ -322,6 +321,14 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_RECORD_RETURN_THREE_POWER:
         subUiStat2Gaia(ind->command, progRun);
         break;
+    case GAIA_COMMAND_STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB:  ///App设置语言唤醒是否使能
+        gUserParam.apolloEnable = ind->payload[0];
+        ParamSaveUserPrm(&gUserParam);
+        break;
+    case GAIA_COMMAND_STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB:
+        gUserParam.sensorEnable = ind->payload[0];
+        ParamSaveUserPrm(&gUserParam);
+        break;
     }
 }
 
@@ -347,6 +354,10 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
     case APP_GAIA_CONNECTED:
         DEBUG_LOG("GAIA connect to phone");
+        if(1 == gUserParam.apolloEnable){
+            progRun->apolloWakeup = 1;
+            appSubUISetMicbias(TRUE);
+        }
         progRun->gaiaStat  = 1;
         break;
     case APP_GAIA_DISCONNECTED:
@@ -359,10 +370,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
 
     case INIT_CFM:
-        register_apollo_wakeup_cb(apolloWakeup);                       //注册apollo唤醒函数
-
-        DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");
-        appSubUISetMicbias(TRUE);
+        DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");    /* Get microphone sources */
+        register_apollo_wakeup_cb(apolloWakeupCallback);                       //注册apollo唤醒函数
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
         /// todo hjs 暂时不启用自动配对
 #ifndef TWS_DEBUG
@@ -864,11 +873,22 @@ const ringtone_note app_tone_wakeup[] =
     RINGTONE_STOP
 };
 
-int apolloWakeup(void)
+int apolloWakeupCallback(void)
 {
-    MessageSend(&appGetUi()->task, APP_ASSISTANT_AWAKEN, 0);
-    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
+    ProgRIPtr  progRun = appSubGetProgRun();
+    if((0 == progRun->recStat) &&
+            ((progRun->dial_stat & (DIAL_ST_IN|DIAL_ST_OUT|DIAL_ST_ACT)) == 0)){
+        MessageSend(&appGetUi()->task, APP_ASSISTANT_AWAKEN, 0);
+    }
+    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);//播放提示音会把录音停止掉
     return 0;
+}
+
+bool appKymeraApolloIsRun(void)
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    return (progRun->apolloWakeup != 0) ? TRUE : FALSE;
 }
 
 #endif

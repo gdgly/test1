@@ -513,12 +513,12 @@ void appKymeraMicCleanup(uint8 mic_1a, uint8 mic1b)
     {
         if(mic_1a != NO_MIC) {
             DEBUG_LOG("appKymeraMicCleanup, disable MIC bias for SCO MIC 1");
-            AudioPluginSetMicBiasDrive(theKymera->mic_params[appConfigScoMic1()], FALSE);
+            AudioPluginSetMicBiasDrive(theKymera->mic_params[appConfigScoMic1()], appKymeraApolloIsRun());
         }
         if (mic1b != NO_MIC)
         {
             DEBUG_LOG("appKymeraMicCleanup, disable MIC bias for SCO MIC 2");
-            AudioPluginSetMicBiasDrive(theKymera->mic_params[appConfigScoMic2()], FALSE);
+            AudioPluginSetMicBiasDrive(theKymera->mic_params[appConfigScoMic2()], appKymeraApolloIsRun());
         }
     }
 }

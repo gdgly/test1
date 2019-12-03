@@ -50,6 +50,8 @@ bool ParamUsingSingle(void);
 /////////////////////////////////////////////////////////////////////////////////
 typedef struct tagUSERPARAM {
     uint8          lKeyFunc, rKeyFunc;        // 耳机双击按键功能
+    uint16         apolloEnable:1;            // 设置apollo是否使能0:不使能, 1:使能
+    uint16         sensorEnable:1;            // 设置佩戴是否使能0:不使能, 1:使能
 
     uint8          rev[8];
 }UserParam, *UserPrmPtr;
