@@ -436,6 +436,9 @@ int CDeviceCtrl::BurningApollo(void)
 	CString sCommand, sTmp;
 	CExecProcess  *execProg = new CExecProcess();
 
+	CloseEngine();
+	Sleep(2000);
+
 	//sCommand.Format("%s -CommanderScript burnApollo.bat", m_iniParam.sJlinkPath);
 	sCommand.Format("%s -CommanderScript ", m_iniParam.sJlinkPath);
 	sCommand = sCommand + m_iniParam.apollo_burn_bat;
@@ -443,6 +446,8 @@ int CDeviceCtrl::BurningApollo(void)
 	execProg->Create(CExecProcess::ASYNC);
 	execProg->Execute(sCommand);
 
+	int erase_ok, download_ok, scrip_ok;
+	erase_ok = 0; download_ok = 0; scrip_ok = 0;
 	while (true) {
 		memset(sText, 0, sizeof(sText));
 		if ((rdlen = execProg->ReadLine(sText, 256)) > 0) {
@@ -457,6 +462,12 @@ int CDeviceCtrl::BurningApollo(void)
 			else if (sTmp.Find("Could not open J-Link Command File") >= 0) { //  Could not open J-Link Command File 'burnApollo.bat'
 				msgbuf = (char*)GetMsgBuffer();
 				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "No Found burnApollo.bat");
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_APOLLO, (LPARAM)msgbuf);
+				break;
+			}
+			else if (sTmp.Find("Cannot connect to target.") >= 0) {//****** Error: Failed to download RAMCode. Failed to prepare for programming.
+				msgbuf = (char*)GetMsgBuffer();
+				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "Cannot connect to target");
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_APOLLO, (LPARAM)msgbuf);
 				break;
 			}
@@ -478,7 +489,16 @@ int CDeviceCtrl::BurningApollo(void)
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_APOLLO, (LPARAM)msgbuf);
 				break;
 			}
-			else if (sTmp.Find("Script processing completed.") >= 0) {//Script processing completed.
+			else if ( sTmp.Find("Erasing done.") >= 0 ) {//Script processing completed.
+				erase_ok = 1;
+			}
+			else if (sTmp.Find("O.K.") >= 0 ) {//Script processing completed.
+				download_ok = 1;
+			}
+			else if (sTmp.Find("Script processing completed.") >= 0 ) {//Script processing completed.
+				scrip_ok = 1;
+			}
+			if(erase_ok && download_ok && scrip_ok){
 				msgbuf = (char*)GetMsgBuffer();
 				sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", "Script completed");
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_APOLLO, (LPARAM)msgbuf);
