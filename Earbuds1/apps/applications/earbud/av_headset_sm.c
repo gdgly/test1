@@ -349,6 +349,7 @@ static void appEnterHandsetPairing(void)
     appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
 
     appBleClearBond();
+    appGaiaDisconnect();
 }
 
 /*! \brief Exit actions when handset pairing completed.

@@ -438,12 +438,6 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
         attr->payload[0] = (status > 0) ? 0X01 : 0X02;
     }
 
-    /// 电话接通
-    if ((status & dialogActive) > 0) {
-        StarotAttr *attr = attrMalloc(&head, 1);
-        attr->attr = 0X05;
-        attr->payload[0] = 0x02;
-    }
 
     /// 电话挂断
     bool needSendEnd = FALSE;
@@ -459,10 +453,10 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
             attr->payload[3] = (uint8)((num >> 24) & 0X00FF);
         }
 
-        {
-            StarotAttr *attr = attrMalloc(&head, 1);
-            attr->attr = 0X03;
-        }
+//        {
+//            StarotAttr *attr = attrMalloc(&head, 1);
+//            attr->attr = 0X03;
+//        }
         needSendEnd = TRUE;
 
         if (appGetGaia()->transformAudioFlag > TRANSFORM_CANT) {
@@ -493,12 +487,16 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
         attrFree(head, data);
     }
 
+    /// 电话接通
+    if ((status & dialogActive) > 0) {
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ACTIVE, 0xfe, 0, NULL);
+    }
+
     if (TRUE == needSendEnd) {
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_END, 0xfe, 0, NULL);
 //        StarotResendCommand *resend = starotResendCommandInit(GAIA_COMMAND_STAROT_CALL_END, 0, 0);
 //        MessageSendLater(appGetGaiaTask(), STAROT_DIALOG_CALL_END_TIMEOUT, resend, STAROT_COMMAND_TIMEOUT);
     }
-
 }
 
 void gaiaNotifyAudioAcceptStatus(Task task, int command) {
