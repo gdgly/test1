@@ -625,7 +625,9 @@ void appUiHfpCallIncomingInactive(int16 isEnd)
     if(isEnd)
         progRun->dial_stat  &= ~(DIAL_ST_IN | DIAL_ST_ACT);
 
-//    MessageSend(&appGetUi()->task, APP_CALLIN_INACT, 0);
+    if (isEnd) {
+        MessageSend(&appGetUi()->task, APP_CALLIN_INACT, 0);
+    }
 }
 
 /* Cancel HFP outcoming call */
@@ -636,7 +638,9 @@ void appUiHfpCallOutcomingInactive(int16 isEnd)
     if(isEnd)
         progRun->dial_stat  &= ~(DIAL_ST_OUT | DIAL_ST_ACT);
 
-//    MessageSend(&appGetUi()->task, APP_CALLOUT_INACT, 0);
+    if (isEnd) {
+        MessageSend(&appGetUi()->task, APP_CALLOUT_INACT, 0);
+    }
 }
 
 /* Show HFP call active */
