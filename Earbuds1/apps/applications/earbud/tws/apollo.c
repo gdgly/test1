@@ -19,7 +19,7 @@ static int apollo_read_fb(uint8 *ret, uint32 length, bitserial_handle handle);
 static int apollo_fb(uint8 *ret, uint32 length);
 static void write_image_param(bitserial_handle handle, uint32 addr, uint32 size, uint32 crc);
 static int transfer_image(void);
-static void read_fw_version(void);
+static int read_fw_version(void);
 static const uint8* map_image(void);
 static void release_image(void);
 static void start_boot_mode_1(void);
@@ -33,6 +33,8 @@ static bool should_upgrade(void);
 static int apollo_check_and_start_upgrade(void);
 static int check_fw_ver(uint32 fw_ver);
 static void wait_for_timeout(int delay);
+static void apollo_init_finish(void);
+
 
 /****** debug ******/
 #define ENABLE_APOLLO_DEBUG (1)
@@ -228,6 +230,7 @@ static void apollo_init_handler(MessageId id, Message msg)
                             APOLLO_DBG_LOG("init fail");
                             apollo_state = APOLLO_STATE_ERR;
                             IO_LOW(APOLLO_OVERRIDE_IO);
+                            apollo_init_finish();
                         }
                         break;
                     }
@@ -238,6 +241,7 @@ static void apollo_init_handler(MessageId id, Message msg)
                         apollo_fw_ver = feedback[1];
                         APOLLO_DBG_LOG("init ok, fw ver: 0x%x.", apollo_fw_ver);
                         apollo_state = APOLLO_STATE_IDLE;
+                        apollo_init_finish();
                         if (apollo_init_end_cb) apollo_init_end_cb();
                     }
                     else if (APOLLO_ACK_WAKEUP == feedback[0]) {
@@ -255,6 +259,7 @@ static void apollo_init_handler(MessageId id, Message msg)
                             /* finally read fw version fail, mark apollo as error. */
                             apollo_state = APOLLO_STATE_ERR;
                             IO_LOW(APOLLO_OVERRIDE_IO);
+                            apollo_init_finish();
                         }
                     }
                 }
@@ -271,7 +276,12 @@ static void apollo_init_handler(MessageId id, Message msg)
                     if (INT_IS_LOW) {
                         APOLLO_DBG_LOG("int init ok");
                         apollo_state = APOLLO_STATE_INIT_RD_FW_VER;
-                        read_fw_version();
+                        if(read_fw_version()) {
+                            /* 老开发板如果没有连接apollo，读版本号时i2c操作会失败，当失败时也要发送结束消息，否则init过程无法走完. */
+                            apollo_state = APOLLO_STATE_ERR;
+                            IO_LOW(APOLLO_OVERRIDE_IO);
+                            apollo_init_finish();
+                        }
                     }
                     else if (io_init_wait_int_low_to < 5) {
                         /* if apollo not up in the last gap, we can wait more gap. */
@@ -283,6 +293,7 @@ static void apollo_init_handler(MessageId id, Message msg)
                         /* apollo finally can not go up, marked as error. */
                         apollo_state = APOLLO_STATE_ERR;
                         IO_LOW(APOLLO_OVERRIDE_IO);
+                        apollo_init_finish();
                     }
                 }
             }
@@ -494,6 +505,11 @@ static void apollo_common_handler(MessageId id, Message msg)
     }
 }
 
+static void apollo_init_finish(void) {
+    MessageSend(appGetAppTask(), APOLLO_INIT_CFM, NULL);
+}
+
+
 static bool should_upgrade(void) {
     const apollo_image_header_t *header = (const apollo_image_header_t*) map_image();
     apollo_up_img_ver = header->version;
@@ -615,11 +631,12 @@ static void apollo_task_handler(Task appTask, MessageId id, Message msg)
         apollo_common_handler(id, msg);
 }
 
-static void read_fw_version(void)
+static int read_fw_version(void)
 {
     bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
-    apollo_send_cmd(APOLLO_GET_FW_VER, handle);
+    int ret = apollo_send_cmd(APOLLO_GET_FW_VER, handle);
     hwi2cClose(handle);
+    return ret;
 }
 
 /*

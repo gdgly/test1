@@ -20,6 +20,11 @@ typedef struct {
     uint32 image;
 } apollo_image_header_t;
 
+enum apolloMessages
+{
+    APOLLO_INIT_CFM = APOLLO_MESSAGE_BASE
+};
+
 typedef int (*apollo_wakeup_cb_t)(void);
 typedef int (*apollo_wakeup_cb_param_t)(uint32 p);
 

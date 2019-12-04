@@ -255,7 +255,7 @@ static const appInitTableEntry appInitTable[] =
     {CummuInit,             0, NULL},
 #endif
 #ifdef ENABLE_APOLLO
-    {apollo_int_io_init,        0, NULL},
+    {apollo_int_io_init,    APOLLO_INIT_CFM, NULL},
 #endif
     {NULL,                  0, NULL}
 };

@@ -42,5 +42,6 @@
 #define TEMPERATURE_MESSAGE_BASE    (0xf60)     /*!< Temperature module messages. Note limited range. See #temperatureMessages */
 #define PEER_SYNC_MESSAGE_BASE      (0xf70)     /*!< Peer sync module messages. Note limited range. See #peerSyncMessages */
 #define APP_GATT_MESSAGE_BASE       (0xf80)     /*!< Messages for the GATT support module. Note limited range. See #av_headet_gatt_messages */
+#define APOLLO_MESSAGE_BASE         (0xf90)     /*!< Device apollo messages. */
 /*@} */
 #endif
