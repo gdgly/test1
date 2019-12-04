@@ -199,6 +199,8 @@ int Lis2dw12Power(bool isOn);//1 打开，0关闭
 #undef EM20168_ITR_PIN
 #define EM20168_ITR_PIN 8
 int EM20168_GetStatus(void);//0 表示初始化ok, -1 wrong
+void EM20168_Set_psvalue(bool high_or_low, unsigned short reg_value);//设置产生中断值，high_or_low表示设最大值或最小值
+unsigned short EM20168_Get_psvalue(void);//返回当前ps值
 
 /* max20340 single bus */
 #define HAVE_MAX20340

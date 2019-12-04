@@ -135,6 +135,40 @@ int EM20168Power(bool isOn)
     return ret;
 }
 
+unsigned short EM20168_Get_psvalue(void)
+{
+    uint8 value;
+    unsigned short em20168_ps0_value;
+    bitserial_handle handle;
+    handle = EM20168Enable();
+    EM20168ReadRegister(handle, 0x20, &value);
+    em20168_ps0_value = value;
+    EM20168ReadRegister(handle, 0x21, &value);
+    em20168_ps0_value += value << 8;
+    EM20168Disable(handle);
+    DEBUG_LOG("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
+    return em20168_ps0_value;
+}
+
+void EM20168_Set_psvalue(bool high_or_low, unsigned short reg_value)
+{
+    uint8 value;
+    bitserial_handle handle;
+    handle = EM20168Enable();
+    if(high_or_low){//1 表示写最高值
+        value = (uint8)(reg_value & 0xff);
+        EM20168WriteRegister(handle, 5, value);
+        value = (uint8)((reg_value>>8) & 0xff);
+        EM20168WriteRegister(handle, 6, value);
+    }else{//0写最小值
+        value = (uint8)(reg_value & 0xff);
+        EM20168WriteRegister(handle, 3, value);
+        value = (uint8)((reg_value>>8) & 0xff);
+        EM20168WriteRegister(handle, 4, value);
+    }
+    EM20168Disable(handle);
+}
+
 void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
 {
     (void)id;(void)msg;(void)task;
