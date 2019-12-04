@@ -192,10 +192,10 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             gaiaAppSetParameter(message, 1);
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_APOLLO_WAKEUP_ENB:
-            gaiaAppGetParameter(message, 0);
+            gaiaAppGetParameter(message, 1);
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB:
-            gaiaAppSetParameter(message, 1);
+            gaiaAppSetParameter(message, 0);
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_ADORN_CHEAK_ENB:
             gaiaAppGetParameter(message, 0);
