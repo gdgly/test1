@@ -9,6 +9,10 @@
 #include "../av_headset_log.h"
 
 #define LIS2DW12_I2C_ADDR 0x19
+#ifdef CONFIG_BOARD_V2
+#undef  LIS2DW12_I2C_ADDR
+#define LIS2DW12_I2C_ADDR 0x18
+#endif
 #define LIS2DW12_I2C_FREQ 400
 
 bool lis2dw12ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value);

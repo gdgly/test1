@@ -128,6 +128,7 @@ lis2dw12_str lis2dw12_init_array[] = {
     {0x3d, 0xff,    0x00},
     {0x3e, 0xff,    0x00},
     {0x3f, 0xff,    0x20},
+    {0x17, 1<<6,    1<<6},
 };
 
 bool lis2dw12_status = FALSE;
@@ -146,13 +147,14 @@ int Lis2dw12Power(bool isOn)
     bitserial_handle handle;
     handle = lis2dw12Enable();
     if(isOn){
-        ret = lis2dw12WriteRegister(handle, 0x32, 0x25);
+        ret = lis2dw12WriteRegister(handle, 0x20, 0x74);
     }else{
-        ret = lis2dw12WriteRegister(handle, 0x32, 0x05);
+        ret = lis2dw12WriteRegister(handle, 0x20, 0x04);
     }
     lis2dw12Disable(handle);
     return ret;
 }
+
 
 void lis2dw12_init(void)
 {

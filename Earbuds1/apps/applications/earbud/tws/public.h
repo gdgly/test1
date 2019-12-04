@@ -8,6 +8,8 @@
 //#define CONFIG_BOARD_V1        // V1版本
 //#define CONFIG_BOARD_V1_EARBARD //v1耳机板与demo板io不一样，打开此宏表示是耳机
 
+#define CONFIG_BOARD_V2
+
 //==============================================================================================
 // TBR 调试器在DEMO板上使用使用的IO脚列表如下，可能会与我们系统中的冲突，注意不能同时使用
 //    上面一排右为1脚
@@ -182,6 +184,38 @@ int Lis2dw12Power(bool isOn);//1 打开，0关闭
 #define PSRAM_POWER_PIO     3
 #define MAX20340_ITR_PIN    2
 #endif
+
+#endif
+
+#ifdef CONFIG_BOARD_V2
+#undef CONFIG_LIS25BA
+
+#define CONFIG_I2CADDR_FOR_LEFT_RIGHT       // V1版本 使用I2C地址来确认是左右耳
+#undef  appConfigLeftAudioChannel
+#define appConfigLeftAudioChannel()              (AUDIO_CHANNEL_B)       // 耳机使用右声道输出
+
+/*接近光*/
+#define HAVE_EM20168
+#undef EM20168_ITR_PIN
+#define EM20168_ITR_PIN 8
+int EM20168_GetStatus(void);//0 表示初始化ok, -1 wrong
+
+/* max20340 single bus */
+#define HAVE_MAX20340
+#define MAX20340_ITR_PIN 2
+int max20340_get_left_or_right(void);//返回0没找到，1左耳，2右耳
+void max20340_init(void);
+int max20340_GetStatus(void);//0 表示初始化ok, -1 wrong
+
+/*tap*/
+#define HAVE_LIS2DW12
+#define LIS2DW12_ITR_PIN 5
+void lis2dw12_init(void);
+int lis2dw12_GetStatus(void);//0 表示初始化ok, -1 wrong
+int Lis2dw12Power(bool isOn);//1 打开，0关闭
+
+#undef PSRAM_POWER_PIO
+#define PSRAM_POWER_PIO     3
 
 #endif
 
