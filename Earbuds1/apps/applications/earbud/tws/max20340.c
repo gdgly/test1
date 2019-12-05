@@ -461,6 +461,10 @@ void singlebus_itr_handler(Task task, MessageId id, Message msg)
     switch(id) {
         case MESSAGE_PIO_CHANGED:
             if( !(pin&pio_state) ){
+                if(3 == g_commuType){
+                    char* buff = "check PLC SUSS";
+                    CommpcMessage((uint8*)buff, 15);
+                }
                 singlebus_itr_process();
             }
             break;

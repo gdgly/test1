@@ -65,6 +65,10 @@ void tap_itr_handle_lis2dw12(void)
 //           value_arr[0], value_arr[1], value_arr[2], value_arr[3], value_arr[4]);
     if(value_arr[0] & 0x10){
         DEBUG_LOG("double tap\n");
+        if(4 == g_commuType){
+            char* buff = "check TAP SUSS";
+            CommpcMessage((uint8*)buff, 15);
+        }
         MessageSend(appGetUiTask(), APP_BTN_DOUBLE_TAP, NULL);
     }
     lis2dw12Disable(handle);

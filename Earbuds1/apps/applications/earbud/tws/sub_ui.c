@@ -20,6 +20,7 @@ extern void appKymeraRecordStop(void);
 extern void disable_audio_forward(bool disable);
 void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
+void appSubUISetMicbias(int set);
 
 ProgRunInfo gProgRunInfo;
 uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
@@ -67,7 +68,7 @@ static void subUiKeyDoubleTap(ProgRIPtr progRun)
 }
 
 // 唤醒时是需要设置BIAS
-static void appSubUISetMicbias(int set)
+void appSubUISetMicbias(int set)
 {
     uint16 value = (set ? MIC_BIAS_FORCE_ON : MIC_BIAS_OFF);
 
@@ -878,6 +879,11 @@ const ringtone_note app_tone_wakeup[] =
 
 int apolloWakeupCallback(void)
 {
+    if(1 == g_commuType){
+        char* buff = "check WAKEUP SUSS";
+        CommpcMessage((uint8*)buff, 18);
+    }
+
     ProgRIPtr  progRun = appSubGetProgRun();
     if((0 == progRun->recStat) &&
             ((progRun->dial_stat & (DIAL_ST_IN|DIAL_ST_OUT|DIAL_ST_ACT)) == 0)){

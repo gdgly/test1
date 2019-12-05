@@ -198,7 +198,7 @@ int apolloGetStatus(void) {
 
 /*get Apollo version*/
 void comGetApolloVer(uint8 *arr) {
-    memcpy(arr, (uint8*)&apollo_fw_ver, 8);
+    memcpy(arr, (uint8*)&apollo_fw_ver, 4);
 }
 
 /*

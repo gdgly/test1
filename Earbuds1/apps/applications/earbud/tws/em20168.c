@@ -227,6 +227,10 @@ void EM20168_itr_handler(Task task, MessageId id, Message msg)
     switch(id) {
         case MESSAGE_PIO_CHANGED:
             if( !(pin&pio_state) ){
+                if(2 == g_commuType){
+                    char* buff = "check SENSOR SUSS";
+                    CommpcMessage((uint8*)buff, 20);
+                }
                 EM20168_itr_read_reg(task, id, msg);
             }
             break;

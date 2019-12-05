@@ -137,6 +137,7 @@ void CommpcParse(GAIA_STAROT_AUDIO_IND_T *message)
     SourceDrop(message->source, message->len);
 }
 
+extern void appSubUISetMicbias(int set);
 /* Task handler function */
 static void CummuHandler(Task task, MessageId id, Message message)
 {
@@ -144,6 +145,8 @@ static void CummuHandler(Task task, MessageId id, Message message)
     char outbuf[128];
     CommuInfo *pComu = (CommuInfo*)task;
     int outsize;
+    char *p = NULL;
+    unsigned short value = 0;
     switch (id)
     {
         case MESSAGE_FROM_HOST:
@@ -195,6 +198,44 @@ static void CummuHandler(Task task, MessageId id, Message message)
 #endif
                 CummuhandleSendData(task, (uint8*)"checkresp STOPRECORD", 22);
             }
+            if(strstr((char *)payload, "check WAKEUP")){
+                g_commuType = 1;
+                appSubUISetMicbias(TRUE);
+                CummuhandleSendData(task, (uint8*)"checkresp WAKEUP", 17);
+            }
+            if(strstr((char *)payload, "check RDSENSOR")){
+                value = EM20168_Get_psvalue();
+                outsize = sprintf(outbuf, "checkresp RDSENSOR=%d", value);
+                CummuhandleSendData(task, (uint8*)outbuf, outsize);
+            }
+
+            if(strstr((char *)payload, "check WRSENSOR")){
+                if((p = strchr((char *)payload, '=')) != NULL){
+                    p += 1;
+                    EM20168_Set_psvalue(1, (unsigned short)atoi(p));
+                    outsize = sprintf(outbuf, "checkresp RDSENSOR=%d", atoi(p));
+                    CummuhandleSendData(task, (uint8*)outbuf, outsize);
+                }else{
+                    CummuhandleSendData(task, (uint8*)"not find", 9);
+                }
+            }
+
+            if(strstr((char *)payload, "check SENSOR")){
+                g_commuType = 2;
+                CummuhandleSendData(task, (uint8*)"checkresp SENSOR", 17);
+            }
+
+            if(strstr((char *)payload, "check PLC")){
+                g_commuType = 3;
+                CummuhandleSendData(task, (uint8*)"checkresp PLC", 14);
+            }
+
+            if(strstr((char *)payload, "check TAP")){
+                g_commuType = 4;
+                CummuhandleSendData(task, (uint8*)"checkresp TAP", 14);
+            }/*else{
+                CummuhandleSendData(task, (uint8*)"undefind command", 17);
+            }*/
             break;
         }
 
@@ -219,6 +260,14 @@ static void CummuHandler(Task task, MessageId id, Message message)
             CommpcParse((GAIA_STAROT_AUDIO_IND_T *) message);
             break;
     }
+}
+
+//作为判断1：唤醒,2：接近光,3：PLC,4：敲击是否正常工作,发送消息的标记
+uint16 g_commuType = 0;
+void CommpcMessage(uint8* buff ,uint8 size)
+{
+    g_commuType = 0;
+    CummuhandleSendData(GetCommuTask(), (uint8 *)buff, size);
 }
 
 Task GetCommuTask(void)
