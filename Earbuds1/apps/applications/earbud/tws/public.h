@@ -142,6 +142,8 @@ void tap_func_init(void);
 #define CUMMPC_PC_USB
 void CummuInit(void);
 Task GetCommuTask(void);
+void CommpcMessage(uint8* buff ,uint8 size);
+extern uint16 g_commuType;
 
 //==============================================================================================
 //      BOARD_V1 不同定义 硬件上的差别
