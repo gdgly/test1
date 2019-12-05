@@ -64,7 +64,7 @@ CDeviceCtrl::CDeviceCtrl()
 
 	m_secRecord = 6;
 	m_secTimeout = 6;
-	m_SensorDiff = -200;
+	m_SensorDiff = 200;
 
 	m_curTick = 0;
 	m_devHandle = 0;
@@ -132,10 +132,11 @@ static CString _sReport[] = {
 	"RERROT_APOLLO",
 
 	"REPORT_READ_RECORD",
+	"REPORT_WAKEUP","REPORT_SENSOR","REPORT_PLC","REPORT_TAP",
 
 	"REPORT_READ_SENSOR",
 	"REPORT_WRITE_SENSOR",
-
+	
 	"REPORT_USER_EXIT",
 	"REPORT_END_ALL",
 	"REPORT_LAST",
@@ -719,7 +720,8 @@ int CDeviceCtrl::teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp)
 	if (m_devHandle == 0)
 		return -1;
 
-	ret = teAppWrite(m_devHandle, 0, (const uint16*)cmdbuf, cmdlen / 2);
+	TRACE("WRITE:%s\n", (char*)cmdbuf);
+	ret = teAppWrite(m_devHandle, 0, (const uint16*)cmdbuf, (cmdlen+1) / 2);
 	if (ret != TE_OK)
 		return -2;
 
@@ -999,6 +1001,7 @@ int CDeviceCtrl::CheckSensorRead(int &value)
 
 			MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_SENSOR, (LPARAM)rdbuf);
 		}
+		else ret = -3;
 	}
 	if(ret < 0)
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_READ_SENSOR, (LPARAM)cmdbuf);
@@ -1011,7 +1014,7 @@ int CDeviceCtrl::CheckSensorWrite(int value)
 {
 	int ret = -2;
 	UINT16 *cmdbuf, cmdlen;
-	char strResp[64];
+	char *strResp = (char*)GetMsgBuffer();
 
 	if (OpenEngineNeed() < 0)
 		return -1;
@@ -1019,11 +1022,10 @@ int CDeviceCtrl::CheckSensorWrite(int value)
 	TRACE("LINE:%d\n", __LINE__);
 	cmdbuf = (UINT16*)GetMsgBuffer();
 	cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check WRSENSOR=%d", value);
-	memset(strResp, 0, sizeof(strResp));
-	sprintf_s(strResp, sizeof(strResp), "checkresp %s", "WRSENSOR");
+	sprintf_s(strResp, PSKEY_BUFFER_LEN, "checkresp %s", "WRSENSOR");
 
 	if (teWriteAndRead(cmdbuf, cmdlen, strResp) == 0) {
-		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_SENSOR, (LPARAM)cmdbuf);
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRITE_SENSOR, (LPARAM)strResp);
 		ret = 0;
 	}
 	else
@@ -1040,7 +1042,6 @@ int CDeviceCtrl::CheckInterrupt(IntrType type, int timeout, int bCloseEnable)
 	unsigned char channel;
 	UINT16 *cmdbuf, cmdlen;
 	UINT16 *rdbuf, rdlen;
-	UINT32 datacnt = 0;
 	char strResp[64];
 	const char *strType[] = { "WAKEUP", "SENSOR", "PLC", "TAP",};            // IntrType
 	
@@ -1048,7 +1049,7 @@ int CDeviceCtrl::CheckInterrupt(IntrType type, int timeout, int bCloseEnable)
 		return -1;
 
 	TRACE("LINE:%d\n", __LINE__);
-	m_checkStatus = CHECK_ST_RECSTART;
+	m_checkStatus = CHECK_ST_WAKEUP;
 	m_curTick = ::GetTickCount();
 	memset(strResp, 0, sizeof(strResp));
 	while (1) {
@@ -1060,10 +1061,9 @@ int CDeviceCtrl::CheckInterrupt(IntrType type, int timeout, int bCloseEnable)
 			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check %s", strType[type]);			
 			sprintf_s(strResp, sizeof(strResp), "checkresp %s", strType[type]);
 			if (teWriteAndRead(cmdbuf, cmdlen, strResp) == 0) {
-				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)strResp);
 				m_checkStatus = CHECK_ST_WAKEUP_WAIT;
 				m_curTick = ::GetTickCount();
-				datacnt = 0;
 			}
 			else {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_COMMU_FAIL, (LPARAM)cmdbuf);
@@ -1079,7 +1079,7 @@ int CDeviceCtrl::CheckInterrupt(IntrType type, int timeout, int bCloseEnable)
 			if (ret == TE_OK) {
 				if (strstr((char*)rdbuf, strType[type]) >= 0) {
 					isEnd = (strstr((char*)rdbuf, "SUCC") >= 0) ? 2 : 1;
-					MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_RECORD, (LPARAM)datacnt);
+					MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WAKEUP+type, (LPARAM)rdbuf);
 				}
 				else {
 					TRACE("Read: %s\n", (char *)rdbuf);
@@ -1096,6 +1096,9 @@ int CDeviceCtrl::CheckInterrupt(IntrType type, int timeout, int bCloseEnable)
 
 		if (::GetTickCount() - m_curTick > (UINT)(timeout * 1000)) {      // N秒接收不到数据退出
 			ret = -2;
+			cmdbuf = (UINT16*)GetMsgBuffer();
+			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "TimeOut check %s", strType[type]);
+			MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_WAKEUP+type, (LPARAM)cmdbuf);
 			break;
 		}
 	}
@@ -1286,21 +1289,53 @@ int CDeviceCtrl::CrystalTrimming(int value)
 	return 0;
 }
 
-int CDeviceCtrl::OpenEngineNeed(void)
+int CDeviceCtrl::EnterDUTMode(void)
+{
+	int ret = -1, success = -2;
+
+	CloseEngine();
+
+	if (OpenEngineNeed(1) <= 0)
+		return -1;
+
+	// Make connectable
+	if ((success = bccmdEnableDeviceConnect(m_devHandle)) != TE_OK) {
+		TRACE("Fasil bccmdEnableDeviceConnect\n");
+		ret = -2;
+		goto out;
+	}
+
+	// Enable DUT mode
+	if ((success = bccmdEnableDeviceUnderTestMode(m_devHandle)) != TE_OK) {
+		ret = -3;
+		goto out;
+	}
+
+	ret = 0;
+
+out:
+//	CloseEngine();  // 不要CLOSE，否则会退出 DUT模式
+	return ret;
+}
+
+int CDeviceCtrl::OpenEngineNeed(int debug)
 {
 	if (m_devHandle == 0) {	// OPened
-		if (OpenEngine() < 0) {
+		if (OpenEngine(debug) < 0) {
 			return -1;
 		}
 	}
-
+	
 	return m_devHandle;
 }
 
-int CDeviceCtrl::OpenEngine(void)
+int CDeviceCtrl::OpenEngine(int debug)
 {
 	for (int i = 0; i < 100; i++) {
-		m_devHandle = openTestEngine(USBDBG, "1", 0, 5000, 1000);
+		if(debug)
+			m_devHandle = openTestEngineDebug(1, 0, DEBUG_USBDBG);
+		else
+			m_devHandle = openTestEngine(USBDBG, "1", 0, 5000, 1000);
 		if (m_devHandle > 0)
 			break;
 

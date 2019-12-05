@@ -82,6 +82,7 @@ public:
 	afx_msg void OnBnClickedBtnSensor();
 	afx_msg void OnBnClickedBtnCaseplc();
 	afx_msg void OnBnClickedBtnTap();
+	afx_msg void OnBnClickedBtnDutMode();
 };
 
 

@@ -34,6 +34,8 @@ enum {
 	ERROR_READ_SENSOR,
 	ERROR_WRITE_SENSOR,
 
+	ERROR_WAKEUP, ERROR_SENSOR, ERROR_PLC, ERROR_TAP,
+
 	ERROR_COMMU_FAIL=70,              // COMMU
 
 };
@@ -66,6 +68,7 @@ enum {
 	REPORT_APOLLO,
 
 	REPORT_READ_RECORD,
+	REPORT_WAKEUP,REPORT_SENSOR,REPORT_PLC,REPORT_TAP,
 
 	REPORT_READ_SENSOR,
 	REPORT_WRITE_SENSOR,
@@ -158,10 +161,12 @@ private:
 
 	int CrystalTrimming(int value);
 
+
 	int teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp);
 public:
-	int OpenEngineNeed(void);
-	int OpenEngine(void);
+	int EnterDUTMode(void);
+	int OpenEngineNeed(int debug = 0);
+	int OpenEngine(int debug = 0);
 	int CloseEngine(void);
 	
 private:

@@ -100,6 +100,7 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SENSOR, &CProductDevToolsDlg::OnBnClickedBtnSensor)
 	ON_BN_CLICKED(IDC_BTN_CASEPLC, &CProductDevToolsDlg::OnBnClickedBtnCaseplc)
 	ON_BN_CLICKED(IDC_BTN_TAP, &CProductDevToolsDlg::OnBnClickedBtnTap)
+	ON_BN_CLICKED(IDC_BTN_DUT_MODE, &CProductDevToolsDlg::OnBnClickedBtnDutMode)
 END_MESSAGE_MAP()
 
 
@@ -775,6 +776,13 @@ void CProductDevToolsDlg::OnBnClickedBtnTap()
 	StartDevContrl(THREAD_TAP);
 }
 
+
+void CProductDevToolsDlg::OnBnClickedBtnDutMode()
+{
+	m_devCtrl.EnterDUTMode();
+}
+
+
 void CProductDevToolsDlg::OnBnClickedBtnStop()
 {
 	m_devCtrl.Stop();
@@ -814,6 +822,10 @@ LRESULT CProductDevToolsDlg::OnDevCtrlError(WPARAM wParam, LPARAM lParam)
 	sText.Format("%02d", (int)wParam);
 	m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 
+	if (0 != lParam) {
+		sText.Format("%s", (int)lParam);
+		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
+	}
 
 	return 0;
 }
@@ -849,6 +861,12 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 		break;
 	case REPORT_COMMU_READ:
+	case REPORT_READ_SENSOR:
+	case REPORT_WRITE_SENSOR:
+	case REPORT_WAKEUP:
+	case REPORT_SENSOR:
+	case REPORT_PLC:
+	case REPORT_TAP:
 		sText.Format("%s", (char*)lParam);
 		OnReportCheck(sText, count);
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
@@ -858,7 +876,6 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 		OnReportCheck(sText, count);
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 		break;
-
 	case REPORT_END_ALL:
 		sText.Format("result=%d", (int)lParam);
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
@@ -964,6 +981,7 @@ void CProductDevToolsDlg::OnBnClickedBtnClear()
 {
 	m_ListCtrl.DeleteAllItems();
 }
+
 
 
 
