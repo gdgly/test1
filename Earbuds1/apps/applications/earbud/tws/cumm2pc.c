@@ -163,9 +163,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
 
                 CummuhandleSendData(task, (uint8*)"checkresp DEVICEINFO", 21);
             }
-//            if(strstr((char *)payload, "check ACCEPT")){
-//                MessageSendLater(task, COMMU_INTERVAL_TIMER, NULL, 0);
-//            }
+
             if(strstr((char *)payload, "check STARTRECORD0")){
                 g_appConfigSocMic1 = 0;
                 g_appConfigSocMic2 = NO_MIC;
@@ -247,8 +245,11 @@ static void CummuHandler(Task task, MessageId id, Message message)
             }
             if(pComu->type < TYPE_LAST)
                 pComu->type  += 1;
-            if(pComu->type == TYPE_LAST)
+            if(pComu->type == TYPE_LAST){
                 CummuhandleSendData(task, (uint8*)"check ENDCHECK", 15);
+                MessageCancelAll(task, COMMU_INTERVAL_TIMER);
+                pComu->type == 0;
+            }
             break;
 
         case COMMU_INTERVAL_RECORD:
