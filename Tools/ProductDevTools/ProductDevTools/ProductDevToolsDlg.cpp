@@ -735,7 +735,7 @@ void CProductDevToolsDlg::OnBnClickedBtnBurnAddr()
 
 void CProductDevToolsDlg::OnBnClickedBtnCheck()
 {
-	StartDevContrl(THREAD_CHECK);
+	StartDevContrl(THREAD_CHECK| THREAD_PLC);
 }
 
 
