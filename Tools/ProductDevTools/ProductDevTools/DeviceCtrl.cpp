@@ -731,8 +731,8 @@ int CDeviceCtrl::teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp)
 		ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 2000);
 		if (ret != TE_OK)
 			return -3;
-
-		if (strstr((char*)rdbuf, readresp) < 0)
+		TRACE("Read[%s]\n", (char*)rdbuf);
+		if (strstr((char*)rdbuf, readresp)  == NULL)
 			return -11;
 	}
 
@@ -785,12 +785,12 @@ int CDeviceCtrl::CheckDevice(int bCloseEng)
 			if (ret == TE_OK) {
 				m_curTick = ::GetTickCount();
 
+				TRACE("CHECK %d:%s\n", rdlen, rdbuf);
 				if (strstr((char*)rdbuf, "check ENDCHECK")) {   // ½áÊø
 					successEnd = 1;
 					break;
 				}
 
-				TRACE("CHECK %d:%s\n", rdlen, rdbuf);
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_READ, (LPARAM)rdbuf);
 
 #if 0
@@ -1077,8 +1077,9 @@ int CDeviceCtrl::CheckInterrupt(IntrType type, int timeout, int bCloseEnable)
 			rdbuf = (UINT16*)GetMsgBuffer();
 			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 1000);
 			if (ret == TE_OK) {
-				if (strstr((char*)rdbuf, strType[type]) >= 0) {
-					isEnd = (strstr((char*)rdbuf, "SUCC") >= 0) ? 2 : 1;
+				TRACE("WAIT[%s]\n", (char*)rdbuf);
+				if (strstr((char*)rdbuf, strType[type]) != NULL) {
+					isEnd = (strstr((char*)rdbuf, "SUCC") != NULL) ? 2 : 1;
 					MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WAKEUP+type, (LPARAM)rdbuf);
 				}
 				else {
