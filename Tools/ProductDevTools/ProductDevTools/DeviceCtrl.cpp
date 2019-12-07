@@ -132,6 +132,7 @@ static CString _sReport[] = {
 	"RERROT_APOLLO",
 
 	"REPORT_READ_RECORD",
+	"REPORT_PLAY_TONE",
 	"REPORT_WAKEUP","REPORT_SENSOR","REPORT_PLC","REPORT_TAP",
 
 	"REPORT_READ_SENSOR",
@@ -261,6 +262,13 @@ int CDeviceCtrl::RuningProc(void)
 
 	if ((m_iThreadFunc & THREAD_RECORD_1)) {
 		if ((ret = Recording(1, m_secRecord)) < 0)
+			goto out;
+
+		if (m_bExit == TRUE) goto out;
+	}
+
+	if ((m_iThreadFunc & THREAD_PLAY)) {
+		if ((ret = PlayTone()) < 0)
 			goto out;
 
 		if (m_bExit == TRUE) goto out;
@@ -707,6 +715,7 @@ enum {
 	CHECK_ST_INFO, CHECK_ST_INFO_WAIT,             // check deviceinfo
 
 	CHECK_ST_RECSTART, CHECK_ST_RECDAT, CHECK_ST_RECSTOP, CHECK_ST_RECFIN,
+	CHECK_ST_SPEAKER, CHECK_ST_SPEAKER_WAIT,
 	CHECK_ST_WAKEUP, CHECK_ST_WAKEUP_WAIT,
 };
 
@@ -966,6 +975,72 @@ int CDeviceCtrl::Recording(int mic, int sec, int bCloseEng)
 
 	// Close
 	if (bCloseEng)
+		CloseEngine();
+
+	return ret;
+}
+
+// ------> check SPEAKER
+// <------ checkresp SPEAKER
+// <------ check ENDSPEAKER
+int CDeviceCtrl::PlayTone(int flag, int sec, int bCloseEnable)
+{
+	int ret = -2, isEnd = 0;
+	UINT16 *cmdbuf, cmdlen;
+	char strResp[64];
+
+	if (OpenEngineNeed() < 0)
+		return -1;
+
+	TRACE("LINE:%d\n", __LINE__);
+	m_checkStatus = CHECK_ST_SPEAKER;
+	m_curTick = ::GetTickCount();
+	memset(strResp, 0, sizeof(strResp));
+	while (1) {
+		if (m_bExit) break;
+
+		switch (m_checkStatus) {
+		case CHECK_ST_SPEAKER:
+			cmdbuf = (UINT16*)GetMsgBuffer();
+			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check SPEAKER");
+			sprintf_s(strResp, sizeof(strResp), "checkresp SPEAKER");
+			if (teWriteAndRead(cmdbuf, cmdlen, strResp) == 0) {
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_PLAY_TONE, (LPARAM)strResp);
+				m_checkStatus = CHECK_ST_SPEAKER_WAIT;
+				m_curTick = ::GetTickCount();
+			}
+			else {
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_PLAY_TONE, (LPARAM)cmdbuf);
+				TRACE("ERROR Send Cmd:%s\n", (char*)cmdbuf);
+				Sleep(1000);
+				break;
+			}
+			break;
+
+		case CHECK_ST_SPEAKER_WAIT:
+			break;
+
+		default:
+			break;
+		}
+		
+		if (::GetTickCount() - m_curTick > (UINT)(sec * 1000)) {      // NÃëÍË³ö
+			if (CHECK_ST_SPEAKER_WAIT == m_checkStatus) {
+				cmdbuf = (UINT16*)GetMsgBuffer();
+				cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check SPEAKER END");
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_PLAY_TONE, (LPARAM)cmdbuf);
+				ret = 0;
+				break;
+			}
+			ret = -2;
+			cmdbuf = (UINT16*)GetMsgBuffer();
+			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "TimeOut check SPEAKER");
+			MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_PLAY_TONE, (LPARAM)cmdbuf);
+			break;
+		}
+	}
+
+	if (bCloseEnable)
 		CloseEngine();
 
 	return ret;

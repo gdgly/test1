@@ -101,6 +101,7 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_CASEPLC, &CProductDevToolsDlg::OnBnClickedBtnCaseplc)
 	ON_BN_CLICKED(IDC_BTN_TAP, &CProductDevToolsDlg::OnBnClickedBtnTap)
 	ON_BN_CLICKED(IDC_BTN_DUT_MODE, &CProductDevToolsDlg::OnBnClickedBtnDutMode)
+	ON_BN_CLICKED(IDC_BTN_PLAY, &CProductDevToolsDlg::OnBnClickedBtnPlay)
 END_MESSAGE_MAP()
 
 
@@ -776,6 +777,10 @@ void CProductDevToolsDlg::OnBnClickedBtnTap()
 	StartDevContrl(THREAD_TAP);
 }
 
+void CProductDevToolsDlg::OnBnClickedBtnPlay()
+{
+	StartDevContrl(THREAD_PLAY);
+}
 
 void CProductDevToolsDlg::OnBnClickedBtnDutMode()
 {
@@ -863,6 +868,7 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 	case REPORT_COMMU_READ:
 	case REPORT_READ_SENSOR:
 	case REPORT_WRITE_SENSOR:
+	case REPORT_PLAY_TONE:
 	case REPORT_WAKEUP:
 	case REPORT_SENSOR:
 	case REPORT_PLC:
@@ -981,7 +987,5 @@ void CProductDevToolsDlg::OnBnClickedBtnClear()
 {
 	m_ListCtrl.DeleteAllItems();
 }
-
-
 
 

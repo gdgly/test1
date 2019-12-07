@@ -30,6 +30,7 @@ enum {
 	ERROR_APOLLO,
 
 	ERROR_READ_RECORD,
+	ERROR_PLAY_TONE,
 
 	ERROR_READ_SENSOR,
 	ERROR_WRITE_SENSOR,
@@ -68,6 +69,7 @@ enum {
 	REPORT_APOLLO,
 
 	REPORT_READ_RECORD,
+	REPORT_PLAY_TONE,
 	REPORT_WAKEUP,REPORT_SENSOR,REPORT_PLC,REPORT_TAP,
 
 	REPORT_READ_SENSOR,
@@ -103,7 +105,7 @@ typedef struct tagINIPARAM {
 
 enum {THREAD_NONE=0, THREAD_BURN=0x01, THREAD_BURN_APO=0x02,
 	THREAD_BT_ADDR=0x04, THREAD_FIX_PARAM=0x08,
-	THREAD_CHECK=0x10, THREAD_RECORD_0=0x20, THREAD_RECORD_1 = 0x40,	
+	THREAD_CHECK=0x10, THREAD_RECORD_0=0x20, THREAD_RECORD_1 = 0x40, THREAD_PLAY = 0x80,
 	THREAD_CRYSTGALTRIM=0x100,
 	THREAD_WAKEUP = 0x1000, THREAD_SENSOR=0x2000, THREAD_PLC=0x4000, THREAD_TAP=0x8000,
 };
@@ -152,6 +154,7 @@ private:
 	int Burning(void);
 	int BurningApollo(void);
 	int Recording(int mic, int sec = 5, int bCloseEng = 0);
+	int PlayTone(int flag = 0, int sec = 5, int bCloseEnable = 0);
 	int SetAllParam(int bCloseEng = 0);
 	int SetFixParam(int bCloseEng = 0);
 	int CheckDevice(int bCloseEng = 0);
