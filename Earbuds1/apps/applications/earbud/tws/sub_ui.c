@@ -472,8 +472,9 @@ void appSubUIInit(void)
     batteryRegistrationForm battery_from;
 
     memset(progRun, 0, sizeof(ProgRunInfo));
+#ifdef TWS_DEBUG
     progRun->realInCase = TRUE;
-
+#endif
     /* 获取底层的电量信息 */
     battery_from.task            = &appGetUi()->task;
     battery_from.representation  = battery_level_repres_percent;
@@ -854,7 +855,11 @@ uint8 appUiGetPower(void)      // 获取当前耳机电量
 //static bool deviceRealInCase = TRUE;
 
 bool  appUIDeviceRealInCase(void) {
+#ifdef TWS_DEBUG
     return gProgRunInfo.realInCase;
+#else
+    return TRUE;
+#endif
 }
 
 void appUIBudsPosition(int type) {
@@ -862,10 +867,14 @@ void appUIBudsPosition(int type) {
     phyStateTaskData* phy_state = appGetPhyState();
     if (1 == type) {
         MessageSend(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL);
+#ifdef TWS_DEBUG
         gProgRunInfo.realInCase = TRUE;
+#endif
     } else if (2 == type) {
         MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
+#ifdef TWS_DEBUG
         gProgRunInfo.realInCase = FALSE;
+#endif
     }
 }
 

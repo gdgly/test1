@@ -63,15 +63,6 @@ bool lis2dw12ReadRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *va
 
 bitserial_handle lis2dw12Enable(void)
 {
-    uint16 bank;
-    uint32 mask;
-
-    bank = PIO2BANK(LIS2DW12_ITR_PIN);
-    mask = PIO2MASK(LIS2DW12_ITR_PIN);
-    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
-    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
-    PanicNotZero(PioSet32Bank(bank, mask, mask));
-
     return hwi2cOpen(LIS2DW12_I2C_ADDR, LIS2DW12_I2C_FREQ);
 }
 
@@ -158,6 +149,8 @@ int Lis2dw12Power(bool isOn)
 
 void lis2dw12_init(void)
 {
+    uint16 bank;
+    uint32 mask;
     bitserial_handle handle;
     uint8 value;
     uint8 i;
@@ -166,6 +159,13 @@ void lis2dw12_init(void)
     if(BITSERIAL_HANDLE_ERROR == handle) {
         return;
     }
+
+    bank = PIO2BANK(LIS2DW12_ITR_PIN);
+    mask = PIO2MASK(LIS2DW12_ITR_PIN);
+    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
+    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
+    PanicNotZero(PioSet32Bank(bank, mask, mask));
+
     lis2dw12ReadRegister(handle, 0xf, &value);
     lis2dw12ReadRegister(handle, 0xf, &value);
     DEBUG_LOG("lis2dw12 id = 0x%x\n", value);

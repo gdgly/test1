@@ -91,24 +91,6 @@ bool EM20168WriteRegister(bitserial_handle handle, uint8 reg, uint8 value)
 
 bitserial_handle EM20168Enable(void)
 {
-    uint16 bank;
-    uint32 mask;
-
-    //DEBUG_LOG("EM20168Enable");
-    bank = PIO2BANK(EM20168_ITR_PIN);
-    mask = PIO2MASK(EM20168_ITR_PIN);
-    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
-    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
-    PanicNotZero(PioSet32Bank(bank, mask, mask));
-
-#ifdef EM20168_KEY_ITR_TEST
-    bank = PIO2BANK(EM20168_KEY_ITR_PIN);
-    mask = PIO2MASK(EM20168_KEY_ITR_PIN);
-    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
-    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
-    PanicNotZero(PioSet32Bank(bank, mask, mask));
-#endif
-
     return hwi2cOpen(EM20168_I2C_ADDR, EM20168_I2C_FREQ);
 }
 
@@ -307,6 +289,8 @@ int EM20168_GetStatus(void)
 
 void EM20168_init(void)
 {
+    uint16 bank;
+    uint32 mask;
     bitserial_handle handle;
     uint8 value;
     uint8 i;
@@ -320,6 +304,21 @@ void EM20168_init(void)
 
     handle = EM20168Enable();
     PanicFalse(handle != BITSERIAL_HANDLE_ERROR);
+
+    //DEBUG_LOG("EM20168Enable");
+    bank = PIO2BANK(EM20168_ITR_PIN);
+    mask = PIO2MASK(EM20168_ITR_PIN);
+    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
+    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
+    PanicNotZero(PioSet32Bank(bank, mask, mask));
+
+#ifdef EM20168_KEY_ITR_TEST
+    bank = PIO2BANK(EM20168_KEY_ITR_PIN);
+    mask = PIO2MASK(EM20168_KEY_ITR_PIN);
+    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
+    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
+    PanicNotZero(PioSet32Bank(bank, mask, mask));
+#endif
 
     EM20168ReadRegister(handle, 0x00, &value);
     EM20168ReadRegister(handle, 0x00, &value);

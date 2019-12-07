@@ -82,23 +82,6 @@ bool max20340WriteRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *v
 unsigned int used_i2c_addr=0;
 bitserial_handle max20340Enable(void)
 {
-    uint16 bank;
-    uint32 mask;
-
-    bank = PIO2BANK(MAX20340_ITR_PIN);
-    mask = PIO2MASK(MAX20340_ITR_PIN);
-    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
-    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
-    PanicNotZero(PioSet32Bank(bank, mask, mask));
-
-#ifdef MAX20340_TEST
-    bank = PIO2BANK(MAX20340_TEST_PIN);
-    mask = PIO2MASK(MAX20340_TEST_PIN);
-    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
-    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
-    PanicNotZero(PioSet32Bank(bank, mask, mask));
-#endif
-
     return hwi2cOpen(used_i2c_addr, MAX20340_I2C_FREQ);
 }
 
@@ -444,6 +427,7 @@ void singlebus_itr_process(void)
 #endif
         }
         //max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x2);
+        max20340WriteRegister(handle, MX20340_REG_CTRL1, 0xe1);
         max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x7f);
         max20340WriteRegister(handle, MX20340_REG_PLC_MASK, 0x0e);
         //max20340WriteRegister(handle, MX20340_REG_PLC_MASK, 0xff);
@@ -610,6 +594,8 @@ int max20340_GetStatus(void)
 
 void max20340_init(void)
 {
+    uint16 bank;
+    uint32 mask;
     bitserial_handle handle;
     uint8 value;uint8 value_a[13];
     uint8 i;
@@ -621,6 +607,29 @@ void max20340_init(void)
     if(BITSERIAL_HANDLE_ERROR == handle) {
         return;
     }
+
+    bank = PIO2BANK(MAX20340_ITR_PIN);
+    mask = PIO2MASK(MAX20340_ITR_PIN);
+    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
+    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
+    PanicNotZero(PioSet32Bank(bank, mask, mask));
+
+#ifdef CONFIG_BOARD_V1
+    bank = PIO2BANK(MAX20340_EN_PIN);
+    mask = PIO2MASK(MAX20340_EN_PIN);
+    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
+    PanicNotZero(PioSetDir32Bank(bank, mask, mask));
+    PanicNotZero(PioSet32Bank(bank, mask, 0));
+#endif
+
+#ifdef MAX20340_TEST
+    bank = PIO2BANK(MAX20340_TEST_PIN);
+    mask = PIO2MASK(MAX20340_TEST_PIN);
+    PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
+    PanicNotZero(PioSetDir32Bank(bank, mask, 0));
+    PanicNotZero(PioSet32Bank(bank, mask, mask));
+#endif
+
     max20340ReadRegister(handle, 0x00, &value);
     max20340ReadRegister(handle, 0x00, &value);
     DEBUG_LOG("max20340 id = 0x%x\n", value);
