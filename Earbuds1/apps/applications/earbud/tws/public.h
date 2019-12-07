@@ -79,7 +79,7 @@ int8 hwi2cRead(bitserial_handle handle, uint8 *addr, uint16 addrlen, uint8 *buff
 //==============================================================================================
 #define UART_RX_PIO   (4)
 #define UART_TX_PIO   (3)
-#if 0
+#if 10
 #define CONFIG_HW_UART
 #define CONFIG_SHELL_UART
 #endif
@@ -193,6 +193,9 @@ int Lis2dw12Power(bool isOn);//1 打开，0关闭
 
 #ifdef CONFIG_BOARD_V2
 #undef CONFIG_LIS25BA
+#undef UART_RX_PIO
+#undef UART_TX_PIO
+#define UART_TX_PIO   (53)
 
 #define CONFIG_I2CADDR_FOR_LEFT_RIGHT       // V1版本 使用I2C地址来确认是左右耳
 #undef  appConfigLeftAudioChannel

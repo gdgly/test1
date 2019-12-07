@@ -178,7 +178,24 @@ static void UARTStreamMessageHandler (Task pTask, MessageId pId, Message pMessag
     }
 }
 
+#ifdef CONFIG_BOARD_V2
+static void UartIoMap(void)
+{
+    bool ret;
+    PioSetMapPins32Bank(PIO2BANK(UART_TX_PIO), PIO2MASK(UART_TX_PIO), 0);
+//    PioSetMapPins32Bank(PIO2BANK(UART_RX_PIO), PIO2MASK(UART_RX_PIO), 0);
 
+ //   ret = PioSetFunction(UART_RX_PIO, UART_RX);
+ //   if(FALSE == ret) {
+//        printf("Error UartRX %d\n", UART_RX_PIO);
+//    }
+
+    ret = PioSetFunction(UART_TX_PIO, UART_TX);
+    if(FALSE == ret) {
+        printf("Error UartTX %d\n", UART_TX_PIO);
+    }
+}
+#else
 static void UartIoMap(void)
 {
     bool ret;
@@ -194,7 +211,7 @@ static void UartIoMap(void)
         printf("Error UartTX %d\n", UART_TX_PIO);
     }
 }
-
+#endif
 
 void uartInit(void)
 {
