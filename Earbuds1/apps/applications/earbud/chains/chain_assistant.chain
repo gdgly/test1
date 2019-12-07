@@ -6,6 +6,13 @@
 
     <include_header name="../av_headset_chain_roles.h"/>
 
+    <operator name="OPR_CVC_SEND" id="CAP_ID_CVCHS2MIC_MONO_SEND_WB">
+        <sink name="IN1" terminal="1"/>
+        <sink name="IN2" terminal="2"/>
+        <source name="OUT" terminal="0"/>
+    </operator>
+
+
     <operator name="OPR_SWITCHED_PASSTHROUGH_CONSUMER" id="CAP_ID_BASIC_PASS">
         <sink name="IN" terminal="0"/>
         <source name="OUT" terminal="0"/>
@@ -16,10 +23,12 @@
         <source name="OUT" terminal="0"/>
     </operator>
 
-    <input sink="OPR_SWITCHED_PASSTHROUGH_CONSUMER.IN" role="EPR_VOLUME_AUX"/>
+    <input sink="OPR_CVC_SEND.IN1" role="EPR_VOLUME_AUX"/>
+    <input sink="OPR_CVC_SEND.IN2" role="EPR_VOLUME_AUX"/>
+    <!--<input sink="OPR_SWITCHED_PASSTHROUGH_CONSUMER.IN" role="EPR_VOLUME_AUX"/>-->
     <output source="OPR_CUSTOM_MIC_PASSTHROUGH.OUT" role="EPR_AUDIO_MICFWD_OUT"/>
 
-    <!--connection source="OPR_VOLUME_CONTROL.OUT" sink="OPR_CUSTOM_MIC_PASSTHROUGH.IN"/-->
+    <connection source="OPR_CVC_SEND.OUT" sink="OPR_SWITCHED_PASSTHROUGH_CONSUMER.IN"/>
     <connection source="OPR_SWITCHED_PASSTHROUGH_CONSUMER.OUT" sink="OPR_CUSTOM_MIC_PASSTHROUGH.IN"/>
 </chain>
 
