@@ -30,8 +30,10 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 
 #define APP_THREE_POWER            (2099)           // ui -> ui 电量状态
 
+#ifdef TWS_DEBUG
 #define APP_ATTACH_PLC_IN           (2100)           // 20340 -> ui 报告plc  in 放入充电盒
 #define APP_ATTACH_PLC_OUT          (2101)           // 20340 -> ui 报告plc  out 取出充电盒
+#endif
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
 //#define APP_CASE_GET_BTINFO        (2011)           // 盒子获取耳机经典蓝牙地址
@@ -84,7 +86,9 @@ typedef struct tagPROGRUNINFO {
     CallIPtr       callInfo[MAX_CALLIN_INFO]; // 保存两个信息
 
     uint8          powerCaseState;          // 0 close 1 open
+#ifdef TWS_DEBUG
     bool           realInCase;              // true:充电盒中 false:空中
+#endif
 
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;

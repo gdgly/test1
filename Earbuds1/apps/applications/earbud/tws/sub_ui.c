@@ -443,7 +443,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_ASSISTANT_AWAKEN:
         subUiStartAssistant2Gaia(id, progRun);
         break;
-
+#ifdef TWS_DEBUG
     case APP_ATTACH_PLC_IN: {
         DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
         phyStateTaskData* phy_state = appGetPhyState();
@@ -459,6 +459,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         gProgRunInfo.realInCase = FALSE;
     }
         break;
+#endif
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
