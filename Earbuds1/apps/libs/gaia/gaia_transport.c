@@ -349,6 +349,9 @@ void gaiaTransportDisconnectRes(gaia_transport *transport) {
     case gaia_transport_rfcomm:
     case gaia_transport_spp:
         UNUSED(transport);
+#ifdef TWS_DEBUG
+        gaiaTransportGattDisconnectRes(transport);
+#endif
         break;
 #endif
 #ifdef GAIA_TRANSPORT_GATT

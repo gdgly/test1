@@ -443,7 +443,23 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_ASSISTANT_AWAKEN:
         subUiStartAssistant2Gaia(id, progRun);
         break;
-     default:
+
+    case APP_ATTACH_PLC_IN: {
+        DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
+        phyStateTaskData* phy_state = appGetPhyState();
+        MessageSend(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL);
+        gProgRunInfo.realInCase = TRUE;
+    }
+        break;
+
+    case APP_ATTACH_PLC_OUT:  {
+        DEBUG_LOG("parse APP_ATTACH_PLC_OUT event");
+        phyStateTaskData* phy_state = appGetPhyState();
+        MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
+        gProgRunInfo.realInCase = FALSE;
+    }
+        break;
+    default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
     }
@@ -455,6 +471,7 @@ void appSubUIInit(void)
     batteryRegistrationForm battery_from;
 
     memset(progRun, 0, sizeof(ProgRunInfo));
+    progRun->realInCase = TRUE;
 
     /* 获取底层的电量信息 */
     battery_from.task            = &appGetUi()->task;
@@ -833,10 +850,10 @@ uint8 appUiGetPower(void)      // 获取当前耳机电量
     return progRun->iElectrity;
 }
 
-static bool deviceRealInCase = TRUE;
+//static bool deviceRealInCase = TRUE;
 
 bool  appUIDeviceRealInCase(void) {
-    return deviceRealInCase;
+    return gProgRunInfo.realInCase;
 }
 
 void appUIBudsPosition(int type) {
@@ -844,10 +861,10 @@ void appUIBudsPosition(int type) {
     phyStateTaskData* phy_state = appGetPhyState();
     if (1 == type) {
         MessageSend(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL);
-        deviceRealInCase = TRUE;
+        gProgRunInfo.realInCase = TRUE;
     } else if (2 == type) {
         MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
-        deviceRealInCase = FALSE;
+        gProgRunInfo.realInCase = FALSE;
     }
 }
 
