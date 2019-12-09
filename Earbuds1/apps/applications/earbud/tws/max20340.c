@@ -173,8 +173,9 @@ static void box_send_btaddr(uint8 *get_buf, uint8 *send_buf)
     uint8 type;
     type = (get_buf[0] & 0x3);
     if(type == 2){//结束包，蓝牙包接收完整，可以通知出去了
-        DEBUG_LOG("btaddr = %x:%x:%x:%x:%x:%x\n",
-               btaddr[0], btaddr[1], btaddr[2], btaddr[3], btaddr[4], btaddr[5]);
+   //     DEBUG_LOG("btaddr = %x:%x:%x:%x:%x:%x\n",
+   //            btaddr[0], btaddr[1], btaddr[2], btaddr[3], btaddr[4], btaddr[5]);
+        appUiCaseSetPeerBtAddr(btaddr);
     }
     box_send_data_process(get_buf, send_buf, btaddr, 6/2, &offset);
 }

@@ -127,6 +127,8 @@ bool appKymeraApolloIsRun(void);
 // bitEars: BIT0/1:Left/Right Mask; Bit4/5 Left/Right in or Not
 void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectrity, uint16 bitEars);
 void appUiCaseVersion(uint16 hwVer, uint16 swVer);
+// 盒子发送过来对方耳机地址
+void appUiCaseSetPeerBtAddr(uint8 *addrbuf);
 bool appUiIsStopBle(void);
 void appUiRestartBle(void);
 

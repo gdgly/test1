@@ -762,6 +762,24 @@ void appUiCaseVersion(uint16 hwVer, uint16 swVer)
     MessageSend(&appGetUi()->task, APP_CASE_REPORT_VERSION, 0);
 }
 
+// 盒子发送过来对方耳机地址
+void appUiCaseSetPeerBtAddr(uint8 *addrbuf)
+{
+    typed_bdaddr taddr;
+
+    if(!addrbuf) return;
+
+    DEBUG_LOG("PeerAddr:%02x:%02x:%02x:%02x:%02x:%02x",
+        addrbuf[0],addrbuf[1],addrbuf[2],addrbuf[3],addrbuf[4],addrbuf[5]);
+    taddr.addr.nap = addrbuf[0] | (addrbuf[1] << 8);
+    taddr.addr.uap = addrbuf[2];
+    taddr.addr.lap = (addrbuf[3] << 16) | (addrbuf[4] << 8) || addrbuf[5];
+
+    MessageSend(&appGetUi()->task, APP_CASE_SET_BTINFO, 0);
+
+    ParamSavePeerAddr(&taddr);
+}
+
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt)
 {
     ProgRIPtr  progRun = appSubGetProgRun();

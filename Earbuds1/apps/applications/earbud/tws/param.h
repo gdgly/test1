@@ -63,6 +63,7 @@ int16 ParamLoadUserPrm(UserPrmPtr pParam);
 
 int16 ParamLoadAll(void);
 int16 ParamGetPeerAddr( typed_bdaddr *taddr);       // 从内存中获取
+int16 ParamSavePeerAddr( typed_bdaddr *taddr);      // 盒子发来地址，需要保存
 int16 ParamLoadBlePair( BlePairInfo *blePairInfo);
 int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
 

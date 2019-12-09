@@ -195,6 +195,13 @@ int16 ParamGetPeerAddr( typed_bdaddr *taddr)
     return sizeof(typed_bdaddr);
 }
 
+int16 ParamSavePeerAddr( typed_bdaddr *taddr)
+{
+    memcpy(&gBtAddrParam.peer_addr, taddr, sizeof(typed_bdaddr));
+
+    return ParamSaveBtAddrPrm(&gBtAddrParam);
+}
+
 int16 ParamSaveBlePair(BlePairInfo *blePairInfo)
 {
     memcpy(&gBtAddrParam.ble_pair, blePairInfo, sizeof(BlePairInfo));
