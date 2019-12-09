@@ -51,18 +51,19 @@ const InputEventConfig_t InputEventConfig  =
 {
     /* Table to convert from PIO to input event ID*/
     {
-         0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
     },
 
     /* Masks for each PIO bank to configure as inputs */
-    { 0x00000001UL, 0x00000000UL, 0x00000000UL },
+    { 0x00000000UL, 0x00000000UL, 0x00000000UL },
     /* PIO debounce settings */
     //4, 5
     1, 0
 };
 
+#if 0
 const InputActionMessage_t InputEventActions[] =
 {
     {
@@ -178,6 +179,7 @@ const InputActionMessage_t InputEventActions[] =
         APP_MFB_BUTTON_PRESS,                   /* Message */
     },
 };
+#endif
 
 /*! User interface internal messasges */
 enum ui_internal_messages
@@ -1344,8 +1346,8 @@ void appUiInit(void)
     
     /* Initialise input event manager with auto-generated tables for
      * the target platform */
-    theUi->input_event_task = InputEventManagerInit(appGetUiTask(), InputEventActions,
-                                                    sizeof(InputEventActions),
+    theUi->input_event_task = InputEventManagerInit(appGetUiTask(), NULL, 0,
+                                         //           InputEventActions, sizeof(InputEventActions),
                                                     &InputEventConfig);
 
     memset(theUi->prompt_file_indexes, FILE_NONE, sizeof(theUi->prompt_file_indexes));
