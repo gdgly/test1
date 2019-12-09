@@ -216,7 +216,7 @@ static void box_send_boxhwsoft_version(uint8 *get_buf, uint8 *send_buf)
 
 static void box_send_boxpower(uint8 *get_buf, uint8 *send_buf)
 {
-    appUiCaseStatus(0, 0, 0, get_buf[1]);
+    appUiCaseStatus(-1, -1, -1, get_buf[1], 0x00);
     send_buf[0] = get_buf[0];
     send_buf[1] = 0;
     send_buf[2] = 0;
@@ -233,6 +233,8 @@ static void box_get_earpower(uint8 *get_buf, uint8 *send_buf)
 static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
 {
     uint8 if_cap, if_usb, if_key, key_time, left_ear_status, right_ear_status;
+    int16 lidOpen=-1, keyDown = -1, keyLong = -1, bitEars = 0;
+
     if_cap = (get_buf[1] & 0xc0) >> 6;
     left_ear_status = (get_buf[1] & 0x20) >> 5;//左耳是否在盒中，0不在，1在
     right_ear_status = (get_buf[1] & 0x10) >> 4;//右耳是否在盒中，0不在，1在
@@ -240,10 +242,10 @@ static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
     if_key = (get_buf[2] & 0x80) >> 7;
     key_time = (get_buf[2] & 0x7f);
     if(if_cap == 0x1){//盒盖
-        appUiCaseStatus(0,-1,-1,-1);
+        lidOpen = 0;
     }
     if(if_cap == 0x2){//开盖
-        appUiCaseStatus(1,-1,-1,-1);
+        lidOpen = 1;
     }
     if(if_usb == 0x1){//插入
 
@@ -251,22 +253,30 @@ static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
     if(if_usb == 0x2){//拔出
 
     }
+
     if(if_key == 0x1){//按键事件
-        if(key_time<4){
-            appUiCaseStatus(-1,1,-1,-1);
-        }else{
-            appUiCaseStatus(-1,-1,1,-1);
+        if(key_time >= 3 && key_time < 9){
+            keyDown  = 1;
+        }else if(key_time >= 10){
+            keyLong = 1;
         }
+
         if(left_ear_status == 0x1){//在盒中
-
+            bitEars |= 0x11;   // 同时设置MASK及值
         }
+        else bitEars |= 0x10;       // 不在盒子中， 设置MASK
+
         if(right_ear_status == 0x1){//在盒中
-
+            bitEars |= 0x22;
         }
+        else bitEars |= 0x20;       // 不在盒子中
     }
     send_buf[0] = get_buf[0];
     send_buf[1] = 0;
     send_buf[2] = 0;
+
+
+    appUiCaseStatus(lidOpen, keyDown, keyLong, -1, bitEars);
 }
 
 static void box_update(uint8 *get_buf, uint8 *send_buf)

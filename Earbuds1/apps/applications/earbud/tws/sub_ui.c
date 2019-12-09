@@ -722,7 +722,7 @@ void appUiAvDisconnected(void)
 ///  盒子状态变化
 ///////////////////////////////////////////////////////////////////////////////
 // 数值小于0，表示不确定，不设置
-void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectrity)
+void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectrity, uint16 bitEars)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
@@ -739,6 +739,15 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
 
     if(iElectrity >= 0)
         appUiBatteryStat(-1, -1, iElectrity);
+
+    if(appConfigIsLeft()) {  // 只考虑对耳机是否在
+        if((bitEars & 0x20))  // mask BIT
+            progRun->peerPlace = ((bitEars & 0x02)) ? 1 : 0;
+    }
+    else {
+        if((bitEars & 0x10))  // Mask BIT
+            progRun->peerPlace = ((bitEars & 0x01)) ? 1 : 0;
+    }
 
     MessageSend(&appGetUi()->task, APP_CASE_REPORT_INFO, 0);
 }
