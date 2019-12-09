@@ -1204,6 +1204,15 @@ static void appSmHandleConnRulesHandsetPair(void)
     }
 }
 
+#ifdef TWS_DEBUG
+static void appSmHandleConnRulesClearHandsetPair(void)
+{
+    DEBUG_LOG("appSmHandleConnRulesClearHandsetPair");
+    appSmSetCoreState();
+    appConnRulesSetRuleComplete(CONN_RULES_CLEAR_HANDSET_PAIR);
+}
+#endif
+
 static void appSmHandleConnRulesEnterDfu(void)
 {
     DEBUG_LOG("appSmHandleConnRulesEnterDfu");
@@ -2286,6 +2295,11 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case CONN_RULES_HANDSET_PAIR:
             appSmHandleConnRulesHandsetPair();
             break;
+#ifdef TWS_DEBUG
+        case CONN_RULES_CLEAR_HANDSET_PAIR:
+            appSmHandleConnRulesClearHandsetPair();
+            break;
+#endif
         case CONN_RULES_ENTER_DFU:
             appSmHandleConnRulesEnterDfu();
             break;

@@ -172,6 +172,10 @@ DEFINE_RULE(ruleOutOfCaseAncTuning);
 DEFINE_RULE(ruleInCaseAncTuning);
 
 DEFINE_RULE(ruleBleConnectionUpdate);
+
+#ifdef TWS_DEBUG
+DEFINE_RULE(ruleClearHandsetPair);
+#endif
 /*! \} */
 
 /*! \brief Set of rules to run on Earbud startup. */
@@ -309,6 +313,9 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_HANDOVER_DISCONNECT,        ruleHandoverDisconnectHandset,      CONN_RULES_DISCONNECT_HANDSET),
     RULE(RULE_EVENT_HANDOVER_RECONNECT,         ruleHandoverConnectHandset,         CONN_RULES_CONNECT_HANDSET),
     RULE(RULE_EVENT_HANDOVER_RECONNECT_AND_PLAY,ruleHandoverConnectHandsetAndPlay,  CONN_RULES_CONNECT_HANDSET),
+#ifdef TWS_DEBUG
+    RULE(RULE_EVENT_CLEAR_PAIR_HEADSET,         ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
+#endif
 };
 
 /*! \brief Types of event that can cause connect rules to run. */
@@ -3056,3 +3063,36 @@ void appConnRulesNopClientRegister(Task task)
     appTaskListAddTask(conn_rules->nop_tasks, task);
 }
 
+
+#ifdef TWS_DEBUG
+ruleAction ruleClearHandsetPair(void) {
+//    if (!appSmIsInCase()) {
+//        RULE_LOG("ruleClearHandsetPair, ignore, we're not in the case");
+//        return RULE_ACTION_IGNORE;
+//    }
+
+//    if (!appPeerSyncIsComplete()) {
+//        RULE_LOG("ruleAutoHandsetPair, defer, not synced with peer");
+//        return RULE_ACTION_DEFER;
+//    }
+//
+//    if (appPeerSyncIsPeerPairing()) {
+//        RULE_LOG("ruleAutoHandsetPair, defer, peer is already in pairing mode");
+//        return RULE_ACTION_DEFER;
+//    }
+
+    if (appSmIsPairing()) {
+        if (appConfigIsLeft()) {
+            return RULE_ACTION_IGNORE;
+        } else {
+//            if (TRUE == appPeerSyncIsPeerPairing() || TRUE == appPeerSyncHasPeerHandsetPairing()) {
+//                /// 停止配对流程
+                return RULE_ACTION_RUN;
+//            }
+        }
+    }
+
+    return  RULE_ACTION_COMPLETE;
+}
+
+#endif

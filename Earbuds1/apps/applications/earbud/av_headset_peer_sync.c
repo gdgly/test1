@@ -677,6 +677,12 @@ static void appPeerSyncHandlePeerSigMsgChannelTxInd(const PEER_SIG_MSG_CHANNEL_R
     {
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_HFP_SUPPORTED);
     }
+#ifdef TWS_DEBUG
+    if (ps->peer_is_pairing)
+    {
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CLEAR_PAIR_HEADSET);
+    }
+#endif
 
     /* TX seqnum has changed from the last we saw, so this is a new peer sync, which
      * requires a response peer sync from us */

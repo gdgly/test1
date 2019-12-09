@@ -111,7 +111,9 @@ enum    av_headset_conn_rules_messages
 
     /*! Change whether we are allowing a new BLE connection (advertising) */
     CONN_RULES_BLE_CONNECTION_UPDATE,
-
+#ifdef TWS_DEBUG
+    CONN_RULES_CLEAR_HANDSET_PAIR,
+#endif
     /*! Any rules with RULE_FLAG_PROGRESS_MATTERS are no longer in progress. */
     CONN_RULES_NOP,
 };
@@ -184,7 +186,6 @@ typedef struct
         FALSE BLE connections are not allowed*/
     bool enable;
 } CONN_RULES_BLE_CONNECTION_UPDATE_T;
-
 
 /*! \brief Definition of #CONN_RULES_DFU_ALLOW action message. */
 typedef struct
@@ -280,6 +281,9 @@ typedef enum
 #define RULE_EVENT_HANDOVER_RECONNECT_AND_PLAY   (1ULL << 51)    /*!< Handover reconnect then play media */
 
 #define RULE_EVENT_CHECK_DFU                     (1ULL << 52)    /*!< Check whether upgrades should be allowed */
+#ifdef TWS_DEBUG
+#define RULE_EVENT_CLEAR_PAIR_HEADSET            (1ULL << 53)    /*!< 同步时，取消不必要的PairHeadset*/
+#endif
 
 #define RULE_EVENT_ALL_EVENTS_MASK               (0xFFFFFFFFFFFFFFFFULL)
 

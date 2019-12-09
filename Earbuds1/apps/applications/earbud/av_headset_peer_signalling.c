@@ -355,6 +355,7 @@ static void appPeerSigCancelInProgressOperation(void)
 
         case AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG:
             appPeerSigMsgDoubleClickConfigConfirmation(peer_sig->client_task, peerSigStatusPairHandsetTxFail);
+            break;
 #endif
         default:
             break;
