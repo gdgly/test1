@@ -232,8 +232,10 @@ static void box_get_earpower(uint8 *get_buf, uint8 *send_buf)
 
 static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
 {
-    uint8 if_cap, if_usb, if_key, key_time;
-    if_cap = (get_buf[1] & 0xf0) >> 4;
+    uint8 if_cap, if_usb, if_key, key_time, left_ear_status, right_ear_status;
+    if_cap = (get_buf[1] & 0xc0) >> 6;
+    left_ear_status = (get_buf[1] & 0x20) >> 5;//左耳是否在盒中，0不在，1在
+    right_ear_status = (get_buf[1] & 0x10) >> 4;//右耳是否在盒中，0不在，1在
     if_usb = (get_buf[1] & 0x0f);
     if_key = (get_buf[2] & 0x80) >> 7;
     key_time = (get_buf[2] & 0x7f);
@@ -254,6 +256,12 @@ static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
             appUiCaseStatus(-1,1,-1,-1);
         }else{
             appUiCaseStatus(-1,-1,1,-1);
+        }
+        if(left_ear_status == 0x1){//在盒中
+
+        }
+        if(right_ear_status == 0x1){//在盒中
+
         }
     }
     send_buf[0] = get_buf[0];
