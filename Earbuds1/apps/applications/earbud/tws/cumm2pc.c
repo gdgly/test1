@@ -202,7 +202,9 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 CummuhandleSendData(task, (uint8*)"checkresp WAKEUP", 17);
             }
             if(strstr((char *)payload, "check RDSENSOR")){
+#ifdef HAVE_EM20168
                 value = EM20168_Get_psvalue();
+#endif
                 outsize = sprintf(outbuf, "checkresp RDSENSOR=%d", value);
                 CummuhandleSendData(task, (uint8*)outbuf, outsize);
             }
@@ -210,7 +212,9 @@ static void CummuHandler(Task task, MessageId id, Message message)
             if(strstr((char *)payload, "check WRSENSOR")){
                 if((p = strchr((char *)payload, '=')) != NULL){
                     p += 1;
+#ifdef HAVE_EM20168
                     EM20168_Set_psvalue(1, (unsigned short)atoi(p));
+#endif
                     outsize = sprintf(outbuf, "checkresp RDSENSOR=%d", atoi(p));
                     CummuhandleSendData(task, (uint8*)outbuf, outsize);
                 }else{

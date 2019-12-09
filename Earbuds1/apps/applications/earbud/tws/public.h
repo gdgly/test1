@@ -79,10 +79,8 @@ int8 hwi2cRead(bitserial_handle handle, uint8 *addr, uint16 addrlen, uint8 *buff
 //==============================================================================================
 #define UART_RX_PIO   (4)
 #define UART_TX_PIO   (3)
-#if 10
-#define CONFIG_HW_UART
-#define CONFIG_SHELL_UART
-#endif
+//#define CONFIG_HW_UART
+//#define CONFIG_SHELL_UART
 typedef signed (*UartRxProc)(const uint8 *ptr, int len);
 void uartInit(void);
 void UartTxData(const uint8 *data, uint16 length);

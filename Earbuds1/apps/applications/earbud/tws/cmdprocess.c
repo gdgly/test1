@@ -362,7 +362,7 @@ static void ShellDoCommand(char *buffer, int len)
         strncpy(casepow, buffer+15,3);
         capower = atoi(casepow);
 
-        appUiCaseStatus(lidopen, keydown, keylong, capower);
+        appUiCaseStatus(lidopen, keydown, keylong, capower, 0x00);
         sprintf(outbuf, "caseLidOpen:1:%d  caseKeyDown:1:%d  caseKeyLong:1:%d caseElectrity:7:%d\n",
                 progRun->caseLidOpen, progRun->caseKeyDown,
                 progRun->caseKeyLong, progRun->caseElectrity);
