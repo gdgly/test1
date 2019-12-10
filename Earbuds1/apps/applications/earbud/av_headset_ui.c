@@ -1006,8 +1006,10 @@ static void appUiHandleMessage(Task task, MessageId id, Message message)
                     appAvPlayToggle(TRUE);
                 else if (appDeviceIsHandsetHfpConnected() && appDeviceIsHandsetA2dpConnected())
                     appUiError();
+#ifndef TWS_DEBUG
                 else if(!appSmIsPairing())
                     appSmPairHandset();
+#endif
                 else
                 {
                     appSmConnectHandset();

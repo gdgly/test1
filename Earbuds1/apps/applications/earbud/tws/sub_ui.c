@@ -424,6 +424,10 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
         subUiCasestat2Gaia(id, progRun);
         break;
+    case APP_PAIR_HEADSET:
+        DEBUG_LOG("plc call pair headset");
+        appSmPairHandset();
+        break;
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
@@ -739,28 +743,42 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
 
     DEBUG_LOG("CASE:%d key=%d %d %d", lidOpen, keyDown, keyLong, iElectrity);
 
-    if(lidOpen >= 0)
-        progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
-
-    if(keyDown >= 0)
-        progRun->caseKeyDown = (1 == keyDown) ? 1 : 0;
-
-    if(keyLong >= 0)
-        progRun->caseKeyLong = (1 == keyLong) ? 1 : 0;
-
-    if(iElectrity >= 0)
-        appUiBatteryStat(-1, -1, iElectrity);
-
     if(appConfigIsLeft()) {  // 只考虑对耳机是否在
         if((bitEars & 0x20))  // mask BIT
             progRun->peerPlace = ((bitEars & 0x02)) ? 1 : 0;
-    }
-    else {
+    } else {
         if((bitEars & 0x10))  // Mask BIT
             progRun->peerPlace = ((bitEars & 0x01)) ? 1 : 0;
     }
 
-    MessageSend(&appGetUi()->task, APP_CASE_REPORT_INFO, 0);
+    if(lidOpen >= 0)
+        progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
+
+    if(keyDown >= 0) {
+        progRun->caseKeyDown = (1 == keyDown) ? 1 : 0;
+        if (appConfigIsLeft()) {
+            /// 如果当前是左边耳机，发送配对信息
+            DEBUG_LOG("call left pair headset");
+            MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
+        } else {
+            /// 如果当前是右边耳机，查看左耳机是否在，如果不在，执行配对
+            if (progRun->peerPlace == 0) {
+                /// send to
+                DEBUG_LOG("call right pair headset");
+                MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
+            }
+        }
+    }
+
+    if(keyLong >= 0) {
+        progRun->caseKeyLong = (1 == keyLong) ? 1 : 0;
+        /// 清理命令开始
+    }
+
+    if(iElectrity >= 0)
+        appUiBatteryStat(-1, -1, iElectrity);
+
+//    MessageSend(&appGetUi()->task, APP_CASE_REPORT_INFO, 0);
 }
 
 void appUiCaseVersion(uint16 hwVer, uint16 swVer)
