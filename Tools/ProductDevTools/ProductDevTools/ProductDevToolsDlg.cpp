@@ -102,6 +102,7 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_TAP, &CProductDevToolsDlg::OnBnClickedBtnTap)
 	ON_BN_CLICKED(IDC_BTN_DUT_MODE, &CProductDevToolsDlg::OnBnClickedBtnDutMode)
 	ON_BN_CLICKED(IDC_BTN_PLAY, &CProductDevToolsDlg::OnBnClickedBtnPlay)
+	ON_BN_CLICKED(IDC_BTN_ALL, &CProductDevToolsDlg::OnBnClickedBtnAll)
 END_MESSAGE_MAP()
 
 
@@ -781,6 +782,17 @@ void CProductDevToolsDlg::OnBnClickedBtnPlay()
 {
 	StartDevContrl(THREAD_PLAY);
 }
+
+
+void CProductDevToolsDlg::OnBnClickedBtnAll()
+{
+//	StartDevContrl(THREAD_CHECK | THREAD_RECORD_0 | THREAD_RECORD_1| THREAD_PLAY);
+//	StartDevContrl(THREAD_CHECK | THREAD_RECORD_0 | THREAD_RECORD_1| THREAD_PLAY| THREAD_WAKEUP| THREAD_SENSOR| THREAD_PLC| THREAD_TAP);
+//	StartDevContrl(THREAD_CHECK| THREAD_SENSOR);
+	StartDevContrl(THREAD_CHECK | THREAD_PLC| THREAD_TAP);
+}
+
+
 
 void CProductDevToolsDlg::OnBnClickedBtnDutMode()
 {

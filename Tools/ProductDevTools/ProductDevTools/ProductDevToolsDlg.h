@@ -84,6 +84,7 @@ public:
 	afx_msg void OnBnClickedBtnTap();
 	afx_msg void OnBnClickedBtnDutMode();
 	afx_msg void OnBnClickedBtnPlay();
+	afx_msg void OnBnClickedBtnAll();
 };
 
 

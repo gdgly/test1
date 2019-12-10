@@ -737,10 +737,19 @@ int CDeviceCtrl::teWriteAndRead(void *cmdbuf, int cmdlen, char *readresp)
 	if (readresp) {
 		UINT16 rdbuf[PSKEY_BUFFER_LEN/2], rdlen;
 		memset(rdbuf, 0, sizeof(rdbuf));
-		ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 2000);
+		Sleep(100);
+		ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 3000);
 		if (ret != TE_OK)
 			return -3;
-		TRACE("Read[%s]\n", (char*)rdbuf);
+
+		if (0 == rdlen) {    // 出现 RET返回成功，但rdlen=0，不清楚是为什么
+			TRACE("ReRead...\n");
+			ret = teAppRead(m_devHandle, &channel, rdbuf, PSKEY_BUFFER_LEN / 2, &rdlen, 4000);
+			if (ret != TE_OK)
+				return -4;
+		}
+
+		TRACE("Read[%s] len=%d ret=%d\n", (char*)rdbuf, rdlen, ret);
 		if (strstr((char*)rdbuf, readresp)  == NULL)
 			return -11;
 	}
@@ -899,6 +908,7 @@ int CDeviceCtrl::Recording(int mic, int sec, int bCloseEng)
 			if(teWriteAndRead(cmdbuf, cmdlen, "checkresp STARTRECORD") == 0) {
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_COMMU_SUCC, (LPARAM)cmdbuf);
 				m_checkStatus = CHECK_ST_RECDAT;
+				TRACE("SendEnd recv ...\n");
 				m_curTick = ::GetTickCount();
 				datacnt = 0;
 				DeleteFile(sName);
@@ -923,9 +933,9 @@ int CDeviceCtrl::Recording(int mic, int sec, int bCloseEng)
 						datacnt += rdlen * 2;
 					}
 
-					cmdbuf = (UINT16*)GetMsgBuffer();
-					cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check RECVREC");
-					teAppWrite(m_devHandle, 0, cmdbuf, cmdlen / 2);
+		//			cmdbuf = (UINT16*)GetMsgBuffer();
+		//			cmdlen = sprintf_s((char*)cmdbuf, PSKEY_BUFFER_LEN, "check RECVREC");
+		//			teAppWrite(m_devHandle, 0, cmdbuf, cmdlen / 2);
 
 				//	TRACE("Recv Audio:%d/%d %s\n", rdlen*2, datacnt,(char*)rdbuf);
 					m_curTick = ::GetTickCount();
