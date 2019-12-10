@@ -33,6 +33,24 @@ void CummuhandleSendData(Task task, uint8* message, uint16 messageSize);
 
 CommuInfo gCommInfo;
 
+#define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
+static const ringtone_note commupc_tone[] =
+{
+    RINGTONE_TIMBRE(sine), RINGTONE_DECAY(50),
+    RINGTONE_NOTE(A7, SEMIBREVE),
+    RINGTONE_NOTE(A1, SEMIBREVE),
+    RINGTONE_NOTE(B7, SEMIBREVE),
+    RINGTONE_NOTE(A9, SEMIBREVE),
+    RINGTONE_NOTE(C9, SEMIBREVE),
+    RINGTONE_NOTE(D9, SEMIBREVE),
+    RINGTONE_NOTE(E9, SEMIBREVE),
+    RINGTONE_NOTE(F9, SEMIBREVE),
+    RINGTONE_NOTE(G9, SEMIBREVE),
+    RINGTONE_STOP
+};
+static void CummuPlayMusic(void){
+    appUiPlayToneCore(commupc_tone, FALSE, TRUE, NULL, 0);
+}
 
 void CommpcParse(GAIA_STAROT_AUDIO_IND_T *message);
 
@@ -215,7 +233,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
 #ifdef HAVE_EM20168
                     EM20168_Set_psvalue(1, (unsigned short)atoi(p));
 #endif
-                    outsize = sprintf(outbuf, "checkresp RDSENSOR=%d", atoi(p));
+                    outsize = sprintf(outbuf, "checkresp WRSENSOR");
                     CummuhandleSendData(task, (uint8*)outbuf, outsize);
                 }else{
                     CummuhandleSendData(task, (uint8*)"not find", 9);
@@ -235,9 +253,12 @@ static void CummuHandler(Task task, MessageId id, Message message)
             if(strstr((char *)payload, "check TAP")){
                 g_commuType = 4;
                 CummuhandleSendData(task, (uint8*)"checkresp TAP", 14);
-            }/*else{
-                CummuhandleSendData(task, (uint8*)"undefind command", 17);
-            }*/
+            }
+
+            if(strstr((char *)payload, "check SPEAKER")){
+                CummuhandleSendData(task, (uint8*)"checkresp SPEAKER", 18);
+                CummuPlayMusic();
+            }
             break;
         }
 
