@@ -419,6 +419,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         subUiCasever2Gaia(id, progRun);
         break;
     case APP_CASE_REPORT_INFO:              // 盒子报告当前信息
+        // 盒盖打开，系统不要进入低功耗
+        appUiDeepSleepMode((1==progRun->caseLidOpen) ? FALSE : TRUE);
+
         subUiCasestat2Gaia(id, progRun);
         break;
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
@@ -435,6 +438,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         else
             appUiRestartBle();
         break;
+    case APP_INTERNAL_DEEPSLEEP:      // 时间到请允许进入低功耗
+        DEBUG_LOG("DeepSeep Enable");
+        VmDeepSleepEnable(TRUE);
+        progRun->disableSleep = 0;
+        break;
+
     case STAROT_RECORD_CALLIN_STOP_STATUS_REPORT:
     case STAROT_RECORD_CALLOUT_STOP_STATUS_REPORT:
     case STAROT_RECORD_STOP_STATUS_REPORT:
@@ -449,6 +458,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         phyStateTaskData* phy_state = appGetPhyState();
         MessageSend(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL);
         gProgRunInfo.realInCase = TRUE;
+        appUiDeepSleepMode(FALSE);
     }
         break;
 
@@ -457,6 +467,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         phyStateTaskData* phy_state = appGetPhyState();
         MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
         gProgRunInfo.realInCase = FALSE;
+        appUiDeepSleepMode(TRUE);
     }
         break;
 #endif
@@ -726,7 +737,7 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    DEBUG_LOG("CASE:%d key=%d %d %d\n", lidOpen, keyDown, keyLong, iElectrity);
+    DEBUG_LOG("CASE:%d key=%d %d %d", lidOpen, keyDown, keyLong, iElectrity);
 
     if(lidOpen >= 0)
         progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
@@ -778,6 +789,24 @@ void appUiCaseSetPeerBtAddr(uint8 *addrbuf)
     MessageSend(&appGetUi()->task, APP_CASE_SET_BTINFO, 0);
 
     ParamSavePeerAddr(&taddr);
+}
+
+
+void appUiDeepSleepMode(bool enable)    // 允许进入SLEEP模式
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    if(FALSE == enable) {
+        if(0 == progRun->disableSleep) {
+            DEBUG_LOG("DeepSeep Disable");
+            VmDeepSleepEnable(FALSE);
+            progRun->disableSleep = 1;
+        }
+    }
+    else {       // 延时关允许低功耗
+        MessageCancelAll(&appGetUi()->task, APP_INTERNAL_DEEPSLEEP);
+        MessageSendLater(&appGetUi()->task, APP_INTERNAL_DEEPSLEEP, 0, 5000);
+    }
 }
 
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt)

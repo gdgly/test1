@@ -27,6 +27,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_ASSISTANT_AWAKEN       (2026)           // apollo启动语音助手
 
 #define APP_INTERNAL_HANDSET_PAIR  (2090)           // 内部消息，启动广播连接手机
+#define APP_INTERNAL_DEEPSLEEP     (2091)           // 延时进入低功耗
 
 #define APP_THREE_POWER            (2099)           // ui -> ui 电量状态
 
@@ -74,6 +75,7 @@ typedef struct tagPROGRUNINFO {
     uint16         recStat:1;               // 当前是否正在录音
     uint16         apolloWakeup:1;          // 当前apollo是否启动0:未启动, 1:启动
     uint16         chargeStat:3;            // 当前充电状态 CHARGE_ST_XXX
+    uint16         disableSleep:1;          // 在盒盖打开时不请允许进入,0=允许
 
     uint8          peerPlace:3;             // 对方耳机状态 Bit0:盒子中 Bit1：空中 Bit2：佩戴
     uint8          peerElectrity;           // 对方耳机电量 0...100    
@@ -131,6 +133,8 @@ void appUiCaseVersion(uint16 hwVer, uint16 swVer);
 void appUiCaseSetPeerBtAddr(uint8 *addrbuf);
 bool appUiIsStopBle(void);
 void appUiRestartBle(void);
+
+void appUiDeepSleepMode(bool enable);    // 允许进入SLEEP模式
 
 ///////////////////////////////////////////////////////////////////////////////
 ///  充电模块反馈的信息
