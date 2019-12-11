@@ -434,13 +434,13 @@ void singlebus_itr_process(void)
     if( (value_a[MX20340_REG_STA_IRQ]&0x1) ){
         if( ((value_a[MX20340_REG_STA1]&0x1c) == (5<<2)) ){
             //说明是插入动作,可能是芯片bug需要重写mask寄存器
-            DEBUG_LOG("plc in\n");
+            DEBUG_LOG("plc in");
 #ifdef TWS_DEBUG
             MessageSend(appGetUiTask(), APP_ATTACH_PLC_IN, NULL);
 #endif
         }else if( ((value_a[MX20340_REG_STA1]&0x1c) == (3<<2)) ){
             //说明是拔出动作,可能是芯片bug需要重写mask寄存器
-            DEBUG_LOG("plc out\n");
+            DEBUG_LOG("plc out");
 #ifdef TWS_DEBUG
             MessageSend(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL);
 #endif
@@ -473,6 +473,7 @@ void singlebus_itr_handler(Task task, MessageId id, Message msg)
                 if(3 == g_commuType){
                     char* buff = "check PLC SUSS";
                     CommpcMessage((uint8*)buff, 15);
+                    return;     // 测试模式不发给UI
                 }
                 singlebus_itr_process();
             }

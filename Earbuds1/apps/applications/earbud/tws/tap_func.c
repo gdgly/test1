@@ -68,6 +68,7 @@ void tap_itr_handle_lis2dw12(void)
         if(4 == g_commuType){
             char* buff = "check TAP SUSS";
             CommpcMessage((uint8*)buff, 15);
+            return;       // 不发送消息给主UI
         }
         MessageSend(appGetUiTask(), APP_BTN_DOUBLE_TAP, NULL);
     }

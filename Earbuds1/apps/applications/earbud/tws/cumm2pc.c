@@ -48,7 +48,8 @@ static const ringtone_note commupc_tone[] =
     RINGTONE_NOTE(G9, SEMIBREVE),
     RINGTONE_STOP
 };
-static void CummuPlayMusic(void){
+static void CummuPlayTone(void)
+{
     appUiPlayToneCore(commupc_tone, FALSE, TRUE, NULL, 0);
 }
 
@@ -183,6 +184,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
             }
 
             if(strstr((char *)payload, "check STARTRECORD0")){
+                g_commuType        = 5;
                 g_appConfigSocMic1 = 0;
                 g_appConfigSocMic2 = NO_MIC;
                 progRun->recStat  = 1;
@@ -195,6 +197,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 CummuhandleSendData(task, (uint8*)"checkresp STARTRECORD", 22);
             }
             if(strstr((char *)payload, "check STARTRECORD1")){
+                g_commuType        = 6;
                 g_appConfigSocMic1 = NO_MIC;
                 g_appConfigSocMic2 = 1;
                 progRun->recStat  = 1;
@@ -207,6 +210,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 CummuhandleSendData(task, (uint8*)"checkresp STARTRECORD", 22);
             }
             if(strstr((char *)payload, "check STOPRECORD")){
+                g_commuType        = 0;
                 progRun->recStat  = 0;
 #ifdef CONFIG_REC_ASSISTANT
                 disable_audio_forward(TRUE);
@@ -257,7 +261,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
 
             if(strstr((char *)payload, "check SPEAKER")){
                 CummuhandleSendData(task, (uint8*)"checkresp SPEAKER", 18);
-                CummuPlayMusic();
+                CummuPlayTone();
             }
             break;
         }
@@ -288,7 +292,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
     }
 }
 
-//作为判断1：唤醒,2：接近光,3：PLC,4：敲击是否正常工作,发送消息的标记
+//作为判断1：唤醒,2：接近光,3：PLC,4：敲击是否正常工作,发送消息的标记 5:record
 uint16 g_commuType = 0;
 void CommpcMessage(uint8* buff ,uint8 size)
 {
@@ -299,21 +303,6 @@ void CommpcMessage(uint8* buff ,uint8 size)
 Task GetCommuTask(void)
 {
     return &gCommInfo.task;
-}
-void do_rec(void);
-void do_rec(void)
-{
-/*    uint8 message[22] = {0};
-    uint16 *ptr = (uint16 *)message;
-    ptr[0] = 22;
-    ptr[1] = 0;
-    memcpy(&message[4],"check STARTRECORD",18);
-*/
-    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
-    message->command      = MESSAGE_FROM_HOST;
-    message->payloadLen   = 23;
-    memcpy(message->payload,"check STARTRECORD0",19);
-    MessageSend(GetCommuTask(), MESSAGE_FROM_HOST, message);
 }
 
 void CummuInit(void)
@@ -329,4 +318,37 @@ void CummuInit(void)
         Panic();
     }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////
+///     PYDBG 调试使用
+/////////////////////////////////////////////////////////////////////////////////////////
+void do_rec(int start);
+void do_play(int iNo);
+void do_rec(int start)
+{
+/*    uint8 message[22] = {0};
+    uint16 *ptr = (uint16 *)message;
+    ptr[0] = 22;
+    ptr[1] = 0;
+    memcpy(&message[4],"check STARTRECORD",18);
+*/
+    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
+    message->command      = MESSAGE_FROM_HOST;
+    message->payloadLen   = 23;
+    if(start)
+        memcpy(message->payload,"check STARTRECORD0",19);
+    else
+        memcpy(message->payload,"check STOPRECORD0",18);
+    MessageSend(GetCommuTask(), MESSAGE_FROM_HOST, message);
+}
+
+void do_play(int iNo)
+{
+    if(iNo >= 7)
+        appUiPlayToneCore(commupc_tone, FALSE, TRUE, NULL, 0);
+    else
+        appUiPlayPrompt(PROMPT_POWER_ON+iNo);
+}
+
+
 #endif

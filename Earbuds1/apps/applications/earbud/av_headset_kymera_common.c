@@ -180,7 +180,13 @@ void appKymeraConfigureDspPowerMode(bool tone_playing)
         case KYMERA_STATE_IDLE:
         case KYMERA_STATE_TONE_PLAYING:
         {
-            /* All other states default to slow */
+    #ifdef CONFIG_REC_ASSISTANT
+        /* All other states default to slow */
+            if(appKymeraRecordIsRun() == TRUE) {
+                cconfig.active_mode = AUDIO_DSP_TURBO_CLOCK;
+                mode = AUDIO_POWER_SAVE_MODE_3;
+            }
+    #endif
         }
         break;        
     }
