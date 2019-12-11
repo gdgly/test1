@@ -60,7 +60,7 @@ static void subUiKeyDoubleTap(ProgRIPtr progRun)
 #ifndef TWS_DEBUG
         else if(!appSmIsPairing())
             appSmPairHandset();
-#end
+#endif
         else
         {
             appSmConnectHandset();
