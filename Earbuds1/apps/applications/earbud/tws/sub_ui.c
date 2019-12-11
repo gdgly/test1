@@ -57,8 +57,10 @@ static void subUiKeyDoubleTap(ProgRIPtr progRun)
             appAvPlayToggle(TRUE);
         else if (appDeviceIsHandsetHfpConnected() && appDeviceIsHandsetA2dpConnected())
             appUiError();
+#ifndef TWS_DEBUG
         else if(!appSmIsPairing())
             appSmPairHandset();
+#end
         else
         {
             appSmConnectHandset();
@@ -424,10 +426,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
         subUiCasestat2Gaia(id, progRun);
         break;
+#ifdef TWS_DEBUG
     case APP_PAIR_HEADSET:
         DEBUG_LOG("plc call pair headset");
         appSmPairHandset();
         break;
+#endif
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
