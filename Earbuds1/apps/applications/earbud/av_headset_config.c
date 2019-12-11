@@ -109,12 +109,22 @@ const promptConfig prompt_config[] =
     },
     [PROMPT_CONNECTED] = {
         .filename = "connected.sbc",
-        .rate = 48000,
+        .rate = 16000,
         .format = PROMPT_FORMAT_SBC,
     },
     [PROMPT_DISCONNECTED] = {
         .filename = "disconnected.sbc",
-        .rate = 48000,
+        .rate = 16000,
+        .format = PROMPT_FORMAT_SBC,
+    },
+    [PROMPT_LOW_BATTERY] = {
+        .filename = "low_battery.sbc",
+        .rate = 16000,
+        .format = PROMPT_FORMAT_SBC,
+    },
+    [PROMPT_DOUBLE_CLICK] = {
+        .filename = "double_click.sbc",
+        .rate = 16000,
         .format = PROMPT_FORMAT_SBC,
     },
 };
