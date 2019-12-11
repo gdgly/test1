@@ -154,6 +154,17 @@ static void box_send_data_process(uint8 *get_buf, uint8 *send_buf, uint8 *cache_
     send_buf[0] = get_buf[0];
 }
 
+static void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
+{
+    if(get_buf[1] == 0){//byte1 表示子命令，进入不同测试状态
+        send_buf[1] = 0;//需要返回值的话，给send_buf赋值
+        send_buf[2] = 0;
+    }else{
+
+    }
+    send_buf[0] = get_buf[0];
+}
+
 static void box_get_btaddr(uint8 *get_buf, uint8 *send_buf)
 {
     static uint8 btaddr[6]={0x13,0x14,0x15,0,0,1};
@@ -347,6 +358,9 @@ static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
     uint8 cmd;
     cmd = (buf[MX20340_REG_RX_DATA0] & 0x3c) >> 2;
     switch(cmd){
+    case 0://盒子发送测试指令
+        box_send_test_cmd(&buf[MX20340_REG_RX_DATA0], send_buf);
+        break;
     case 1://盒子获取蓝牙地址
         box_get_btaddr(&buf[MX20340_REG_RX_DATA0], send_buf);
         break;
