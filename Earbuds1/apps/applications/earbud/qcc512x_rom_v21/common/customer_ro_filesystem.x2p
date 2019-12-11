@@ -29,6 +29,8 @@
     <file path="../../../../../images/apollo/V00.01.000B_upgrade.bin"/>
     <file path="../../prompts/connected.sbc"/>
     <file path="../../prompts/disconnected.sbc"/>
+    <file path="../../prompts/double_click.sbc"/>
+    <file path="../../prompts/low_battery.sbc"/>
     <file path="../../prompts/pairing.sbc"/>
     <file path="../../prompts/pairing_failed.sbc"/>
     <file path="../../prompts/pairing_successful.sbc"/>

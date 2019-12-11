@@ -50,6 +50,8 @@ typedef enum prompt_name
     PROMPT_PAIRING_FAILED,
     PROMPT_CONNECTED,
     PROMPT_DISCONNECTED,
+    PROMPT_LOW_BATTERY,
+    PROMPT_DOUBLE_CLICK,
     NUMBER_OF_PROMPTS,
     PROMPT_NONE = 0xffff,
 } voicePromptName;
