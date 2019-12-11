@@ -1208,7 +1208,37 @@ static void appSmHandleConnRulesHandsetPair(void)
 static void appSmHandleConnRulesClearHandsetPair(void)
 {
     DEBUG_LOG("appSmHandleConnRulesClearHandsetPair");
-    appSmSetCoreState();
+    appState status = PHY_STATE_IN_CASE;
+    bool busy = appAvIsStreaming() || appHfpIsScoActive();
+    phyState ps = appPhyStateGetState();
+
+    switch (ps)
+    {
+        case PHY_STATE_IN_CASE:
+            status = APP_STATE_IN_CASE_IDLE;
+            break;
+
+        case PHY_STATE_OUT_OF_EAR:
+        case PHY_STATE_OUT_OF_EAR_AT_REST:
+            status = busy ? APP_STATE_OUT_OF_CASE_BUSY :
+                   APP_STATE_OUT_OF_CASE_IDLE;
+            break;
+
+        case PHY_STATE_IN_EAR:
+            status = busy ? APP_STATE_IN_EAR_BUSY :
+                   APP_STATE_IN_EAR_IDLE;
+            break;
+
+            /* Physical state is unknown, default to in-case state */
+        case PHY_STATE_UNKNOWN:
+            status = APP_STATE_IN_CASE_IDLE;
+            break;
+
+        default:
+            Panic();
+    }
+
+    appSetState(status);
     appConnRulesSetRuleComplete(CONN_RULES_CLEAR_HANDSET_PAIR);
 }
 #endif
