@@ -174,6 +174,10 @@ static void CummuHandler(Task task, MessageId id, Message message)
             uint8* payload = &msg[HOST_COMMS_PAYLOAD_OFFSET_WORD * sizeof(uint16)];
             //uint16 size = msg[HOST_COMMS_SIZE_OFFSET_WORD * sizeof(uint16)];
 
+            // 接收到测试命令，先打开各外设
+            progRun->iPowerSaveMode = POWER_MODE_IN_EAR;
+            appUiPowerSaveSync();
+
             /* Handle the message from the host here*/
             if(strstr((char *)payload, "check DEVICEINFO")){
                 pComu->type = 0;

@@ -3,7 +3,6 @@
 
 void appSubUiHandleMessage(Task task, MessageId id, Message message);
 
-
 #define GAIA_PAYLOAD_LEN        (28)       // 消息最大长度
 #define MAKE_GAIA_MESSAGE_WITH_LEN(TYPE, LEN) \
     TYPE##_T *message = (TYPE##_T *) PanicUnlessMalloc(sizeof(TYPE##_T) + LEN);
@@ -17,6 +16,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 
 #define APP_CHARGE_STATUS          (2010)           // 充电信息报告
 #define APP_BTN_DOUBLE_TAP         (2011)           // 双击敲击
+#define APP_PSENSOR_INEAR          (2012)           // 入耳
+#define APP_PSENSOR_OUTEAR         (2013)           // 出耳机
 
 #define APP_CALLIN_ACT             (2020)           // 拨号相关信息 拨入
 #define APP_CALLIN_INACT           (2021)           // 拨号相关信息 拨入断开
@@ -27,15 +28,14 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_ASSISTANT_AWAKEN       (2026)           // apollo启动语音助手
 
 #define APP_INTERNAL_HANDSET_PAIR  (2090)           // 内部消息，启动广播连接手机
-#define APP_INTERNAL_DEEPSLEEP     (2091)           // 延时进入低功耗
+#define APP_INTERNAL_POWERSAVECHG  (2091)           // 当前模式变化
 
 #define APP_THREE_POWER            (2099)           // ui -> ui 电量状态
 
-#ifdef TWS_DEBUG
 #define APP_ATTACH_PLC_IN           (2100)           // 20340 -> ui 报告plc  in 放入充电盒
 #define APP_ATTACH_PLC_OUT          (2101)           // 20340 -> ui 报告plc  out 取出充电盒
 #define APP_PAIR_HEADSET            (2102)           // 20340 -> ui 报告plc  配对手机
-#endif
+
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
 //#define APP_CASE_GET_BTINFO        (2011)           // 盒子获取耳机经典蓝牙地址
@@ -59,6 +59,8 @@ enum {DIAL_ST_IN=1, DIAL_ST_OUT=2,                    // 电话拨入/出
 enum {CHARGE_ST_NONE=0, CHARGE_ST_CONNECT,
       CHARGE_ST_OK, CHARGE_ST_LOW,
       CHARGE_ST_FIN};
+typedef enum {POWER_MODE_IN_CASE=1, POWER_MODE_IN_CASE_OPEN,
+              POWER_MODE_OUT_CASE, POWER_MODE_IN_EAR}PowerSaveMode;    // powersave
 // 系统运行中的一些动态数据
 typedef struct tagPROGRUNINFO {
     bdaddr         addr;                    // 本机蓝牙地址
@@ -81,6 +83,8 @@ typedef struct tagPROGRUNINFO {
     uint8          peerPlace:3;             // 对方耳机状态 Bit0:盒子中 Bit1：空中 Bit2：佩戴
     uint8          peerElectrity;           // 对方耳机电量 0...100    
     uint8          iElectrity;              // 自己耳机电量 0...100
+
+    PowerSaveMode  iPowerSaveMode;          // 当前模式
 
     uint8          dial_stat;               // 当前拨号情况
     uint8          dial_type:1;             // 1: 电话， 0：微信等其它
@@ -123,6 +127,7 @@ void appUiAvDisconnected(void);
 ///////////////////////////////////////////////////////////////////////////////
 int apolloWakeupCallback(void);
 bool appKymeraApolloIsRun(void);
+void apolloWakeupPower(int enable);        // 开启或停止 APO2
 
 ///////////////////////////////////////////////////////////////////////////////
 ///  盒子状态变化
@@ -135,6 +140,8 @@ void appUiCaseSetPeerBtAddr(uint8 *addrbuf);
 bool appUiIsStopBle(void);
 void appUiRestartBle(void);
 
+void appUiPowerSave(PowerSaveMode mode);     // 省电模式
+void appUiPowerSaveSync(void);
 void appUiDeepSleepMode(bool enable);    // 允许进入SLEEP模式
 
 ///////////////////////////////////////////////////////////////////////////////
