@@ -349,7 +349,8 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
     send_buf[0] = get_buf[0];
     //status 高两位 1广播成功 2广播失败 3手机连接成功； 第5，6位 1表示已peer， 2表示未peer
     send_buf[1] = ( (status<<6) & 0xc0 ) + ( (peer_status<<4) & 0x30 );
-    send_buf[2] = 0;
+    //第二byte送回电量信息
+    send_buf[2] = appUiGetPower();
 }
 
 static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
