@@ -1,4 +1,26 @@
 
+
+20191211
+PowerSave模式说明
+1、几种状态：盒子中 盒盖打开 空中 耳中
+2、可开关设备：接近光 APO2 TAP LIS25(当前无） PLC总线（不能/不需要关闭）
+3、状态变化时需要一定的延时;
+4、PLC通信的过程中，不能进入DeepSleep模式，否则通信不正常
+5、APO打开时，当前需要BIAS电压，当前BIAS压电需要DSP打开
+6、敲击传感器需要在耳朵中才能打开
+                  接近光    APO2        TAP     LIS25(当前无）    DSP&BT
+     盒子中        OFF       OFF         OFF
+     盒盖打开      OFF       OFF         OFF
+     空中          ON        OFF         OFF
+     耳朵中        ON        ON/SET      ON
+
+20191210
+  SBC压缩，有一个使用sbc_encoder的程序可以指定码流、
+  实际测试默认代码码流为128KBPS， 而我们可以设置为64/32都能使用。16K也可以压纹，但在QCC5126上
+会出现播放成功（正确），但无返回的状态（不能获取播放结束），无法播放下一个提示音了.
+  我们当前选用64K先测试着。
+
+
 20191121
 单MIC及双MIC的使用
 uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）

@@ -1,6 +1,9 @@
 #include "em20168.h"
 #ifdef HAVE_EM20168
 
+
+static uint8  _em20168Runing = 0;              // poweroff后，设置为 0, 启动运行为1
+
 em20168_str em20168_init_array[] = {
 #if 0
     {0x01, 0x80},
@@ -110,8 +113,10 @@ int EM20168Power(bool isOn)
     EM20168ReadRegister(handle, 0x00, &value);
     if(isOn){
         ret = EM20168WriteRegister(handle, 0x01, 0x80);
+        _em20168Runing = 1;
     }else{
         ret = EM20168WriteRegister(handle, 0x01, 0);
+        _em20168Runing = 0;
     }
     EM20168Disable(handle);
     return ret;
@@ -169,6 +174,12 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     DEBUG_LOG("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
 #endif
     EM20168WriteRegister(handle, 2, 0);
+
+    if(0 == _em20168Runing) {      // poweroff后，不向外发送消息
+        DEBUG_LOG("EM20168_itr_read_reg=%d but Poweroff", em20168_ps0_value);
+        EM20168Disable(handle);
+        return;
+    }
 
     if(em20168_ps0_value >= EM20168_HIGH_VALUE &&
             (prox->state->proximity != proximity_state_in_proximity) ){
@@ -372,6 +383,7 @@ void EM20168_init(void)
     EM20168Task->task.handler = EM20168_itr_handler;
     InputEventManagerRegisterTask(&EM20168Task->task, EM20168_ITR_PIN);
     EM20168Task->status = TRUE;
+    _em20168Runing = 1;
 
 #ifdef EM20168_KEY_ITR_TEST
     ProximitykeyTask = PanicUnlessNew(EM20168InfoTask);

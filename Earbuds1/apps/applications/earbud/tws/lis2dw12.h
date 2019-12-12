@@ -15,6 +15,8 @@
 #endif
 #define LIS2DW12_I2C_FREQ 400
 
+extern uint8  lis2dw12Runing;              // poweroff后，设置为 0, 启动运行为1
+
 bool lis2dw12ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value);
 bool lis2dw12WriteRegister(bitserial_handle handle, uint8 reg, uint8 value);
 bool lis2dw12ReadRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *value, uint8 len);

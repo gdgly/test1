@@ -1,6 +1,7 @@
 #include "lis2dw12.h"
 #ifdef HAVE_LIS2DW12
 
+uint8  lis2dw12Runing = 0;              // poweroff后，设置为 0, 启动运行为1
 /*! \brief Read a register from the proximity sensor */
 bool lis2dw12ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
 {
@@ -139,8 +140,10 @@ int Lis2dw12Power(bool isOn)
     handle = lis2dw12Enable();
     if(isOn){
         ret = lis2dw12WriteRegister(handle, 0x20, 0x74);
+        lis2dw12Runing = 1;
     }else{
         ret = lis2dw12WriteRegister(handle, 0x20, 0x04);
+        lis2dw12Runing = 0;
     }
     lis2dw12Disable(handle);
     return ret;
@@ -190,6 +193,7 @@ void lis2dw12_init(void)
         DEBUG_LOG("lis2dw12 reg 0x%x = 0x%x\n", lis2dw12_init_array[i].reg, value);
     }
     lis2dw12_status = TRUE;
+    lis2dw12Runing  = 1;
 
     lis2dw12Disable(handle);
     return;

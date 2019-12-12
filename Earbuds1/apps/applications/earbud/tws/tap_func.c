@@ -63,6 +63,12 @@ void tap_itr_handle_lis2dw12(void)
     lis2dw12ReadRegister_withlen(handle, 0x37, value_arr, 5);
 //    DEBUG_LOG("reg 0x37=0x%x, 0x38=0x%x, 0x39=0x%x, 0x3a=0x%x, 0x3b=0x%x\n",
 //           value_arr[0], value_arr[1], value_arr[2], value_arr[3], value_arr[4]);
+
+    if(0 == lis2dw12Runing) {  // poweroff 后不需要分发消息
+        DEBUG_LOG("tap_itr_handle_lis2dw12=0x%X but Poweroff", value_arr[0]);
+        lis2dw12Disable(handle);
+    }
+
     if(value_arr[0] & 0x10){
         DEBUG_LOG("double tap\n");
         if(4 == g_commuType){
