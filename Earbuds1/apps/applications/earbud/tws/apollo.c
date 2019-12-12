@@ -34,6 +34,7 @@ static int apollo_check_and_start_upgrade(void);
 static int check_fw_ver(uint32 fw_ver);
 static void wait_for_timeout(int delay);
 static void apollo_init_finish(void);
+static int send_successful_upgrade(void);
 
 
 /****** debug ******/
@@ -311,6 +312,14 @@ static void apollo_init_handler(MessageId id, Message msg)
     }
 }
 
+static int send_successful_upgrade(void)
+{
+    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+    int ret = apollo_send_cmd(APOLLO_RESET_2, handle);
+    hwi2cClose(handle);
+    return ret;
+}
+
 /* apollo upgrade handler */
 static void apollo_upgrade_handler(MessageId id, Message msg)
 {
@@ -332,6 +341,9 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
                         release_image();
                         if (!ret) {
                             APOLLO_DBG_LOG("upgrade success, reboot.");
+                            apollo_state = APOLLO_STATE_UPGRADE_S3;
+                            send_successful_upgrade();
+                            break;
                         }
                         else if (upgrade_times < 3) {
                             upgrade_times ++;
@@ -339,15 +351,25 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
                         } else {
                             apollo_init_end_cb = NULL;
                             APOLLO_DBG_LOG("upgrade fail, re-init and stop upgrade");
+                            break;
                         }
 
-                        /* reboot to enter app. */
-                        apollo_state = APOLLO_STATE_UPGRADE_S3;
-                        IO_LOW(APOLLO_OVERRIDE_IO);
-                        IO_LOW(APOLLO_RESET_IO);
+                        apollo_state = APOLLO_STATE_INIT_IO;
                         wait_for_timeout(10);
                         break;
                     }
+                case APOLLO_STATE_UPGRADE_S3:{
+                    uint32 feedback[2];
+                    PanicFalse(apollo_fb((uint8*)feedback, 8));
+                    PanicFalse(0x02 == feedback[0]);
+
+                    apollo_state = APOLLO_STATE_UPGRADE_S4;
+                    IO_LOW(APOLLO_OVERRIDE_IO);
+                    IO_LOW(APOLLO_RESET_IO);
+                    wait_for_timeout(10);
+
+                    break;
+                }
                     default:
                         break;
                 }
@@ -386,8 +408,14 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
                         IO_HIGH(APOLLO_RESET_IO);
                         wait_for_int_low(60);
                     }
-                    if (APOLLO_STATE_UPGRADE_S3 == apollo_state) {
+                    if (APOLLO_STATE_UPGRADE_S4 == apollo_state) {
                         apollo_state = APOLLO_STATE_INIT_IO;
+                        io_init_wait_int_low_to = 0;
+                        io_init_i2c_rd_err_times = 0;
+                        io_init_rd_fw_err_times = 0;
+                        enter_boot_int_times = 0;
+                        upgrade_times = 0;
+                        apollo_init_end_cb = NULL;
                         IO_HIGH(APOLLO_RESET_IO);
                         wait_for_int_low(60);
                     }

@@ -91,7 +91,8 @@ void comGetApolloVer(uint8 *arr);
 #define    APOLLO_STATE_UPGRADE_S1                  (APOLLO_STATE_INIT_END + 2)
 #define    APOLLO_STATE_UPGRADE_S2                  (APOLLO_STATE_INIT_END + 3)
 #define    APOLLO_STATE_UPGRADE_S3                  (APOLLO_STATE_INIT_END + 4)
-#define    APOLLO_STATE_UPGRADE_END                 (APOLLO_STATE_INIT_END + 5)
+#define    APOLLO_STATE_UPGRADE_S4                  (APOLLO_STATE_INIT_END + 5)
+#define    APOLLO_STATE_UPGRADE_END                 (APOLLO_STATE_INIT_END + 6)
 /* state before APOLLO_STATE_UPGRADE_STAR are all used for image upgrade */
 #define    APOLLO_STATE_ENTERING_SLEEP              (APOLLO_STATE_UPGRADE_END + 1)
 #define    APOLLO_STATE_SLEEP                       (APOLLO_STATE_UPGRADE_END + 2)
