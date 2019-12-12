@@ -200,6 +200,9 @@ static const appInitTableEntry appInitTable[] =
     {appChargerInit,        0, NULL},
 #endif
     {appLedInit,            0, NULL},
+#ifdef ENABLE_APOLLO
+    {apollo_int_io_init,    APOLLO_INIT_CFM, NULL},
+#endif
 #ifdef HAVE_MAX20340
     {max20340_init,             0, NULL},
 #endif
@@ -253,9 +256,6 @@ static const appInitTableEntry appInitTable[] =
 #endif
 #ifdef CUMMPC_PC_USB
     {CummuInit,             0, NULL},
-#endif
-#ifdef ENABLE_APOLLO
-    {apollo_int_io_init,    APOLLO_INIT_CFM, NULL},
 #endif
     {NULL,                  0, NULL}
 };
