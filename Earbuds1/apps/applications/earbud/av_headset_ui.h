@@ -542,10 +542,4 @@ extern void appUiSleep(void);
      is interrupted, or if it is not played at all. */
 #define appUiPlayPromptInterruptibleClearLock(prompt, lock, mask) appUiPlayPromptCore(prompt, TRUE, TRUE, lock, mask)
 
-
-#ifdef CONFIG_STAROT
-#include "tws/sub_ui.h"
-#endif  /* CONFIG_STAROT */
-
-
 #endif
