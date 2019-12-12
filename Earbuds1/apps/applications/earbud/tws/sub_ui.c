@@ -18,6 +18,7 @@
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
 extern void disable_audio_forward(bool disable);
+extern bool max20340_GetConnect(void);
 void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
 void appSubUISetMicbias(int set);
@@ -360,15 +361,14 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
     case APP_GAIA_CONNECTED:
         DEBUG_LOG("GAIA connect to phone");
-        if(1 == gUserParam.apolloEnable){
-            progRun->apolloWakeup = 1;
-            appSubUISetMicbias(TRUE);
-        }
         progRun->gaiaStat  = 1;
+        if(1 == gUserParam.apolloEnable)
+            apolloWakeupPower(1);
         break;
     case APP_GAIA_DISCONNECTED:
         DEBUG_LOG("GAIA disconnect from phone");
         progRun->gaiaStat  = 0;
+        apolloWakeupPower(0);
         break;
 
     case APP_BTN_DOUBLE_TAP:
@@ -377,6 +377,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case INIT_CFM:
         DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");    /* Get microphone sources */
+        appUiPowerSave((TRUE==max20340_GetConnect()) ? POWER_MODE_IN_CASE : POWER_MODE_OUT_CASE);
         register_apollo_wakeup_cb(apolloWakeupCallback);                       //注册apollo唤醒函数
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
         /// todo hjs 暂时不启用自动配对
@@ -422,8 +423,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
     case APP_CASE_REPORT_INFO:              // 盒子报告当前信息
         // 盒盖打开，系统不要进入低功耗
-        appUiDeepSleepMode((1==progRun->caseLidOpen) ? FALSE : TRUE);
-
+        appUiPowerSave((1==progRun->caseLidOpen) ? POWER_MODE_IN_CASE_OPEN : POWER_MODE_IN_CASE);
         subUiCasestat2Gaia(id, progRun);
         break;
 #ifdef TWS_DEBUG
@@ -446,10 +446,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         else
             appUiRestartBle();
         break;
-    case APP_INTERNAL_DEEPSLEEP:      // 时间到请允许进入低功耗
-        DEBUG_LOG("DeepSeep Enable");
-        VmDeepSleepEnable(TRUE);
-        progRun->disableSleep = 0;
+
+    case APP_INTERNAL_POWERSAVECHG:
+        appUiPowerSaveSync();
         break;
 
     case STAROT_RECORD_CALLIN_STOP_STATUS_REPORT:
@@ -460,25 +459,34 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_ASSISTANT_AWAKEN:
         subUiStartAssistant2Gaia(id, progRun);
         break;
-#ifdef TWS_DEBUG
     case APP_ATTACH_PLC_IN: {
         DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
+#ifdef TWS_DEBUG
         phyStateTaskData* phy_state = appGetPhyState();
         MessageSend(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL);
         gProgRunInfo.realInCase = TRUE;
-        appUiDeepSleepMode(FALSE);
+#endif
+        appUiPowerSave(POWER_MODE_IN_CASE);
     }
         break;
 
     case APP_ATTACH_PLC_OUT:  {
         DEBUG_LOG("parse APP_ATTACH_PLC_OUT event");
+#ifdef TWS_DEBUG
         phyStateTaskData* phy_state = appGetPhyState();
         MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
         gProgRunInfo.realInCase = FALSE;
-        appUiDeepSleepMode(TRUE);
-    }
-        break;
 #endif
+        appUiPowerSave(POWER_MODE_OUT_CASE);
+    }
+
+        // 入耳 出耳
+    case APP_PSENSOR_INEAR:
+        appUiPowerSave(POWER_MODE_IN_EAR);
+        break;
+    case APP_PSENSOR_OUTEAR:
+        appUiPowerSave(POWER_MODE_OUT_CASE);
+        break;
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
@@ -819,15 +827,80 @@ void appUiDeepSleepMode(bool enable)    // 允许进入SLEEP模式
     ProgRIPtr  progRun = appSubGetProgRun();
 
     if(FALSE == enable) {
-        if(0 == progRun->disableSleep) {
+        if(1 != progRun->disableSleep) {
             DEBUG_LOG("DeepSeep Disable");
             VmDeepSleepEnable(FALSE);
             progRun->disableSleep = 1;
         }
     }
-    else {       // 延时关允许低功耗
-        MessageCancelAll(&appGetUi()->task, APP_INTERNAL_DEEPSLEEP);
-        MessageSendLater(&appGetUi()->task, APP_INTERNAL_DEEPSLEEP, 0, 5000);
+    else {
+        if(0 != progRun->disableSleep) {
+            DEBUG_LOG("DeepSeep Enable");
+            VmDeepSleepEnable(TRUE);
+            progRun->disableSleep = 0;
+        }
+    }
+}
+
+void appUiPowerSave(PowerSaveMode mode)           // 省电模式
+{
+    uint16 timeout;
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    if(POWER_MODE_IN_CASE == mode || POWER_MODE_IN_CASE_OPEN == mode ) {
+        appUiDeepSleepMode(FALSE);  // 进入盒子，立即禁进入低功耗
+        timeout = 2000;
+    }
+    else if(POWER_MODE_OUT_CASE == mode)
+        timeout = 1000;
+    else if(POWER_MODE_IN_EAR == mode)
+        timeout = 500;
+    else
+        timeout = 10;
+
+    //这个涵数就是为了延时，无论模式怎么变化
+    progRun->iPowerSaveMode   = mode;
+    MessageCancelAll(appGetUiTask(), APP_INTERNAL_POWERSAVECHG);
+    MessageSendLater(appGetUiTask(), APP_INTERNAL_POWERSAVECHG, 0, timeout);
+
+}
+
+void appUiPowerSaveSync(void)
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    DEBUG_LOG("PowerSaveSync mode=%d", progRun->iPowerSaveMode);
+
+    switch(progRun->iPowerSaveMode) {
+    case POWER_MODE_IN_CASE_OPEN:
+    case POWER_MODE_IN_CASE:
+        EM20168Power(0);             // 接近光
+        Lis2dw12Power(0);            // TAP
+        lis25Power(0);               // 骨麦
+        apolloWakeupPower(0);        // APO2
+
+        appUiDeepSleepMode(FALSE);   // PLC通信不能进入低功耗
+        break;
+    case POWER_MODE_OUT_CASE:
+        EM20168Power(1);             // 接近光
+#ifdef TWS_DEBUG
+        Lis2dw12Power(0);            // TAP
+#else
+        Lis2dw12Power(1);            // TAP
+#endif
+        lis25Power(1);               // 骨麦
+        apolloWakeupPower(1);        // APO2
+
+        appUiDeepSleepMode(TRUE);    // PLC
+        break;
+    case POWER_MODE_IN_EAR:
+        EM20168Power(1);             // 接近光
+        Lis2dw12Power(1);            // TAP
+        lis25Power(1);               // 骨麦
+        apolloWakeupPower(1);        // APO2
+
+        appUiDeepSleepMode(TRUE);    // PLC
+        break;
     }
 }
 
@@ -1003,6 +1076,44 @@ bool appKymeraApolloIsRun(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     return (progRun->apolloWakeup != 0) ? TRUE : FALSE;
+}
+
+void apolloWakeupPower(int enable)        // 开启或停止 APO2
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    if(enable) {
+        if(1 == gUserParam.apolloEnable && 1 == progRun->gaiaStat){          // 系统配置了启动
+            progRun->apolloWakeup = 1;
+            appSubUISetMicbias(TRUE);
+            OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 需要放在SetMicbias之后，否则容易出现2.1V
+            apollo_evoke();
+        }
+    }
+    else {
+        if(1 == progRun->apolloWakeup) {          // 当前已经启动
+            apollo_sleep();                  // APO2,可能不成功
+            appSubUISetMicbias(FALSE);
+            OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
+            progRun->apolloWakeup = 0;
+        }
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+///     PYDBG 调试使用
+/////////////////////////////////////////////////////////////////////////////////////////
+void do_bias(int value);
+void do_bias(int value)
+{
+    if(value) {
+        appSubUISetMicbias(TRUE);
+        OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 需要放在SetMicbias之后，否则容易出现2.1V
+    }
+    else {
+        appSubUISetMicbias(FALSE);
+        OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
+    }
 }
 
 #endif
