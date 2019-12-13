@@ -17,6 +17,7 @@
 
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
+extern bool appKymeraRecordIsRun(void);
 extern void disable_audio_forward(bool disable);
 extern bool max20340_GetConnect(void);
 void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
@@ -368,6 +369,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_GAIA_DISCONNECTED:
         DEBUG_LOG("GAIA disconnect from phone");
         progRun->gaiaStat  = 0;
+        if (appKymeraRecordIsRun() == TRUE){
+#ifdef CONFIG_REC_ASSISTANT
+            disable_audio_forward(TRUE);
+            appKymeraRecordStop();
+#endif
+        }
         apolloWakeupPower(0);
         break;
 
