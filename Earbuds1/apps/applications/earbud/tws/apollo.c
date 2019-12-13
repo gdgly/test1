@@ -195,7 +195,7 @@ int apollo_evoke(void) {
 
 /*Return 0 for Apollo startup success*/
 int apolloGetStatus(void) {
-    return !(apollo_state > APOLLO_STATE_INIT_END);
+    return !((apollo_state > APOLLO_STATE_INIT_END) && (apollo_state != APOLLO_STATE_ERR));
 }
 
 /*get Apollo version*/
