@@ -1,6 +1,12 @@
 #include "max20340.h"
 #ifdef HAVE_MAX20340
 
+#define TIME_READ_MAX20340_REG
+// max20340 正常为低电平中断，部分时间出现IO为常低，而不能拉回到常高而不能再次产生中断
+// 每次来中断之后，启动一个100ms的定时器，定时器到的时候检查IO状态，如果为低就再次读取一次
+// 产生原因很可能 发送给对方耳机及对方耳机快速响应，导致本耳机中断没响应过来
+void max20340_timer_restart(int timeout);
+
 /*! \brief Read a register from the proximity sensor */
 bool max20340ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
 {
@@ -487,6 +493,7 @@ void singlebus_itr_handler(Task task, MessageId id, Message msg)
                     return;     // 测试模式不发给UI
                 }
                 singlebus_itr_process();
+                max20340_timer_restart(70);     // 70ms后，查看中断是否拉回来了
             }
             break;
         default:
@@ -526,7 +533,6 @@ void singlebus_key_itr_handler(Task task, MessageId id, Message msg)
 }
 #endif
 
-#define TIME_READ_MAX20340_REG
 
 typedef struct tagSHELLCMDINFO {
     TaskData       task;
@@ -548,14 +554,21 @@ static void max20340_time_handle_msg(Task task, MessageId id, Message message)
     switch (id)
     {
         case MESSAGE_MAX20340_TIME_TRIGGER:
-            singlebus_itr_process();
-            //DEBUG_LOG("lalalala\n");
-            MessageSendLater(&time_funcTask->task,
-                             MESSAGE_MAX20340_TIME_TRIGGER, NULL,
-                             1000);
+            if(!(PioGet32Bank(PIO2BANK(MAX20340_ITR_PIN)) & PIO2MASK(MAX20340_ITR_PIN))) {
+                singlebus_itr_process();
+                DEBUG_LOG("max23040 timer READ");
+            }
         break;
     }
 }
+
+void max20340_timer_restart(int timeout)
+{
+    MessageCancelAll(&time_funcTask->task, MESSAGE_MAX20340_TIME_TRIGGER);
+    MessageSendLater(&time_funcTask->task, MESSAGE_MAX20340_TIME_TRIGGER, 0, timeout);
+}
+#else
+void max20340_timer_restart(int timeout) { (void)timeout;}
 #endif
 
 int max20340_get_left_or_right(void)
@@ -709,9 +722,7 @@ void max20340_init(void)
     time_funcTask = PanicUnlessNew(singlebus_funcInfoTask);
     memset(time_funcTask, 0, sizeof(singlebus_funcInfoTask));
     time_funcTask->task.handler = max20340_time_handle_msg;
-    MessageSendLater(&time_funcTask->task,
-                     MESSAGE_MAX20340_TIME_TRIGGER, NULL,
-                     6000);
+    max20340_timer_restart(6000);
 #endif
 
     max20340Disable(handle);
