@@ -527,4 +527,8 @@ extern appTaskData globalApp;
 #define appHandleSysUnexpected(id) \
     DEBUG_LOGF("appHandleSysUnexpected, id = 0x%x (%d)", (id), (id))
 
+#ifdef CONFIG_STAROT
+#include "tws/sub_ui.h"
+#endif  /* CONFIG_STAROT */
+
 #endif /* _AV_HEADSET_H_ */

@@ -749,9 +749,16 @@ void appSetState(appState new_state)
     }
 
     /* if entering the APP_STATE_IN_CASE parent state */
-//    if (!appSmStateInCase(previous_state) && appSmStateInCase(new_state))
+#ifdef TWS_DEBUG
+    /// 修改出发点：如果手机点击配对，是希望连接成功的。但是tws默认，pair完毕之后，就应该结束了，不让连接，导致手机上有额外的连接失败弹框
+    /// 现在让他连接成功，在连接成功之后，触发规则ruleRealInCaseDisconnect去处理
     if (((APP_STATE_HANDSET_PAIRING & previous_state) == 0) && !appSmStateInCase(previous_state) && appSmStateInCase(new_state))
+#else
+    if (!appSmStateInCase(previous_state) && appSmStateInCase(new_state))
+#endif
+    {
         appEnterInCase();
+    }
 
     /* if entering the APP_STATE_OUT_OF_CASE parent state */
     if (!appSmStateOutOfCase(previous_state) && appSmStateOutOfCase(new_state))
@@ -1043,6 +1050,9 @@ static void appSmHandlePairingHandsetPairConfirm(PAIRING_HANDSET_PAIR_CFM_T *cfm
 {
     UNUSED(cfm);
     DEBUG_LOGF("appSmHandlePairingHandsetPairConfirm, status %d", cfm->status);
+    if (pairingHandsetSuccess == cfm->status) {
+        /// 尝试连接手机，如果连接成功，会在连接成功的地方，校验是否可以连接
+    }
 
     switch (appGetState())
     {
