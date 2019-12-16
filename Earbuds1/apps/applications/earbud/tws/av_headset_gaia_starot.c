@@ -258,7 +258,7 @@ void starotGaiaDefaultParse(MessageId id, Message message) {
             break;
 
         case GAIA_STAROT_MORE_SPACE: {
-//            DEBUG_LOG("Call GAIA_STAROT_MORE_SPACE");
+            DEBUG_LOG("Call GAIA_STAROT_MORE_SPACE");
             starotGaiaParseMessageMoreSpace();
         }
             break;
@@ -311,9 +311,9 @@ void starotGaiaParseMessageMoreSpace(void) {
     if (appGetGaia()->nowSendAudioPhase != GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE) {
         return;
     }
+    appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
 
     if (appGetGaia()->needCycleSendAudio > 0) {
-        appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
         //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudioPhase);
         MessageSend(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL);
     } else {
@@ -351,7 +351,7 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
     UNUSED(message);
 
     /// 不能传输，在source中缓存，如果缓存过多，会丢弃
-//    DEBUG_LOG("transformAudioFlag: %d nowSendAudioPhase is %d", appGetGaia()->transformAudioFlag, appGetGaia()->nowSendAudioPhase);
+    //DEBUG_LOG("transformAudioFlag: %d nowSendAudioPhase is %d", appGetGaia()->transformAudioFlag, appGetGaia()->nowSendAudioPhase);
     if (appGetGaia()->transformAudioFlag < TRANSFORM_CANT) {
         return FALSE;
     }
