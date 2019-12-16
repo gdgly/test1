@@ -213,9 +213,6 @@ static const appInitTableEntry appInitTable[] =
 #if defined(HAVE_BMA400) || defined(HAVE_LIS2DW12)
     {tap_func_init,             0, NULL},
 #endif
-#ifdef HAVE_EM20168
-    {EM20168_init,             0, NULL},
-#endif
 #ifdef CONFIG_SHELL_UART
     {ShellCmdInit,          0, NULL},
 #endif
@@ -228,6 +225,9 @@ static const appInitTableEntry appInitTable[] =
 #ifdef CONFIG_STAROT
     {appSubUIInit,          0, NULL},      // 必须在ParamConfigInit之前
     {ParamConfigInit,       CL_DM_LOCAL_BD_ADDR_CFM, ParamInitHandleClDmLocalBdAddrCfm},
+#endif
+#ifdef HAVE_EM20168//放到subui后面，因为要读flash
+    {EM20168_init,             0, NULL},
 #endif
     {appLinkPolicyInit,     0, NULL},
     {appConManagerInit,     0, NULL},
