@@ -896,11 +896,15 @@ void gaiaControlRejectDialog(GAIA_STAROT_IND_T *message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
+// APP控制上一首
 void gaiaControlPreviousMusic(GAIA_STAROT_IND_T *message) {
+    gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_APP_CONTROL_PREVIOUS_TRACK);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
+// APP控制下一首
 void gaiaControlNextMusic(GAIA_STAROT_IND_T *message) {
+    gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_APP_CONTROL_NEXT_TRACK);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 

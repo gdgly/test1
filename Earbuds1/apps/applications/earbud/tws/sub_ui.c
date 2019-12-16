@@ -24,6 +24,24 @@ void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
 void appSubUISetMicbias(int set);
 
+/*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
+#define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
+
+static const ringtone_note app_tone_music[] =
+{
+    RINGTONE_TIMBRE(sine), RINGTONE_DECAY(16),
+    RINGTONE_NOTE(A7, SEMIQUAVER),
+    RINGTONE_STOP
+};
+static const ringtone_note app_tone_wakeup[] =
+{
+    RINGTONE_TIMBRE(sine), RINGTONE_DECAY(16),
+    RINGTONE_NOTE(A7, SEMIQUAVER),
+    RINGTONE_NOTE(B7, SEMIQUAVER),
+    RINGTONE_NOTE(C7, SEMIQUAVER),
+    RINGTONE_STOP
+};
+
 ProgRunInfo gProgRunInfo;
 uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
 
@@ -336,6 +354,14 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         EM20168Power(gUserParam.sensorEnable);   ///App设置是否佩戴使能
 #endif
         ParamSaveUserPrm(&gUserParam);
+        break;
+    case STAROT_APP_CONTROL_PREVIOUS_TRACK:      ///App控制上一首
+        appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
+        appAvBackward();
+        break;
+    case STAROT_APP_CONTROL_NEXT_TRACK:          ///App控制下一首
+        appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
+        appAvForward();
         break;
     }
 }
@@ -1049,18 +1075,6 @@ uint8 appUIGetPowerCaseState(void)
 {
     return gProgRunInfo.powerCaseState;
 }
-
-/*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
-#define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
-const ringtone_note app_tone_wakeup[];
-const ringtone_note app_tone_wakeup[] =
-{
-    RINGTONE_TIMBRE(sine), RINGTONE_DECAY(16),
-    RINGTONE_NOTE(A7, SEMIQUAVER),
-    RINGTONE_NOTE(B7, SEMIQUAVER),
-    RINGTONE_NOTE(C7, SEMIQUAVER),
-    RINGTONE_STOP
-};
 
 int apolloWakeupCallback(void)
 {
