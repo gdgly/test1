@@ -122,10 +122,6 @@ void appKymeraRecordStop(void)
             /* Disable external amplifier if required */
             ChainDestroy(theKymera->chain_record_handle);
             theKymera->chain_record_handle = NULL;
-            theKymera->mic_params[0].gain = appConfigMic0Gain();
-            theKymera->mic_params[1].gain = appConfigMic0Gain();
-            appConfigScoMic1() = 0;
-            appConfigScoMic2() = 1;
         }
         break;
     }

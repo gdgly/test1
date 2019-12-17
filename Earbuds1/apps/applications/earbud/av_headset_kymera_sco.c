@@ -230,8 +230,6 @@ static void appKymeraScoConfigureChain(uint16 wesco)
     appKymeraSetOperatorUcids(TRUE, theKymera->sco_info->mode);
 }
 
-
-
 void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *info,
                                      uint8 wesco, uint16 volume)
 {
@@ -246,8 +244,10 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
         appKymeraTonePromptStop();
     }
 #ifdef CONFIG_REC_ASSISTANT
-    if (appKymeraRecordIsRun())
+    if (appKymeraRecordIsRun()){
+        disable_audio_forward(TRUE);
         appKymeraRecordStop();
+        }
 #endif
 
     /* Can't start voice chain if we're not idle */
