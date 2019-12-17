@@ -49,6 +49,17 @@
 
 const InputEventConfig_t InputEventConfig  =
 {
+#ifndef CONFIG_BOARD_V2
+    /* Table to convert from PIO to input event ID*/
+    {
+         0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+    },
+
+    /* Masks for each PIO bank to configure as inputs */
+    { 0x00000001UL, 0x00000000UL, 0x00000000UL },
+#else
     /* Table to convert from PIO to input event ID*/
     {
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -58,12 +69,13 @@ const InputEventConfig_t InputEventConfig  =
 
     /* Masks for each PIO bank to configure as inputs */
     { 0x00000000UL, 0x00000000UL, 0x00000000UL },
+#endif
     /* PIO debounce settings */
     //4, 5
     1, 0
 };
 
-#if 0
+#ifndef CONFIG_BOARD_V2
 const InputActionMessage_t InputEventActions[] =
 {
     {
@@ -1348,8 +1360,12 @@ void appUiInit(void)
     
     /* Initialise input event manager with auto-generated tables for
      * the target platform */
-    theUi->input_event_task = InputEventManagerInit(appGetUiTask(), NULL, 0,
-                                         //           InputEventActions, sizeof(InputEventActions),
+    theUi->input_event_task = InputEventManagerInit(appGetUiTask(),
+            #ifndef CONFIG_BOARD_V2
+                                                    InputEventActions, sizeof(InputEventActions),
+            #else
+                                                    NULL, 0,
+            #endif
                                                     &InputEventConfig);
 
     memset(theUi->prompt_file_indexes, FILE_NONE, sizeof(theUi->prompt_file_indexes));
