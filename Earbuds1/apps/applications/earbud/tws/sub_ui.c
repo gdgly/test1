@@ -43,7 +43,7 @@ static const ringtone_note app_tone_wakeup[] =
 };
 
 ProgRunInfo gProgRunInfo;
-uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
+uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
 
 /* BLE 已经连接到手机，则不需要修改广播内容, 没有连接到手机则信息不需要发送出去 */
 #define BLE_CONNECTED_PHONE()  (NULL != appGetGaiaTransport())
@@ -319,18 +319,16 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_AI_USER_START_RECORD:               ///设备开始录音
         progRun->recStat  = 1;
 #ifdef CONFIG_REC_ASSISTANT
-        g_appConfigSocMic1 = 0;
-        g_appConfigSocMic2 = NO_MIC;
+        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
         appKymeraRecordStart();
-        disable_audio_forward(FALSE);
 #endif
         break;
 
     case STAROT_AI_USER_STOP_RECORD:               ///设备停止录音
         progRun->recStat  = 0;
 #ifdef CONFIG_REC_ASSISTANT
-        disable_audio_forward(TRUE);
-        appKymeraRecordStop();
+        appKymeraRecordStop();        
+        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
 #endif
         break;
 
@@ -395,12 +393,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_GAIA_DISCONNECTED:
         DEBUG_LOG("GAIA disconnect from phone");
         progRun->gaiaStat  = 0;
-        if (appKymeraRecordIsRun() == TRUE){
 #ifdef CONFIG_REC_ASSISTANT
-            disable_audio_forward(TRUE);
+        if (appKymeraRecordIsRun() == TRUE){
             appKymeraRecordStop();
+            g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
+            }
 #endif
-        }
         apolloWakeupPower(0);
         break;
 
@@ -680,6 +678,14 @@ void appUiHfpCallIncomingActive(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
+//如果此时有录音
+#ifdef CONFIG_REC_ASSISTANT
+    if (appKymeraRecordIsRun()){
+        appKymeraRecordStop();
+        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
+        }
+#endif
+
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
 
     progRun->dial_stat  &= ~DIAL_ST_INACT;
@@ -696,6 +702,14 @@ void appUiHfpCallIncomingActive(void)
 void appUiHfpCallOutcomingActive(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
+
+//如果此时有录音
+#ifdef CONFIG_REC_ASSISTANT
+    if (appKymeraRecordIsRun()){
+        appKymeraRecordStop();
+        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
+        }
+#endif
 
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
 

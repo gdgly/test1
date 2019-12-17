@@ -83,6 +83,9 @@ void appKymeraHandleInternalRecordStart(const KYMERA_INTERNAL_RECORD_T *msg)
 
             /* May need to exit low power mode to play tone simultaneously */
             appKymeraConfigureDspPowerMode(TRUE);
+
+            // 允许DSP数据传到APP
+            disable_audio_forward(FALSE);
             break;
 
         default:
@@ -103,6 +106,7 @@ void appKymeraRecordStop(void)
         return;
 
     DEBUG_LOGF("appKymeraRecordStop, state %u", appKymeraGetState());
+    disable_audio_forward(TRUE);
     switch (appKymeraGetState())
     {
         case KYMERA_STATE_A2DP_STREAMING:

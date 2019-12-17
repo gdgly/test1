@@ -243,13 +243,6 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
          * it must be an interruptible tone, so cut it off */
         appKymeraTonePromptStop();
     }
-#ifdef CONFIG_REC_ASSISTANT
-    if (appKymeraRecordIsRun()){
-        disable_audio_forward(TRUE);
-        appKymeraRecordStop();
-        }
-#endif
-
     /* Can't start voice chain if we're not idle */
     PanicFalse(appKymeraGetState() == KYMERA_STATE_IDLE);
 

@@ -60,7 +60,6 @@ extern int apolloGetStatus(void);
 extern void comGetApolloVer(uint8 *arr);
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
-extern void disable_audio_forward(bool disable);
 
 /* 延时赋值数据消息转发方向 */
 static void CommuForwardSetDataClient(void)
@@ -194,7 +193,6 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 progRun->recStat  = 1;
 #ifdef CONFIG_REC_ASSISTANT
                 appKymeraRecordStart();
-                disable_audio_forward(FALSE);
 #endif
                 MessageSendLater(task, COMMU_INTERVAL_RECORD, NULL, 10);
 
@@ -207,7 +205,6 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 progRun->recStat  = 1;
 #ifdef CONFIG_REC_ASSISTANT
                 appKymeraRecordStart();
-                disable_audio_forward(FALSE);
 #endif
                 MessageSendLater(task, COMMU_INTERVAL_RECORD, NULL, 10);
 
@@ -217,7 +214,6 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 g_commuType        = 0;
                 progRun->recStat  = 0;
 #ifdef CONFIG_REC_ASSISTANT
-                disable_audio_forward(TRUE);
                 appKymeraRecordStop();
 #endif
                 CummuhandleSendData(task, (uint8*)"checkresp STOPRECORD", 22);
