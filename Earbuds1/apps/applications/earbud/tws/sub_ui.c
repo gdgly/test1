@@ -19,7 +19,9 @@ extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
 extern bool appKymeraRecordIsRun(void);
 extern void disable_audio_forward(bool disable);
+#ifdef HAVE_MAX20340
 extern bool max20340_GetConnect(void);
+#endif
 void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
 void appSubUISetMicbias(int set);
@@ -408,7 +410,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case INIT_CFM:
         DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");    /* Get microphone sources */
+#ifdef HAVE_MAX20340
         appUiPowerSave((TRUE==max20340_GetConnect()) ? POWER_MODE_IN_CASE : POWER_MODE_OUT_CASE);
+#endif
         register_apollo_wakeup_cb(apolloWakeupCallback);                       //注册apollo唤醒函数
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
         /// todo hjs 暂时不启用自动配对
@@ -914,6 +918,7 @@ void appUiPowerSave(PowerSaveMode mode)           // 省电模式
 
 void appUiPowerSaveSync(void)
 {
+#ifdef CONFIG_BOARD_V2
     ProgRIPtr  progRun = appSubGetProgRun();
 
     DEBUG_LOG("PowerSaveSync mode=%d", progRun->iPowerSaveMode);
@@ -949,6 +954,7 @@ void appUiPowerSaveSync(void)
         appUiDeepSleepMode(TRUE);    // PLC
         break;
     }
+#endif
 }
 
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt)
