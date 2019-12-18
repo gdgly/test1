@@ -310,13 +310,18 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
         if(start_flag == 1){//开始包1 回复总共需要多少个1k字节
 //            send_buf[1] = 10;//先假设是10个之后计算出确认值
 //            send_buf[2] = 0;
-            send_buf[1] = sizeof(AP)/1024;//先假设是10个之后计算出确认值
+            send_buf[1] = (sizeof(AP) + 1023)/1024;//先假设是10个之后计算出确认值
             send_buf[2] = 0;
         }else if(start_flag == 2){//开始包2 表示接下来要开始发送第几个1k
             //u8 num_k = get_buf[2];
             //memcpy(buffer_1k, buf, 1024);
             num_k = get_buf[2];
-            memcpy(buffer_1k, AP+num_k*1024, 1024);
+            if( (num_k+1)*1024 > sizeof(AP) ){
+                memset(buffer_1k, 0, 1024);
+                memcpy(buffer_1k, AP+num_k*1024, sizeof(AP)-num_k*1024);
+            }else{
+                memcpy(buffer_1k, AP+num_k*1024, 1024);
+            }
         }else if(start_flag == 3){//开始包3 耳机需回复1k字节的校验码
             for(i=0; i<1024; i++){
                 checksum += buffer_1k[i];
