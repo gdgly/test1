@@ -324,6 +324,11 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
             send_buf[1] = ((checksum>>8) & 0xff);
             send_buf[2] = (checksum & 0xff);
             DEBUG_LOG("checksum buf1=%d, buf2=%d\n", send_buf[1], send_buf[2]);
+        }else if(start_flag == 4){//开始包4 表示升级成功
+
+            send_buf[1] = 0;
+            send_buf[2] = 0;
+            DEBUG_LOG("update sucucess\n");
         }else{
             DEBUG_LOG("update request start_flag error! start_flag = %d\n", start_flag);
         }
