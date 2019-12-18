@@ -283,6 +283,7 @@ typedef enum
 #define RULE_EVENT_CHECK_DFU                     (1ULL << 52)    /*!< Check whether upgrades should be allowed */
 #ifdef TWS_DEBUG
 #define RULE_EVENT_CLEAR_PAIR_HEADSET            (1ULL << 53)    /*!< 同步时，取消不必要的PairHeadset*/
+#define RULE_EVENT_CHECK_NEED_DISCONNECT         (1ULL << 54)    /*!< 同步时，取消不必要的PairHeadset*/
 #endif
 
 #define RULE_EVENT_ALL_EVENTS_MASK               (0xFFFFFFFFFFFFFFFFULL)

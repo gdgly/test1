@@ -587,4 +587,9 @@ bool appDeviceSetBlePairing(const bdaddr *bd_addr, bool ble_random_resolvable_pa
 */
 bool appDeviceHasBlePairing(const bdaddr *bd_addr);
 
+#ifdef TWS_DEBUG
+bool appDeviceIsHandsetAllProfileConnected(void);
+void checkNeedDisconnect(void);
+#endif
+
 #endif

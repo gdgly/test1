@@ -218,9 +218,11 @@ ruleEntry appConnRules[] =
 #ifdef TWS_DEBUG
     /// 如果真实的在盒子中，连上了，也要马上断开; todo 考虑影响范围
     // 如果auth完了，但是没有连接上，此时的异常的处理
-    RULE(RULE_EVENT_HANDSET_A2DP_CONNECTED,     ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
-    RULE(RULE_EVENT_HANDSET_AVRCP_CONNECTED,    ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
-    RULE(RULE_EVENT_HANDSET_HFP_CONNECTED,      ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
+//    RULE(RULE_EVENT_HANDSET_A2DP_CONNECTED,     ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
+//    RULE(RULE_EVENT_HANDSET_AVRCP_CONNECTED,    ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
+//    RULE(RULE_EVENT_HANDSET_HFP_CONNECTED,      ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
+
+    RULE(RULE_EVENT_CHECK_NEED_DISCONNECT,    ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
 #endif
     /*! \} */
 
@@ -1728,6 +1730,7 @@ static ruleAction rulePairingConnectTwsPlusHfp(void)
 }
 
 static ruleAction ruleRealInCaseDisconnect(void) {
+    DEBUG_LOG("rule real in case disconnect check");
     bool realInCase = appUIDeviceRealInCase();
     if (TRUE == realInCase) {
         return RULE_ACTION_RUN;
