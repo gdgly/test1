@@ -4,6 +4,7 @@
 #define  DEV_HWVER_LEN            (3)
 #define  DEV_SWVER_LEN            (4)
 #define  DEV_HWSWVER_LEN          (DEV_HWVER_LEN+1+DEV_SWVER_LEN)          // 版本信息总长度
+#define  DEV_SN_LEN               (16)      // 耳机上使用16个字节的SN号
 
 typedef enum {DEV_CASE=0, DEV_LEFT, DEV_RIGHT}DevType;         // 一套系统中三种分设备
 
@@ -13,6 +14,7 @@ typedef enum {DEV_CASE=0, DEV_LEFT, DEV_RIGHT}DevType;         // 一套系统�
 typedef struct tagFIXPARAM {
     uint8          hw_ver[DEV_HWVER_LEN];                  // 硬件版本
     uint8          rev1;
+    uint8          sn[DEV_SN_LEN];             // SN号，在生产的最后阶段写入
     int16          aud_adj;                    // 音频微调
 
     uint8          rev[8];
@@ -32,8 +34,8 @@ typedef struct tagBTADDRPARAM {
     typed_bdaddr   peer_addr;          // 保存双方配对耳机蓝牙地址
     BlePairInfo    ble_pair;           // 保存ble配对信息adv广播，bind码
 
-    uint8          peerVer[16];        // 对方耳机版本信息
-    uint8          caseVer[16];        // 盒子版本信息
+    uint8          peerVer[DEV_HWSWVER_LEN];        // 对方耳机版本信息
+    uint8          caseVer[DEV_HWSWVER_LEN];        // 盒子版本信息
 
 
     uint8          rev[8];
