@@ -1,11 +1,36 @@
 #include "max20340.h"
 #ifdef HAVE_MAX20340
 
+#include "AP.h"
+
 #define TIME_READ_MAX20340_REG
 // max20340 正常为低电平中断，部分时间出现IO为常低，而不能拉回到常高而不能再次产生中断
 // 每次来中断之后，启动一个100ms的定时器，定时器到的时候检查IO状态，如果为低就再次读取一次
 // 产生原因很可能 发送给对方耳机及对方耳机快速响应，导致本耳机中断没响应过来
 void max20340_timer_restart(int timeout);
+
+typedef struct {
+  uint16 uVersionLength;
+  uint16 uHeader;
+  uint8 uVersion[8];        // HW[3] + ' ' + SW[4]
+  uint32 uAPLen;
+  uint32 uFWID;
+  uint32 uChecksum;
+  uint16 uAPCRC;
+  uint16 uCRCKEY;
+} CaseImageHead;
+
+// 根据上面的结构体，升级固件的版本是在第四到第十二字节，共8字节
+static uint8 _case_image_ver[DEV_HWSWVER_LEN], _case_need_upgrade = 0;
+int imagecase_checkver(uint8 *recv_ver)      // return 1 is upgrade
+{
+    memcpy(_case_image_ver, &AP[16+4], DEV_HWSWVER_LEN);
+
+    // only compile SW ver
+    _case_need_upgrade = (memcmp(&_case_image_ver[4], &recv_ver[4], DEV_SWVER_LEN) != 0) ? 1 : 0;
+
+    return _case_need_upgrade;
+}
 
 /*! \brief Read a register from the proximity sensor */
 bool max20340ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
@@ -227,6 +252,7 @@ static void box_send_boxhwsoft_version(uint8 *get_buf, uint8 *send_buf)
     uint8 type;
     type = (get_buf[0] & 0x3);
     if(type == 2){//版本号接收完整，可以通知出去了
+        imagecase_checkver(version);
         SystemSetVersion(DEV_CASE,version);
     }
     box_send_data_process(get_buf, send_buf, version, 8/2, &offset);
@@ -360,11 +386,15 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
 
 static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
 {
-    uint8 status = 1;//广播成功
+    uint8 status = appSmIsPairing();// 1 广播成功
     uint8 peer_status = 1;//已peer
+
     send_buf[0] = get_buf[0];
+
     //status 高两位 1广播成功 2广播失败 3手机连接成功； 第5，6位 1表示已peer， 2表示未peer
     send_buf[1] = ( (status<<6) & 0xc0 ) + ( (peer_status<<4) & 0x30 );
+    send_buf[1] |= (1 == _case_need_upgrade) ? 0x08 : 0x00;         // 是否需要升级 BIT4
+
     //第二byte送回电量信息
     send_buf[2] = appUiGetPower();
 }
