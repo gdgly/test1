@@ -51,6 +51,8 @@ typedef struct
 /*! Get the transport for the current GAIA connection */
 #define appGetGaiaTransport()           (appGetGaia()->transport)
 
+#define appGaiaIsConnect() NULL != (appGetGaia()->transport)
+
 /*! Set the transport for the current GAIA connection */
 #define appSetGaiaTransport(_transport)  do { \
                                             appGetGaia()->transport = (_transport);\

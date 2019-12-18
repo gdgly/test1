@@ -1251,6 +1251,13 @@ static void appSmHandleConnRulesClearHandsetPair(void)
     appSetState(status);
     appConnRulesSetRuleComplete(CONN_RULES_CLEAR_HANDSET_PAIR);
 }
+
+static void appSmHandleConnRulesDisconnectGaia(void)
+{
+    DEBUG_LOG("appSmHandleConnRulesDisconnectGaia");
+    appGaiaDisconnect();
+    appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_GAIA);
+}
 #endif
 
 static void appSmHandleConnRulesEnterDfu(void)
@@ -2338,6 +2345,9 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 #ifdef TWS_DEBUG
         case CONN_RULES_CLEAR_HANDSET_PAIR:
             appSmHandleConnRulesClearHandsetPair();
+            break;
+        case CONN_RULES_DISCONNECT_GAIA:
+            appSmHandleConnRulesDisconnectGaia();
             break;
 #endif
         case CONN_RULES_ENTER_DFU:

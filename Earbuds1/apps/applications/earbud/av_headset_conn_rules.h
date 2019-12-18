@@ -113,6 +113,7 @@ enum    av_headset_conn_rules_messages
     CONN_RULES_BLE_CONNECTION_UPDATE,
 #ifdef TWS_DEBUG
     CONN_RULES_CLEAR_HANDSET_PAIR,
+    CONN_RULES_DISCONNECT_GAIA,
 #endif
     /*! Any rules with RULE_FLAG_PROGRESS_MATTERS are no longer in progress. */
     CONN_RULES_NOP,

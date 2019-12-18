@@ -175,6 +175,7 @@ DEFINE_RULE(ruleBleConnectionUpdate);
 
 #ifdef TWS_DEBUG
 DEFINE_RULE(ruleClearHandsetPair);
+DEFINE_RULE(ruleDisconnectGaia);
 #endif
 /*! \} */
 
@@ -278,6 +279,9 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseRejectHandsetConnect,     CONN_RULES_REJECT_HANDSET_CONNECT),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseAncTuning,                CONN_RULES_ANC_TUNING_START),
+#ifdef TWS_DEBUG
+    RULE(RULE_EVENT_IN_CASE,                    ruleDisconnectGaia,                 CONN_RULES_DISCONNECT_GAIA),
+#endif
 
     RULE(RULE_EVENT_OUT_EAR,                    rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_OUT_EAR,                    ruleOutOfEarA2dpActive,             CONN_RULES_A2DP_TIMEOUT),
@@ -3096,6 +3100,15 @@ ruleAction ruleClearHandsetPair(void) {
     }
 
     return  RULE_ACTION_COMPLETE;
+}
+
+static ruleAction ruleDisconnectGaia(void)
+{
+    if (appGaiaIsConnect()) {
+        return RULE_ACTION_RUN;
+    } else {
+        return RULE_ACTION_COMPLETE;
+    }
 }
 
 #endif
