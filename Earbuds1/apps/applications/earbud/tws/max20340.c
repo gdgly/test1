@@ -376,6 +376,7 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
         send_buf[2]=buffer_1k[1+(data_num)*2];
         break;
     case 2://结束包
+        _case_need_upgrade = 0;        // 升级完成，将这个标记置回
         //表示升级完成
         break;
     case 3://重发包
@@ -533,7 +534,7 @@ void singlebus_itr_handler(Task task, MessageId id, Message msg)
                     return;     // 测试模式不发给UI
                 }
                 singlebus_itr_process();
-                max20340_timer_restart(70);     // 70ms后，查看中断是否拉回来了
+                max20340_timer_restart(20);     // 20ms后，查看中断是否拉回来了
             }
             break;
         default:
@@ -597,6 +598,7 @@ static void max20340_time_handle_msg(Task task, MessageId id, Message message)
             if(!(PioGet32Bank(PIO2BANK(MAX20340_ITR_PIN)) & PIO2MASK(MAX20340_ITR_PIN))) {
                 singlebus_itr_process();
                 DEBUG_LOG("max23040 timer READ");
+                max20340_timer_restart(20);
             }
         break;
     }
@@ -715,8 +717,8 @@ void max20340_init(void)
     PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
     PanicNotZero(PioSetDir32Bank(bank, mask, 0));
     PanicNotZero(PioSet32Bank(bank, mask, mask));
-    PioSetWakeupStateBank( bank,  mask,  0);
-    PioSetDeepSleepEitherLevelBank( bank,  mask,  mask);
+    PioSetWakeupStateBank(bank,  mask,  0);
+    PioSetDeepSleepEitherLevelBank(bank,  mask,  mask);
 
 #ifdef CONFIG_BOARD_V1
     bank = PIO2BANK(MAX20340_EN_PIN);
