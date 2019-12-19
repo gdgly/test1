@@ -715,6 +715,8 @@ void max20340_init(void)
     PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
     PanicNotZero(PioSetDir32Bank(bank, mask, 0));
     PanicNotZero(PioSet32Bank(bank, mask, mask));
+    PioSetWakeupStateBank( bank,  mask,  0);
+    PioSetDeepSleepEitherLevelBank( bank,  mask,  mask);
 
 #ifdef CONFIG_BOARD_V1
     bank = PIO2BANK(MAX20340_EN_PIN);

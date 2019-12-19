@@ -324,6 +324,8 @@ void EM20168_init(void)
     PanicNotZero(PioSetMapPins32Bank(bank, mask, mask));
     PanicNotZero(PioSetDir32Bank(bank, mask, 0));
     PanicNotZero(PioSet32Bank(bank, mask, mask));
+    PioSetWakeupStateBank( bank,  mask,  0);
+    PioSetDeepSleepEitherLevelBank( bank,  mask,  mask);
 
 #ifdef EM20168_KEY_ITR_TEST
     bank = PIO2BANK(EM20168_KEY_ITR_PIN);
