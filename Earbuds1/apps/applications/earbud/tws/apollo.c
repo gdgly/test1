@@ -49,7 +49,7 @@ static int send_successful_upgrade(void);
 #endif
 
 /******* upgrade image file name ******/
-#define UPGRADE_IMG_FILE_NAME "V00.01.000B_upgrade.bin"
+#define UPGRADE_IMG_FILE_NAME "apollo2_blue.bin"
 
 /******* private defination *******/
 #define GET_INT         (PioGet32Bank(0) & (1<<APOLLO_INT_IO))
@@ -79,6 +79,7 @@ static apollo_wakeup_cb_t apollo_wakeup_cb = NULL;
 static volatile uint8 apollo_state = APOLLO_STATE_UNINIT;
 
 static int io_init_wait_int_low_to = 0;
+static int io_init_wait_int_low_interrupt = 0;
 static int io_init_i2c_rd_err_times = 0;
 static int io_init_rd_fw_err_times = 0;
 static int enter_boot_int_times = 0;
@@ -98,6 +99,7 @@ void apollo_int_io_init(void) {
     io_init_i2c_rd_err_times = 0;
     io_init_rd_fw_err_times = 0;
     enter_boot_int_times = 0;
+    io_init_wait_int_low_interrupt = 0;
     upgrade_times = 0;
     apollo_init_end_cb = apollo_check_and_start_upgrade;
     apollo_enter_boot_cb = apollo_start_new_image;
@@ -216,6 +218,10 @@ static void apollo_init_handler(MessageId id, Message msg)
         case MESSAGE_PIO_CHANGED:
         {
             if (INT_IS_LOW) {
+                if(APOLLO_STATE_START_UP == apollo_state)
+                {
+                    apollo_state = APOLLO_STATE_INIT_IO;
+                }else
                 /* reading apollo fw version during start up. */
                 if (APOLLO_STATE_INIT_RD_FW_VER == apollo_state) {
                     uint32 feedback[2];
@@ -299,10 +305,25 @@ static void apollo_init_handler(MessageId id, Message msg)
                         IO_LOW(APOLLO_OVERRIDE_IO);
                         apollo_init_finish();
                     }
+                }else if(APOLLO_STATE_START_UP == apollo_state)
+                {
+                    if (io_init_wait_int_low_interrupt < 5) {
+                        /* if apollo not up in the last gap, we can wait more gap. */
+                        APOLLO_DBG_LOG("init wait int low interrupt timeout");
+                        wait_for_int_low(40);
+                        io_init_wait_int_low_interrupt ++;
+                    }
+                    else {
+                        /* apollo finally can not go up, marked as error. */
+                        apollo_state = APOLLO_STATE_ERR;
+                        IO_LOW(APOLLO_OVERRIDE_IO);
+                        apollo_init_finish();
+                    }
                 }
             }
             else if(APOLLO_CMD_WAIT_TIMEOUT == message->command) {
                 if (APOLLO_STATE_INIT_IO == apollo_state) {
+                    apollo_state = APOLLO_STATE_START_UP;
                     IO_HIGH(APOLLO_RESET_IO);
                     wait_for_int_low(60);
                 }
@@ -362,7 +383,7 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
                     }
                 case APOLLO_STATE_UPGRADE_S3:{
                     uint32 feedback[2];
-                    PanicFalse(apollo_fb((uint8*)feedback, 8));
+                    PanicNotZero(apollo_fb((uint8*)feedback, 8));
                     PanicFalse(0x02 == feedback[0]);
 
                     apollo_state = APOLLO_STATE_UPGRADE_S4;
@@ -411,12 +432,13 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
                         wait_for_int_low(60);
                     }
                     if (APOLLO_STATE_UPGRADE_S4 == apollo_state) {
-                        apollo_state = APOLLO_STATE_INIT_IO;
+                        apollo_state = APOLLO_STATE_START_UP;
                         io_init_wait_int_low_to = 0;
                         io_init_i2c_rd_err_times = 0;
                         io_init_rd_fw_err_times = 0;
                         enter_boot_int_times = 0;
                         upgrade_times = 0;
+                        io_init_wait_int_low_interrupt = 0;
                         apollo_init_end_cb = NULL;
                         IO_HIGH(APOLLO_RESET_IO);
                         wait_for_int_low(60);

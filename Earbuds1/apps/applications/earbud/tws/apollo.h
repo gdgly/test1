@@ -83,9 +83,10 @@ void comGetApolloVer(uint8 *arr);
  * apollo init state definition
 */
 #define    APOLLO_STATE_UNINIT                      (0)
-#define    APOLLO_STATE_INIT_IO                     (APOLLO_STATE_UNINIT + 1)
-#define    APOLLO_STATE_INIT_RD_FW_VER              (APOLLO_STATE_UNINIT + 2)
-#define    APOLLO_STATE_INIT_END                    (APOLLO_STATE_UNINIT + 3)
+#define    APOLLO_STATE_START_UP                    (APOLLO_STATE_UNINIT + 1)
+#define    APOLLO_STATE_INIT_IO                     (APOLLO_STATE_UNINIT + 2)
+#define    APOLLO_STATE_INIT_RD_FW_VER              (APOLLO_STATE_UNINIT + 3)
+#define    APOLLO_STATE_INIT_END                    (APOLLO_STATE_UNINIT + 4)
 /* state before APOLLO_STATE_INIT_END are all used for initialise */
 #define    APOLLO_STATE_ENTERING_BOOT_MODE_S1       (APOLLO_STATE_INIT_END + 1)
 #define    APOLLO_STATE_UPGRADE_S1                  (APOLLO_STATE_INIT_END + 2)
