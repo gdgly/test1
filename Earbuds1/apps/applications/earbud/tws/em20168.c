@@ -103,6 +103,19 @@ void EM20168Disable(bitserial_handle handle)
     hwi2cClose(handle);
 }
 
+#define TIME_READ_EM20168_REG
+typedef struct tagSHELLCMDINFO {
+    TaskData       task;
+    bool status;
+}EM20168InfoTask;
+static EM20168InfoTask *EM20168Task = NULL;
+#ifdef EM20168_KEY_ITR_TEST
+static EM20168InfoTask *ProximitykeyTask = NULL;
+#endif
+#ifdef TIME_READ_EM20168_REG
+static EM20168InfoTask *time_funcTask = NULL;
+#endif
+
 int EM20168Power(bool isOn)
 {
     int ret;
@@ -211,6 +224,30 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     EM20168Disable(handle);
 }
 
+#ifdef TIME_READ_EM20168_REG
+#define MESSAGE_EM20168_TIME_TRIGGER 1
+static void em20168_timer_restart(int timeout)
+{
+    MessageCancelAll(&time_funcTask->task, MESSAGE_EM20168_TIME_TRIGGER);
+    MessageSendLater(&time_funcTask->task, MESSAGE_EM20168_TIME_TRIGGER, 0, timeout);
+}
+
+static void EM20168_time_itr_handler(Task task, MessageId id, Message msg)
+{
+    switch (id){
+        case MESSAGE_EM20168_TIME_TRIGGER:
+            if(!(PioGet32Bank(PIO2BANK(EM20168_ITR_PIN)) & PIO2MASK(EM20168_ITR_PIN))) {
+                EM20168_itr_read_reg(task, id, msg);
+                DEBUG_LOG("em20168 timer READ");
+                em20168_timer_restart(100);
+            }
+        break;
+    }
+}
+#else
+static void em20168_timer_restart(int timeout) { (void)timeout;}
+#endif
+
 void EM20168_itr_handler(Task task, MessageId id, Message msg)
 {
     (void)task;
@@ -227,6 +264,7 @@ void EM20168_itr_handler(Task task, MessageId id, Message msg)
                     CommpcMessage((uint8*)buff, 20);
                 }
                 EM20168_itr_read_reg(task, id, msg);
+                em20168_timer_restart(100);
             }
             break;
         default:
@@ -270,14 +308,6 @@ void EM20168_keytest_itr_handler(Task task, MessageId id, Message msg)
 }
 #endif
 
-typedef struct tagSHELLCMDINFO {
-    TaskData       task;
-    bool status;
-}EM20168InfoTask;
-static EM20168InfoTask *EM20168Task = NULL;
-#ifdef EM20168_KEY_ITR_TEST
-static EM20168InfoTask *ProximitykeyTask = NULL;
-#endif
 
 static void delay_ms(int time_ms)
 {
@@ -305,8 +335,8 @@ void EM20168_init(void)
     uint16 bank;
     uint32 mask;
     bitserial_handle handle;
-    uint8 value;
-    uint8 i;
+    uint8 value;uint8 i;
+    FixParam pParam;
     value = 0;
 #ifdef EM20168_CAL_OFFSET_VALUE
     uint8 offset=0;
@@ -346,7 +376,28 @@ void EM20168_init(void)
     }
 
     EM20168WriteRegister(handle,0x14,0x00);
-    delay_ms(100);
+    delay_ms(10);
+
+    ParamLoadFixPrm(&pParam);
+    if(pParam.em20168_cal_already == 1){//说明校准过了，使用校准过的value
+        for(i=0; i<ARRAY_DIM(em20168_init_array); i++){
+            if(em20168_init_array[i].reg == 3){
+                em20168_init_array[i].value = pParam.em20168_low_value & 0xff;
+            }
+            if(em20168_init_array[i].reg == 4){
+                em20168_init_array[i].value = (pParam.em20168_low_value & 0xff00) >> 8;
+            }
+            if(em20168_init_array[i].reg == 5){
+                em20168_init_array[i].value = pParam.em20168_high_value & 0xff;
+            }
+            if(em20168_init_array[i].reg == 6){
+                em20168_init_array[i].value = (pParam.em20168_high_value & 0xff00) >> 8;
+            }
+        }
+        DEBUG_LOG("em20168 already cal, use cal value!");
+    }else{
+        DEBUG_LOG("em20168 not cal, use default value!");
+    }
 
     for(i=0; i<ARRAY_DIM(em20168_init_array); i++){
         EM20168WriteRegister(handle,
@@ -394,6 +445,13 @@ void EM20168_init(void)
     memset(ProximitykeyTask, 0, sizeof(ProximitykeyTask));
     ProximitykeyTask->task.handler = EM20168_keytest_itr_handler;
     InputEventManagerRegisterTask(&ProximitykeyTask->task, EM20168_KEY_ITR_PIN);
+#endif
+
+#ifdef TIME_READ_EM20168_REG
+    time_funcTask = PanicUnlessNew(EM20168InfoTask);
+    memset(time_funcTask, 0, sizeof(time_funcTask));
+    time_funcTask->task.handler = EM20168_time_itr_handler;
+    InputEventManagerRegisterTask(&time_funcTask->task, EM20168_ITR_PIN);
 #endif
 
     EM20168Disable(handle);

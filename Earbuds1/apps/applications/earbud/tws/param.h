@@ -16,6 +16,9 @@ typedef struct tagFIXPARAM {
     uint8          rev1;
     uint8          sn[DEV_SN_LEN];             // SN号，在生产的最后阶段写入
     int16          aud_adj;                    // 音频微调
+    uint8          em20168_cal_already;         //接近光是否校准过了
+    uint16         em20168_high_value;          //接近光校准高值
+    uint16         em20168_low_value;           //接近光校准低值
 
     uint8          rev[8];
 }FixParam, *FixPrmPtr;
