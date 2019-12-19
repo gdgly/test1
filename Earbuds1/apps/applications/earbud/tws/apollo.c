@@ -108,6 +108,8 @@ void apollo_int_io_init(void) {
     PioSetMapPins32Bank(bank, mask, mask);
     PioSetDir32Bank(bank, mask, 0);
     PioSet32Bank(bank, mask, mask);
+    PioSetWakeupStateBank( bank,  mask,  mask);
+    PioSetDeepSleepEitherLevelBank( bank,  mask,  mask);
     InputEventManagerRegisterTask(apolloTask, APOLLO_INT_IO);
 
     // override io init
