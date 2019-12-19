@@ -78,7 +78,6 @@ typedef struct tagPROGRUNINFO {
     uint16         recStat:1;               // 当前是否正在录音
     uint16         apolloWakeup:1;          // 当前apollo是否启动0:未启动, 1:启动
     uint16         chargeStat:3;            // 当前充电状态 CHARGE_ST_XXX
-    uint16         disableSleep:1;          // 在盒盖打开时不请允许进入,0=允许
 
     uint8          peerPlace:3;             // 对方耳机状态 Bit0:盒子中 Bit1：空中 Bit2：佩戴
     uint8          peerElectrity;           // 对方耳机电量 0...100    
@@ -142,7 +141,6 @@ void appUiRestartBle(void);
 
 void appUiPowerSave(PowerSaveMode mode);     // 省电模式
 void appUiPowerSaveSync(void);
-void appUiDeepSleepMode(bool enable);    // 允许进入SLEEP模式
 
 ///////////////////////////////////////////////////////////////////////////////
 ///  充电模块反馈的信息

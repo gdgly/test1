@@ -894,34 +894,12 @@ void appUiCaseSetPeerBtAddr(uint8 *addrbuf)
     ParamSavePeerAddr(&taddr);
 }
 
-
-void appUiDeepSleepMode(bool enable)    // 允许进入SLEEP模式
-{
-    ProgRIPtr  progRun = appSubGetProgRun();
-
-    if(FALSE == enable) {
-        if(1 != progRun->disableSleep) {
-            DEBUG_LOG("DeepSeep Disable");
-            VmDeepSleepEnable(FALSE);
-            progRun->disableSleep = 1;
-        }
-    }
-    else {
-        if(0 != progRun->disableSleep) {
-            DEBUG_LOG("DeepSeep Enable");
-            VmDeepSleepEnable(TRUE);
-            progRun->disableSleep = 0;
-        }
-    }
-}
-
 void appUiPowerSave(PowerSaveMode mode)           // 省电模式
 {
     uint16 timeout;
     ProgRIPtr  progRun = appSubGetProgRun();
 
     if(POWER_MODE_IN_CASE == mode || POWER_MODE_IN_CASE_OPEN == mode ) {
-        appUiDeepSleepMode(FALSE);  // 进入盒子，立即禁进入低功耗
         timeout = 2000;
     }
     else if(POWER_MODE_OUT_CASE == mode)
@@ -952,8 +930,6 @@ void appUiPowerSaveSync(void)
         Lis2dw12Power(0);            // TAP
         lis25Power(0);               // 骨麦
         apolloWakeupPower(0);        // APO2
-
-        appUiDeepSleepMode(FALSE);   // PLC通信不能进入低功耗
         break;
     case POWER_MODE_OUT_CASE:
         EM20168Power(1);             // 接近光
@@ -964,16 +940,12 @@ void appUiPowerSaveSync(void)
 #endif
         lis25Power(1);               // 骨麦
         apolloWakeupPower(1);        // APO2
-
-        appUiDeepSleepMode(TRUE);    // PLC
         break;
     case POWER_MODE_IN_EAR:
         EM20168Power(1);             // 接近光
         Lis2dw12Power(1);            // TAP
         lis25Power(1);               // 骨麦
         apolloWakeupPower(1);        // APO2
-
-        appUiDeepSleepMode(TRUE);    // PLC
         break;
     }
 #endif
