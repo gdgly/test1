@@ -483,12 +483,19 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appUiPowerSave((1==progRun->caseLidOpen) ? POWER_MODE_IN_CASE_OPEN : POWER_MODE_IN_CASE);
         subUiCasestat2Gaia(id, progRun);
         break;
-#ifdef TWS_DEBUG
     case APP_PAIR_HEADSET:
         DEBUG_LOG("plc call pair headset");
+#ifdef TWS_DEBUG
         appSmPairHandset();
-        break;
 #endif
+        break;
+   case APP_RESET_FACTORY:
+       DEBUG_LOG("plc call reset headset");
+#ifdef TWS_DEBUG
+       appSmFactoryReset();
+#endif
+       break;
+
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
@@ -861,6 +868,9 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
 
     if(keyLong >= 0) {
         progRun->caseKeyLong = (1 == keyLong) ? 1 : 0;
+        if (1 == progRun->caseKeyLong) {
+            MessageSend(&appGetUi()->task, APP_RESET_FACTORY, 0);
+        }
         /// 清理命令开始
     }
 

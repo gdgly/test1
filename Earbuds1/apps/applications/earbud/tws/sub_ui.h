@@ -35,6 +35,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_ATTACH_PLC_IN           (2100)           // 20340 -> ui 报告plc  in 放入充电盒
 #define APP_ATTACH_PLC_OUT          (2101)           // 20340 -> ui 报告plc  out 取出充电盒
 #define APP_PAIR_HEADSET            (2102)           // 20340 -> ui 报告plc  配对手机
+#define APP_RESET_FACTORY           (2103)           // 20340 -> ui 报告plc 回复出厂设置
 
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息

@@ -274,8 +274,21 @@ static void appExitDfuCheck(void)
 static void appEnterFactoryReset(void)
 {
     DEBUG_LOG("appEnterFactoryReset");
+    /// * 清理经典蓝牙的配置信息
     appSmInitiateLinkDisconnection(SM_DISCONNECT_ALL, appConfigFactoryResetTimeoutMs(),
                                    POST_DISCONNECT_ACTION_NONE);
+    /// * 清理GAIA的配置信息
+#ifdef TWS_DEBUG
+    if (appGaiaIsConnect()) {
+        appGaiaDisconnect();
+    }
+
+    /// todo 现在没有处理地方耳机地址
+    BtAddrParamDefault();
+    ParamSaveBtAddrPrm(NULL);
+    UserParamDefault();
+    ParamSaveUserPrm(NULL);
+#endif
 }
 
 /*! \brief Exit factory reset. */
