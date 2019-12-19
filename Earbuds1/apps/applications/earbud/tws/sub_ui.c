@@ -234,22 +234,32 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
         return -1;
 
     (void)id;
+
+    uint16 battery_level, peer_battery_level;
+    appPeerSyncGetPeerBatteryLevel(&battery_level, &peer_battery_level);
+    progRun->peerElectrity = (uint8)peer_battery_level;
+
     phyState state = appPhyStateGetState();
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 5);
 
     message->command = STAROT_NOTIFY_STATUS;
-    message->payload[2] = (uint8)progRun->caseElectrity;
-    message->payload[3] = 0X00;
-    message->payload[4] = 0X00;
+    message->payload[2] = (uint8)progRun->caseElectrity;//盒子电量
+    message->payload[3] = 0X00;//位置信息
+    message->payload[4] = 0X00;//连接信息
     if(appConfigIsLeft()){
         message->payload[0] = (uint8)progRun->iElectrity;
-        message->payload[1] = (uint8)progRun->peerElectrity;
+        message->payload[1] = (uint8)progRun->peerElectrity;//对方电量
         if((uint8)progRun->gaiaStat)
             message->payload[4] |= 0X80;
-        if((uint8)progRun->bredrconnect)
+        if(appDeviceIsHandsetAnyProfileConnected())
             message->payload[4] |= 0X40;
-        if((uint8)progRun->peerconnect)
+        if(appDeviceIsPeerConnected()) {
             message->payload[4] |= 0X20;
+            message->payload[4] |= 0X04;
+        }
+        if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()
+                || appPeerSyncIsPeerHandsetHfpConnected())
+            message->payload[4] |= 0X08;
         switch(state) {
         case PHY_STATE_IN_CASE:
             message->payload[3] |= 0X80;
@@ -264,19 +274,27 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
         case PHY_STATE_UNKNOWN:
             break;
         }
-        message->payload[3] |= (progRun->peerPlace >> 3);
-        message->payload[4] |= ((message->payload[4] & 0XE0) >> 3);
-
+        if(appPeerSyncIsPeerInCase() == TRUE)
+            message->payload[3] |= 0X10;
+        if(appPeerSyncIsPeerInEar() == TRUE)
+            message->payload[3] |= 0X04;
+        if(appPeerSyncIsPeerInCase() == FALSE && appPeerSyncIsPeerInEar() == FALSE)
+            message->payload[3] |= 0X08;
     }
     else {
         message->payload[0] = (uint8)progRun->peerElectrity;
         message->payload[1] = (uint8)progRun->iElectrity;
         if((uint8)progRun->gaiaStat)
             message->payload[4] |= 0X10;
-        if((uint8)progRun->bredrconnect)
+        if(appDeviceIsHandsetAnyProfileConnected())
             message->payload[4] |= 0X08;
-        if((uint8)progRun->peerconnect)
+        if(appDeviceIsPeerConnected()) {
+            message->payload[4] |= 0X20;
             message->payload[4] |= 0X04;
+        }
+        if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()
+                || appPeerSyncIsPeerHandsetHfpConnected())
+            message->payload[4] |= 0X40;
         switch(state) {
         case PHY_STATE_IN_CASE:
             message->payload[3] |= 0x10;
@@ -291,8 +309,12 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
         case PHY_STATE_UNKNOWN:
             break;
         }
-        message->payload[3] |= progRun->peerPlace;
-        message->payload[4] |= ((message->payload[4] & 0X1C) << 3);
+        if(appPeerSyncIsPeerInCase() == TRUE)
+            message->payload[3] |= 0X80;
+        if(appPeerSyncIsPeerInEar() == TRUE)
+            message->payload[3] |= 0X02;
+        if(appPeerSyncIsPeerInCase() == FALSE && appPeerSyncIsPeerInEar() == FALSE)
+            message->payload[3] |= 0X04;
     }
     message->payloadLen = 5;
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
