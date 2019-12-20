@@ -197,6 +197,14 @@ int16 ParamGetPeerAddr( typed_bdaddr *taddr)
 
 int16 ParamSavePeerAddr( typed_bdaddr *taddr)
 {
+    if(memcmp(&gBtAddrParam.peer_addr, taddr, sizeof(typed_bdaddr)) == 0)
+        return 0;    // Same Addr
+
+    if(taddr->addr.nap == 0xFFFF && taddr->addr.uap == 0xFF && taddr->addr.lap == 0xFFFFFF)
+        gBtAddrParam.single_era = TRUE;
+    else
+        gBtAddrParam.single_era = FALSE;
+
     memcpy(&gBtAddrParam.peer_addr, taddr, sizeof(typed_bdaddr));
 
     return ParamSaveBtAddrPrm(&gBtAddrParam);
