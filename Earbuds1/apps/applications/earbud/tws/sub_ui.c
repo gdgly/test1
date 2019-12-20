@@ -495,7 +495,21 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
        appSmFactoryReset();
 #endif
        break;
-
+    case APP_CASE_OPEN:
+        DEBUG_LOG("plc call case open");
+#ifdef TWS_DEBUG
+        appConnRulesResetEvent(RULE_EVENT_CASE_OPEN);
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_OPEN);
+#endif
+        break;
+    case APP_CASE_CLOSE:
+        DEBUG_LOG("plc call case close");
+#ifdef TWS_DEBUG
+        /// 设置规则去处理
+        appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
+#endif
+        break;
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
@@ -847,8 +861,20 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
             progRun->peerPlace = ((bitEars & 0x01)) ? 1 : 0;
     }
 
-    if(lidOpen >= 0)
+    if(lidOpen >= 0) {
+        uint16 beforeStatus = progRun->caseLidOpen;
         progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
+        if (beforeStatus != progRun->caseLidOpen) {
+            /// 之前状态和现在状态不一致，发送事件
+            if (progRun->caseLidOpen > 0) {
+                DEBUG_LOG("call case open");
+                MessageSend(&appGetUi()->task, APP_CASE_OPEN, 0);
+            } else {
+                DEBUG_LOG("call case close");
+                MessageSend(&appGetUi()->task, APP_CASE_CLOSE, 0);
+            }
+        }
+    }
 
     if(keyDown >= 0) {
         progRun->caseKeyDown = (1 == keyDown) ? 1 : 0;
@@ -1147,6 +1173,11 @@ void apolloWakeupPower(int enable)        // 开启或停止 APO2
             progRun->apolloWakeup = 0;
         }
     }
+}
+
+bool appUICaseIsOpen(void) {
+    ProgRIPtr  progRun = appSubGetProgRun();
+    return (progRun->caseLidOpen > 0 ? TRUE : FALSE);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

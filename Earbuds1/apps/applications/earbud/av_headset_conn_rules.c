@@ -176,6 +176,7 @@ DEFINE_RULE(ruleBleConnectionUpdate);
 #ifdef TWS_DEBUG
 DEFINE_RULE(ruleClearHandsetPair);
 DEFINE_RULE(ruleDisconnectGaia);
+DEFINE_RULE(ruleIdelHandsetPair);
 #endif
 /*! \} */
 
@@ -281,6 +282,7 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseAncTuning,                CONN_RULES_ANC_TUNING_START),
 #ifdef TWS_DEBUG
     RULE(RULE_EVENT_IN_CASE,                    ruleDisconnectGaia,                 CONN_RULES_DISCONNECT_GAIA),
+    RULE(RULE_EVENT_IN_CASE,                    ruleIdelHandsetPair,                CONN_RULES_HANDSET_PAIR),
 #endif
 
     RULE(RULE_EVENT_OUT_EAR,                    rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
@@ -321,6 +323,9 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_HANDOVER_RECONNECT_AND_PLAY,ruleHandoverConnectHandsetAndPlay,  CONN_RULES_CONNECT_HANDSET),
 #ifdef TWS_DEBUG
     RULE(RULE_EVENT_CLEAR_PAIR_HEADSET,         ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
+
+    RULE(RULE_EVENT_CASE_OPEN,                  ruleIdelHandsetPair,                CONN_RULES_HANDSET_PAIR),
+    RULE(RULE_EVENT_CASE_CLOSE,                 ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
 #endif
 };
 
@@ -3072,7 +3077,21 @@ void appConnRulesNopClientRegister(Task task)
 
 
 #ifdef TWS_DEBUG
+
+extern bool appUICaseIsOpen(void);
+
 ruleAction ruleClearHandsetPair(void) {
+
+    if (!appSmIsPairing()) {
+        RULE_LOG("ruleClearHandsetPair current not in pairing headset, ignore");
+        return RULE_ACTION_IGNORE;
+    }
+
+    if (!appUICaseIsOpen()) {
+        RULE_LOG("ruleClearHandsetPair case is close, so need stop pairing headset");
+        return RULE_ACTION_RUN;
+    }
+
 //    if (!appSmIsInCase()) {
 //        RULE_LOG("ruleClearHandsetPair, ignore, we're not in the case");
 //        return RULE_ACTION_IGNORE;
@@ -3108,6 +3127,54 @@ static ruleAction ruleDisconnectGaia(void)
         return RULE_ACTION_RUN;
     } else {
         return RULE_ACTION_COMPLETE;
+    }
+}
+
+static ruleAction ruleIdelHandsetPair(void) {
+    if (appDeviceGetHandsetBdAddr(NULL)) {
+        RULE_LOG("ruleIdelHandsetPair, complete, already paired with handset");
+        return RULE_ACTION_COMPLETE;
+    }
+
+    if (!appPeerSyncIsComplete()) {
+        RULE_LOG("ruleIdelHandsetPair, defer, not synced with peer");
+        return RULE_ACTION_DEFER;
+    }
+
+    if (appPeerSyncIsPeerPairing()) {
+        RULE_LOG("ruleIdelHandsetPair, defer, peer is already in pairing mode");
+        return RULE_ACTION_DEFER;
+    }
+
+    if (appSmIsPairing()) {
+        RULE_LOG("ruleIdelHandsetPair, ignore, already in pairing mode");
+        return RULE_ACTION_IGNORE;
+    }
+
+    if (appPeerSyncHasPeerHandsetPairing()) {
+        RULE_LOG("ruleIdelHandsetPair, complete, peer is already paired with handset");
+        return RULE_ACTION_COMPLETE;
+    }
+
+    if (!appUICaseIsOpen()) {
+        RULE_LOG("ruleIdelHandsetPair, ignore, case is closed");
+        return RULE_ACTION_IGNORE;
+    }
+
+    /// todo: 如果是单耳模式，需要单独设计条件
+    if (!(appSmIsInCase() && appPeerSyncIsPeerInCase())) {
+        RULE_LOG("ruleIdelHandsetPair, ignore, no paired handset, but left or right not in case");
+        return RULE_ACTION_IGNORE;
+    }
+
+    if (appConfigIsLeft()) {
+        RULE_LOG(
+                "ruleIdelHandsetPair, run, no paired handset, we're in of case, peer is in of case, we're left earbud");
+        return RULE_ACTION_RUN;
+    } else {
+        RULE_LOG(
+                "ruleIdelHandsetPair, ignore, no paired handset, we're in of case, peer is in of case, we're right earbud");
+        return RULE_ACTION_IGNORE;
     }
 }
 

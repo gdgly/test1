@@ -1218,6 +1218,10 @@ static void appSmHandleConnRulesHandsetPair(void)
     {
         case APP_STATE_OUT_OF_CASE_IDLE:
         case APP_STATE_IN_EAR_IDLE:
+#ifdef TWS_DEBUG
+        /// 恢复出厂设置之后，PeerPair成功之后，进入incase—idel状态，自动触发与手机配对
+        case APP_STATE_IN_CASE_IDLE:
+#endif
             DEBUG_LOG("appSmHandleConnRulesHandsetPair, rule said pair with handset");
             appSmClearUserPairing();
             appSetState(APP_STATE_HANDSET_PAIRING);
