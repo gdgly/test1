@@ -26,6 +26,17 @@ void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
 void appSubUISetMicbias(int set);
 
+static void appUIGetPowerInfo(ProgRIPtr  progRun, uint8* arr);
+static uint8 appUIGetPositionInfo(void);
+static uint8 appUIGetMasterSlave(void);
+static uint8 appUIGetPeerPosition(void);
+static uint8 appUIGetCurrentPosition(void);
+
+static uint8 appUIGetConnectStatusInfo(void);
+static uint8 appUIGetCurrentConnectStatusInfo(void);
+static uint8 appUIGetPeerConnectStatusInfo(void);
+static uint8 appUIGetCaseConnectStatusInfo(void);
+
 /*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
 #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
 
@@ -239,83 +250,39 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
     appPeerSyncGetPeerBatteryLevel(&battery_level, &peer_battery_level);
     progRun->peerElectrity = (uint8)peer_battery_level;
 
-    phyState state = appPhyStateGetState();
+//    phyState state = appPhyStateGetState();
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 5);
 
     message->command = STAROT_NOTIFY_STATUS;
-    message->payload[2] = (uint8)progRun->caseElectrity;//盒子电量
-    message->payload[3] = 0X00;//位置信息
-    message->payload[4] = 0X00;//连接信息
-    if(appConfigIsLeft()){
-        message->payload[0] = (uint8)progRun->iElectrity;
-        message->payload[1] = (uint8)progRun->peerElectrity;//对方电量
-        if((uint8)progRun->gaiaStat)
-            message->payload[4] |= 0X80;
-        if(appDeviceIsHandsetAnyProfileConnected())
-            message->payload[4] |= 0X40;
-        if(appDeviceIsPeerConnected()) {
-            message->payload[4] |= 0X20;
-            message->payload[4] |= 0X04;
-        }
-        if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()
-                || appPeerSyncIsPeerHandsetHfpConnected())
-            message->payload[4] |= 0X08;
-        switch(state) {
-        case PHY_STATE_IN_CASE:
-            message->payload[3] |= 0X80;
-            break;
-        case PHY_STATE_OUT_OF_EAR:
-        case PHY_STATE_OUT_OF_EAR_AT_REST:
-            message->payload[3] |= 0X40;
-            break;
-        case PHY_STATE_IN_EAR:
-            message->payload[3] |= 0X20;
-            break;
-        case PHY_STATE_UNKNOWN:
-            break;
-        }
-        if(appPeerSyncIsPeerInCase() == TRUE)
-            message->payload[3] |= 0X10;
-        if(appPeerSyncIsPeerInEar() == TRUE)
-            message->payload[3] |= 0X04;
-        if(appPeerSyncIsPeerInCase() == FALSE && appPeerSyncIsPeerInEar() == FALSE)
-            message->payload[3] |= 0X08;
-    }
-    else {
-        message->payload[0] = (uint8)progRun->peerElectrity;
-        message->payload[1] = (uint8)progRun->iElectrity;
-        if((uint8)progRun->gaiaStat)
-            message->payload[4] |= 0X10;
-        if(appDeviceIsHandsetAnyProfileConnected())
-            message->payload[4] |= 0X08;
-        if(appDeviceIsPeerConnected()) {
-            message->payload[4] |= 0X20;
-            message->payload[4] |= 0X04;
-        }
-        if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()
-                || appPeerSyncIsPeerHandsetHfpConnected())
-            message->payload[4] |= 0X40;
-        switch(state) {
-        case PHY_STATE_IN_CASE:
-            message->payload[3] |= 0x10;
-            break;
-        case PHY_STATE_OUT_OF_EAR:
-        case PHY_STATE_OUT_OF_EAR_AT_REST:
-            message->payload[3] |= 0x08;
-            break;
-        case PHY_STATE_IN_EAR:
-            message->payload[3] |= 0x04;
-            break;
-        case PHY_STATE_UNKNOWN:
-            break;
-        }
-        if(appPeerSyncIsPeerInCase() == TRUE)
-            message->payload[3] |= 0X80;
-        if(appPeerSyncIsPeerInEar() == TRUE)
-            message->payload[3] |= 0X02;
-        if(appPeerSyncIsPeerInCase() == FALSE && appPeerSyncIsPeerInEar() == FALSE)
-            message->payload[3] |= 0X04;
-    }
+    appUIGetPowerInfo(progRun, message->payload);
+    message->payload[3] = appUIGetPositionInfo();//位置信息
+    message->payload[4] = appUIGetConnectStatusInfo();//连接信息
+//    if(appConfigIsLeft()){
+//        if((uint8)progRun->gaiaStat)
+//            message->payload[4] |= 0X80;
+//        if(appDeviceIsHandsetAnyProfileConnected())
+//            message->payload[4] |= 0X40;
+//        if(appDeviceIsPeerConnected()) {
+//            message->payload[4] |= 0X20;
+//            message->payload[4] |= 0X04;
+//        }
+//        if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()
+//                || appPeerSyncIsPeerHandsetHfpConnected())
+//            message->payload[4] |= 0X08;
+//    }
+//    else {
+//        if((uint8)progRun->gaiaStat)
+//            message->payload[4] |= 0X10;
+//        if(appDeviceIsHandsetAnyProfileConnected())
+//            message->payload[4] |= 0X08;
+//        if(appDeviceIsPeerConnected()) {
+//            message->payload[4] |= 0X20;
+//            message->payload[4] |= 0X04;
+//        }
+//        if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()
+//                || appPeerSyncIsPeerHandsetHfpConnected())
+//            message->payload[4] |= 0X40;
+//    }
     message->payloadLen = 5;
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
@@ -483,12 +450,33 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appUiPowerSave((1==progRun->caseLidOpen) ? POWER_MODE_IN_CASE_OPEN : POWER_MODE_IN_CASE);
         subUiCasestat2Gaia(id, progRun);
         break;
-#ifdef TWS_DEBUG
     case APP_PAIR_HEADSET:
         DEBUG_LOG("plc call pair headset");
+#ifdef TWS_DEBUG
         appSmPairHandset();
-        break;
 #endif
+        break;
+   case APP_RESET_FACTORY:
+       DEBUG_LOG("plc call reset headset");
+#ifdef TWS_DEBUG
+       appSmFactoryReset();
+#endif
+       break;
+    case APP_CASE_OPEN:
+        DEBUG_LOG("plc call case open");
+#ifdef TWS_DEBUG
+        appConnRulesResetEvent(RULE_EVENT_CASE_OPEN);
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_OPEN);
+#endif
+        break;
+    case APP_CASE_CLOSE:
+        DEBUG_LOG("plc call case close");
+#ifdef TWS_DEBUG
+        /// 设置规则去处理
+        appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
+#endif
+        break;
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
@@ -556,6 +544,10 @@ void appSubUIInit(void)
     batteryRegistrationForm battery_from;
 
     memset(progRun, 0, sizeof(ProgRunInfo));
+
+    // 运行到这个地方时外设都为正常打开状态
+    apollo_sleep();
+
 #ifdef TWS_DEBUG
     progRun->realInCase = TRUE;
 #endif
@@ -836,8 +828,20 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
             progRun->peerPlace = ((bitEars & 0x01)) ? 1 : 0;
     }
 
-    if(lidOpen >= 0)
+    if(lidOpen >= 0) {
+        uint16 beforeStatus = progRun->caseLidOpen;
         progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
+        if (beforeStatus != progRun->caseLidOpen) {
+            /// 之前状态和现在状态不一致，发送事件
+            if (progRun->caseLidOpen > 0) {
+                DEBUG_LOG("call case open");
+                MessageSend(&appGetUi()->task, APP_CASE_OPEN, 0);
+            } else {
+                DEBUG_LOG("call case close");
+                MessageSend(&appGetUi()->task, APP_CASE_CLOSE, 0);
+            }
+        }
+    }
 
     if(keyDown >= 0) {
         progRun->caseKeyDown = (1 == keyDown) ? 1 : 0;
@@ -848,7 +852,6 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
         } else {
             /// 如果当前是右边耳机，查看左耳机是否在，如果不在，执行配对
             if (progRun->peerPlace == 0) {
-                /// send to
                 DEBUG_LOG("call right pair headset");
                 MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
             }
@@ -857,6 +860,9 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
 
     if(keyLong >= 0) {
         progRun->caseKeyLong = (1 == keyLong) ? 1 : 0;
+        if (1 == progRun->caseKeyLong) {
+            MessageSend(&appGetUi()->task, APP_RESET_FACTORY, 0);
+        }
         /// 清理命令开始
     }
 
@@ -887,7 +893,7 @@ void appUiCaseSetPeerBtAddr(uint8 *addrbuf)
         addrbuf[0],addrbuf[1],addrbuf[2],addrbuf[3],addrbuf[4],addrbuf[5]);
     taddr.addr.nap = addrbuf[0] | (addrbuf[1] << 8);
     taddr.addr.uap = addrbuf[2];
-    taddr.addr.lap = (addrbuf[3] << 16) | (addrbuf[4] << 8) || addrbuf[5];
+    taddr.addr.lap = (addrbuf[3] << 16) | (addrbuf[4] << 8) | addrbuf[5];
 
     MessageSend(&appGetUi()->task, APP_CASE_SET_BTINFO, 0);
 
@@ -1135,6 +1141,134 @@ void apolloWakeupPower(int enable)        // 开启或停止 APO2
     }
 }
 
+bool appUICaseIsOpen(void) {
+    ProgRIPtr  progRun = appSubGetProgRun();
+    return (progRun->caseLidOpen > 0 ? TRUE : FALSE);
+}
+
+uint8 appUIGetCurrentPosition(void) {
+    phyState state = appPhyStateGetState();
+    switch(state) {
+        case PHY_STATE_IN_CASE:
+            return 0X01 << 2;
+        case PHY_STATE_OUT_OF_EAR:
+        case PHY_STATE_OUT_OF_EAR_AT_REST:
+            return  0X01 << 1;
+        case PHY_STATE_IN_EAR:
+            return  0X01 << 0;
+        case PHY_STATE_UNKNOWN:
+            return  0X00;
+    }
+    return 0X00;
+}
+
+uint8 appUIGetPeerPosition(void) {
+    if(appPeerSyncIsPeerInCase() == TRUE)
+        return 0X01 << 2;
+
+    if(appPeerSyncIsPeerInCase() == FALSE && appPeerSyncIsPeerInEar() == FALSE)
+        return 0X01 << 1;
+
+    if(appPeerSyncIsPeerInEar() == TRUE)
+        return  0X01 << 0;
+
+    return 0X00;
+}
+
+uint8 appUIGetMasterSlave(void) {
+    /// 展示不实现
+    return 0X00;
+}
+
+uint8 appUIGetPositionInfo(void) {
+    uint8 current = appUIGetCurrentPosition();
+    uint8 peer = appUIGetPeerPosition();
+    uint8 ms = appUIGetMasterSlave();
+
+    uint8 res = 0;
+    if (appConfigIsLeft()) {
+        res |= (current << 5) | (peer << 2);
+    } else {
+        res |= (peer << 5) | (current << 2);
+    }
+
+    return res | ms;
+}
+
+void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
+    // 原始的电量信息获取有问题
+    // 0:left 1:right 2:case
+    if (appConfigIsLeft()) {
+        arr[0] = (uint8)progRun->iElectrity;
+        if ((CHARGE_ST_OK==progRun->chargeStat) || (CHARGE_ST_LOW == progRun->chargeStat)) {
+            arr[0] |= 0X80;
+        }
+        arr[1] = (uint8)progRun->peerElectrity;//对方电量
+        if (appPeerSyncIsPeerInCase()) {
+            arr[1] |= 0X80;
+        }
+    } else {
+        arr[0] = (uint8)progRun->peerElectrity;//对方电量
+        if (appPeerSyncIsPeerInCase()) {
+            arr[0] |= 0X80;
+        }
+        arr[1] = (uint8)progRun->iElectrity;
+        if ((CHARGE_ST_OK==progRun->chargeStat) || (CHARGE_ST_LOW == progRun->chargeStat)) {
+            arr[1] |= 0X80;
+        }
+    }
+    arr[2] = (uint8)progRun->caseElectrity;//盒子电量
+}
+
+uint8 appUIGetConnectStatusInfo(void) {
+    uint8 current = appUIGetCurrentConnectStatusInfo();
+    uint8 peer = appUIGetPeerConnectStatusInfo();
+    uint8 ms = appUIGetCaseConnectStatusInfo();
+
+    uint8 res = 0;
+    if (appConfigIsLeft()) {
+        res |= (current << 5) | (peer << 2);
+    } else {
+        res |= (peer << 5) | (current << 2);
+    }
+
+    return res | ms;
+}
+
+uint8 appUIGetCurrentConnectStatusInfo(void) {
+    ProgRIPtr progRun = appSubGetProgRun();
+    uint8 res = 0X00;
+
+    if((uint8)progRun->gaiaStat) {
+        res |= 0X01 << 2;
+    }
+    if(appDeviceIsHandsetAnyProfileConnected()) {
+        res |= 0X01 << 1;
+    }
+    if(appDeviceIsPeerConnected()) {
+        res |= 0X01 << 0;
+    }
+
+    return res;
+}
+
+uint8 appUIGetPeerConnectStatusInfo(void) {
+    uint8 res = 0;
+    if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected() || appPeerSyncIsPeerHandsetHfpConnected()) {
+        res |= 0X01 << 1;
+    }
+
+    if(appDeviceIsPeerConnected()) {
+        res |= 0X01 << 0;
+    }
+
+    return res;
+}
+
+uint8 appUIGetCaseConnectStatusInfo(void) {
+    return 0X00;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 ///     PYDBG 调试使用
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -1150,5 +1284,7 @@ void do_bias(int value)
         OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
     }
 }
+
+
 
 #endif

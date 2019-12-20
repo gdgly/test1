@@ -677,6 +677,10 @@ void appDeviceSetHfpWasConnected(const bdaddr *bd_addr, bool connected)
         }
         appDeviceSetAttributes(bd_addr, &attributes);
         DEBUG_LOGF("appDeviceSetHfpWasConnected, connected %02x", attributes.connected_profiles);
+
+#ifdef TWS_DEBUG
+        checkNeedDisconnect();
+#endif
     }
 }
 
@@ -730,6 +734,10 @@ void appDeviceSetA2dpWasConnected(const bdaddr *bd_addr, bool connected)
         }
         appDeviceSetAttributes(bd_addr, &attributes);
         DEBUG_LOGF("appDeviceSetA2dpWasConnected, connected %02x", attributes.connected_profiles);
+
+#ifdef TWS_DEBUG
+        checkNeedDisconnect();
+#endif
     }
 }
 
@@ -1186,3 +1194,19 @@ void appDeviceUpdateMruDevice(const bdaddr *bd_addr)
         }
     }
 }
+
+#ifdef TWS_DEBUG
+bool appDeviceIsHandsetAllProfileConnected(void)
+{
+    return appDeviceIsHandsetHfpConnected() &&
+           appDeviceIsHandsetA2dpConnected();
+}
+
+
+void checkNeedDisconnect(void) {
+    if (TRUE == appDeviceIsHandsetAllProfileConnected()) {
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CHECK_NEED_DISCONNECT);
+        DEBUG_LOG("set rule reset event RULE_EVENT_CHECK_NEED_DISCONNECT");
+    }
+}
+#endif

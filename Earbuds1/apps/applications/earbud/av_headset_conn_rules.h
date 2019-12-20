@@ -113,6 +113,7 @@ enum    av_headset_conn_rules_messages
     CONN_RULES_BLE_CONNECTION_UPDATE,
 #ifdef TWS_DEBUG
     CONN_RULES_CLEAR_HANDSET_PAIR,
+    CONN_RULES_DISCONNECT_GAIA,
 #endif
     /*! Any rules with RULE_FLAG_PROGRESS_MATTERS are no longer in progress. */
     CONN_RULES_NOP,
@@ -283,6 +284,9 @@ typedef enum
 #define RULE_EVENT_CHECK_DFU                     (1ULL << 52)    /*!< Check whether upgrades should be allowed */
 #ifdef TWS_DEBUG
 #define RULE_EVENT_CLEAR_PAIR_HEADSET            (1ULL << 53)    /*!< 同步时，取消不必要的PairHeadset*/
+#define RULE_EVENT_CHECK_NEED_DISCONNECT         (1ULL << 54)    /*!< 检测是否需要断开连接 */
+#define RULE_EVENT_CASE_OPEN                     (1ULL << 55)    /*!< 充电盒打开  */
+#define RULE_EVENT_CASE_CLOSE                    (1ULL << 56)    /*!< 充电盒关闭  */
 #endif
 
 #define RULE_EVENT_ALL_EVENTS_MASK               (0xFFFFFFFFFFFFFFFFULL)

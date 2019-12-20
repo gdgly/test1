@@ -274,8 +274,18 @@ static void appExitDfuCheck(void)
 static void appEnterFactoryReset(void)
 {
     DEBUG_LOG("appEnterFactoryReset");
+    /// * 清理经典蓝牙的配置信息
     appSmInitiateLinkDisconnection(SM_DISCONNECT_ALL, appConfigFactoryResetTimeoutMs(),
                                    POST_DISCONNECT_ACTION_NONE);
+    /// * 清理GAIA的配置信息
+#ifdef TWS_DEBUG
+    if (appGaiaIsConnect()) {
+        appGaiaDisconnect();
+    }
+
+    BtAddrResetFactory();
+    UserParamResetFactory();
+#endif
 }
 
 /*! \brief Exit factory reset. */
@@ -1205,6 +1215,10 @@ static void appSmHandleConnRulesHandsetPair(void)
     {
         case APP_STATE_OUT_OF_CASE_IDLE:
         case APP_STATE_IN_EAR_IDLE:
+#ifdef TWS_DEBUG
+        /// 恢复出厂设置之后，PeerPair成功之后，进入incase—idel状态，自动触发与手机配对
+        case APP_STATE_IN_CASE_IDLE:
+#endif
             DEBUG_LOG("appSmHandleConnRulesHandsetPair, rule said pair with handset");
             appSmClearUserPairing();
             appSetState(APP_STATE_HANDSET_PAIRING);
@@ -1250,6 +1264,13 @@ static void appSmHandleConnRulesClearHandsetPair(void)
 
     appSetState(status);
     appConnRulesSetRuleComplete(CONN_RULES_CLEAR_HANDSET_PAIR);
+}
+
+static void appSmHandleConnRulesDisconnectGaia(void)
+{
+    DEBUG_LOG("appSmHandleConnRulesDisconnectGaia");
+    appGaiaDisconnect();
+    appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_GAIA);
 }
 #endif
 
@@ -2338,6 +2359,9 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 #ifdef TWS_DEBUG
         case CONN_RULES_CLEAR_HANDSET_PAIR:
             appSmHandleConnRulesClearHandsetPair();
+            break;
+        case CONN_RULES_DISCONNECT_GAIA:
+            appSmHandleConnRulesDisconnectGaia();
             break;
 #endif
         case CONN_RULES_ENTER_DFU:

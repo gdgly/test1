@@ -45,6 +45,7 @@ typedef struct tagBTADDRPARAM {
 }BtAddrParam, *BtAddrPrmPtr;
 
 extern BtAddrParam gBtAddrParam;
+void BtAddrResetFactory(void);
 void BtAddrParamDefault(void);
 int16 ParamSaveBtAddrPrm(BtAddrPrmPtr pParam);
 int16 ParamLoadBtAddrPrm(BtAddrPrmPtr pParam);
@@ -62,6 +63,7 @@ typedef struct tagUSERPARAM {
 }UserParam, *UserPrmPtr;
 
 extern UserParam gUserParam;
+void UserParamResetFactory(void);
 void UserParamDefault(void);
 int16 ParamSaveUserPrm(UserPrmPtr pParam);
 int16 ParamLoadUserPrm(UserPrmPtr pParam);

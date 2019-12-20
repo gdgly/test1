@@ -35,6 +35,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_ATTACH_PLC_IN           (2100)           // 20340 -> ui 报告plc  in 放入充电盒
 #define APP_ATTACH_PLC_OUT          (2101)           // 20340 -> ui 报告plc  out 取出充电盒
 #define APP_PAIR_HEADSET            (2102)           // 20340 -> ui 报告plc  配对手机
+#define APP_RESET_FACTORY           (2103)           // 20340 -> ui 报告plc 恢复出厂设置
+#define APP_CASE_OPEN               (2104)           // 20340 -> ui 报告plc 充电盒打开
+#define APP_CASE_CLOSE              (2105)           // 20340 -> ui 报告plc 充电盒关闭
 
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
@@ -165,4 +168,5 @@ uint8 appUIGetPowerCaseState(void);
 
 bool appUIDeviceRealInCase(void);
 
+bool appUICaseIsOpen(void);
 #endif // SUB_UI_H
