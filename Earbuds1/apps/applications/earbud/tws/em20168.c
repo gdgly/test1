@@ -70,7 +70,7 @@ bool EM20168ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        //DEBUG_LOG("%s faild,result = %d\n",__func__, result);
+        //DEBUG_LOG("EM20168ReadRegister faild,result = %d\n", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -87,7 +87,7 @@ bool EM20168WriteRegister(bitserial_handle handle, uint8 reg, uint8 value)
                             command, 2,
                             BITSERIAL_FLAG_BLOCK);
     if(result != BITSERIAL_RESULT_SUCCESS){
-        DEBUG_LOG("%s faild,result = %d\n",__func__, result);
+        DEBUG_LOG("EM20168WriteRegister faild,result = %d\n", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }

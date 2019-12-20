@@ -49,7 +49,7 @@ bool max20340ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        //DEBUG_LOG("%s faild,result = %d\n",__func__, result);
+        //DEBUG_LOG("max20340ReadRegister Faild,result=%d", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -70,7 +70,7 @@ bool max20340ReadRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *va
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        //DEBUG_LOG("%s faild,result = %d\n",__func__, result);
+        //DEBUG_LOG("max20340ReadRegister_withlen faild,result= %d", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -87,7 +87,7 @@ bool max20340WriteRegister(bitserial_handle handle, uint8 reg, uint8 value)
                             command, 2,
                             BITSERIAL_FLAG_BLOCK);
     if(result != BITSERIAL_RESULT_SUCCESS){
-        DEBUG_LOG("%s faild,result = %d\n",__func__, result);
+        DEBUG_LOG("max20340WriteRegister faild,Result = %d", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -105,7 +105,7 @@ bool max20340WriteRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *v
                             command, len+1,
                             BITSERIAL_FLAG_BLOCK);
     if(result != BITSERIAL_RESULT_SUCCESS){
-        DEBUG_LOG("%s faild,result = %d\n",__func__, result);
+        DEBUG_LOG("max20340WriteRegister_withlen,result=%d\n", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }

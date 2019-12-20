@@ -19,7 +19,7 @@ bool lis2dw12ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        //DEBUG_LOG("%s faild,result = %d\n",__func__, result);
+        //DEBUG_LOG("lis2dw12ReadRegister faild,result = %d\n", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -36,7 +36,7 @@ bool lis2dw12WriteRegister(bitserial_handle handle, uint8 reg, uint8 value)
                             command, 2,
                             BITSERIAL_FLAG_BLOCK);
     if(result != BITSERIAL_RESULT_SUCCESS){
-        DEBUG_LOG("%s faild,result = %d\n",__func__, result);
+        DEBUG_LOG("lis2dw12WriteRegister faild,result = %d\n", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -57,7 +57,7 @@ bool lis2dw12ReadRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *va
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        //DEBUG_LOG("%s faild,result = %d\n",__func__, result);
+        //DEBUG_LOG("lis2dw12ReadRegister_withlen faild,result = %d\n", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
