@@ -819,7 +819,7 @@ void gaiaAssistantAwake(GAIA_STAROT_IND_T *message)
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
 
-    DEBUG_LOG("gaiaDevRecordStopInfo");
+    DEBUG_LOG("gaiaAssistantAwake");
     attr = attrMalloc(&head, 1);
     attr->attr = 0X01;
     attr->payload[0] = 0X01;
