@@ -82,6 +82,22 @@ int16 ParamLoadFixPrm(FixPrmPtr pParam)
 /////// 蓝牙配对相关参数
 /////////////////////////////////////////////////////////////////////////////////
 BtAddrParam gBtAddrParam;
+
+void BtAddrResetFactory(void) {
+    BtAddrPrmPtr prm = &gBtAddrParam;
+
+    uint8 se = prm->single_era;
+    typed_bdaddr pa;
+    memcpy(&pa, &(prm->peer_addr), sizeof(typed_bdaddr));
+
+    BtAddrParamDefault();
+
+    prm->single_era = se;
+    memcpy(&(prm->peer_addr), &pa, sizeof(typed_bdaddr));
+
+    ParamSaveBtAddrPrm(NULL);
+}
+
 void BtAddrParamDefault(void)
 {
     BtAddrPrmPtr prm = &gBtAddrParam;
@@ -134,6 +150,7 @@ void UserParamDefault(void)
     prm->lKeyFunc = 0X04;
     prm->rKeyFunc = 0X05;
 }
+
 
 int16 ParamSaveUserPrm(UserPrmPtr pParam)
 {
@@ -333,4 +350,9 @@ void ParamInitHandleClDmLocalBdAddrCfm(Message message)
 
     memcpy(&progRun->addr, &cfm->bd_addr, sizeof(bdaddr));
     DEBUG_LOG("ParamInit addr %04x:%02x:%06x", cfm->bd_addr.nap, cfm->bd_addr.uap, cfm->bd_addr.lap);
+}
+
+void UserParamResetFactory(void) {
+    UserParamDefault();
+    ParamSaveUserPrm(NULL);
 }

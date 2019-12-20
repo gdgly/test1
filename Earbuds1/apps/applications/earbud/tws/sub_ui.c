@@ -885,7 +885,6 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
         } else {
             /// 如果当前是右边耳机，查看左耳机是否在，如果不在，执行配对
             if (progRun->peerPlace == 0) {
-                /// send to
                 DEBUG_LOG("call right pair headset");
                 MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
             }

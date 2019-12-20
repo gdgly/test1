@@ -283,11 +283,8 @@ static void appEnterFactoryReset(void)
         appGaiaDisconnect();
     }
 
-    /// todo 现在没有处理地方耳机地址
-    BtAddrParamDefault();
-    ParamSaveBtAddrPrm(NULL);
-    UserParamDefault();
-    ParamSaveUserPrm(NULL);
+    BtAddrResetFactory();
+    UserParamResetFactory();
 #endif
 }
 
