@@ -26,7 +26,7 @@
     <file path="../../../../../audio/kalimba/kymera/output_bundles/stre_rom_v21_release/download_passthrough/download_passthrough.dkcs"/>
     <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_anc_tuning.edkcs"/>
     <file path="../../../../../audio/kalimba_ROM_5951/kymera/prebuilt_dkcs/stre_rom_v21_release/download_usb_audio.edkcs"/>
-    <file path="../../../../../images/apollo/V00.01.000B_upgrade.bin"/>
+    <file path="../../../../../images/apollo/apollo2_blue.bin"/>
     <file path="../../prompts/connected.sbc"/>
     <file path="../../prompts/disconnected.sbc"/>
     <file path="../../prompts/double_click.sbc"/>
