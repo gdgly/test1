@@ -556,6 +556,10 @@ void appSubUIInit(void)
     batteryRegistrationForm battery_from;
 
     memset(progRun, 0, sizeof(ProgRunInfo));
+
+    // 运行到这个地方时外设都为正常打开状态
+    apollo_sleep();
+
 #ifdef TWS_DEBUG
     progRun->realInCase = TRUE;
 #endif
@@ -887,7 +891,7 @@ void appUiCaseSetPeerBtAddr(uint8 *addrbuf)
         addrbuf[0],addrbuf[1],addrbuf[2],addrbuf[3],addrbuf[4],addrbuf[5]);
     taddr.addr.nap = addrbuf[0] | (addrbuf[1] << 8);
     taddr.addr.uap = addrbuf[2];
-    taddr.addr.lap = (addrbuf[3] << 16) | (addrbuf[4] << 8) || addrbuf[5];
+    taddr.addr.lap = (addrbuf[3] << 16) | (addrbuf[4] << 8) | addrbuf[5];
 
     MessageSend(&appGetUi()->task, APP_CASE_SET_BTINFO, 0);
 
