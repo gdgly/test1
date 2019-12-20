@@ -65,7 +65,7 @@ void comGetApolloVer(uint8 *arr);
 #define APOLLO_ERASE_HEADER     (0x10)
 #define APOLLO_RESET            (0x09)
 #define APOLLO_RESET_2          (0x04)
-#define APOLLO_SLEEP            (0x0C)
+#define APOLLO_SLEEP            (0x12)
 
 /* i2c access address */
 #define APOLLO_FEEDBACK         (0x00)

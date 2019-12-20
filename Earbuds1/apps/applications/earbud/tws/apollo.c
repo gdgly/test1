@@ -493,7 +493,7 @@ static void apollo_common_handler(MessageId id, Message msg)
                         uint32 feedback[2];
                         int ret = apollo_fb((uint8*)feedback, 8);
 
-                        if (!ret && (0x01 != feedback[0])) {
+                        if (!ret) {
                             APOLLO_DBG_LOG("get other int, try enter sleep again.");
                             bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
                             if (0 == apollo_send_cmd(APOLLO_SLEEP, handle)){
