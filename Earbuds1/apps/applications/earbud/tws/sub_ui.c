@@ -1199,12 +1199,23 @@ void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
     // 原始的电量信息获取有问题
     // 0:left 1:right 2:case
     if (appConfigIsLeft()) {
-        progRun->chargeStat
         arr[0] = (uint8)progRun->iElectrity;
+        if ((CHARGE_ST_OK==progRun->chargeStat) || (CHARGE_ST_LOW == progRun->chargeStat)) {
+            arr[0] |= 0X80;
+        }
         arr[1] = (uint8)progRun->peerElectrity;//对方电量
+        if (appPeerSyncIsPeerInCase()) {
+            arr[1] |= 0X80;
+        }
     } else {
         arr[0] = (uint8)progRun->peerElectrity;//对方电量
+        if (appPeerSyncIsPeerInCase()) {
+            arr[0] |= 0X80;
+        }
         arr[1] = (uint8)progRun->iElectrity;
+        if ((CHARGE_ST_OK==progRun->chargeStat) || (CHARGE_ST_LOW == progRun->chargeStat)) {
+            arr[1] |= 0X80;
+        }
     }
     arr[2] = (uint8)progRun->caseElectrity;//盒子电量
 }
