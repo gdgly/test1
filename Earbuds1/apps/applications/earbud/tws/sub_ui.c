@@ -548,7 +548,7 @@ void appSubUIInit(void)
     memset(progRun, 0, sizeof(ProgRunInfo));
 
     // 运行到这个地方时外设都为正常打开状态
-    apollo_sleep();
+    //apollo_sleep();
 
 #ifdef TWS_DEBUG
     progRun->realInCase = TRUE;
