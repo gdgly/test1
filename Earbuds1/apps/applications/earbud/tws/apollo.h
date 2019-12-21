@@ -50,6 +50,7 @@ int apollo_evoke(void);
 
 int apolloGetStatus(void);
 void comGetApolloVer(uint8 *arr);
+void apollo_s_e(void);
 
 /* hw i2c/io def*/
 #define APOLLO_CHIPADDR         (0x10) // (0x68)
