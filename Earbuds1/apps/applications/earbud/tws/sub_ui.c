@@ -363,6 +363,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     switch(id) {
     case MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT:
+        /// 需要根据实际使用的容量去计算
+//        DEBUG_LOG("power precent is :%02X", ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent);
         if(progRun->iElectrity == ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent)
             break;
         progRun->iElectrity = ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent;
