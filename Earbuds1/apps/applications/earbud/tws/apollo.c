@@ -84,6 +84,7 @@ static int io_init_i2c_rd_err_times = 0;
 static int io_init_rd_fw_err_times = 0;
 static int enter_boot_int_times = 0;
 static int upgrade_times = 0;
+static int sleep_times = 0;
 
 /*
  * APIs
@@ -181,6 +182,7 @@ int apollo_sleep(void) {
     if (APOLLO_STATE_IDLE != apollo_state) return -1;
 
     apollo_state = APOLLO_STATE_ENTERING_SLEEP;
+    sleep_times = 0;
     bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
     apollo_send_cmd(APOLLO_SLEEP, handle);
     hwi2cClose(handle);
@@ -493,15 +495,36 @@ static void apollo_common_handler(MessageId id, Message msg)
                         uint32 feedback[2];
                         int ret = apollo_fb((uint8*)feedback, 8);
 
-                        if (!ret) {
+                        if (ret) {
+                            APOLLO_DBG_LOG("init fail");
+                            apollo_state = APOLLO_STATE_ERR;
+                            IO_LOW(APOLLO_OVERRIDE_IO);
+                            apollo_init_finish();
+                            break;
+                        }
+
+                        if (feedback[0] != APOLLO_SLEEP) {
                             APOLLO_DBG_LOG("get other int, try enter sleep again.");
-                            bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
-                            if (0 == apollo_send_cmd(APOLLO_SLEEP, handle)){
-                                /* wait for another int. */
+                            if(sleep_times < 3)
+                            {
+                                bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+                                if (0 == apollo_send_cmd(APOLLO_SLEEP, handle)){
+                                    /* wait for another int. */
+                                    hwi2cClose(handle);
+                                }else
+                                {
+                                    APOLLO_DBG_LOG("sleep mode fail");
+                                    apollo_state = APOLLO_STATE_ERR;
+                                    IO_LOW(APOLLO_OVERRIDE_IO);
+                                }
                                 hwi2cClose(handle);
-                                return;
+                                sleep_times++;
+                            }else{
+                                APOLLO_DBG_LOG("sleep mode fail");
+                                apollo_state = APOLLO_STATE_ERR;
+                                IO_LOW(APOLLO_OVERRIDE_IO);
                             }
-                            hwi2cClose(handle);
+                            break;
                         }
 
                         APOLLO_DBG_LOG("enter sleep.");
@@ -512,6 +535,7 @@ static void apollo_common_handler(MessageId id, Message msg)
                         uint32 bank = PIO2BANK(APOLLO_INT_IO);
                         uint32 mask = PIO2MASK(APOLLO_INT_IO);
                         PioSetMapPins32Bank(bank, mask, mask);
+                        PioSet32Bank(bank, mask, 0);
                         PioSetDir32Bank(bank, mask, mask);
                         IO_LOW(APOLLO_INT_IO);
 
