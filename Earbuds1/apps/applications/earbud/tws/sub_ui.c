@@ -304,7 +304,11 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         appHfpCallAccept();
         break;
     case GAIA_COMMAND_STAROT_CONTROL_REJECT_DIALOG:      ///调用拒接电话
-        appHfpCallHangup();
+        if (appHfpIsCallActive()) {
+            appHfpCallHangup();
+        } else {
+            appHfpCallReject();
+        }
         break;
 
     case STAROT_AI_USER_START_RECORD:               ///设备开始录音
@@ -1286,7 +1290,5 @@ void do_bias(int value)
         OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
     }
 }
-
-
 
 #endif
