@@ -85,4 +85,8 @@ int16 UserSetKeyFunc(uint8 lKeyFunc, uint8 rKeyFunc);     // 设置功能键
 void ParamConfigInit(void);
 void ParamInitHandleClDmLocalBdAddrCfm(Message message);
 
+// 组装测试使用
+void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf);
+int16 ParamSaveSN(void *buff);
+int16 ParamLoadSN(void *buff);
 #endif // PARAM_H
