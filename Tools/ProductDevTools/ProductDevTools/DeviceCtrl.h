@@ -27,6 +27,9 @@ enum {
 	ERROR_WRITE_CACHE,
 	ERROR_WRITE_FIXPARAM,
 
+	ERROR_READ_LICENSE,
+	ERROR_WRITE_LICENSE,
+
 	ERROR_APOLLO,
 
 	ERROR_READ_RECORD,
@@ -34,6 +37,11 @@ enum {
 
 	ERROR_READ_SENSOR,
 	ERROR_WRITE_SENSOR,
+
+	ERROR_READ_XTALTRIM,
+	ERROR_READ_XTALCAP,
+	ERROR_WRITE_XTALTRIM,
+	ERROR_WRITE_XTALCAP,
 
 	ERROR_WAKEUP, ERROR_SENSOR, ERROR_PLC, ERROR_TAP,
 
@@ -66,6 +74,9 @@ enum {
 	REPORT_COMMU_OPEN,
 	RERROT_COMMU_TIMEOUT,
 
+	REPORT_READ_LICENSE,
+	REPORT_WRITE_LICENSE,
+
 	REPORT_APOLLO,
 
 	REPORT_READ_RECORD,
@@ -74,6 +85,11 @@ enum {
 
 	REPORT_READ_SENSOR,
 	REPORT_WRITE_SENSOR,
+
+	REPORT_READ_XTALTRIM,
+	REPORT_READ_XTALCAP,
+	REPORT_WRITE_XTALTRIM,
+	REPORT_WRITE_XTALCAP,
 
 	REPORT_USER_EXIT,
 	REPORT_END_ALL,
@@ -106,7 +122,7 @@ typedef struct tagINIPARAM {
 enum {THREAD_NONE=0, THREAD_BURN=0x01, THREAD_BURN_APO=0x02,
 	THREAD_BT_ADDR=0x04, THREAD_FIX_PARAM=0x08,
 	THREAD_CHECK=0x10, THREAD_RECORD_0=0x20, THREAD_RECORD_1 = 0x40, THREAD_PLAY = 0x80,
-	THREAD_CRYSTGALTRIM=0x100,
+	THREAD_CRYSTGALTRIM=0x100, THREAD_CRYSTGALTRIM_READ=0x200, THREAD_CRYSTGALTRIM_WRITE = 0x400,
 	THREAD_WAKEUP = 0x1000, THREAD_SENSOR=0x2000, THREAD_PLC=0x4000, THREAD_TAP=0x8000,
 };
 
@@ -137,17 +153,25 @@ public:
 	void SetFlashImage(CString sFile) { m_sFlashImage = sFile; }	
 	void SetEraseAll(int bErase) { m_bEnableErase = bErase;  }
 	void SetThreadFunc(int iFunc) { m_iThreadFunc = iFunc; }
+	void SetXtalTrim(int cap, int trim) { m_xtalCap = cap; m_xtalTrim = trim; }
+	void SetLicenseText(CString license) { m_sLicense = license; }
 	int SetHwVersion(CString sText);
 	int SetBtAddr(CString addr);       // {0x00ff09, 0x5b, 0x02}
 	void SetBtName(CString sName);
 	void SetRecordTime(int sec);
 	void SetJlinkPath(CString path) { m_iniParam.sJlinkPath = path; }	
 	void SetApolloBurnfile(CString path) { m_iniParam.apollo_burn_bat = path; }	
+
+	int CrystalTrimmingRead(int &XtalFreqTrim, int &XtalLoadCap, int bCloseEng);
+	int CrystalTrimmingWrite(int XtalFreqTrim, int XtalLoadCap, int bCloseEng);
+
 private:
 	IniParam m_iniParam;
 	CString m_sFlashImage;
 	UINT m_checkStatus;
 	char m_bdAddr[32], m_bdName[32];
+	int  m_xtalCap, m_xtalTrim;
+	CString m_sLicense;
 	FixParam m_FixParam;
 	BOOL  m_bEnableErase;
 

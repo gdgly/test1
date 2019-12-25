@@ -52,6 +52,8 @@ END_MESSAGE_MAP()
 CProductDevToolsDlg::CProductDevToolsDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_PRODUCTDEVTOOLS_DIALOG, pParent)
 	, m_bEraseAll(FALSE)
+	, m_edCap(7)
+	, m_edTrim(6)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
@@ -71,6 +73,8 @@ void CProductDevToolsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_ERASE, m_bEraseAll);
 	DDX_Control(pDX, IDC_EDIT_NAME, m_edName);
 	DDX_Control(pDX, IDC_LIST_CHECK, m_ListCheck);
+	DDX_Text(pDX, IDC_EDIT_CAP, m_edCap);
+	DDX_Text(pDX, IDC_EDIT_TRIM, m_edTrim);
 }
 
 BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
@@ -103,6 +107,8 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_DUT_MODE, &CProductDevToolsDlg::OnBnClickedBtnDutMode)
 	ON_BN_CLICKED(IDC_BTN_PLAY, &CProductDevToolsDlg::OnBnClickedBtnPlay)
 	ON_BN_CLICKED(IDC_BTN_ALL, &CProductDevToolsDlg::OnBnClickedBtnAll)
+	ON_BN_CLICKED(IDC_BTN_CRITRIM_READ, &CProductDevToolsDlg::OnBnClickedBtnCritrimRead)
+	ON_BN_CLICKED(IDC_BTN_CRITRIM_WRITE, &CProductDevToolsDlg::OnBnClickedBtnCritrimWrite)
 END_MESSAGE_MAP()
 
 
@@ -148,6 +154,8 @@ BOOL CProductDevToolsDlg::OnInitDialog()
 
 	m_edHWver.SetWindowText(m_Param.hwVer);
 	m_edAddr.SetWindowTextA("{0x00ff0F, 0x5b, 0x02}");
+	if (m_Param.btName.IsEmpty())
+		m_Param.btName.Format("iFlyBuds");
 	sText.Format("\"%s\"", m_Param.btName);
 	m_edName.SetWindowTextA(sText);
 	m_edSend.SetWindowTextA("abcdefg≤‚ ‘ ˝æ›1234567");
@@ -783,6 +791,19 @@ void CProductDevToolsDlg::OnBnClickedBtnPlay()
 	StartDevContrl(THREAD_PLAY);
 }
 
+void CProductDevToolsDlg::OnBnClickedBtnCritrimRead()
+{
+	StartDevContrl(THREAD_CRYSTGALTRIM_READ);
+}
+
+void CProductDevToolsDlg::OnBnClickedBtnCritrimWrite()
+{
+	UpdateData(TRUE);
+
+	m_devCtrl.SetXtalTrim(m_edCap, m_edTrim);
+	StartDevContrl(THREAD_CRYSTGALTRIM_WRITE);
+}
+
 
 void CProductDevToolsDlg::OnBnClickedBtnAll()
 {
@@ -868,6 +889,10 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 		break;
 
 	case REPORT_APOLLO:
+	case REPORT_READ_XTALTRIM:
+	case REPORT_READ_XTALCAP:
+	case REPORT_WRITE_XTALTRIM:
+	case REPORT_WRITE_XTALCAP:
 
 	case REPORT_RDBD_NAME:
 	case REPORT_WRBD_NAME:
@@ -999,5 +1024,9 @@ void CProductDevToolsDlg::OnBnClickedBtnClear()
 {
 	m_ListCtrl.DeleteAllItems();
 }
+
+
+
+
 
 
