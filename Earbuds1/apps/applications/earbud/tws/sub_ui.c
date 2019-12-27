@@ -56,7 +56,7 @@ static const ringtone_note app_tone_wakeup[] =
 };
 
 ProgRunInfo gProgRunInfo;
-uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
+uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
 
 /* BLE 已经连接到手机，则不需要修改广播内容, 没有连接到手机则信息不需要发送出去 */
 #define BLE_CONNECTED_PHONE()  (NULL != appGetGaiaTransport())
@@ -323,7 +323,7 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         progRun->recStat  = 0;
 #ifdef CONFIG_REC_ASSISTANT
         appKymeraRecordStop();        
-        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
+        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
 #endif
         break;
 
@@ -393,8 +393,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 #ifdef CONFIG_REC_ASSISTANT
         if (appKymeraRecordIsRun() == TRUE){
             appKymeraRecordStop();
-            g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
-            }
+            g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
+        }
+        ///todo 添加通话录音停止操作
 #endif
         apolloWakeupPower(0);
         break;
@@ -706,7 +707,7 @@ void appUiHfpCallIncomingActive(void)
 #ifdef CONFIG_REC_ASSISTANT
     if (appKymeraRecordIsRun()){
         appKymeraRecordStop();
-        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
+        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
         }
 #endif
 
@@ -731,7 +732,7 @@ void appUiHfpCallOutcomingActive(void)
 #ifdef CONFIG_REC_ASSISTANT
     if (appKymeraRecordIsRun()){
         appKymeraRecordStop();
-        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
+        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
         }
 #endif
 
