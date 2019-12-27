@@ -113,8 +113,8 @@ enum    av_headset_conn_rules_messages
     CONN_RULES_BLE_CONNECTION_UPDATE,
 #ifdef TWS_DEBUG
     CONN_RULES_CLEAR_HANDSET_PAIR,
-    CONN_RULES_DISCONNECT_GAIA,
 #endif
+    CONN_RULES_DISCONNECT_GAIA,
     /*! Any rules with RULE_FLAG_PROGRESS_MATTERS are no longer in progress. */
     CONN_RULES_NOP,
 };
@@ -288,6 +288,8 @@ typedef enum
 #define RULE_EVENT_CASE_OPEN                     (1ULL << 55)    /*!< 充电盒打开  */
 #define RULE_EVENT_CASE_CLOSE                    (1ULL << 56)    /*!< 充电盒关闭  */
 #endif
+
+#define RULE_EVENT_CHECK_GAIA_CONNECTION         (1ULL << 57)    /*!< 检查gaia是否需要断开 */
 
 #define RULE_EVENT_ALL_EVENTS_MASK               (0xFFFFFFFFFFFFFFFFULL)
 
