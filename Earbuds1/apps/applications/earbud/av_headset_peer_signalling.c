@@ -738,6 +738,8 @@ static bool appPeerSigHandleRxLinkKey(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind)
     }
 }
 
+extern void appBleClearBond(void);
+
 /*! \brief Receive pair handset command. */
 static bool appPeerSigHandlePairHandsetCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind)
 {
@@ -764,6 +766,9 @@ static bool appPeerSigHandlePairHandsetCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T
                                              ((uint16)ind->payload[index+5]) << 8);
         MessageSend(peer_sig->rx_handset_commands_task, PEER_SIG_PAIR_HANDSET_IND, message);
         DEBUG_LOGF("appPeerSigHandlePairHandsetCommand %lx %x %x", message->handset_addr.lap, message->handset_addr.uap, message->handset_addr.nap);
+
+        appBleClearBond();
+
         return TRUE;
     }
 }
