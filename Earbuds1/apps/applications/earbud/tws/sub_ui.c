@@ -340,6 +340,11 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB:  ///App设置语言唤醒是否使能
         gUserParam.apolloEnable = ind->payload[0];
         ParamSaveUserPrm(&gUserParam);
+        if (0 < gUserParam.apolloEnable) { /// 使能
+            apolloWakeupPower(1);
+        } else { /// 禁用
+            apolloWakeupPower(0);
+        }
         break;
     case STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB:
         gUserParam.sensorEnable = ind->payload[0];

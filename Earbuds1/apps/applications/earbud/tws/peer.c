@@ -137,3 +137,87 @@ void appPeerSigMsgDoubleClickConfigConfirmation(Task task, peerSigStatus status)
 //    MessageSend(task, PEER_SIG_CONNECT_HANDSET_CFM, message);
 }
 
+
+void appPeerSigTxNormalConfigRequest(Task task, const bdaddr *peer_addr) {
+    if (NULL == peer_addr) {
+        return;
+    }
+#ifdef CONFIG_STAROT_PEERPAIR
+    if(ParamUsingSingle()) {    // 检测是否为独立使用
+        /// todo 设置已经同步
+        return;
+    }
+#endif
+
+    peerSigTaskData *peer_sig = appGetPeerSig();
+    STAROT_MAKE_MESSAGE(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T);
+    message->client_task = task;
+    /// 获取对应的值，并填写
+    message->apollo_config = 0X00;
+    message->apollo_timestamp = 0X00;
+    message->wear_config = 0X00;
+    message->wear_timestamp = 0X00;
+
+    MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_NORMAL_SETTING_REQ, message, appPeerSigStartup(peer_addr));
+}
+
+void appPeerSigHandleInternalNormalConfigRequest(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T *req) {
+    DEBUG_LOG("appPeerSigHandleInternalNormalConfigRequest, state %u", appPeerSigGetState());
+
+    switch (appPeerSigGetState()) {
+        case PEER_SIG_STATE_CONNECTED: {
+            uint8 message[AVRCP_PEER_CMD_NORMAL_CONFIG_SIZE];
+            uint8 pos = 0;
+
+            *((uint8*) (message + pos)) = req->apollo_config;
+            pos += sizeof(uint8);
+            *((uint8*) (message + pos)) = req->wear_timestamp;
+            pos += sizeof(uint8);
+            *((uint32*) (message + pos)) = req->apollo_timestamp;
+            pos += sizeof(uint32);
+            *((uint32*) (message + pos)) = req->wear_timestamp;
+
+            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_NORMAL_CONFIG,
+                                               AVRCP_PEER_CMD_NORMAL_CONFIG_SIZE, message);
+        }
+            break;
+
+        default: {
+            appPeerSigMsgConnectHandsetConfirmation(req->client_task, peerSigStatusLinkKeyTxFail);
+        }
+            break;
+    }
+}
+
+bool appPeerSigHandleNormalConfigCommand(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T *ind) {
+    peerSigTaskData *peer_sig = appGetPeerSig();
+
+    DEBUG_LOG("call appPeerSigHandleNormalConfigCommand");
+
+    /* validate message */
+    if ((ind->size_payload != AVRCP_PEER_CMD_NORMAL_CONFIG_SIZE)
+        || !peer_sig->rx_handset_commands_task) {
+        return FALSE;
+    } else {
+        uint8 *data = (int *) (ind->payload);
+        uint8 pos = 0;
+        { // apollo
+            pos = 0;
+            uint8 apollo_enable = *(uint8*)(data + pos);
+            pos = sizeof(uint8) + sizeof(uint8);
+            uint32 apollo_timestamp = *(uint32 *)(data + pos);
+            /// 比较当前的时间戳，如果大于保存的时间，则更新当前数据
+        }
+        { // wear
+            pos = sizeof(uint8);
+            uint8 wear_enable = *(uint8*)(data + pos);
+            pos = sizeof(uint8) + sizeof(uint8) + sizeof(uint32);
+            uint32 wear_timestamp = *(uint32 *)(data + pos);
+            /// 比较当前的时间戳，如果大于保存的时间，则更新当前数据
+        }
+
+        return TRUE;
+    }
+}
+
+void appPeerSigMsgNormalConfigConfirmation(Task task, peerSigStatus status);

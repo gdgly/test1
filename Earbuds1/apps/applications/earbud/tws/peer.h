@@ -37,7 +37,7 @@ void appPeerSigMsgBleConfigConfirmation(Task task, peerSigStatus status);
  * Peer Signalling Message Definitions
  ******************************************************************************/
 #define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG                 0x71
-#define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE            2    /// 左+有
+#define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE            2    /// 左+右
 
 typedef struct
 {
@@ -54,5 +54,26 @@ void appPeerSigMsgDoubleClickConfigConfirmation(Task task, peerSigStatus status)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
+////////////////////////////////////通用配置项////////////////////////////////////////////
+
+#define AVRCP_PEER_CMD_NORMAL_CONFIG_SIZE                  6
+
+typedef struct
+{
+    Task client_task;           /*!< Task to receive any response */
+    uint8 apollo_config;
+    uint8 wear_config;
+    uint32 apollo_timestamp;
+    uint32 wear_timestamp;
+} PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T;
+
+#define AVRCP_PEER_CMD_NORMAL_CONFIG                       0x72
+
+void appPeerSigTxNormalConfigRequest(Task task, const bdaddr *peer_addr);
+void appPeerSigHandleInternalNormalConfigRequest(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T *req);
+bool appPeerSigHandleNormalConfigCommand(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T *ind);
+void appPeerSigMsgNormalConfigConfirmation(Task task, peerSigStatus status);
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 #endif //EARBUDS1_PEER_H
