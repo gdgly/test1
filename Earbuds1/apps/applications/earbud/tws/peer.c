@@ -189,7 +189,7 @@ void appPeerSigHandleInternalNormalConfigRequest(PEER_SIG_INTERNAL_NORMAL_CONFIG
     }
 }
 
-bool appPeerSigHandleNormalConfigCommand(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T *ind) {
+bool appPeerSigHandleNormalConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
     peerSigTaskData *peer_sig = appGetPeerSig();
 
     DEBUG_LOG("call appPeerSigHandleNormalConfigCommand");
@@ -199,7 +199,7 @@ bool appPeerSigHandleNormalConfigCommand(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T *
         || !peer_sig->rx_handset_commands_task) {
         return FALSE;
     } else {
-        uint8 *data = (int *) (ind->payload);
+        uint8 *data = (uint8*) (ind->payload);
         uint8 pos = 0;
         { // apollo
             pos = 0;
@@ -207,6 +207,8 @@ bool appPeerSigHandleNormalConfigCommand(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T *
             pos = sizeof(uint8) + sizeof(uint8);
             uint32 apollo_timestamp = *(uint32 *)(data + pos);
             /// 比较当前的时间戳，如果大于保存的时间，则更新当前数据
+            UNUSED(apollo_enable);
+            UNUSED(apollo_timestamp);
         }
         { // wear
             pos = sizeof(uint8);
@@ -214,10 +216,15 @@ bool appPeerSigHandleNormalConfigCommand(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T *
             pos = sizeof(uint8) + sizeof(uint8) + sizeof(uint32);
             uint32 wear_timestamp = *(uint32 *)(data + pos);
             /// 比较当前的时间戳，如果大于保存的时间，则更新当前数据
+            UNUSED(wear_enable);
+            UNUSED(wear_timestamp);
         }
 
         return TRUE;
     }
 }
 
-void appPeerSigMsgNormalConfigConfirmation(Task task, peerSigStatus status);
+void appPeerSigMsgNormalConfigConfirmation(Task task, peerSigStatus status) {
+    UNUSED(task);
+    UNUSED(status);
+}

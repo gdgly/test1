@@ -71,7 +71,7 @@ typedef struct
 
 void appPeerSigTxNormalConfigRequest(Task task, const bdaddr *peer_addr);
 void appPeerSigHandleInternalNormalConfigRequest(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T *req);
-bool appPeerSigHandleNormalConfigCommand(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T *ind);
+bool appPeerSigHandleNormalConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind);
 void appPeerSigMsgNormalConfigConfirmation(Task task, peerSigStatus status);
 
 /////////////////////////////////////////////////////////////////////////////////////////
