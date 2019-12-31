@@ -151,6 +151,7 @@ public:
 	CString Error2String(int eCoder);
 	CString Report2String(int rCode);
 	void SetFlashImage(CString sFile) { m_sFlashImage = sFile; }	
+	void SetBtWrite(BOOL bWrite) { m_btWrite = bWrite; }
 	void SetEraseAll(int bErase) { m_bEnableErase = bErase;  }
 	void SetThreadFunc(int iFunc) { m_iThreadFunc = iFunc; }
 	void SetXtalTrim(int cap, int trim) { m_xtalCap = cap; m_xtalTrim = trim; }
@@ -170,6 +171,7 @@ private:
 	CString m_sFlashImage;
 	UINT m_checkStatus;
 	char m_bdAddr[32], m_bdName[32];
+	BOOL m_btWrite;
 	int  m_xtalCap, m_xtalTrim;
 	CString m_sLicense;
 	FixParam m_FixParam;

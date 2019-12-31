@@ -66,12 +66,13 @@ CDeviceCtrl::CDeviceCtrl()
 	m_secTimeout = 6;
 	m_SensorDiff = 200;
 
-	m_xtalCap = 0; m_xtalTrim = 0;
+	m_xtalCap = 9; m_xtalTrim = -10;
 	m_sLicense.Empty();
 
 	m_curTick = 0;
 	m_devHandle = 0;
 	memset(m_bdAddr, 0, sizeof(m_bdAddr));
+	m_btWrite = FALSE;
 	m_sFlashImage.Empty();
 	m_iThreadFunc = THREAD_NONE;
 	m_ctrlThread = INVALID_HANDLE_VALUE;
@@ -202,6 +203,16 @@ int CDeviceCtrl::RuningProc(void)
 
 	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_THREAD_START, (LPARAM)0);
 	
+	if ((m_iThreadFunc & THREAD_CRYSTGALTRIM_READ)) {
+		int cap = 0, trim = 0;
+		if (CrystalTrimmingRead(cap, trim, 0) == 0) {
+			m_xtalTrim = trim;
+			m_xtalCap = cap;
+		}
+
+		if (m_bExit == TRUE) goto out;
+	}
+	
 	if ((m_iThreadFunc & THREAD_BURN)) {
 		if (!m_sFlashImage.IsEmpty()) {
 			if ((ret = Burning()) < 0)
@@ -287,12 +298,6 @@ int CDeviceCtrl::RuningProc(void)
 
 	if ((m_iThreadFunc & THREAD_CRYSTGALTRIM)) {
 		CrystalTrimming(0);
-		if (m_bExit == TRUE) goto out;
-	}
-
-	if ((m_iThreadFunc & THREAD_CRYSTGALTRIM_READ)) {
-		int cap = 0, trim = 0;
-		CrystalTrimmingRead(cap, trim, 0);
 		if (m_bExit == TRUE) goto out;
 	}
 
@@ -643,7 +648,9 @@ int CDeviceCtrl::SetAllParam(int bCloseEng)
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_LICENSE, (LPARAM)msgbuf);		// {0xff09, 0x5b, 0x02}
 	}
 
-#if 10
+	if (FALSE == m_btWrite)
+		goto out_no_write;
+
 	/* ÐÞ¸ÄÀ¶ÑÀµØÖ· OK*/
 	status = teConfigCacheWriteItem(m_devHandle, "bt2:pskey_bdaddr", m_bdAddr);
 	if(status != TE_OK) {
@@ -683,7 +690,8 @@ int CDeviceCtrl::SetAllParam(int bCloseEng)
 	if (status != TE_OK) {
 		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_CACHE, status, -6);
 	}
-#endif
+
+out_no_write:
 
 	TRACE("LINE:%d ret=%d\n", __LINE__, ret);
 	ret = 0;
