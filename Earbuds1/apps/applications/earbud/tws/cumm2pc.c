@@ -11,6 +11,7 @@
 #include "public.h"
 #include "av_headset_gaia_starot.h"
 #include "audio_forward.h"
+#include "apollo.h"
 
 #ifdef CUMMPC_PC_USB
 
@@ -157,6 +158,11 @@ void CommpcParse(GAIA_STAROT_AUDIO_IND_T *message)
 }
 
 extern void appSubUISetMicbias(int set);
+
+//作为判断 1：唤醒,2：接近光,3：PLC,4：敲击是否正常工作,发送消息的标记 5:record
+// 默认为0是正常模式，0xFF为测试模式，在测试模式下相关信号不需要发给UI做逻辑控制
+uint16 g_commuType = 0;
+
 /* Task handler function */
 static void CummuHandler(Task task, MessageId id, Message message)
 {
@@ -175,8 +181,10 @@ static void CummuHandler(Task task, MessageId id, Message message)
             //uint16 size = msg[HOST_COMMS_SIZE_OFFSET_WORD * sizeof(uint16)];
 
             // 接收到测试命令，先打开各外设
-            progRun->iPowerSaveMode = POWER_MODE_IN_EAR;
-            appUiPowerSaveSync();
+            if(g_commuType == 0){
+                progRun->iPowerSaveMode = POWER_MODE_IN_EAR;
+                appUiPowerSaveSync();
+            }
 
             /* Handle the message from the host here*/
             if(strstr((char *)payload, "check DEVICEINFO")){
@@ -188,6 +196,8 @@ static void CummuHandler(Task task, MessageId id, Message message)
             }
 
             if(strstr((char *)payload, "check STARTRECORD0")){
+                apollo_sleep();
+                progRun->apolloWakeup = 0;
                 g_commuType        = 5;
                 g_appConfigSocMic1 = 0;
                 g_appConfigSocMic2 = NO_MIC;
@@ -200,6 +210,8 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 CummuhandleSendData(task, (uint8*)"checkresp STARTRECORD", 22);
             }
             if(strstr((char *)payload, "check STARTRECORD1")){
+                apollo_sleep();
+                progRun->apolloWakeup = 0;
                 g_commuType        = 6;
                 g_appConfigSocMic1 = NO_MIC;
                 g_appConfigSocMic2 = 1;
@@ -212,7 +224,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 CummuhandleSendData(task, (uint8*)"checkresp STARTRECORD", 22);
             }
             if(strstr((char *)payload, "check STOPRECORD")){
-                g_commuType        = 0;
+                g_commuType        = 0xFF;
                 progRun->recStat  = 0;
 #ifdef CONFIG_REC_ASSISTANT
                 appKymeraRecordStop();
@@ -222,6 +234,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
             if(strstr((char *)payload, "check WAKEUP")){
                 g_commuType = 1;
                 apollo_s_e();
+                OperatorFrameworkEnable(MAIN_PROCESSOR_ON);
                 appSubUISetMicbias(TRUE);
                 CummuhandleSendData(task, (uint8*)"checkresp WAKEUP", 17);
             }
@@ -294,11 +307,9 @@ static void CummuHandler(Task task, MessageId id, Message message)
     }
 }
 
-//作为判断1：唤醒,2：接近光,3：PLC,4：敲击是否正常工作,发送消息的标记 5:record
-uint16 g_commuType = 0;
 void CommpcMessage(uint8* buff ,uint8 size)
 {
-    g_commuType = 0;
+    g_commuType = 0xFF;
     CummuhandleSendData(GetCommuTask(), (uint8 *)buff, size);
 }
 

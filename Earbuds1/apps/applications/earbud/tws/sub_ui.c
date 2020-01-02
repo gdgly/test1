@@ -91,7 +91,7 @@ static void subUiKeyDoubleTap(ProgRIPtr progRun)
         else if (appDeviceIsHandsetHfpConnected() && appDeviceIsHandsetA2dpConnected())
             appUiError();
 #ifndef TWS_DEBUG
-        else if(!appSmIsPairing())
+        else if(!appSmIsPairing() && !appDeviceIsHandsetAnyProfileConnected())
             appSmPairHandset();
 #endif
         else
@@ -1113,7 +1113,8 @@ int apolloWakeupCallback(void)
     ProgRIPtr  progRun = appSubGetProgRun();
     if((0 == progRun->recStat) &&
             ((progRun->dial_stat & (DIAL_ST_IN|DIAL_ST_OUT|DIAL_ST_ACT)) == 0)){
-        MessageSend(&appGetUi()->task, APP_ASSISTANT_AWAKEN, 0);
+        if(0 == g_commuType)
+            MessageSend(&appGetUi()->task, APP_ASSISTANT_AWAKEN, 0);
     }
     appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
     return 0;

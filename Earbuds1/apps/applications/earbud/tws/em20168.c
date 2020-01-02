@@ -205,7 +205,8 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
             appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_IN_PROXIMITY);
         }
 #endif
-        MessageSend(appGetUiTask(), APP_PSENSOR_INEAR, NULL);
+        if(0 == g_commuType)
+            MessageSend(appGetUiTask(), APP_PSENSOR_INEAR, NULL);
     }
     if(em20168_ps0_value <= EM20168_LOW_VALUE &&
             (prox->state->proximity == proximity_state_in_proximity) ){
@@ -218,7 +219,8 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
             appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY);
         }
 #endif
-        MessageSend(appGetUiTask(), APP_PSENSOR_OUTEAR, NULL);
+        if(0 == g_commuType)
+            MessageSend(appGetUiTask(), APP_PSENSOR_OUTEAR, NULL);
     }
 
     EM20168Disable(handle);

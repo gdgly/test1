@@ -76,7 +76,8 @@ void tap_itr_handle_lis2dw12(void)
             CommpcMessage((uint8*)buff, 15);
             return;       // 不发送消息给主UI
         }
-        MessageSend(appGetUiTask(), APP_BTN_DOUBLE_TAP, NULL);
+        if(0 == g_commuType)
+            MessageSend(appGetUiTask(), APP_BTN_DOUBLE_TAP, NULL);
     }
     lis2dw12Disable(handle);
     return;
