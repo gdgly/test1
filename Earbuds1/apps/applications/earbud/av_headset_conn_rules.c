@@ -17,6 +17,7 @@
 #include <bdaddr.h>
 #include <panic.h>
 #include <system_clock.h>
+#include <upgrade_sm.h>
 
 #pragma unitsuppress Unused
 
@@ -177,6 +178,9 @@ DEFINE_RULE(ruleBleConnectionUpdate);
 DEFINE_RULE(ruleClearHandsetPair);
 DEFINE_RULE(ruleDisconnectGaia);
 DEFINE_RULE(ruleIdleHandsetPair);
+DEFINE_RULE(ruleCaseOpenAllowGaiaConnect);
+DEFINE_RULE(ruleCaseCloseNotAllowGaiaConnect);
+DEFINE_RULE(ruleAllowGaiaConnect);
 #endif
 DEFINE_RULE(ruleCheckGaiaIsNeedDisconnection);
 /*! \} */
@@ -194,6 +198,7 @@ ruleEntry appConnRules[] =
         Startup (power on) rules */
     RULE(RULE_EVENT_STARTUP,                    rulePeerPair,               CONN_RULES_PEER_PAIR),
     RULE(RULE_EVENT_STARTUP,                    rulePeerSync,               CONN_RULES_SEND_PEER_SYNC),
+    RULE(RULE_EVENT_STARTUP,                    ruleAllowGaiaConnect,       CONN_RULES_ALLOW_HANDSET_CONNECT),
     /*! \} */
 
     RULE(RULE_EVENT_PEER_UPDATE_LINKKEYS,       ruleForwardLinkKeys,        CONN_RULES_PEER_SEND_LINK_KEYS),
@@ -332,9 +337,13 @@ ruleEntry appConnRules[] =
 #ifdef TWS_DEBUG
     RULE(RULE_EVENT_CLEAR_PAIR_HEADSET,         ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
     RULE(RULE_EVENT_CASE_OPEN,                  ruleIdleHandsetPair,                CONN_RULES_HANDSET_PAIR),
+    RULE(RULE_EVENT_CASE_OPEN,                  ruleCaseOpenAllowGaiaConnect,       CONN_RULES_ALLOW_HANDSET_CONNECT), /// 可连接，用户android升级
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
+    RULE(RULE_EVENT_CASE_CLOSE,                 ruleCaseCloseNotAllowGaiaConnect,   CONN_RULES_REJECT_HANDSET_CONNECT), //盒盖关闭，不可连接
+    RULE(RULE_EVENT_CASE_CLOSE,                 ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
 #endif
     RULE(RULE_EVENT_CHECK_GAIA_CONNECTION,      ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
+
 };
 
 /*! \brief Types of event that can cause connect rules to run. */
@@ -2519,6 +2528,11 @@ static ruleAction bleDisable(void) {
 
 static ruleAction ruleBleConnectionUpdate(void)
 {
+    if (!appGaiaIsConnect() && UpgradeSMUpgradeInProgress()) {
+        DEBUG_LOG("gaia is connect, but now is upgrade, so need enable");
+        return bleEnable();
+    }
+
     if (appGaiaIsConnect() && !handsetDisconnectAllowed()) {
         RULE_LOG("current gaia is connect, and headset is connect");
         return RULE_ACTION_IGNORE;
@@ -3196,6 +3210,16 @@ static ruleAction ruleIdleHandsetPair(void) {
 
 static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
 {
+    if (UpgradeSMUpgradeInProgress()) {
+        RULE_LOG("ruleCheckGaiaIsNeedDisconnection, appSmIsDfuPending is true, ignore");
+        return RULE_ACTION_IGNORE;
+    }
+
+    if (appUICaseIsOpen()) {
+        RULE_LOG("ruleCheckGaiaIsNeedDisconnection, appUICaseIsOpen is true, ignore");
+        return RULE_ACTION_IGNORE;
+    }
+
     if (!appDeviceIsHandsetAnyProfileConnected()) {
         if (appGaiaIsConnect()) {
             RULE_LOG("ruleCheckGaiaIsNeedDisconnection, need disconnect");
@@ -3209,3 +3233,24 @@ static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
     return RULE_ACTION_IGNORE;
 }
 
+static ruleAction ruleCaseOpenAllowGaiaConnect(void)
+{
+    RULE_LOG("ruleCaseOpenAllowGaiaConnect, run as case open");
+    return RULE_ACTION_RUN;
+}
+
+static ruleAction ruleCaseCloseNotAllowGaiaConnect(void)
+{
+    RULE_LOG("ruleCaseCloseNotAllowGaiaConnect, run as case close");
+    return RULE_ACTION_RUN;
+}
+
+static ruleAction ruleAllowGaiaConnect(void)
+{
+    if (UpgradeSMUpgradeInProgress()) {
+        RULE_LOG("ruleAllowGaiaConnect, UpgradeSMUpgradeInProgress is true, run");
+        return RULE_ACTION_RUN;
+    }
+
+    return RULE_ACTION_IGNORE;
+}
