@@ -128,7 +128,10 @@ typedef GAIA_STAROT_DIALOG_SOURCE GAIA_STAROT_DIALOG_SOURCE_T;
 
 #define CALL_AUDIO_IND(cmd) ((cmd) == GAIA_COMMAND_STAROT_CALL_AUDIO_IND || (cmd) == GAIA_COMMAND_STAROT_AI_AUDIO_TO_APP)
 
+/////////////////////////////////////////////初始化与销毁/////////////////////////////////////////
 void starotGaiaInit(void);
+void starotGaiaReset(void);
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
 
@@ -195,5 +198,7 @@ typedef struct StarotResendCommand_T StarotResendCommand;
 StarotResendCommand* starotResendCommandInit(uint16 command, uint16 len, uint8* payload);
 StarotResendCommand* starotResendCommandDo(StarotResendCommand* resendCommand, bool stillNeedResend);
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 #endif // AV_HEADSET_GAIA_STAROT_H

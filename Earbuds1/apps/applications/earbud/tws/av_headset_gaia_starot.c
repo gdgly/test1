@@ -92,6 +92,15 @@ void starotGaiaInit(void) {
     gaiaStarotPrivateData.speedTestSendUnit = 81;
 }
 
+void starotGaiaReset(void) {
+    memset(&gaiaStarotPrivateData, 0x00, sizeof(struct GaiaStarotPrivateData_T));
+    appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
+    appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
+    appGetGaia()->needCycleSendAudio = 0;
+}
+
+static uint32 gaia_dbg_cnt = 0;
+
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
     /// 内部消息处理
     switch (message->command) {
@@ -105,7 +114,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             gaiaParseDialogStatus(message);
             break;
         case STAROT_DIALOG_AUDIO_DATA:
-            DEBUG_LOG("call STAROT_DIALOG_AUDIO_DATA EVENT ");
+            if (gaia_dbg_cnt++ % 100 == 0) {
+                DEBUG_LOG("call STAROT_DIALOG_AUDIO_DATA EVENT ");
+            }
             starotGaiaSendAudio(NULL);
             break;
     }
@@ -1076,7 +1087,6 @@ void gaiaSendDialogActiveStatus(int command, uint8* phone, int len) {
     appGaiaSendPacket(GAIA_VENDOR_STAROT, command, 0xfe, attrLen, attrData);
     attrFree(starotAttr, attrData);
 }
-
 
 #endif
 

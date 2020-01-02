@@ -178,6 +178,7 @@ DEFINE_RULE(ruleClearHandsetPair);
 DEFINE_RULE(ruleDisconnectGaia);
 DEFINE_RULE(ruleIdelHandsetPair);
 #endif
+DEFINE_RULE(ruleCheckGaiaIsNeedDisconnection);
 /*! \} */
 
 /*! \brief Set of rules to run on Earbud startup. */
@@ -237,6 +238,13 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_HANDSET_AVRCP_DISCONNECTED, ruleDisconnectPeer,         CONN_RULES_DISCONNECT_PEER),
     RULE(RULE_EVENT_HANDSET_HFP_DISCONNECTED,   ruleDisconnectPeer,         CONN_RULES_DISCONNECT_PEER),
 
+#define maybe_app_error "经典断开，但是gaia没有断开，经典重连的时候，app是否有去连接"
+#ifdef  maybe_app_error
+    RULE(RULE_EVENT_HANDSET_A2DP_DISCONNECTED,  ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
+    RULE(RULE_EVENT_HANDSET_AVRCP_DISCONNECTED, ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
+    RULE(RULE_EVENT_HANDSET_HFP_DISCONNECTED,   ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
+#endif
+
     /*! \{
         Receive handset link-key from peer */
     RULE(RULE_EVENT_RX_HANDSET_LINKKEY,         rulePeerSync,               CONN_RULES_SEND_PEER_SYNC),
@@ -278,11 +286,7 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectHandset,        CONN_RULES_DISCONNECT_HANDSET),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectPeer,           CONN_RULES_DISCONNECT_PEER),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
-#ifndef TWS_DEBUG
-    // 耳机需要在充电盒中升级
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseRejectHandsetConnect,     CONN_RULES_REJECT_HANDSET_CONNECT),
-#endif
-
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseAncTuning,                CONN_RULES_ANC_TUNING_START),
 #ifdef TWS_DEBUG
     RULE(RULE_EVENT_IN_CASE,                    ruleDisconnectGaia,                 CONN_RULES_DISCONNECT_GAIA),
@@ -327,10 +331,10 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_HANDOVER_RECONNECT_AND_PLAY,ruleHandoverConnectHandsetAndPlay,  CONN_RULES_CONNECT_HANDSET),
 #ifdef TWS_DEBUG
     RULE(RULE_EVENT_CLEAR_PAIR_HEADSET,         ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
-
     RULE(RULE_EVENT_CASE_OPEN,                  ruleIdelHandsetPair,                CONN_RULES_HANDSET_PAIR),
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
 #endif
+    RULE(RULE_EVENT_CHECK_GAIA_CONNECTION,      ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
 };
 
 /*! \brief Types of event that can cause connect rules to run. */
@@ -2515,6 +2519,11 @@ static ruleAction bleDisable(void) {
 
 static ruleAction ruleBleConnectionUpdate(void)
 {
+    if (appGaiaIsConnect() && !handsetDisconnectAllowed()) {
+        RULE_LOG("current gaia is connect, and headset is connect");
+        return RULE_ACTION_IGNORE;
+    }
+
     bool left = appConfigIsLeft();
 
     bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
@@ -3127,12 +3136,13 @@ ruleAction ruleClearHandsetPair(void) {
 
 static ruleAction ruleDisconnectGaia(void)
 {
-    if (appGaiaIsConnect()) {
+    if (appGaiaIsConnect() && handsetDisconnectAllowed()) {
         return RULE_ACTION_RUN;
     } else {
-        return RULE_ACTION_COMPLETE;
+        return RULE_ACTION_IGNORE;
     }
 }
+
 
 static ruleAction ruleIdelHandsetPair(void) {
     if (appDeviceGetHandsetBdAddr(NULL)) {
@@ -3183,3 +3193,19 @@ static ruleAction ruleIdelHandsetPair(void) {
 }
 
 #endif
+
+static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
+{
+    if (!appDeviceIsHandsetAnyProfileConnected()) {
+        if (appGaiaIsConnect()) {
+            RULE_LOG("ruleCheckGaiaIsNeedDisconnection, need disconnect");
+            return RULE_ACTION_RUN;
+        } else {
+            RULE_LOG("ruleCheckGaiaIsNeedDisconnection, is RULE_ACTION_COMPLETE");
+            return RULE_ACTION_COMPLETE;
+        }
+    }
+    RULE_LOG("ruleCheckGaiaIsNeedDisconnection, is RULE_ACTION_IGNORE");
+    return RULE_ACTION_IGNORE;
+}
+

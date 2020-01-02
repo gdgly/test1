@@ -40,6 +40,10 @@ public:
 public:
 	int OnReportCheck(CString sText, int rows = -1);
 
+private:
+	CString m_sLicense;
+	BOOL Btaddr2License(void);
+
 // й╣ож
 protected:
 	HICON m_hIcon;
@@ -85,6 +89,11 @@ public:
 	afx_msg void OnBnClickedBtnDutMode();
 	afx_msg void OnBnClickedBtnPlay();
 	afx_msg void OnBnClickedBtnAll();
+	afx_msg void OnBnClickedBtnCritrimRead();
+	afx_msg void OnBnClickedBtnCritrimWrite();
+	int m_edCap;
+	int m_edTrim;
+	BOOL m_btWrite;
 };
 
 

@@ -66,9 +66,13 @@ CDeviceCtrl::CDeviceCtrl()
 	m_secTimeout = 6;
 	m_SensorDiff = 200;
 
+	m_xtalCap = 9; m_xtalTrim = -10;
+	m_sLicense.Empty();
+
 	m_curTick = 0;
 	m_devHandle = 0;
 	memset(m_bdAddr, 0, sizeof(m_bdAddr));
+	m_btWrite = FALSE;
 	m_sFlashImage.Empty();
 	m_iThreadFunc = THREAD_NONE;
 	m_ctrlThread = INVALID_HANDLE_VALUE;
@@ -129,6 +133,9 @@ static CString _sReport[] = {
 	"REPORT_COMMU_OPEN",
 	"RERROT_COMMU_TIMEOUT",
 
+	"REPORT_READ_LICENSE",
+	"REPORT_WRITE_LICENSE",
+
 	"RERROT_APOLLO",
 
 	"REPORT_READ_RECORD",
@@ -137,6 +144,11 @@ static CString _sReport[] = {
 
 	"REPORT_READ_SENSOR",
 	"REPORT_WRITE_SENSOR",
+
+	"REPORT_READ_XTALTRIM",
+	"REPORT_READ_XTALCAP",
+	"REPORT_WRITE_XTALTRIM",
+	"REPORT_WRITE_XTALCAP",
 	
 	"REPORT_USER_EXIT",
 	"REPORT_END_ALL",
@@ -190,6 +202,16 @@ int CDeviceCtrl::RuningProc(void)
 	int ret = 0;
 
 	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_THREAD_START, (LPARAM)0);
+	
+	if ((m_iThreadFunc & THREAD_CRYSTGALTRIM_READ)) {
+		int cap = 0, trim = 0;
+		if (CrystalTrimmingRead(cap, trim, 0) == 0) {
+			m_xtalTrim = trim;
+			m_xtalCap = cap;
+		}
+
+		if (m_bExit == TRUE) goto out;
+	}
 	
 	if ((m_iThreadFunc & THREAD_BURN)) {
 		if (!m_sFlashImage.IsEmpty()) {
@@ -279,7 +301,10 @@ int CDeviceCtrl::RuningProc(void)
 		if (m_bExit == TRUE) goto out;
 	}
 
-
+	if ((m_iThreadFunc & THREAD_CRYSTGALTRIM_WRITE)) {
+		CrystalTrimmingWrite(m_xtalTrim, m_xtalCap, 0);
+		if (m_bExit == TRUE) goto out;
+	}
 		
 
 out:
@@ -611,6 +636,21 @@ int CDeviceCtrl::SetAllParam(int bCloseEng)
 	}
 	// psReadBdAddr  有一部分不正确,不知道为什么出现a5a5  // 0x00a5a5 5b 0002
 
+	/* 读取LICENSE */
+	datalen = PSKEY_BUFFER_LEN;
+	msgbuf = (char*)GetMsgBuffer();
+	if ((ret = teConfigCacheReadItem(m_devHandle, "app3:FeatureLicenseKey", msgbuf, &datalen)) != TE_OK) {
+		TRACE("LICESE teConfigCacheReadItem\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_READ_LICENSE, status, -4);
+	}
+	else {
+		TRACE("LICESE teConfigCacheReadItem:%s LEN=%d\n", msgbuf, datalen);
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_LICENSE, (LPARAM)msgbuf);		// {0xff09, 0x5b, 0x02}
+	}
+
+	if (FALSE == m_btWrite)
+		goto out_no_write;
+
 	/* 修改蓝牙地址 OK*/
 	status = teConfigCacheWriteItem(m_devHandle, "bt2:pskey_bdaddr", m_bdAddr);
 	if(status != TE_OK) {
@@ -621,6 +661,7 @@ int CDeviceCtrl::SetAllParam(int bCloseEng)
 	}
 	TRACE("LINE:%d ret=%d\n", __LINE__, ret);
 	
+	/* 修改蓝牙名称 */
 	if ((ret = teConfigCacheWriteItem(m_devHandle, "bt2:pskey_device_name", m_bdName)) != TE_OK) {
 		TRACE("BTADDR teConfigCacheWriteItem NAME\n");
 		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_DEVNAME, status, -15);
@@ -629,11 +670,28 @@ int CDeviceCtrl::SetAllParam(int bCloseEng)
 		TRACE("BTADDR teConfigCacheWriteItem:name=%s\n", m_bdName);
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRBD_NAME, (LPARAM)m_bdName);		// BTADDR ANME
 	}	
+
+	/* 写入LICENSE */
+	if (!m_sLicense.IsEmpty()) {
+		datalen = PSKEY_BUFFER_LEN;
+		msgbuf = (char*)GetMsgBuffer();
+		sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%s", m_sLicense.GetBuffer()); m_sLicense.ReleaseBuffer();
+		if ((ret = teConfigCacheWriteItem(m_devHandle, "app3:FeatureLicenseKey", msgbuf)) != TE_OK) {
+			TRACE("LICESE teConfigCacheWriteItem\n");
+			ERROROUT(WM_DEV_ERROR, ERROR_WRITE_LICENSE, status, -4);
+		}
+		else {
+			TRACE("LICESE teConfigCacheWriteItem:%s\n", msgbuf);
+			MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRITE_LICENSE, (LPARAM)msgbuf);		// {0xff09, 0x5b, 0x02}
+		}
+	}
 	
 	status = teConfigCacheWrite(m_devHandle, NULL, 0);
 	if (status != TE_OK) {
 		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_CACHE, status, -6);
 	}
+
+out_no_write:
 
 	TRACE("LINE:%d ret=%d\n", __LINE__, ret);
 	ret = 0;
@@ -1197,11 +1255,126 @@ int CDeviceCtrl::CheckInterrupt(IntrType type, int timeout, int bCloseEnable)
 	return ret;
 }
 
+int CDeviceCtrl::CrystalTrimmingRead(int &XtalFreqTrim, int &XtalLoadCap, int bCloseEng)
+{
+	char *msgbuf;  uint32 datalen;
+	int status, ret = 0;
+	CString sText;
+
+	if (m_devHandle == 0) {
+		if (OpenEngine() < 0) {
+			TRACE("Error openTestEngine\n");
+			ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
+		}
+	}
+
+	if ((status = teConfigCacheInit(m_devHandle, CFG_DB_PARAM)) != TE_OK) {
+		TRACE("ERROR CACHE INIT\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_CACHE_INIT, status, -2);
+	}
+
+	if (TE_OK != (status = teConfigCacheRead(m_devHandle, NULL, 0))) {
+		TRACE("ERRO Cache Read\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_CACHE_READ, status, -3);
+	}
+
+	// 读取Cap
+	datalen = PSKEY_BUFFER_LEN;
+	msgbuf = (char*)GetMsgBuffer();
+	if ((ret = teConfigCacheReadItem(m_devHandle, "curator:XtalLoadCapacitance", msgbuf, &datalen)) != TE_OK) {
+		TRACE("Error XtalLoadCapacitance teConfigCacheReadItem\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_READ_XTALCAP, status, -14);
+	}
+	else {
+		TRACE("XtalLoadCapacitance:%s LEN=%d\n", msgbuf, datalen);
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_XTALCAP, (LPARAM)msgbuf);
+	}
+
+	/* 读取XtalFreqTrim*/
+	datalen = PSKEY_BUFFER_LEN;
+	msgbuf = (char*)GetMsgBuffer();
+	if ((ret = teConfigCacheReadItem(m_devHandle, "curator:XtalFreqTrim", msgbuf, &datalen)) != TE_OK) {
+		TRACE("Error XtalFreqTrim teConfigCacheReadItem\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_READ_XTALTRIM, status, -4);
+	}
+	else {
+		TRACE("XtalFreqTrim teConfigCacheReadItem:%s LEN=%d\n", msgbuf, datalen);
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_XTALTRIM, (LPARAM)msgbuf);
+	}
+
+	ret = 0;
+
+out:
+	if (bCloseEng) CloseEngine();
+
+	return ret;
+}
+
+int CDeviceCtrl::CrystalTrimmingWrite(int XtalFreqTrim, int XtalLoadCap, int bCloseEng)
+{
+	char *msgbuf;
+	int status, ret = 0;
+	CString sText;
+
+	if (m_devHandle == 0) {
+		if (OpenEngine() < 0) {
+			TRACE("Error openTestEngine\n");
+			ERROROUT(WM_DEV_ERROR, ERROR_OPEN_ENGINE, 0, -1);
+		}
+	}
+
+	if ((status = teConfigCacheInit(m_devHandle, CFG_DB_PARAM)) != TE_OK) {
+		TRACE("ERROR CACHE INIT\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_CACHE_INIT, status, -2);
+	}
+
+	if (TE_OK != (status = teConfigCacheRead(m_devHandle, NULL, 0))) {
+		TRACE("ERRO Cache Read\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_CACHE_READ, status, -3);
+	}
+
+	// 写取Cap
+	msgbuf = (char*)GetMsgBuffer();
+	sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%d", XtalLoadCap);
+	if ((ret = teConfigCacheWriteItem(m_devHandle, "curator3:XtalLoadCapacitance", (char*)msgbuf)) != TE_OK) {
+		TRACE("Error XtalLoadCapacitance teConfigCacheWriteItem\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_XTALCAP, status, -14);
+	}
+	else {
+		TRACE("Write XtalLoadCapacitance:%s\n", msgbuf);
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRITE_XTALCAP, (LPARAM)msgbuf);
+	}
+
+	/* 写取XtalFreqTrim*/
+	msgbuf = (char*)GetMsgBuffer();
+	sprintf_s(msgbuf, PSKEY_BUFFER_LEN, "%d", XtalFreqTrim);
+	if ((ret = teConfigCacheWriteItem(m_devHandle, "curator3:XtalFreqTrim", msgbuf)) != TE_OK) {
+		TRACE("Error XtalFreqTrim teConfigCacheWriteItem\n");
+		ERROROUT(WM_DEV_ERROR, ERROR_WRITE_XTALTRIM, status, -4);
+	}
+	else {
+		TRACE("Write XtalFreqTrim teConfigCacheReadItem:%s\n", msgbuf);
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_WRITE_XTALTRIM, (LPARAM)msgbuf);
+	}
+
+
+	teConfigCacheWrite(m_devHandle, NULL, 0);
+
+	ret = 0;
+
+out:
+	if (bCloseEng) CloseEngine();
+
+	return ret;
+}
+
+
 double ReadFreqOffsetHz(int value)
 {
 
 	return 2000.0;
 }
+
 
 int CDeviceCtrl::CrystalTrimming(int value)
 {

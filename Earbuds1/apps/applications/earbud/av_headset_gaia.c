@@ -164,6 +164,9 @@ static void appGaiaHandleConnectInd(const GAIA_CONNECT_IND_T *ind) {
     GaiaOnTransportConnect(transport);
 
     appGaiaNotifyGaiaConnected();
+
+    /// 检查gaia连接规则，是否需要断开
+    appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CHECK_GAIA_CONNECTION);
 }
 
 
@@ -177,6 +180,7 @@ static void appGaiaHandleDisconnectInd(const GAIA_DISCONNECT_IND_T *ind) {
         appSetGaiaTransport(NULL);
     }
     appGaiaNotifyGaiaDisconnected();
+    starotGaiaReset();
 }
 
 

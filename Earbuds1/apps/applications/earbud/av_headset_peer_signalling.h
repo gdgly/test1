@@ -230,6 +230,7 @@ typedef enum
 #ifdef CONFIG_STAROT
     PEER_SIG_INTERNAL_BLE_CONFIG_REQ,
     PEER_SIG_INTERNAL_DOUBLE_CLICK_SETTING_REQ,
+    PEER_SIG_INTERNAL_NORMAL_SETTING_REQ,
 #endif
 
     /*! Message to send message to peer, channel ID is added to message ID

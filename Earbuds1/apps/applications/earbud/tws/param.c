@@ -78,6 +78,21 @@ int16 ParamLoadFixPrm(FixPrmPtr pParam)
     return ParamLoad(PSKEY_FIX_PARAM, prm, sizeof(FixParam));
 }
 
+
+int16 ParamSaveSN(void *buff)
+{
+    memcpy(gFixParam.sn, buff, DEV_SN_LEN);
+
+    ParamSaveFixPrm(NULL);
+    return 0;
+}
+
+int16 ParamLoadSN(void *buff)
+{
+    memcpy(buff, gFixParam.sn, DEV_SN_LEN);
+    return 0;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 /////// 蓝牙配对相关参数
 /////////////////////////////////////////////////////////////////////////////////

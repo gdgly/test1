@@ -10,6 +10,30 @@ void ProductEnterDutMode(void);
 void ProductEnterReocrdMode(int16 isLeft);      // 1: left, 0:right
 int appChangeCVCProcessMode(void);
 
+ uint8 SNsize20=0;
+ uint8 SNsize21=0;
+ uint8 SNsize30=0;
+ uint8 SNsize31=0;
+
+ #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
+ static const ringtone_note product_tone[] =
+ {
+     RINGTONE_TIMBRE(sine), RINGTONE_DECAY(50),
+     RINGTONE_NOTE(A9, SEMIBREVE),
+     RINGTONE_NOTE(A9, SEMIBREVE),
+     RINGTONE_NOTE(A9, SEMIBREVE),
+ //    RINGTONE_NOTE(D9, SEMIBREVE),
+ //    RINGTONE_NOTE(E9, SEMIBREVE),
+ //    RINGTONE_NOTE(F9, SEMIBREVE),
+ //    RINGTONE_NOTE(G9, SEMIBREVE),
+     RINGTONE_STOP
+ };
+
+ static void ProductPlayTone(void)
+ {
+ //   appUiPlayToneCore(product_tone, FALSE, TRUE, NULL, 0);
+     appKymeraTonePlay(product_tone, TRUE, NULL, 0);
+ }
 
 //==================================================================================
 // 蓝牙传导测试时，可以通过盒子发送集合执行这个函数。
@@ -59,8 +83,160 @@ int appChangeCVCProcessMode(void)
     return 0;
 }
 
+///////////////////////////////////////////////////////////////////////////
+//  部分命令需要使用TASK来处理
+///////////////////////////////////////////////////////////////////////////
+typedef struct tagPRODUCTCMDINFO {
+    TaskData       task;
+    uint8          tmp_sn[20];
+}ProductCmdInfo, *ProdCmdIPtr;
+ProdCmdIPtr _ProdCmdPtr = NULL;
+
+#define  PRODCMD_HANDSET_PAIR_STEP1   0x2500
+#define  PRODCMD_HANDSET_PAIR_STEP2   0x2501
+
+static void ProductTaskHandleMessage(Task task, MessageId id, Message message)
+{
+    (void)task;(void)message;
+    switch(id) {
+    case PRODCMD_HANDSET_PAIR_STEP1:
+        appSetState(APP_STATE_IN_CASE_IDLE);
+        MessageSendLater(&_ProdCmdPtr->task, PRODCMD_HANDSET_PAIR_STEP2, 0, 100);
+        break;
+    case PRODCMD_HANDSET_PAIR_STEP2:
+        appSmPairHandset();
+        break;
+    }
+}
+
+// 启动广播，供手机连接。耳机可能处在双耳配对过程中，需要多条指令来切换到对应的状态
+static void appEnterSingleforTest(void)
+{
+#if 1
+    if(NULL == _ProdCmdPtr) {
+        _ProdCmdPtr = PanicUnlessNew(ProductCmdInfo);
+        _ProdCmdPtr->task.handler = ProductTaskHandleMessage;
+    }
+
+    appSetState(APP_SUBSTATE_TERMINATING);
+    MessageSendLater(&_ProdCmdPtr->task, PRODCMD_HANDSET_PAIR_STEP1, 0, 100);
+
+#else
+    BtAddrPrmPtr prm = &gBtAddrParam;
+
+    prm->single_era = TRUE;
+    prm->peer_addr.addr.nap = 0xFFFF;
+    prm->peer_addr.addr.uap = 0xFF;
+    prm->peer_addr.addr.lap = 0xFFFFFF;
+    // don't save
+
+    appConManagerAllowHandsetConnect(TRUE);
+    appSmSetUserPairing();
+    appSetState(APP_STATE_HANDSET_PAIRING);
+#endif
+}
 
 
+void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
+{
+//    uint8 i;
+    FixPrmPtr prm = &gFixParam;
+
+    send_buf[0] = get_buf[0];
+    send_buf[1] = get_buf[1];  //需要返回值的话，给send_buf赋值
+    send_buf[2] = 0x00;
+
+    DEBUG_LOG("get_buf = %x:%x:%x",get_buf[0], get_buf[1], get_buf[2]);
+    switch(get_buf[1])
+    {
+        case 0x00:   //复位右
+            appSmFactoryReset();
+            send_buf[2] = 0x01;
+            break;
+        case 0x01:   //复位左
+            appSmFactoryReset();
+            break;
+        case 0x08:   //主MIC
+            ProductEnterReocrdMode(1);
+            break;
+        case 0x09:   //副MIC
+            ProductEnterReocrdMode(0);
+            break;
+        case 0x0a:   //SPEAK
+            ProductPlayTone();
+            break;
+        case 0x0e:   //蓝牙
+            ProductEnterDutMode();
+            break;
+        case 0x0f:
+            appEnterSingleforTest();
+            break;
+        case 0x10:   //接近光校准读高
+            prm->em20168_high_value = EM20168_Get_psvalue();
+            DEBUG_LOG("em20168_high_value = %x\n",prm->em20168_high_value);
+            send_buf[2] = prm->em20168_high_value>>8;
+            break;
+        case 0x11:   //接近光校准读低
+            prm->em20168_low_value = EM20168_Get_psvalue();
+            DEBUG_LOG("em20168_low_value = %x\n",prm->em20168_low_value);
+            send_buf[2] = prm->em20168_low_value&0xff;
+            break;
+        case 0x12:   //接近光校准写高
+            prm->em20168_high_value = get_buf[2]<<8;
+            EM20168_Set_psvalue(1,prm->em20168_high_value);
+              break;
+        case 0x13:   //接近光校准写低
+            prm->em20168_low_value = get_buf[2];
+            EM20168_Set_psvalue(0,prm->em20168_low_value);
+              break;
+        case 0x14:   //接近光验证打开
+            EM20168Power(1);
+              break;
+        case 0x15:   //接近光验证状态
+//          EM20168_itr_read_reg(task, id, msg);
+//            em20168_timer_restart(100);
+            send_buf[1] = 0x15;//需要返回值的话，给send_buf赋值
+            send_buf[2] = 0;
+            break;
+        case 0x20:   //写SN号
+            prm->sn[SNsize20] = get_buf[2];
+            SNsize20++;
+            if(SNsize20>15)
+            {
+                ParamSaveSN(prm->sn);
+                SNsize20 = 0;
+            }
+            send_buf[1] = 0x20;//需要返回值的话，给send_buf赋值
+            send_buf[2] = 0;
+            break;
+        case 0x21:   //写SN号
+            prm->sn[SNsize21] = get_buf[2];
+            SNsize21++;
+            if(SNsize21>15)
+            {
+                ParamSaveSN(prm->sn);
+                SNsize21 = 0;
+            }
+            send_buf[1] = 0x21;//需要返回值的话，给send_buf赋值
+            send_buf[2] = 0;
+              break;
+        case 0x30:   //读SN号
+            if(!SNsize30)   ParamLoadSN(prm->sn);
+            send_buf[1] = 0x30;//需要返回值的话，给send_buf赋值
+            send_buf[2] = prm->sn[SNsize30];
+            SNsize30++;
+            if(SNsize30>15) SNsize30=0;
+              break;
+        case 0x31:   //读SN号
+            if(!SNsize31)   ParamLoadSN(prm->sn);
+            send_buf[1] = 0x31;//需要返回值的话，给send_buf赋值
+            send_buf[2] = prm->sn[SNsize31];
+//          DEBUG_LOG("sen_buf = %x\n",send_buf[2]);
+            SNsize31++;
+            if(SNsize31>15) SNsize31=0;
+            break;
+    }
+}
 
 
 

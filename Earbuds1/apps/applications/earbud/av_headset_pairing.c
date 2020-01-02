@@ -1765,12 +1765,15 @@ static void appPairingHandlePeerSigLinkKeyTxConfirm(pairingTaskData* thePairing,
     thePairing->outstanding_peer_sig_req--;
 }
 
+extern void appBleClearBond(void);
+
 static void appPairingHandlePeerSigPairHandsetConfirm(pairingTaskData* thePairing, PEER_SIG_PAIR_HANDSET_CFM_T *cfm)
 {
     DEBUG_LOGF("appPairingHandlePeerSigPairHandsetConfirm %d", cfm->status);
 
     if (cfm->status == peerSigStatusSuccess)
     {
+        appBleClearBond();
         appDeviceSetHandsetAddressForwardReq(&cfm->handset_addr, FALSE);
     }
     else

@@ -55,8 +55,15 @@ static const ringtone_note app_tone_wakeup[] =
     RINGTONE_STOP
 };
 
+#define USE_TWO_MIC
+
 ProgRunInfo gProgRunInfo;
+
+#ifdef USE_TWO_MIC
 uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
+#else
+uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_MIC，就是不使用这个MIC（使用单MIC）
+#endif
 
 /* BLE 已经连接到手机，则不需要修改广播内容, 没有连接到手机则信息不需要发送出去 */
 #define BLE_CONNECTED_PHONE()  (NULL != appGetGaiaTransport())
@@ -304,12 +311,17 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         appHfpCallAccept();
         break;
     case GAIA_COMMAND_STAROT_CONTROL_REJECT_DIALOG:      ///调用拒接电话
-        appHfpCallHangup();
+        if (appHfpIsCallActive()) {
+            appHfpCallHangup();
+        } else {
+            appHfpCallReject();
+        }
         break;
 
     case STAROT_AI_USER_START_RECORD:               ///设备开始录音
         progRun->recStat  = 1;
 #ifdef CONFIG_REC_ASSISTANT
+        ///AI录音时，使用的是单MIC
         g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
         appKymeraRecordStart();
 #endif
@@ -318,8 +330,12 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_AI_USER_STOP_RECORD:               ///设备停止录音
         progRun->recStat  = 0;
 #ifdef CONFIG_REC_ASSISTANT
-        appKymeraRecordStop();        
+        appKymeraRecordStop();
+#ifdef USE_TWO_MIC
         g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
+#else
+        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
+#endif
 #endif
         break;
 
@@ -336,6 +352,11 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB:  ///App设置语言唤醒是否使能
         gUserParam.apolloEnable = ind->payload[0];
         ParamSaveUserPrm(&gUserParam);
+        if (0 < gUserParam.apolloEnable) { /// 使能
+            apolloWakeupPower(1);
+        } else { /// 禁用
+            apolloWakeupPower(0);
+        }
         break;
     case STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB:
         gUserParam.sensorEnable = ind->payload[0];
@@ -389,8 +410,13 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 #ifdef CONFIG_REC_ASSISTANT
         if (appKymeraRecordIsRun() == TRUE){
             appKymeraRecordStop();
+#ifdef USE_TWO_MIC
             g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
-            }
+#else
+            g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
+#endif
+        }
+        ///todo 添加通话录音停止操作
 #endif
         apolloWakeupPower(0);
         break;
@@ -702,8 +728,12 @@ void appUiHfpCallIncomingActive(void)
 #ifdef CONFIG_REC_ASSISTANT
     if (appKymeraRecordIsRun()){
         appKymeraRecordStop();
+#ifdef USE_TWO_MIC
         g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
-        }
+#else
+        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
+#endif
+    }
 #endif
 
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
@@ -727,8 +757,12 @@ void appUiHfpCallOutcomingActive(void)
 #ifdef CONFIG_REC_ASSISTANT
     if (appKymeraRecordIsRun()){
         appKymeraRecordStop();
+#ifdef USE_TWO_MIC
         g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
-        }
+#else
+        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
+#endif
+    }
 #endif
 
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
@@ -1286,7 +1320,5 @@ void do_bias(int value)
         OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
     }
 }
-
-
 
 #endif

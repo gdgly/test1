@@ -358,7 +358,7 @@ static void appEnterHandsetPairing(void)
 
     appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
 
-    appBleClearBond();
+    //appBleClearBond();  // todo 要不记录多个，要不在成功配对之后，或在收到配对地址时，给清除掉
     appGaiaDisconnect();
 }
 
@@ -1266,13 +1266,15 @@ static void appSmHandleConnRulesClearHandsetPair(void)
     appConnRulesSetRuleComplete(CONN_RULES_CLEAR_HANDSET_PAIR);
 }
 
+
+#endif
+
 static void appSmHandleConnRulesDisconnectGaia(void)
 {
     DEBUG_LOG("appSmHandleConnRulesDisconnectGaia");
     appGaiaDisconnect();
     appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_GAIA);
 }
-#endif
 
 static void appSmHandleConnRulesEnterDfu(void)
 {
@@ -2360,10 +2362,10 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case CONN_RULES_CLEAR_HANDSET_PAIR:
             appSmHandleConnRulesClearHandsetPair();
             break;
+#endif
         case CONN_RULES_DISCONNECT_GAIA:
             appSmHandleConnRulesDisconnectGaia();
             break;
-#endif
         case CONN_RULES_ENTER_DFU:
             appSmHandleConnRulesEnterDfu();
             break;
