@@ -205,7 +205,7 @@ int CDeviceCtrl::RuningProc(void)
 	
 	if ((m_iThreadFunc & THREAD_CRYSTGALTRIM_READ)) {
 		int cap = 0, trim = 0;
-		if (CrystalTrimmingRead(cap, trim, 0) == 0) {
+		if (CrystalTrimmingRead(trim, cap, 1) == 0) {       // 操作完之后，重新烧写，需要关闭
 			m_xtalTrim = trim;
 			m_xtalCap = cap;
 		}
@@ -1287,6 +1287,7 @@ int CDeviceCtrl::CrystalTrimmingRead(int &XtalFreqTrim, int &XtalLoadCap, int bC
 	}
 	else {
 		TRACE("XtalLoadCapacitance:%s LEN=%d\n", msgbuf, datalen);
+		XtalLoadCap = strtoul((char*)msgbuf, (char**)NULL, 16);
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_XTALCAP, (LPARAM)msgbuf);
 	}
 
@@ -1299,6 +1300,7 @@ int CDeviceCtrl::CrystalTrimmingRead(int &XtalFreqTrim, int &XtalLoadCap, int bC
 	}
 	else {
 		TRACE("XtalFreqTrim teConfigCacheReadItem:%s LEN=%d\n", msgbuf, datalen);
+		XtalFreqTrim = atoi((char*)msgbuf);
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_READ_XTALTRIM, (LPARAM)msgbuf);
 	}
 
