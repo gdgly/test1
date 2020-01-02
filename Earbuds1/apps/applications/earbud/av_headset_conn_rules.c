@@ -2519,6 +2519,11 @@ static ruleAction bleDisable(void) {
 
 static ruleAction ruleBleConnectionUpdate(void)
 {
+    if (appGaiaIsConnect() && !handsetDisconnectAllowed()) {
+        RULE_LOG("current gaia is connect, and headset is connect");
+        return RULE_ACTION_IGNORE;
+    }
+
     bool left = appConfigIsLeft();
 
     bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);

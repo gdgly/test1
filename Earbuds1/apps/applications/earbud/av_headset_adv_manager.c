@@ -81,23 +81,23 @@ static bool appAdvManagerSetAdvertisingData(uint8 size_ad_data, const uint8 *ad_
 
    That allows elements that precede the name to be truncated while 
    leaving space for the name */
-static uint8 reserveSpaceForLocalName(uint8* space, uint16 name_length)
-{
-    uint8 required_space = MIN(name_length, MIN_LOCAL_NAME_LENGTH);
-    
-    if((*space) >= required_space)
-    {
-        *space -= required_space;
-        return required_space;
-    }
-    return 0;
-}
-
-
-static void restoreSpaceForLocalName(uint8* space, uint8 reserved_space)
-{
-    *space += reserved_space;
-}
+//static uint8 reserveSpaceForLocalName(uint8* space, uint16 name_length)
+//{
+//    uint8 required_space = MIN(name_length, MIN_LOCAL_NAME_LENGTH);
+//
+//    if((*space) >= required_space)
+//    {
+//        *space -= required_space;
+//        return required_space;
+//    }
+//    return 0;
+//}
+//
+//
+//static void restoreSpaceForLocalName(uint8* space, uint8 reserved_space)
+//{
+//    *space += reserved_space;
+//}
 //#endif
 
 
@@ -165,36 +165,36 @@ static void appAdvManagerSendBlockingResponse(connection_lib_status sts)
 }
 
 //#ifndef CONFIG_STAROT
-static uint8* appAdvManagerAdvertdataAddName(uint8 *ad_data, uint8* space, uint16 size_local_name, const uint8 * local_name, bool shortened)
-{
-    uint8 name_field_length;
-    uint8 name_data_length = size_local_name;
-    uint8 ad_tag = ble_ad_type_complete_local_name;
-    uint8 usable_space = USABLE_SPACE(space);
-
-    if((name_data_length == 0) || usable_space <= 1)
-        return ad_data;
-
-    if (name_data_length > usable_space)
-    {
-        ad_tag = ble_ad_type_shortened_local_name;
-        name_data_length = usable_space;
-    }
-    else if (shortened)
-    {
-        ad_tag = ble_ad_type_shortened_local_name;
-    }
-
-    name_field_length = AD_FIELD_LENGTH(name_data_length);
-    ad_data = addHeaderToAdData(ad_data, space, name_field_length, ad_tag);
-
-    /* Setup the local name advertising data */
-    memmove(ad_data, local_name, name_data_length);
-    ad_data += name_data_length;
-    *space -= name_data_length;
-
-    return ad_data;
-}
+//static uint8* appAdvManagerAdvertdataAddName(uint8 *ad_data, uint8* space, uint16 size_local_name, const uint8 * local_name, bool shortened)
+//{
+//    uint8 name_field_length;
+//    uint8 name_data_length = size_local_name;
+//    uint8 ad_tag = ble_ad_type_complete_local_name;
+//    uint8 usable_space = USABLE_SPACE(space);
+//
+//    if((name_data_length == 0) || usable_space <= 1)
+//        return ad_data;
+//
+//    if (name_data_length > usable_space)
+//    {
+//        ad_tag = ble_ad_type_shortened_local_name;
+//        name_data_length = usable_space;
+//    }
+//    else if (shortened)
+//    {
+//        ad_tag = ble_ad_type_shortened_local_name;
+//    }
+//
+//    name_field_length = AD_FIELD_LENGTH(name_data_length);
+//    ad_data = addHeaderToAdData(ad_data, space, name_field_length, ad_tag);
+//
+//    /* Setup the local name advertising data */
+//    memmove(ad_data, local_name, name_data_length);
+//    ad_data += name_data_length;
+//    *space -= name_data_length;
+//
+//    return ad_data;
+//}
 //#endif
 
 
@@ -259,8 +259,8 @@ static void appAdvManagerSetupAdvert(advManagerAdvert *advert)
     uint8 *ad_start = (uint8*)PanicNull(malloc(space));
     uint8 *ad_head = ad_start;
 //#ifndef CONFIG_STAROT
-    unsigned name_len = 0;
-    uint8 space_reserved_for_name = 0;
+//    unsigned name_len = 0;
+//    uint8 space_reserved_for_name = 0;
 //#endif
 
     PanicFalse(VALID_ADVERT_POINTER(advert));
@@ -272,11 +272,11 @@ static void appAdvManagerSetupAdvert(advManagerAdvert *advert)
     }
 
 //#ifndef CONFIG_STAROT
-    if (advert->content.local_name)
-    {
-        name_len = strlen((char *)advert->local_name);
-        space_reserved_for_name = reserveSpaceForLocalName(&space, name_len);
-    }
+//    if (advert->content.local_name)
+//    {
+//        name_len = strlen((char *)advert->local_name);
+//        space_reserved_for_name = reserveSpaceForLocalName(&space, name_len);
+//    }
 //#endif
 
     if (advert->content.services)
@@ -286,12 +286,12 @@ static void appAdvManagerSetupAdvert(advManagerAdvert *advert)
                                                      advert->num_services);
     }
 //#ifndef CONFIG_STAROT
-    if (advert->content.local_name)
-    {
-        restoreSpaceForLocalName(&space, space_reserved_for_name);
-
-        ad_head = appAdvManagerAdvertdataAddName(ad_head, &space, name_len, advert->local_name, advert->content.local_name_shortened);
-    }
+//    if (advert->content.local_name)
+//    {
+//        restoreSpaceForLocalName(&space, space_reserved_for_name);
+//
+//        ad_head = appAdvManagerAdvertdataAddName(ad_head, &space, name_len, advert->local_name, advert->content.local_name_shortened);
+//    }
 //#endif
 
 #ifdef CONFIG_STAROT

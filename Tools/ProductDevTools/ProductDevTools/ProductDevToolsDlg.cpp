@@ -52,12 +52,14 @@ END_MESSAGE_MAP()
 CProductDevToolsDlg::CProductDevToolsDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_PRODUCTDEVTOOLS_DIALOG, pParent)
 	, m_bEraseAll(FALSE)
-	, m_edCap(7)
-	, m_edTrim(6)
+	, m_edCap(9)
+	, m_edTrim(-10)
+	, m_btWrite(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	m_devHandle = 0;
+	m_sLicense.Empty();
 }
 
 void CProductDevToolsDlg::DoDataExchange(CDataExchange* pDX)
@@ -75,6 +77,7 @@ void CProductDevToolsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_CHECK, m_ListCheck);
 	DDX_Text(pDX, IDC_EDIT_CAP, m_edCap);
 	DDX_Text(pDX, IDC_EDIT_TRIM, m_edTrim);
+	DDX_Check(pDX, IDC_CHECK_BT_WR, m_btWrite);
 }
 
 BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
@@ -736,9 +739,62 @@ void CProductDevToolsDlg::OnBnClickedBtnBurnApo()
 	StartDevContrl(THREAD_BURN_APO);
 }
 
+CString _sLicense[] = {
+	"[ D0 D5 A8 A5 E0 6B C4 54 4B F3 3A A2 07 63 3F 7C 27 48 18 CF 40 54 4E 88 E9 E2 B0 49 32 A0 39 F5 53 27 41 EB 14 9B FC 13 3F E3 97 0C E0 41 1E 3F 64 D5 3F 82 9E 21 C3 4C 6E 4D 7E A3 D5 9F E4 43 ]",
+	"[ A2 70 0E 3C D0 FC 2C 57 C6 4D 9D 81 CA 56 DA 1F FD 9F FF 79 06 45 DA CE 0B ED 03 A6 77 68 B5 41 3D FF D7 0C 5F AB 43 D2 19 B1 A5 99 D0 53 C7 68 9F A2 33 D3 31 C8 47 B2 59 F7 01 03 B1 E1 37 6C ]",
+};
+
+// 根据蓝牙地址，来设置LICENSE
+// {0x00ff0F, 0x5b, 0x0002}
+BOOL CProductDevToolsDlg::Btaddr2License(void)
+{
+	UINT lap, uap, nap;
+	int pos1, pos2;
+	CString sText, tmp;
+
+	m_edAddr.GetWindowText(tmp);
+	pos1 = tmp.Find('{'); pos2 = tmp.Find('}');
+	if (pos1 < 0 || pos2 < 0) {
+		AfxMessageBox("不正确的蓝牙地址");
+		return FALSE;
+	}
+
+	sText = tmp.Mid(pos1 + 1, pos2 - pos1 - 1);
+	TRACE("sText:%s\n", sText);
+
+	pos1 = sText.Find(',');
+	tmp = sText.Mid(0, pos1); lap = strtol(tmp, NULL, 16);
+	pos2 = sText.Find(',', pos1+1);
+	tmp = sText.Mid(pos1+1, pos2-pos1-1); 
+	uap = strtol(tmp, NULL, 16);	
+	tmp = sText.Right(sText.GetLength() - (pos2+1));
+	nap = strtol(tmp, NULL, 16);
+
+	m_sLicense.Empty();
+	if (nap == 0x0002 && uap == 0x5B && lap >= 0x00ff00 && lap <= 0x00ff0F) {
+		m_sLicense.Format("%s", _sLicense[0]);
+	}
+	else if (nap == 0x70B3 && uap == 0xD5) {      // {0x4D300C, 0xD5, 0x70B3}
+		if (lap >= 0x4D3000 && lap <= 0x4D33e7)
+			m_sLicense.Format("%s", _sLicense[1]);
+	}
+
+	if(m_sLicense.IsEmpty())
+		return FALSE;
+
+	return TRUE;
+}
+
 
 void CProductDevToolsDlg::OnBnClickedBtnBurnAddr()
 {
+	UpdateData(TRUE);
+
+	// LICENSE
+	if (Btaddr2License() != TRUE)
+		return;
+
+	m_devCtrl.SetBtWrite(m_btWrite);
 	StartDevContrl(THREAD_BT_ADDR);
 }
 
@@ -810,7 +866,8 @@ void CProductDevToolsDlg::OnBnClickedBtnAll()
 //	StartDevContrl(THREAD_CHECK | THREAD_RECORD_0 | THREAD_RECORD_1| THREAD_PLAY);
 //	StartDevContrl(THREAD_CHECK | THREAD_RECORD_0 | THREAD_RECORD_1| THREAD_PLAY| THREAD_WAKEUP| THREAD_SENSOR| THREAD_PLC| THREAD_TAP);
 //	StartDevContrl(THREAD_CHECK| THREAD_SENSOR);
-	StartDevContrl(THREAD_CHECK | THREAD_PLC| THREAD_TAP);
+//	StartDevContrl(THREAD_CHECK | THREAD_PLC| THREAD_TAP);
+	StartDevContrl(THREAD_CRYSTGALTRIM_READ | THREAD_CRYSTGALTRIM_WRITE |THREAD_CHECK);
 }
 
 
@@ -890,9 +947,20 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 
 	case REPORT_APOLLO:
 	case REPORT_READ_XTALTRIM:
+		if (REPORT_READ_XTALTRIM == (int)wParam) {
+			m_edTrim = atoi((char*)lParam);
+			UpdateData(FALSE);
+		}
 	case REPORT_READ_XTALCAP:
+		if (REPORT_READ_XTALCAP == (int)wParam) {
+			m_edCap = strtoul((char*)lParam, (char**)NULL, 16);
+			UpdateData(FALSE);
+		}
 	case REPORT_WRITE_XTALTRIM:
 	case REPORT_WRITE_XTALCAP:
+
+	case REPORT_READ_LICENSE:
+	case REPORT_WRITE_LICENSE:
 
 	case REPORT_RDBD_NAME:
 	case REPORT_WRBD_NAME:
