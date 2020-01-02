@@ -435,6 +435,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         } else {
             MessageSend(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL);
         }
+
+
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_UPGRADE);
 #endif
         register_apollo_wakeup_cb(apolloWakeupCallback);                       //注册apollo唤醒函数
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息

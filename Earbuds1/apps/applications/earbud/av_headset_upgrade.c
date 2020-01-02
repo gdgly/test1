@@ -183,6 +183,7 @@ void appUpgradeInit(void)
             upgrade_perm_always_ask,
             &earbud_upgrade_init_version,
             earbud_upgrade_init_config_version);
+
 }
 
 

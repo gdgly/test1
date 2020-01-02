@@ -290,6 +290,7 @@ typedef enum
 #endif
 
 #define RULE_EVENT_CHECK_GAIA_CONNECTION         (1ULL << 57)    /*!< 检查gaia是否需要断开 */
+#define RULE_EVENT_UPGRADE                       (1ULL << 58)    /*!<  */
 
 #define RULE_EVENT_ALL_EVENTS_MASK               (0xFFFFFFFFFFFFFFFFULL)
 

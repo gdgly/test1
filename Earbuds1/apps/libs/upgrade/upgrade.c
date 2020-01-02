@@ -774,4 +774,13 @@ void UpgradeImageSwap(void)
     UpgradeSMHandleValidated(UPGRADE_VM_DFU_COPY_VALIDATION_SUCCESS, NULL);
 }
 
+extern UpgradeCtx *upgradeCtx;
+
+bool UpgradeInProgress(void) {
+    if (NULL == upgradeCtx) {
+        return FALSE;
+    }
+    return ((upgradeCtx->smState) >= UPGRADE_STATE_READY);
+}
+
 

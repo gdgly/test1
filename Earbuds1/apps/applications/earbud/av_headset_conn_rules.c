@@ -17,7 +17,7 @@
 #include <bdaddr.h>
 #include <panic.h>
 #include <system_clock.h>
-#include <upgrade_sm.h>
+#include <upgrade.h>
 
 #pragma unitsuppress Unused
 
@@ -198,7 +198,7 @@ ruleEntry appConnRules[] =
         Startup (power on) rules */
     RULE(RULE_EVENT_STARTUP,                    rulePeerPair,               CONN_RULES_PEER_PAIR),
     RULE(RULE_EVENT_STARTUP,                    rulePeerSync,               CONN_RULES_SEND_PEER_SYNC),
-    RULE(RULE_EVENT_STARTUP,                    ruleAllowGaiaConnect,       CONN_RULES_ALLOW_HANDSET_CONNECT),
+//    RULE(RULE_EVENT_STARTUP,                    ruleAllowGaiaConnect,       CONN_RULES_ALLOW_HANDSET_CONNECT),
     /*! \} */
 
     RULE(RULE_EVENT_PEER_UPDATE_LINKKEYS,       ruleForwardLinkKeys,        CONN_RULES_PEER_SEND_LINK_KEYS),
@@ -343,6 +343,7 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
 #endif
     RULE(RULE_EVENT_CHECK_GAIA_CONNECTION,      ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
+    RULE(RULE_EVENT_UPGRADE,                    ruleAllowGaiaConnect,               CONN_RULES_ALLOW_HANDSET_CONNECT),
 
 };
 
@@ -2528,7 +2529,7 @@ static ruleAction bleDisable(void) {
 
 static ruleAction ruleBleConnectionUpdate(void)
 {
-    if (!appGaiaIsConnect() && UpgradeSMUpgradeInProgress()) {
+    if (!(appGaiaIsConnect()) && (TRUE == UpgradeInProgress())) {
         DEBUG_LOG("gaia is connect, but now is upgrade, so need enable");
         return bleEnable();
     }
@@ -3210,7 +3211,7 @@ static ruleAction ruleIdleHandsetPair(void) {
 
 static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
 {
-    if (UpgradeSMUpgradeInProgress()) {
+    if (UpgradeInProgress()) {
         RULE_LOG("ruleCheckGaiaIsNeedDisconnection, appSmIsDfuPending is true, ignore");
         return RULE_ACTION_IGNORE;
     }
@@ -3235,8 +3236,17 @@ static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
 
 static ruleAction ruleCaseOpenAllowGaiaConnect(void)
 {
-    RULE_LOG("ruleCaseOpenAllowGaiaConnect, run as case open");
-    return RULE_ACTION_RUN;
+    if (appPeerSyncIsPeerInCase() && appSmIsInCase()) {
+        if (appUICaseIsOpen()) {
+            RULE_LOG("ruleCaseOpenAllowGaiaConnect, appUICaseIsOpen is true, run");
+            return RULE_ACTION_RUN;
+        } else {
+            return RULE_ACTION_IGNORE;
+        }
+    }
+
+    RULE_LOG("ruleCaseOpenAllowGaiaConnect, but not all in case,  so ignore");
+    return RULE_ACTION_IGNORE;
 }
 
 static ruleAction ruleCaseCloseNotAllowGaiaConnect(void)
@@ -3247,10 +3257,20 @@ static ruleAction ruleCaseCloseNotAllowGaiaConnect(void)
 
 static ruleAction ruleAllowGaiaConnect(void)
 {
-    if (UpgradeSMUpgradeInProgress()) {
-        RULE_LOG("ruleAllowGaiaConnect, UpgradeSMUpgradeInProgress is true, run");
+    if (UpgradeInProgress()) {
+        RULE_LOG("ruleAllowGaiaConnect, UpgradeInProgress is true, run");
         return RULE_ACTION_RUN;
     }
 
-    return RULE_ACTION_IGNORE;
+    if (appPeerSyncIsPeerInCase() && appSmIsInCase()) {
+        if (appUICaseIsOpen()) {
+            RULE_LOG("ruleAllowGaiaConnect, appUICaseIsOpen is true, run");
+            return RULE_ACTION_RUN;
+        } else {
+            return RULE_ACTION_IGNORE;
+        }
+    } else {
+        RULE_LOG("ruleAllowGaiaConnect, not all in case , so need ignore");
+        return RULE_ACTION_IGNORE;
+    }
 }

@@ -905,4 +905,5 @@ bool UpgradePartialUpdateInterrupted(void);
 */
 bool UpgradeIsRunningNewImage(void);
 
+bool UpgradeInProgress(void);
 #endif /* UPGRADE_H_ */
