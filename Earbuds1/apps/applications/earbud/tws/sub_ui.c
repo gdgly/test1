@@ -429,6 +429,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");    /* Get microphone sources */
 #ifdef HAVE_MAX20340
         appUiPowerSave((TRUE==max20340_GetConnect()) ? POWER_MODE_IN_CASE : POWER_MODE_OUT_CASE);
+
+        if (TRUE == max20340_GetConnect()) {
+            MessageSend(appGetUiTask(), APP_ATTACH_PLC_IN, NULL);
+        } else {
+            MessageSend(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL);
+        }
 #endif
         register_apollo_wakeup_cb(apolloWakeupCallback);                       //注册apollo唤醒函数
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
