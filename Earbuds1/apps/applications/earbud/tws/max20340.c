@@ -394,6 +394,8 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
 
     send_buf[0] = get_buf[0];
 
+	appUiCaseStatus(((get_buf[1] >> 6) & 0x01), -1, -1, -1, 0);	        // 发送是否在盒子中的信号
+
     //status 高两位 1广播成功 2广播失败 3手机连接成功； 第5，6位 1表示已peer， 2表示未peer
     send_buf[1] = ( (status<<6) & 0xc0 ) + ( (peer_status<<4) & 0x30 );
     send_buf[1] |= (1 == _case_need_upgrade) ? 0x08 : 0x00;         // 是否需要升级 BIT4
