@@ -356,6 +356,10 @@ static void appPeerSigCancelInProgressOperation(void)
         case AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG:
             appPeerSigMsgDoubleClickConfigConfirmation(peer_sig->client_task, peerSigStatusPairHandsetTxFail);
             break;
+
+        case AVRCP_PEER_CMD_NORMAL_CONFIG:
+            appPeerSigMsgNormalConfigConfirmation(peer_sig->client_task, peerSigStatusPairHandsetTxFail);
+            break;
 #endif
         default:
             break;
@@ -872,6 +876,9 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughInd(AV_AVRCP_VENDOR_PASSTHRO
         case AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG:
             rc = appPeerSigHandleDoubleClickConfigCommand(ind);
             break;
+        case AVRCP_PEER_CMD_NORMAL_CONFIG:
+            rc = appPeerSigHandleNormalConfigCommand(ind);
+            break;
 #endif
 
         default:
@@ -926,9 +933,15 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughConfirm(AV_AVRCP_VENDOR_PASS
             appPeerSigMsgBleConfigConfirmation(peer_sig->client_task, cfm->status == avrcp_success ?
                                                peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
             break;
+
         case AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG:
             appPeerSigMsgDoubleClickConfigConfirmation(peer_sig->client_task, cfm->status == avrcp_success ?
                                                        peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
+            break;
+
+        case AVRCP_PEER_CMD_NORMAL_CONFIG:
+            appPeerSigMsgNormalConfigConfirmation(peer_sig->client_task, cfm->status == avrcp_success ?
+                                                  peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
             break;
 #endif
 
@@ -1206,6 +1219,10 @@ static void appPeerSigHandleMessage(Task task, MessageId id, Message message)
 
         case PEER_SIG_INTERNAL_DOUBLE_CLICK_SETTING_REQ:
             appPeerSigHandleInternalDoubleClickConfigRequest((PEER_SIG_INTERNAL_DOBULE_CLICK_CONFIG_REQ_T *)message);
+            break;
+
+        case PEER_SIG_INTERNAL_NORMAL_SETTING_REQ:
+            appPeerSigHandleInternalNormalConfigRequest((PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T*)message);
             break;
 #endif
         default:

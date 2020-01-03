@@ -56,7 +56,7 @@ void appPeerSigMsgDoubleClickConfigConfirmation(Task task, peerSigStatus status)
 
 ////////////////////////////////////通用配置项////////////////////////////////////////////
 
-#define AVRCP_PEER_CMD_NORMAL_CONFIG_SIZE                  6
+#define AVRCP_PEER_CMD_NORMAL_CONFIG_SIZE                  12
 
 typedef struct
 {
