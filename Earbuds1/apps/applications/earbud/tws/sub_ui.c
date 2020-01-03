@@ -14,6 +14,7 @@
 #include "sub_ui.h"
 #include "av_headset_gaia_starot.h"
 #include "apollo.h"
+#include "peer.h"
 
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
@@ -36,6 +37,7 @@ static uint8 appUIGetConnectStatusInfo(void);
 static uint8 appUIGetCurrentConnectStatusInfo(void);
 static uint8 appUIGetPeerConnectStatusInfo(void);
 static uint8 appUIGetCaseConnectStatusInfo(void);
+static void appNotifyPeerDeviceConfig(uint16 source);
 
 /*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
 #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
@@ -349,21 +351,28 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_RECORD_RETURN_THREE_POWER:
         subUiStat2Gaia(ind->command, progRun);
         break;
-    case STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB:  ///App设置语言唤醒是否使能
-        gUserParam.apolloEnable = ind->payload[0];
+    case STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB: {  ///App设置语言唤醒是否使能
+        GAIA_STAROT_CONFIG_IND_T* m = (GAIA_STAROT_CONFIG_IND_T*)message;
+        gUserParam.apolloEnable = m->payload[0];
         ParamSaveUserPrm(&gUserParam);
         if (0 < gUserParam.apolloEnable) { /// 使能
             apolloWakeupPower(1);
         } else { /// 禁用
             apolloWakeupPower(0);
         }
+
+        appNotifyPeerDeviceConfig(m->messageFrom);
+    }
         break;
-    case STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB:
-        gUserParam.sensorEnable = ind->payload[0];
+    case STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB: {
+        GAIA_STAROT_CONFIG_IND_T* m = (GAIA_STAROT_CONFIG_IND_T*)message;
+        gUserParam.sensorEnable = m->payload[0];
 #ifdef HAVE_EM20168
         EM20168Power(gUserParam.sensorEnable);   ///App设置是否佩戴使能
 #endif
         ParamSaveUserPrm(&gUserParam);
+        appNotifyPeerDeviceConfig(m->messageFrom);
+    }
         break;
     case STAROT_APP_CONTROL_PREVIOUS_TRACK:      ///App控制上一首
         appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
@@ -1328,6 +1337,16 @@ void do_bias(int value)
     else {
         appSubUISetMicbias(FALSE);
         OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
+    }
+}
+
+void appNotifyPeerDeviceConfig(uint16 source) {
+    if (MESSAGE_FROM_APP == source) {
+        /// 通知对方耳机，查找对方地址
+        bdaddr peer_addr;
+        if (appDeviceGetPeerBdAddr(&peer_addr)) {
+            appPeerSigTxNormalConfigRequest(appGetGaiaTask(), &peer_addr);
+        }
     }
 }
 

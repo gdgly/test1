@@ -774,8 +774,9 @@ void gaiaAppSetParameter(GAIA_STAROT_IND_T *mess, uint16 type){
         return;
     }
     if (0X01 == body->attr) {
-        MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_IND, body->len);
+        MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_CONFIG_IND, body->len);
         message->payloadLen = body->len;
+        message->messageFrom = MESSAGE_FROM_APP;
         message->payload[0] = body->payload[0];
         if(1 == type)
             message->command = STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB;

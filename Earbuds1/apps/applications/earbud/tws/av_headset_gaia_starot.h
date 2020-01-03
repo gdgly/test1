@@ -10,6 +10,21 @@ enum GAIA_AUDIO_TYPE {
     GAIA_AUDIO_MIC = 2
 };
 
+/// 消息的来源
+enum MessageFromSource {
+    MESSAGE_FROM_APP,    /// 从APP发送来的消息
+    MESSAGE_FROM_PEER    /// 从Peer耳机转发的消息
+};
+
+typedef struct
+{
+    uint16 command;
+    uint16 payloadLen;
+    uint16 messageFrom;
+    uint8 payload[4];
+} GAIA_STAROT_CONFIG_IND_T;
+typedef GAIA_STAROT_CONFIG_IND_T GAIA_STAROT_CONFIG_IND;
+
 ////////////////////////////EVENT//////////////////////////////
 enum {
     /// 临时，不能这样定义，会冲突

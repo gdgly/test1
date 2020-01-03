@@ -1,6 +1,7 @@
 
 #include "av_headset.h"
 #include "peer.h"
+#include "av_headset_gaia_starot.h"
 
 #define STAROT_MAKE_SIZE(TYPE) (((sizeof(TYPE)) / 8 * 8) + ((sizeof(TYPE)) % 8 > 0 ? 8 : 0))
 #define STAROT_MAKE_MESSAGE(TYPE) TYPE *message = (TYPE *) PanicUnlessMalloc(STAROT_MAKE_SIZE(TYPE))
@@ -137,11 +138,13 @@ void appPeerSigMsgDoubleClickConfigConfirmation(Task task, peerSigStatus status)
 //    MessageSend(task, PEER_SIG_CONNECT_HANDSET_CFM, message);
 }
 
+extern UserParam gUserParam;
 
 void appPeerSigTxNormalConfigRequest(Task task, const bdaddr *peer_addr) {
     if (NULL == peer_addr) {
         return;
     }
+
 #ifdef CONFIG_STAROT_PEERPAIR
     if(ParamUsingSingle()) {    // 检测是否为独立使用
         /// todo 设置已经同步
@@ -153,9 +156,9 @@ void appPeerSigTxNormalConfigRequest(Task task, const bdaddr *peer_addr) {
     STAROT_MAKE_MESSAGE(PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T);
     message->client_task = task;
     /// 获取对应的值，并填写
-    message->apollo_config = 0X00;
+    message->apollo_config = (gUserParam.apolloEnable > 0 ? 1 : 0);
     message->apollo_timestamp = 0X00;
-    message->wear_config = 0X00;
+    message->wear_config = (gUserParam.sensorEnable > 0 ? 1 : 0);
     message->wear_timestamp = 0X00;
 
     MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_NORMAL_SETTING_REQ, message, appPeerSigStartup(peer_addr));
@@ -209,7 +212,15 @@ bool appPeerSigHandleNormalConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind)
             /// 比较当前的时间戳，如果大于保存的时间，则更新当前数据
             UNUSED(apollo_enable);
             UNUSED(apollo_timestamp);
+
+            MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_CONFIG_IND, 0);
+            message->payloadLen = 0X01;
+            message->messageFrom = MESSAGE_FROM_PEER;
+            message->payload[0] = apollo_enable;
+            message->command = STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB;
+            MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
         }
+
         { // wear
             pos = sizeof(uint8);
             uint8 wear_enable = *(uint8*)(data + pos);
@@ -218,6 +229,13 @@ bool appPeerSigHandleNormalConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind)
             /// 比较当前的时间戳，如果大于保存的时间，则更新当前数据
             UNUSED(wear_enable);
             UNUSED(wear_timestamp);
+
+            MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_CONFIG_IND, 0);
+            message->payloadLen = 0X01;
+            message->messageFrom = MESSAGE_FROM_PEER;
+            message->payload[0] = wear_enable;
+            message->command = STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB;
+            MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
         }
 
         return TRUE;
