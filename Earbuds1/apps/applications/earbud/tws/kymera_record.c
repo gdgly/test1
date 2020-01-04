@@ -70,6 +70,7 @@ void appKymeraHandleInternalRecordStart(const KYMERA_INTERNAL_RECORD_T *msg)
     {
         case KYMERA_STATE_TONE_PLAYING:
         case KYMERA_STATE_A2DP_STREAMING:
+        case KYMERA_STATE_A2DP_STREAMING_WITH_FORWARDING:
         case KYMERA_STATE_IDLE:
             /* Need to set up audio output chain to play tone from scratch */
             appKymeraCreateRecordChain(msg->rate);

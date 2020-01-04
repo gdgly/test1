@@ -496,12 +496,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appUiPowerSave((1==progRun->caseLidOpen) ? POWER_MODE_IN_CASE_OPEN : POWER_MODE_IN_CASE);
         subUiCasestat2Gaia(id, progRun);
         break;
-    case APP_PAIR_HEADSET:
-        DEBUG_LOG("plc call pair headset");
-#ifdef TWS_DEBUG
-        appSmPairHandset();
-#endif
-        break;
+//    case APP_PAIR_HEADSET:
+//        DEBUG_LOG("plc call pair headset");
+//#ifdef TWS_DEBUG
+//        appSmPairHandset();
+//#endif
+//        break;
    case APP_RESET_FACTORY:
        DEBUG_LOG("plc call reset headset");
 #ifdef TWS_DEBUG
@@ -882,6 +882,10 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
             progRun->peerPlace = ((bitEars & 0x01)) ? 1 : 0;
     }
 
+    if (0X00 == appGetState()) {
+        return;
+    }
+
     if(lidOpen >= 0) {
         uint16 beforeStatus = progRun->caseLidOpen;
         progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
@@ -897,20 +901,20 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
         }
     }
 
-    if(keyDown >= 0) {
-        progRun->caseKeyDown = (1 == keyDown) ? 1 : 0;
-        if (appConfigIsLeft()) {
-            /// 如果当前是左边耳机，发送配对信息
-            DEBUG_LOG("call left pair headset");
-            MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
-        } else {
-            /// 如果当前是右边耳机，查看左耳机是否在，如果不在，执行配对
-            if (progRun->peerPlace == 0) {
-                DEBUG_LOG("call right pair headset");
-                MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
-            }
-        }
-    }
+//    if(keyDown >= 0) {
+//        progRun->caseKeyDown = (1 == keyDown) ? 1 : 0;
+//        if (appConfigIsLeft()) {
+//            /// 如果当前是左边耳机，发送配对信息
+//            DEBUG_LOG("call left pair headset");
+//            MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
+//        } else {
+//            /// 如果当前是右边耳机，查看左耳机是否在，如果不在，执行配对
+//            if (progRun->peerPlace == 0) {
+//                DEBUG_LOG("call right pair headset");
+//                MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
+//            }
+//        }
+//    }
 
     if(keyLong >= 0) {
         progRun->caseKeyLong = (1 == keyLong) ? 1 : 0;
