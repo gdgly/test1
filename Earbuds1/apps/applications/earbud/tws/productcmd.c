@@ -137,7 +137,9 @@ static void appEnterSingleforTest(void)
 #endif
 }
 
+#include "apollo.h"
 extern int apolloGetStatus(void);
+extern void appSubUISetMicbias(int set);
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 {
     uint8 buf_get;
@@ -157,6 +159,18 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         case 0x01:   //复位左
             appSetState(APP_STATE_FACTORY_RESET);
             appSmFactoryReset();
+            break;
+        case 0x07:   // 启动或获取唤醒状态
+            if(0x00 == get_buf[2]) {
+                apollo_s_e();
+                OperatorFrameworkEnable(MAIN_PROCESSOR_ON);
+                appSubUISetMicbias(TRUE);
+                send_buf[2] = 0x00;
+                appSubGetProgRun()->iWakeupTimes = 0;
+            }
+            else if(0x01 == get_buf[2]){
+                send_buf[2] = appSubGetProgRun()->iWakeupTimes;
+            }
             break;
         case 0x08:   //主MIC
             ProductEnterReocrdMode(1);

@@ -873,7 +873,8 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    DEBUG_LOG("CASE:%d key=%d %d %d", lidOpen, keyDown, keyLong, iElectrity);
+    (void)keyDown;
+//    DEBUG_LOG("CASE:%d key=%d %d %d", lidOpen, keyDown, keyLong, iElectrity);
 
     if(appConfigIsLeft()) {  // 只考虑对耳机是否在
         if((bitEars & 0x20))  // mask BIT
@@ -1163,6 +1164,7 @@ int apolloWakeupCallback(void)
     }
 
     ProgRIPtr  progRun = appSubGetProgRun();
+    progRun->iWakeupTimes  += 1;
     if((0 == progRun->recStat) &&
             ((progRun->dial_stat & (DIAL_ST_IN|DIAL_ST_OUT|DIAL_ST_ACT)) == 0)){
         if(0 == g_commuType)

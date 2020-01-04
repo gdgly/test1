@@ -86,6 +86,8 @@ typedef struct tagPROGRUNINFO {
     uint8          peerElectrity;           // 对方耳机电量 0...100    
     uint8          iElectrity;              // 自己耳机电量 0...100
 
+    uint8          iWakeupTimes;            // 短时间记录 APO 唤醒次数
+
     PowerSaveMode  iPowerSaveMode;          // 当前模式
 
     uint8          dial_stat;               // 当前拨号情况
