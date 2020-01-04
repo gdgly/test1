@@ -459,6 +459,33 @@ void EM20168_init(void)
     EM20168Disable(handle);
 }
 
+int EM20168_statcheck(void)
+{
+    bitserial_handle handle;
+    uint8 value;
+    unsigned short em20168_ps0_value;
+    proximityTaskData *prox = appGetProximity();
+    handle = EM20168Enable();
+
+    EM20168ReadRegister(handle, 0x20, &value);
+    em20168_ps0_value = value;
+    EM20168ReadRegister(handle, 0x21, &value);
+    em20168_ps0_value += value << 8;
+
+#ifndef EM20168_SEND_MSG
+    DEBUG_LOG("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
+#endif
+//    EM20168WriteRegister(handle, 2, 0);
+    EM20168Disable(handle);
+    if(em20168_ps0_value >= EM20168_HIGH_VALUE &&
+            (prox->state->proximity != proximity_state_in_proximity) )
+            return 1;
+
+     else return -2;
+//    else  if(em20168_ps0_value <= EM20168_LOW_VALUE &&
+//            (prox->state->proximity == proximity_state_in_proximity) )
+//            return -2;
+}
 
 #ifdef INCLUDE_PROXIMITY
 bool appProximityClientRegister(Task task)

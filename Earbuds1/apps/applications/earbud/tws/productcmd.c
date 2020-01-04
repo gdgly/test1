@@ -9,12 +9,9 @@
 void ProductEnterDutMode(void);
 void ProductEnterReocrdMode(int16 isLeft);      // 1: left, 0:right
 int appChangeCVCProcessMode(void);
-
- uint8 SNsize20=0;
- uint8 SNsize21=0;
- uint8 SNsize30=0;
- uint8 SNsize31=0;
-
+bool Em20168_h_w = 0;
+bool Em20168_l_w = 0;
+uint8 em20168_cal =0;
  #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
  static const ringtone_note product_tone[] =
  {
@@ -137,9 +134,9 @@ static void appEnterSingleforTest(void)
 #endif
 }
 
-#include "apollo.h"
 extern int apolloGetStatus(void);
-extern void appSubUISetMicbias(int set);
+
+
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 {
     uint8 buf_get;
@@ -152,6 +149,24 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 
     DEBUG_LOG("get_buf = %x:%x:%x",get_buf[0], get_buf[1], get_buf[2]);
 
+    buf_get = get_buf[1];
+    if((buf_get>=0x20)&&(buf_get<= 0x2f))
+    {
+       prm->sn[buf_get - 0x20] = get_buf[2];
+
+       if(buf_get == 0x2f)
+        {
+            ParamSaveSN(prm->sn);
+        }
+    }
+
+    if((buf_get>=0x30)&&(buf_get<= 0x3f))
+    {
+        ParamLoadSN(prm->sn);
+        send_buf[2] = prm->sn[buf_get - 0x30];
+
+    }
+
     switch(get_buf[1])
     {
         case 0x00:   //复位右
@@ -159,18 +174,6 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         case 0x01:   //复位左
             appSetState(APP_STATE_FACTORY_RESET);
             appSmFactoryReset();
-            break;
-        case 0x07:   // 启动或获取唤醒状态
-            if(0x00 == get_buf[2]) {
-                apollo_s_e();
-                OperatorFrameworkEnable(MAIN_PROCESSOR_ON);
-                appSubUISetMicbias(TRUE);
-                send_buf[2] = 0x00;
-                appSubGetProgRun()->iWakeupTimes = 0;
-            }
-            else if(0x01 == get_buf[2]){
-                send_buf[2] = appSubGetProgRun()->iWakeupTimes;
-            }
             break;
         case 0x08:   //主MIC
             ProductEnterReocrdMode(1);
@@ -181,105 +184,84 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         case 0x0a:   //SPEAK
             ProductPlayTone();
             break;
-        case 0x0B:   // check device
-#ifdef HAVE_EM20168
-            send_buf[2] |= (EM20168_GetStatus() == 0) ? 0x01 : 0;
-#endif
-#ifdef HAVE_LIS2DW12
-            send_buf[2] |= (lis2dw12_GetStatus() == 0) ? 0x02 : 0;
-#endif
-#ifdef HAVE_MAX20340
-            send_buf[2] |= (max20340_GetStatus() == 0) ? 0x04 : 0;
-#endif
-            send_buf[2] |= (apolloGetStatus() == 0) ? 0x08 : 0;
-            break;
         case 0x0e:   //蓝牙
             ProductEnterDutMode();
             break;
+        case 0x0B:   // check device
+#ifdef HAVE_EM20168
+        send_buf[2] |= (EM20168_GetStatus() == 0) ? 0x01 : 0;
+#endif
+#ifdef HAVE_LIS2DW12
+        send_buf[2] |= (lis2dw12_GetStatus() == 0) ? 0x02 : 0;
+#endif
+#ifdef HAVE_MAX20340
+        send_buf[2] |= (max20340_GetStatus() == 0) ? 0x04 : 0;
+#endif
+        send_buf[2] |= (apolloGetStatus() == 0) ? 0x08 : 0;
+            break;
+
         case 0x0f:
             appEnterSingleforTest();
             break;
-        case 0x10:   //接近光校准读高
-            prm->em20168_high_value = EM20168_Get_psvalue();
-            DEBUG_LOG("em20168_high_value = %x\n",prm->em20168_high_value);
+        case 0x10:   //读接近光校准高_H
             send_buf[1] = 0x10;
             send_buf[2] = prm->em20168_high_value>>8;
             break;
-        case 0x11:   //接近光校准读低
-            prm->em20168_low_value = EM20168_Get_psvalue();
-            DEBUG_LOG("em20168_low_value = %x\n",prm->em20168_low_value);
+        case 0x11:   //读接近光校准高_L
             send_buf[1] = 0x11;
+            send_buf[2] = prm->em20168_high_value&0xff;
+            break;
+        case 0x40:   //读接近光校准低_H
+            send_buf[1] = 0x40;
+            send_buf[2] = prm->em20168_low_value>>8;
+            break;
+        case 0x41:   //读接近光校准低_L
+            send_buf[1] = 0x41;
             send_buf[2] = prm->em20168_low_value&0xff;
             break;
-        case 0x12:   //接近光校准写高
+        case 0x12:   //写接近光校准高_H
             prm->em20168_high_value = get_buf[2]<<8;
-      //      EM20168_Set_psvalue(1,prm->em20168_high_value);
-
-              break;
-        case 0x13:   //接近光校准写低
-            prm->em20168_cal_already = 1;
-            prm->em20168_low_value = get_buf[2];
-    //        EM20168_Set_psvalue(0,prm->em20168_low_value);
-               break;
+            Em20168_h_w =1;
+            em20168_cal = 1;
+            send_buf[1] = 0x12;  //需要返回值的话，给send_buf赋值
+            send_buf[2] = 0x00;
+            break;
+        case 0x13:   //写接近光校准高_L
+            prm->em20168_high_value |= get_buf[2];
+            if(Em20168_h_w) ParamSaveFixPrm(NULL);
+            Em20168_h_w =0;
+            em20168_cal = 2;
+            send_buf[1] = 0x13;  //需要返回值的话，给send_buf赋值
+            send_buf[2] = 0x00;
+            break;
+        case 0x42:   //写接近光校准低_H
+            prm->em20168_low_value = get_buf[2]<<8;
+            Em20168_l_w =1;
+            em20168_cal = 3;
+            send_buf[1] = 0x42;  //需要返回值的话，给send_buf赋值
+            send_buf[2] = 0x00;
+            break;
+        case 0x43:   //写接近光校准低_L
+            prm->em20168_low_value |= get_buf[2];
+            if(Em20168_l_w) ParamSaveFixPrm(NULL);
+            Em20168_l_w =0;
+            if(em20168_cal ==3)
+            {
+                prm->em20168_cal_already;
+                ParamSaveFixPrm(NULL);
+                em20168_cal = 0;
+            }
+            send_buf[1] = 0x43;  //需要返回值的话，给send_buf赋值
+            send_buf[2] = 0x00;
+            break;
         case 0x14:   //接近光验证打开
             EM20168Power(1);
-              break;
+             break;
         case 0x15:   //接近光验证状态
-//          EM20168_itr_read_reg(task, id, msg);
-//            em20168_timer_restart(100);
             send_buf[1] = 0x15;//需要返回值的话，给send_buf赋值
-            send_buf[2] = 0;
+            send_buf[2] = EM20168_statcheck();
             break;
-
-        case 0x20:   //写SN号
-            prm->sn[SNsize20] = get_buf[2];
-            SNsize20++;
-            if(SNsize20>15)
-            {
-                ParamSaveSN(prm->sn);
-                SNsize20 = 0;
-            }
-            send_buf[1] = 0x20;//需要返回值的话，给send_buf赋值
-            send_buf[2] = 0;
-            break;
-        case 0x21:   //写SN号
-            prm->sn[SNsize21] = get_buf[2];
-            SNsize21++;
-            if(SNsize21>15)
-            {
-                ParamSaveSN(prm->sn);
-                SNsize21 = 0;
-            }
-            send_buf[1] = 0x21;//需要返回值的话，给send_buf赋值
-            send_buf[2] = 0;
-              break;
-
-        case 0x30:   //读SN号
-            if(!SNsize30)   ParamLoadSN(prm->sn);
-            send_buf[1] = 0x30;//需要返回值的话，给send_buf赋值
-            send_buf[2] = prm->sn[SNsize30];
-            SNsize30++;
-            if(SNsize30>15) SNsize30=0;
-              break;
-        case 0x31:   //读SN号
-            if(!SNsize31)   ParamLoadSN(prm->sn);
-            send_buf[1] = 0x31;//需要返回值的话，给send_buf赋值
-            send_buf[2] = prm->sn[SNsize31];
-//          DEBUG_LOG("sen_buf = %x\n",send_buf[2]);
-            SNsize31++;
-            if(SNsize31>15) SNsize31=0;
-            break;
-
-       default:
+        default:
             break;
     }
 }
-
-
-
-
-
-
-
-
-
