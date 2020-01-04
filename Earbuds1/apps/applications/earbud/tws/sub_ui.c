@@ -569,6 +569,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
         gProgRunInfo.realInCase = FALSE;
 #endif
+        /// 从充电盒中取出，默认充电盒之后是关闭的，放入的时候，会收到case状态，打开的，会使这个事件失效
+//        progRun->caseLidOpen = 0;
         appUiPowerSave(POWER_MODE_OUT_CASE);
     }
 

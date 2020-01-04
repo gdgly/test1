@@ -3251,6 +3251,10 @@ static ruleAction ruleCaseOpenAllowGaiaConnect(void)
 
 static ruleAction ruleCaseCloseNotAllowGaiaConnect(void)
 {
+    if (UpgradeInProgress()) {
+        RULE_LOG("ruleCaseCloseNotAllowGaiaConnect, now in upgrade, so ignore");
+        return RULE_ACTION_DEFER;
+    }
     RULE_LOG("ruleCaseCloseNotAllowGaiaConnect, run as case close");
     return RULE_ACTION_RUN;
 }
