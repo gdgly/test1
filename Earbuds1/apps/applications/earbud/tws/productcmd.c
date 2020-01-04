@@ -60,6 +60,7 @@ void ProductEnterDutMode(void)
 #define CVC_PROCESSING_MODE_PASS_THRU_MIC4 		7
 #define CVC_PROCESSING_MODE_MAX_MODES      		8
 static uint8 g_cvcMode = CVC_PROCESSING_MODE_FULL;             // 默认一定是双MIC降噪模式
+
 void ProductEnterReocrdMode(int16 isLeft)
 {
     g_cvcMode = (isLeft) ? CVC_PROCESSING_MODE_PASS_THRU_LEFT : CVC_PROCESSING_MODE_PASS_THRU_RIGHT;
@@ -139,7 +140,8 @@ static void appEnterSingleforTest(void)
 
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 {
-//    uint8 i;
+    uint8 buf_get;
+    (void)buf_get;
     FixPrmPtr prm = &gFixParam;
 
     send_buf[0] = get_buf[0];
@@ -147,13 +149,13 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
     send_buf[2] = 0x00;
 
     DEBUG_LOG("get_buf = %x:%x:%x",get_buf[0], get_buf[1], get_buf[2]);
+
     switch(get_buf[1])
     {
         case 0x00:   //复位右
-            appSmFactoryReset();
             send_buf[2] = 0x01;
-            break;
         case 0x01:   //复位左
+            appSetState(APP_STATE_FACTORY_RESET);
             appSmFactoryReset();
             break;
         case 0x08:   //主MIC
@@ -174,21 +176,25 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         case 0x10:   //接近光校准读高
             prm->em20168_high_value = EM20168_Get_psvalue();
             DEBUG_LOG("em20168_high_value = %x\n",prm->em20168_high_value);
+            send_buf[1] = 0x10;
             send_buf[2] = prm->em20168_high_value>>8;
             break;
         case 0x11:   //接近光校准读低
             prm->em20168_low_value = EM20168_Get_psvalue();
             DEBUG_LOG("em20168_low_value = %x\n",prm->em20168_low_value);
+            send_buf[1] = 0x11;
             send_buf[2] = prm->em20168_low_value&0xff;
             break;
         case 0x12:   //接近光校准写高
             prm->em20168_high_value = get_buf[2]<<8;
-            EM20168_Set_psvalue(1,prm->em20168_high_value);
+      //      EM20168_Set_psvalue(1,prm->em20168_high_value);
+
               break;
         case 0x13:   //接近光校准写低
+            prm->em20168_cal_already = 1;
             prm->em20168_low_value = get_buf[2];
-            EM20168_Set_psvalue(0,prm->em20168_low_value);
-              break;
+    //        EM20168_Set_psvalue(0,prm->em20168_low_value);
+               break;
         case 0x14:   //接近光验证打开
             EM20168Power(1);
               break;
@@ -198,6 +204,7 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             send_buf[1] = 0x15;//需要返回值的话，给send_buf赋值
             send_buf[2] = 0;
             break;
+
         case 0x20:   //写SN号
             prm->sn[SNsize20] = get_buf[2];
             SNsize20++;
@@ -220,6 +227,7 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             send_buf[1] = 0x21;//需要返回值的话，给send_buf赋值
             send_buf[2] = 0;
               break;
+
         case 0x30:   //读SN号
             if(!SNsize30)   ParamLoadSN(prm->sn);
             send_buf[1] = 0x30;//需要返回值的话，给send_buf赋值
@@ -234,6 +242,9 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 //          DEBUG_LOG("sen_buf = %x\n",send_buf[2]);
             SNsize31++;
             if(SNsize31>15) SNsize31=0;
+            break;
+
+       default:
             break;
     }
 }

@@ -280,6 +280,7 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
     appKymeraScoConfigureChain(wesco);
 #ifdef CONFIG_STAROT
     forwardAudioAndMic(sco_chain);
+    appChangeCVCProcessMode();
 #endif
 
     /* Connect SCO to chain SCO endpoints */

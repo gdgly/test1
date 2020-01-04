@@ -86,7 +86,7 @@ void uartInit(void);
 void UartTxData(const uint8 *data, uint16 length);
 void UartSetRecvHandle(UartRxProc func);
 void ShellCmdInit(void);
-
+int appChangeCVCProcessMode(void);
 
 //==============================================================================================
 //              /* Lis25BA I2C AUDIO INIT */
