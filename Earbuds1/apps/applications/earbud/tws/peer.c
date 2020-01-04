@@ -174,7 +174,7 @@ void appPeerSigHandleInternalNormalConfigRequest(PEER_SIG_INTERNAL_NORMAL_CONFIG
 
             *((uint16*) (message + pos)) = req->apollo_config;
             pos += sizeof(uint16);
-            *((uint16*) (message + pos)) = req->wear_timestamp;
+            *((uint16*) (message + pos)) = req->wear_config;
             pos += sizeof(uint16);
             *((uint32*) (message + pos)) = req->apollo_timestamp;
             pos += sizeof(uint32);

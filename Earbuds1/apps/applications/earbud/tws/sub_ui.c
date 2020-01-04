@@ -1357,4 +1357,10 @@ void appNotifyPeerDeviceConfig(uint16 source) {
     }
 }
 
+void appSendMessageToUI(int message);
+
+void appSendMessageToUI(int message) {
+    MessageSend(&appGetUi()->task, message, 0);
+}
+
 #endif
