@@ -257,7 +257,7 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
 
     uint16 battery_level, peer_battery_level;
     appPeerSyncGetPeerBatteryLevel(&battery_level, &peer_battery_level);
-    progRun->peerElectrity = (uint8)peer_battery_level;
+    progRun->peerElectrity = appBatteryConvertLevelToPercentage(peer_battery_level);
 
 //    phyState state = appPhyStateGetState();
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 5);
@@ -398,6 +398,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         if(progRun->iElectrity == ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent)
             break;
         progRun->iElectrity = ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent;
+        appPeerSyncSend(FALSE);
         subUiStat2Gaia(id, progRun);
         DEBUG_LOG("appSubUiHandleMessage iElectrity=%d", progRun->iElectrity);
         break;
