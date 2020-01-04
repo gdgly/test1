@@ -497,12 +497,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appUiPowerSave((1==progRun->caseLidOpen) ? POWER_MODE_IN_CASE_OPEN : POWER_MODE_IN_CASE);
         subUiCasestat2Gaia(id, progRun);
         break;
-//    case APP_PAIR_HEADSET:
-//        DEBUG_LOG("plc call pair headset");
-//#ifdef TWS_DEBUG
-//        appSmPairHandset();
-//#endif
-//        break;
+    case APP_PAIR_HEADSET:
+        DEBUG_LOG("plc call pair headset");
+#ifdef TWS_DEBUG
+        appSmPairHandset();
+#endif
+        break;
    case APP_RESET_FACTORY:
        DEBUG_LOG("plc call reset headset");
 #ifdef TWS_DEBUG
