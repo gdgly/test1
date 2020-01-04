@@ -9,6 +9,10 @@
 // 产生原因很可能 发送给对方耳机及对方耳机快速响应，导致本耳机中断没响应过来
 void max20340_timer_restart(int timeout);
 
+#define MESSAGE_MAX30240_SEND_LATER    2000    // (延时反馈数据)
+static uint8 g_send_data[4];                   // 需要发送的数据
+void max20340_timer_send(int timeout);
+
 typedef struct {
   uint16 uVersionLength;
   uint16 uHeader;
@@ -26,8 +30,8 @@ int imagecase_checkver(uint8 *recv_ver)      // return 1 is upgrade
 {
     memcpy(_case_image_ver, &AP[16+4], DEV_HWSWVER_LEN);
 
-    // only compile SW ver
-    _case_need_upgrade = (memcmp(&_case_image_ver[4], &recv_ver[4], DEV_SWVER_LEN) != 0) ? 1 : 0;
+    // only compile SW ver, >0比较版本更新
+    _case_need_upgrade = (memcmp(&_case_image_ver[4], &recv_ver[4], DEV_SWVER_LEN) > 0) ? 1 : 0;
 
     return _case_need_upgrade;
 }
@@ -387,6 +391,7 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
     send_buf[0] = get_buf[0];
 }
 
+// get_buf[1]: bit6=盒盖信息 bit7=usb插拨信息
 static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
 {
     uint8 status = appSmIsPairing();// 1 广播成功
@@ -444,8 +449,17 @@ static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
         box_get_ear_status(&buf[MX20340_REG_RX_DATA0], send_buf);
         break;
     }
+
+#ifdef MESSAGE_MAX30240_SEND_LATER
+    (void)handle;
+    memcpy(g_send_data, send_buf, 3);
+    g_send_data[3] = (buf[MX20340_REG_PLC_CTL] | 3);
+    max20340_timer_send(3);
+
+#else
     max20340WriteRegister_withlen(handle, MX20340_REG_TX_DATA0, send_buf, 3);
     max20340WriteRegister(handle, MX20340_REG_PLC_CTL, buf[MX20340_REG_PLC_CTL] | 3);
+#endif
 /*    while(1){
         max20340ReadRegister(handle, MX20340_REG_PLC_STA, value_a);
         if (value_a[0] & 0x10){
@@ -543,6 +557,16 @@ void singlebus_itr_handler(Task task, MessageId id, Message msg)
                 max20340_timer_restart(20);     // 20ms后，查看中断是否拉回来了
             }
             break;
+#ifdef MESSAGE_MAX30240_SEND_LATER
+        case MESSAGE_MAX30240_SEND_LATER: {
+            bitserial_handle handle;
+            handle = max20340Enable();
+            max20340WriteRegister_withlen(handle, MX20340_REG_TX_DATA0, g_send_data, 3);
+            max20340WriteRegister(handle, MX20340_REG_PLC_CTL, g_send_data[3]);
+            max20340Disable(handle);
+        }
+            break;
+#endif
         default:
             DEBUG_LOG("id=%d(0x%x\n", id, id);
             break;
@@ -591,6 +615,14 @@ static singlebus_funcInfoTask *psbtest_funcTask = NULL;
 #endif
 #ifdef TIME_READ_MAX20340_REG
 static singlebus_funcInfoTask *time_funcTask = NULL;
+#endif
+
+#ifdef MESSAGE_MAX30240_SEND_LATER
+void max20340_timer_send(int timeout)
+{
+    MessageCancelAll(&psbfuncTask->task, MESSAGE_MAX30240_SEND_LATER);
+    MessageSendLater(&psbfuncTask->task, MESSAGE_MAX30240_SEND_LATER, 0, timeout);
+}
 #endif
 
 #ifdef TIME_READ_MAX20340_REG

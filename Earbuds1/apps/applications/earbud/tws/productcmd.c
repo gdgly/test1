@@ -137,7 +137,7 @@ static void appEnterSingleforTest(void)
 #endif
 }
 
-
+extern int apolloGetStatus(void);
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 {
     uint8 buf_get;
@@ -166,6 +166,18 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             break;
         case 0x0a:   //SPEAK
             ProductPlayTone();
+            break;
+        case 0x0B:   // check device
+#ifdef HAVE_EM20168
+            send_buf[2] |= (EM20168_GetStatus() == 0) ? 0x01 : 0;
+#endif
+#ifdef HAVE_LIS2DW12
+            send_buf[2] |= (lis2dw12_GetStatus() == 0) ? 0x02 : 0;
+#endif
+#ifdef HAVE_MAX20340
+            send_buf[2] |= (max20340_GetStatus() == 0) ? 0x04 : 0;
+#endif
+            send_buf[2] |= (apolloGetStatus() == 0) ? 0x08 : 0;
             break;
         case 0x0e:   //蓝牙
             ProductEnterDutMode();
