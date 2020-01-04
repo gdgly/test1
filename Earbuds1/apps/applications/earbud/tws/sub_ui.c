@@ -398,7 +398,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         if(progRun->iElectrity == ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent)
             break;
         progRun->iElectrity = ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent;
-        appPeerSyncSend(FALSE);
+        if (appPeerSyncIsComplete()) {
+            appPeerSyncSend(FALSE);
+        }
         subUiStat2Gaia(id, progRun);
         DEBUG_LOG("appSubUiHandleMessage iElectrity=%d", progRun->iElectrity);
         break;
