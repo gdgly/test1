@@ -399,7 +399,7 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
 
     send_buf[0] = get_buf[0];
 
-	appUiCaseStatus(((get_buf[1] >> 6) & 0x01), -1, -1, -1, 0);	        // 发送是否在盒子中的信号
+    appUiCaseStatus(((get_buf[1] >> 6) & 0x01), -1, -1, -1, 0);	        // 发送是否在盒子中的信号
 
     //status 高两位 1广播成功 2广播失败 3手机连接成功； 第5，6位 1表示已peer， 2表示未peer
     send_buf[1] = ( (status<<6) & 0xc0 ) + ( (peer_status<<4) & 0x30 );
@@ -531,7 +531,8 @@ void singlebus_itr_process(void)
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x08){//总线接收数据出错，不做回应，master会重发
         ;
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x06){//总线接收到数据
-        recv_data_process_ear(handle, value_a);
+        if(appInitCompleted())                    //没有初始化完成时，忽略接收到的数据处理
+            recv_data_process_ear(handle, value_a);
     }
 #endif
     max20340Disable(handle);

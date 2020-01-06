@@ -892,9 +892,9 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
     }
 
     if(lidOpen >= 0) {
-        uint16 beforeStatus = progRun->caseLidOpen;
-        progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
+        static uint8 beforeStatus = 0xFF;                   // 先设置为0xFF,这样第一次过来就能发送信息了
         if (beforeStatus != progRun->caseLidOpen) {
+            beforeStatus = progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
             /// 之前状态和现在状态不一致，发送事件
             if (progRun->caseLidOpen > 0) {
                 DEBUG_LOG("call case open");
