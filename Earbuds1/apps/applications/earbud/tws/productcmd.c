@@ -167,6 +167,14 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 
     }
 
+    if(get_buf[1] >= 0x48 && get_buf[1] <= 0x4F) {
+        uint8 version[8];
+        DevType type = appConfigIsLeft() ? DEV_LEFT : DEV_RIGHT;
+        SystemGetVersion(type, version);
+        send_buf[2] = version[get_buf[1] - 0x48];
+        return;
+    }
+
     switch(get_buf[1])
     {
         case 0x00:   //复位右
