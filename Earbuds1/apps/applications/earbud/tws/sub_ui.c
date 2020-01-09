@@ -351,19 +351,22 @@ static int16 subUiStartAssistant2Gaia(MessageId id, ProgRIPtr  progRun)
     UserPrmPtr prm = GetUserParam();
     if(1 != progRun->gaiaStat)
         return -1;
-    if((prm->rKeyFunc == TAP_SYSTEM || prm->lKeyFunc == TAP_SYSTEM) && id == APP_ASSISTANT_AWAKEN){
-        HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
-        return 0;
+
+    if (id == APP_ASSISTANT_AWAKEN) {
+        if (prm->assistantType == ASSISTANT_TYPE_SYSTEM) {
+            HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
+            return 0;
+        }
     }
 
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
     if(id == APP_ASSISTANT_AWAKEN){
         message->command = GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START;
-        message->payload[0] = 0x01;
+        message->payload[0] = 0x02;
     }
     if(id == APP_ASSISTANT_TAP_AWAKEN){
         message->command = GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START;
-        message->payload[0] = 0x02;
+        message->payload[0] = 0x01;
     }
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
     return 0;
@@ -473,8 +476,10 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         subUiStat2Gaia(ind->command, progRun);
         break;
     case STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB: {  ///App设置语言唤醒是否使能
-        GAIA_STAROT_CONFIG_IND_T* m = (GAIA_STAROT_CONFIG_IND_T*)message;
-        gUserParam.apolloEnable = m->payload[0];
+        APP_STAROT_WAKEUP_CONFIG_IND_T* m = (APP_STAROT_WAKEUP_CONFIG_IND_T*)message;
+        gUserParam.apolloEnable = m->apollo_enable;
+        gUserParam.assistantType = m->assistant_type;
+        gUserParam.assistantModifyTime = m->timestamp;
         ParamSaveUserPrm(&gUserParam);
         if (0 < gUserParam.apolloEnable) { /// 使能
             apolloWakeupPower(1);
@@ -486,8 +491,9 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     }
         break;
     case STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB: {
-        GAIA_STAROT_CONFIG_IND_T* m = (GAIA_STAROT_CONFIG_IND_T*)message;
-        gUserParam.sensorEnable = m->payload[0];
+        APP_STAROT_WEAR_CONFIG_IND* m = (APP_STAROT_WEAR_CONFIG_IND*)message;
+        gUserParam.sensorEnable = m->wear_enable;
+        gUserParam.sensorModifyTime = m->timestamp;
 #ifdef HAVE_EM20168
         EM20168Power(gUserParam.sensorEnable);   ///App设置是否佩戴使能
 #endif

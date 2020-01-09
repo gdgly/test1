@@ -59,12 +59,16 @@ enum{TAP_PREVIOUS_TRACK = 0x01, TAP_NEXT_TRACK = 0x02,
      TAP_PLAY_PAUSE = 0x03, TAP_WACKUP = 0x04, TAP_SYSTEM = 0x05,
 };
 
+
+
 typedef struct tagUSERPARAM {
     uint8          lKeyFunc, rKeyFunc;        // 耳机双击按键功能
     uint16         apolloEnable:1;            // 设置apollo是否使能0:不使能, 1:使能
     uint16         sensorEnable:1;            // 设置佩戴是否使能0:不使能, 1:使能
+    uint16         assistantType;             // 1:App 2:System
+    uint32         assistantModifyTime;       // 助手修改时间
+    uint32         sensorModifyTime;          // 佩戴检测修改时间
 
-    uint8          rev[8];
 }UserParam, *UserPrmPtr;
 
 extern UserParam gUserParam;

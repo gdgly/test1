@@ -10,6 +10,7 @@
 #include <vm.h>
 #include <adv_manager.h>
 #include "param.h"
+#include "av_headset_gaia_starot.h"
 
 #define PSKEY_CUSTOMER0_VALUE   (200)                         // ID, from trap_api/ps.h
 
@@ -165,6 +166,7 @@ void UserParamDefault(void)
     memset(prm, 0, sizeof(UserParam));
     prm->lKeyFunc = 0X02;
     prm->rKeyFunc = 0X02;
+    prm->assistantType = ASSISTANT_TYPE_APP;
 }
 
 

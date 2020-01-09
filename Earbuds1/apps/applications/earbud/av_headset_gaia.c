@@ -222,6 +222,7 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message) {
                machine, but it is mainly upgrade we care about. Not gaia connections. */
             DEBUG_LOG("appGaiaMessageHandler GAIA_DISCONNECT_CFM");
             appSetGaiaTransport(NULL);
+            appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
             break;
 
         case GAIA_START_SERVICE_CFM:             /* Confirmation that a Gaia server has started */

@@ -65,6 +65,8 @@ typedef struct
     Task client_task;           /*!< Task to receive any response */
     uint8 apollo_config;
     uint8 wear_config;
+    uint8 assistant_type;
+    uint8 dontused;
     uint32 apollo_timestamp;
     uint32 wear_timestamp;
 } PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T;

@@ -25,6 +25,31 @@ typedef struct
 } GAIA_STAROT_CONFIG_IND_T;
 typedef GAIA_STAROT_CONFIG_IND_T GAIA_STAROT_CONFIG_IND;
 
+enum {
+    ASSISTANT_TYPE_APP = 1,
+    ASSISTANT_TYPE_SYSTEM = 2
+};
+
+typedef struct
+{
+    uint16 command;
+    uint8 messageFrom;
+    uint8 apollo_enable;
+    uint32 timestamp;
+    uint8 assistant_type;
+    uint8 unused;
+} APP_STAROT_WAKEUP_CONFIG_IND_T;
+typedef APP_STAROT_WAKEUP_CONFIG_IND_T APP_STAROT_WAKEUP_CONFIG_IND;
+
+typedef struct
+{
+    uint16 command;
+    uint8 messageFrom;
+    uint8 wear_enable;
+    uint32 timestamp;
+} APP_STAROT_WEAR_CONFIG_IND_T;
+typedef APP_STAROT_WEAR_CONFIG_IND_T APP_STAROT_WEAR_CONFIG_IND;
+
 ////////////////////////////EVENT//////////////////////////////
 enum {
     /// 临时，不能这样定义，会冲突
