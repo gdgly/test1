@@ -182,6 +182,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
 
             // 接收到测试命令，先打开各外设
             if(g_commuType == 0){
+                g_commuType == 0xFF;
                 progRun->iPowerSaveMode = POWER_MODE_IN_EAR;
                 appUiPowerSaveSync();
             }
