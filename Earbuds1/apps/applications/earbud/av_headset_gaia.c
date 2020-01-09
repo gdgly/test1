@@ -188,6 +188,7 @@ static void appGaiaHandleInternalDisconnect(void) {
     GAIA_TRANSPORT *transport = appGetGaiaTransport();
 
     if (transport) {
+        DEBUG_LOG("call appGaiaHandleInternalDisconnect");
         GaiaDisconnectRequest(transport);
         appSetGaiaTransport(NULL);
     }
@@ -406,6 +407,12 @@ void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status, uint1
 /*! \brief Disconnect any active gaia connection
  */
 void appGaiaDisconnect(void) {
+    DEBUG_LOG("call appGaiaDisconnect");
+    if (NULL != appGetGaia()->transport) {
+        DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
+    }
+//    MessageSendLater(appGetGaiaTask(), APP_GAIA_INTERNAL_DISCONNECT, NULL, 100);
     MessageSend(appGetGaiaTask(), APP_GAIA_INTERNAL_DISCONNECT, NULL);
 }
 

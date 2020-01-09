@@ -887,7 +887,7 @@ bool gaiaTransportHandleMessage(Task task, MessageId id, Message message)
                 
                 GAIA_TRANS_DEBUG(("gaia: TRANSPORT_MGR_LINK_DISCONNECTED_CFM: %d\n", m->status));
 
-                if(transport != NULL && m->status)
+                if(transport != NULL/* && m->status*/)
                 {
                     if(transport->type == gaia_transport_rfcomm)
                     {

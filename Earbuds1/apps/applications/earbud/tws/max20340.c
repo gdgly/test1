@@ -515,13 +515,19 @@ void singlebus_itr_process(void)
         if( ((value_a[MX20340_REG_STA1]&0x1c) == (5<<2)) ){
             //说明是插入动作,可能是芯片bug需要重写mask寄存器
             DEBUG_LOG("plc in");
-            if(0 == g_commuType)       // 非测试模式下去改变实际状态
+            if(0 == g_commuType){       // 非测试模式下去改变实际状态
+                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
+                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
                 MessageSend(appGetUiTask(), APP_ATTACH_PLC_IN, NULL);
+            }
         }else if( ((value_a[MX20340_REG_STA1]&0x1c) == (3<<2)) ){
             //说明是拔出动作,可能是芯片bug需要重写mask寄存器
             DEBUG_LOG("plc out");
-            if(0 == g_commuType)       // 非测试模式下去改变实际状态
+            if(0 == g_commuType) {       // 非测试模式下去改变实际状态
+                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
+                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
                 MessageSend(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL);
+            }
         }
         //max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x2);
         max20340WriteRegister(handle, MX20340_REG_CTRL1, 0xe1);

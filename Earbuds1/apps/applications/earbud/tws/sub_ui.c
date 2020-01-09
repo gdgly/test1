@@ -681,9 +681,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_ATTACH_PLC_IN: {
         DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
 #ifdef TWS_DEBUG
+       // if (appSmIsOutOfEar()) {
         phyStateTaskData* phy_state = appGetPhyState();
+        MessageCancelAll(&phy_state->task, CHARGER_MESSAGE_ATTACHED);
         MessageSend(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL);
         gProgRunInfo.realInCase = TRUE;
+       // }
 #endif
         appUiPowerSave(POWER_MODE_IN_CASE);
     }
@@ -692,9 +695,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_ATTACH_PLC_OUT:  {
         DEBUG_LOG("parse APP_ATTACH_PLC_OUT event");
 #ifdef TWS_DEBUG
+       // if (appSmIsInCase()) {
         phyStateTaskData* phy_state = appGetPhyState();
+        MessageCancelAll(&phy_state->task, CHARGER_MESSAGE_DETACHED);
         MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
         gProgRunInfo.realInCase = FALSE;
+       // }
 #endif
         /// 从充电盒中取出，默认充电盒之后是关闭的，放入的时候，会收到case状态，打开的，会使这个事件失效
 //        progRun->caseLidOpen = 0;

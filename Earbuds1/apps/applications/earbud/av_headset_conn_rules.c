@@ -340,7 +340,7 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_CASE_OPEN,                  ruleCaseOpenAllowGaiaConnect,       CONN_RULES_ALLOW_HANDSET_CONNECT), /// 可连接，用户android升级
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleCaseCloseNotAllowGaiaConnect,   CONN_RULES_REJECT_HANDSET_CONNECT), //盒盖关闭，不可连接
-    RULE(RULE_EVENT_CASE_CLOSE,                 ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
+   // RULE(RULE_EVENT_CASE_CLOSE,                 ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
 #endif
     RULE(RULE_EVENT_CHECK_GAIA_CONNECTION,      ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
     RULE(RULE_EVENT_UPGRADE,                    ruleAllowGaiaConnect,               CONN_RULES_ALLOW_HANDSET_CONNECT),
