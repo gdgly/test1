@@ -1107,5 +1107,12 @@ void gaiaSendDialogActiveStatus(int command, uint8* phone, int len) {
     attrFree(starotAttr, attrData);
 }
 
+bool appGaiaIsConnectBySpp(void)
+{
+    return  ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_rfcomm) ||
+             ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_spp)));
+}
+
+
 #endif
 

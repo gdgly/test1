@@ -2528,23 +2528,34 @@ static ruleAction bleDisable(void) {
 }
 
 extern bool appGetCaseIsOpen(void);
+extern bool appGaiaIsConnectBySpp(void);
 
 static ruleAction ruleBleConnectionUpdate(void)
 {
+    if ((appGaiaIsConnect()) && appGaiaIsConnectBySpp()) {
+        DEBUG_LOG("ruleBleConnectionUpdate now have gaia(spp) connect, so ble disable");
+        return bleDisable();
+    }
+
+    if (appPeerSyncIsPeerPairing()) {
+        DEBUG_LOG("ruleBleConnectionUpdate now peer is in pair, so need ble adv disable");
+        return bleDisable();
+    }
+
     if (appSmIsPairing()) {
-        DEBUG_LOG("now is pair, so need ble adv for android");
+        DEBUG_LOG("ruleBleConnectionUpdate now is pair, so need ble adv for android");
         appBleSelectFeture();
         return bleEnable();
     }
 
     if (!(appGaiaIsConnect()) && (TRUE == UpgradeInProgress())) {
-        DEBUG_LOG("gaia is connect, but now is upgrade, so need enable");
+        DEBUG_LOG("ruleBleConnectionUpdate gaia is connect, but now is upgrade, so need enable");
         appBleSelectFeture();
         return bleEnable();
     }
 
     if (appGaiaIsConnect() && !handsetDisconnectAllowed()) {
-        RULE_LOG("current gaia is connect, and headset is connect");
+        RULE_LOG("ruleBleConnectionUpdate current gaia is connect, and headset is connect");
         return RULE_ACTION_IGNORE;
     }
 
@@ -2553,14 +2564,14 @@ static ruleAction ruleBleConnectionUpdate(void)
     bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
     /// 没有和另一只耳机交换地址
     if (FALSE == paired_with_peer) {
-        DEBUG_LOG("tws ble status ---------------------------0");
+        DEBUG_LOG("ruleBleConnectionUpdate paired_with_peer is false, ble disable");
         return bleDisable();
     }
     appState state = appGetState();
     bool allow_ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
-    DEBUG_LOG("ble connect, app get state is %04X all_ble_connectable is : %02X", state, allow_ble_connectable);
+    DEBUG_LOG("ruleBleConnectionUpdate ble connect, app get state is %04X all_ble_connectable is : %02X", state, allow_ble_connectable);
     if (FALSE == allow_ble_connectable) { /// 状态不允许连接
-        DEBUG_LOG("tws ble status ---------------------------not allow ble connectable");
+        DEBUG_LOG("ruleBleConnectionUpdate allow_ble_connectable is false, ble disable");
         return bleDisable();
     }
 
@@ -2570,12 +2581,12 @@ static ruleAction ruleBleConnectionUpdate(void)
         bool peer_sync = appPeerSyncIsComplete();
         /// 正在同步数据，等待
         if (FALSE == peer_sync) {
-            DEBUG_LOG("tws ble status peer sync ing, ignore the rules");
+            DEBUG_LOG("ruleBleConnectionUpdate peer sync ing, ignore the rules");
             return RULE_ACTION_IGNORE;
         } else {
             bool peer_dfu = appPeerSyncPeerDfuInProgress();
             if (TRUE == peer_dfu) {
-                DEBUG_LOG("tws ble status peer in dfu, so we need disable ble adv");
+                DEBUG_LOG("ruleBleConnectionUpdate peer in dfu, so we need disable ble adv");
                 return bleDisable();
             }
 
@@ -2583,15 +2594,15 @@ static ruleAction ruleBleConnectionUpdate(void)
                 if (appPeerSyncIsPeerInCase() && appGetCaseIsOpen()) {
                     //1.比较版本号 2.比较电量信息
                     if(bleBattery(left)) {  /// 电量多
-                        DEBUG_LOG("tws ble status self battery more, ble adv enable");
+                        DEBUG_LOG("ruleBleConnectionUpdate self battery more, ble adv enable");
                         appBleSelectFeture();
                         return bleEnable();
                     } else { /// 电量少
-                        DEBUG_LOG("tws ble status self battery less, ble adv disable");
+                        DEBUG_LOG("ruleBleConnectionUpdate self battery less, ble adv disable");
                         return bleDisable();
                     }
                 } else {
-                    DEBUG_LOG("tws ble status only one in case ble adv disable");
+                    DEBUG_LOG("ruleBleConnectionUpdate only one in case ble adv disable");
                     return bleDisable();
                 }
             } else {  /// 当前耳机在空中
@@ -2602,11 +2613,11 @@ static ruleAction ruleBleConnectionUpdate(void)
                 bool bredrHaveConnected = appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetA2dpStreaming() ||
                         appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected();
                 if (TRUE == bredrHaveConnected) {
-                    DEBUG_LOG("tws ble status ---------------------------bredr have connected");
+                    DEBUG_LOG("ruleBleConnectionUpdate bredr have connected ble enable");
                     appBleSelectFeture();
                     return bleEnable();
                 } else {
-                    DEBUG_LOG("tws ble status ---------------------------bredr don't connected");
+                    DEBUG_LOG("ruleBleConnectionUpdate bredr don't connected ble disable");
                     return bleDisable();
                 }
             }
@@ -2615,15 +2626,15 @@ static ruleAction ruleBleConnectionUpdate(void)
         bool self_in_case = appSmIsInCase();
         if (TRUE == self_in_case) { /// 盒子中
             if (appGetCaseIsOpen()) { /// 充电盒打开
-                DEBUG_LOG("tws ble status, peer not connect, now in case, and case is open, so we ble adv enable");
+                DEBUG_LOG("ruleBleConnectionUpdate peer not connect, now in case, and case is open, so we ble adv enable");
                 appBleSelectFeture();
                 return bleEnable();
             } else {/// 充电盒关闭
-                DEBUG_LOG("tws ble status, peer not connect, now in case, and case is close, so we ble adv disable");
+                DEBUG_LOG("ruleBleConnectionUpdate peer not connect, now in case, and case is close, so we ble adv disable");
                 return bleDisable();
             }
         } else { /// 不在盒子中
-            DEBUG_LOG("tws ble status ---------------------------8");
+            DEBUG_LOG("ruleBleConnectionUpdate not in case, ble enable");
             appBleSelectFeture();
             return bleEnable();
         }

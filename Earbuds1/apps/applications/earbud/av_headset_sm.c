@@ -1680,7 +1680,6 @@ static void appSmHandleConnRulesScoForwardingControl(CONN_RULES_SCO_FORWARDING_C
 /*! \brief Handle rule action to update page scan settings. */
 static void appSmHandleBleConnectionUpdate(const CONN_RULES_BLE_CONNECTION_UPDATE_T* update)
 {
-
     if (appGattAllowBleConnections(update->enable))
     {
         DEBUG_LOGF("appSmHandleBleConnectionUpdate enable:%u Kicking peer sync", update->enable);
