@@ -2529,8 +2529,14 @@ static ruleAction bleDisable(void) {
 
 static ruleAction ruleBleConnectionUpdate(void)
 {
+    if (appSmIsPairing()) {
+        appBleSelectFeture();
+        return bleEnable();
+    }
+
     if (!(appGaiaIsConnect()) && (TRUE == UpgradeInProgress())) {
         DEBUG_LOG("gaia is connect, but now is upgrade, so need enable");
+        appBleSelectFeture();
         return bleEnable();
     }
 
@@ -2575,18 +2581,21 @@ static ruleAction ruleBleConnectionUpdate(void)
                 bool peer_in_case = appPeerSyncIsPeerInCase();
                 if (TRUE == peer_in_case) {
                     uint8 powerCaseState = appUIGetPowerCaseState();
-                    if (0 != powerCaseState) { /// 充电盒打开
-                        if(bleBattery(left)) {  /// 电量多
-                            DEBUG_LOG("tws ble status ---------------------------battery more");
-                            return bleEnable();
-                        } else { /// 电量少
-                            DEBUG_LOG("tws ble status ---------------------------battery less");
-                            return bleDisable();
-                        }
-                    } else {/// 充电盒关闭
-                        DEBUG_LOG("tws ble status ---------------------------power case close");
-                        return bleEnable();
-                    }
+                    return bleEnable();
+
+//                    if (0 != powerCaseState) { /// 充电盒打开
+//                        if(bleBattery(left)) {  /// 电量多
+//                            DEBUG_LOG("tws ble status ---------------------------battery more");
+//                            return bleEnable();
+//                        } else { /// 电量少
+//                            DEBUG_LOG("tws ble status ---------------------------battery less");
+//                            return bleDisable();
+//                        }
+//                    } else {/// 充电盒关闭
+//                        DEBUG_LOG("tws ble status ---------------------------power case close");
+//                        appBleSelectFeture();
+//                        return bleEnable();
+//                    }
                 } else {
                     DEBUG_LOG("tws ble status ---------------------------only one in case");
                     return bleDisable();
@@ -2600,6 +2609,7 @@ static ruleAction ruleBleConnectionUpdate(void)
                         appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected();
                 if (TRUE == bredrHaveConnected) {
                     DEBUG_LOG("tws ble status ---------------------------bredr have connected");
+                    appBleSelectFeture();
                     return bleEnable();
                 } else {
                     DEBUG_LOG("tws ble status ---------------------------bredr don't connected");
@@ -2613,13 +2623,16 @@ static ruleAction ruleBleConnectionUpdate(void)
             uint8 powerCaseState = appUIGetPowerCaseState();
             if (0 != powerCaseState) { /// 充电盒打开
                 DEBUG_LOG("tws ble status ---------------------------6");
+                appBleSelectFeture();
                 return bleEnable();
             } else {/// 充电盒关闭
                 DEBUG_LOG("tws ble status ---------------------------7");
+                appBleSelectFeture();
                 return bleEnable();
             }
         } else { /// 不在盒子中
             DEBUG_LOG("tws ble status ---------------------------8");
+            appBleSelectFeture();
             return bleEnable();
         }
     }

@@ -173,4 +173,7 @@ uint8 appUIGetPowerCaseState(void);
 bool appUIDeviceRealInCase(void);
 
 bool appUICaseIsOpen(void);
+
+void appGetLocalBrEdrAddress(uint8* addrbuf);
+void appGetPeerBrEdrAddress(uint8* addrbuf);
 #endif // SUB_UI_H

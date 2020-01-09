@@ -15,6 +15,7 @@
 #include "av_headset_gaia_starot.h"
 #include "apollo.h"
 #include "peer.h"
+#include "param.h"
 
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
@@ -1002,7 +1003,7 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
     ProgRIPtr  progRun = appSubGetProgRun();
 
     (void)keyDown;
-//    DEBUG_LOG("CASE:%d key=%d %d %d", lidOpen, keyDown, keyLong, iElectrity);
+    DEBUG_LOG("CASE:%d key=%d %d %d", lidOpen, keyDown, keyLong, iElectrity);
 
     if(appConfigIsLeft()) {  // 只考虑对耳机是否在
         if((bitEars & 0x20))  // mask BIT
@@ -1491,4 +1492,37 @@ void appSendMessageToUI(int message) {
     MessageSend(&appGetUi()->task, message, 0);
 }
 
+void appGetLocalBrEdrAddress(uint8* addrbuf) {
+    ProgRIPtr  progRun = appSubGetProgRun();
+    addrbuf[0] = (progRun->addr.nap >> 8) & 0xFF;
+    addrbuf[1] = (progRun->addr.nap & 0xFF);
+    addrbuf[2] = progRun->addr.uap;
+    addrbuf[3] = (progRun->addr.lap >> 16) & 0xFF;
+    addrbuf[4] = (progRun->addr.lap >> 8) & 0xFF;
+    addrbuf[5] = (progRun->addr.lap & 0xFF);
+    for (int i = 0; i < 6; ++i)
+        DEBUG_LOG("MAC ADDRESS :%d %02X", i, addrbuf[i]);
+}
+
+
+void appGetPeerBrEdrAddress(uint8* addrbuf) {
+    bdaddr addr;
+    if (appDeviceGetPeerBdAddr(&addr)) {
+        addrbuf[0] = (addr.nap >> 8) & 0xFF;
+        addrbuf[1] = (addr.nap & 0xFF);
+        addrbuf[2] = addr.uap;
+        addrbuf[3] = (addr.lap >> 16) & 0xFF;
+        addrbuf[4] = (addr.lap >> 8) & 0xFF;
+        addrbuf[5] = (addr.lap & 0xFF);
+        for (int i = 0; i < 6; ++i)
+            DEBUG_LOG("MAC ADDRESS :%d %02X", i, addrbuf[i]);
+    }
+}
+
+void testPrintBrEdr(void);
+void testPrintBrEdr(void) {
+    uint8 addr[32];
+    appGetLocalBrEdrAddress(addr);
+    appGetPeerBrEdrAddress(addr);
+}
 #endif

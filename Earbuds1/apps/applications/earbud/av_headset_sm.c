@@ -344,7 +344,6 @@ static void appExitPeerPairing(void)
     appPairingPeerPairCancel();
 }
 
-
 /*! \brief Start process to pairing with handset.
  */
 static void appEnterHandsetPairing(void)
@@ -357,7 +356,7 @@ static void appEnterHandsetPairing(void)
     appPeerSyncSend(FALSE);
 
     appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
-
+    GattManagerCancelWaitForRemoteClient();
     //appBleClearBond();  // todo 要不记录多个，要不在成功配对之后，或在收到配对地址时，给清除掉
     appGaiaDisconnect();
 }
