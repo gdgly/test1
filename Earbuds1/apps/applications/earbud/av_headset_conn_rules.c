@@ -2527,9 +2527,12 @@ static ruleAction bleDisable(void) {
     return RULE_ACTION_RUN_PARAM(st);
 }
 
+extern bool appGetCaseIsOpen(void);
+
 static ruleAction ruleBleConnectionUpdate(void)
 {
     if (appSmIsPairing()) {
+        DEBUG_LOG("now is pair, so need ble adv for android");
         appBleSelectFeture();
         return bleEnable();
     }
@@ -2567,37 +2570,28 @@ static ruleAction ruleBleConnectionUpdate(void)
         bool peer_sync = appPeerSyncIsComplete();
         /// 正在同步数据，等待
         if (FALSE == peer_sync) {
-            DEBUG_LOG("tws ble status ---------------------------peer sync ing");
+            DEBUG_LOG("tws ble status peer sync ing, ignore the rules");
             return RULE_ACTION_IGNORE;
         } else {
             bool peer_dfu = appPeerSyncPeerDfuInProgress();
             if (TRUE == peer_dfu) {
-                DEBUG_LOG("tws ble status ---------------------------dfu");
+                DEBUG_LOG("tws ble status peer in dfu, so we need disable ble adv");
                 return bleDisable();
             }
 
-            bool self_in_case = appSmIsInCase();
-            if (TRUE == self_in_case) { /// 当前耳机在充电盒中
-                bool peer_in_case = appPeerSyncIsPeerInCase();
-                if (TRUE == peer_in_case) {
-                    uint8 powerCaseState = appUIGetPowerCaseState();
-                    return bleEnable();
-
-//                    if (0 != powerCaseState) { /// 充电盒打开
-//                        if(bleBattery(left)) {  /// 电量多
-//                            DEBUG_LOG("tws ble status ---------------------------battery more");
-//                            return bleEnable();
-//                        } else { /// 电量少
-//                            DEBUG_LOG("tws ble status ---------------------------battery less");
-//                            return bleDisable();
-//                        }
-//                    } else {/// 充电盒关闭
-//                        DEBUG_LOG("tws ble status ---------------------------power case close");
-//                        appBleSelectFeture();
-//                        return bleEnable();
-//                    }
+            if (TRUE == appSmIsInCase()) { /// 当前耳机在充电盒中
+                if (appPeerSyncIsPeerInCase() && appGetCaseIsOpen()) {
+                    //1.比较版本号 2.比较电量信息
+                    if(bleBattery(left)) {  /// 电量多
+                        DEBUG_LOG("tws ble status self battery more, ble adv enable");
+                        appBleSelectFeture();
+                        return bleEnable();
+                    } else { /// 电量少
+                        DEBUG_LOG("tws ble status self battery less, ble adv disable");
+                        return bleDisable();
+                    }
                 } else {
-                    DEBUG_LOG("tws ble status ---------------------------only one in case");
+                    DEBUG_LOG("tws ble status only one in case ble adv disable");
                     return bleDisable();
                 }
             } else {  /// 当前耳机在空中
@@ -2620,15 +2614,13 @@ static ruleAction ruleBleConnectionUpdate(void)
     } else { /// Peer连接未建立
         bool self_in_case = appSmIsInCase();
         if (TRUE == self_in_case) { /// 盒子中
-            uint8 powerCaseState = appUIGetPowerCaseState();
-            if (0 != powerCaseState) { /// 充电盒打开
-                DEBUG_LOG("tws ble status ---------------------------6");
+            if (appGetCaseIsOpen()) { /// 充电盒打开
+                DEBUG_LOG("tws ble status, peer not connect, now in case, and case is open, so we ble adv enable");
                 appBleSelectFeture();
                 return bleEnable();
             } else {/// 充电盒关闭
-                DEBUG_LOG("tws ble status ---------------------------7");
-                appBleSelectFeture();
-                return bleEnable();
+                DEBUG_LOG("tws ble status, peer not connect, now in case, and case is close, so we ble adv disable");
+                return bleDisable();
             }
         } else { /// 不在盒子中
             DEBUG_LOG("tws ble status ---------------------------8");

@@ -97,8 +97,6 @@ typedef struct tagPROGRUNINFO {
     //保存手机拨入的信息
     uint8          callIndex:2;
     CallIPtr       callInfo[MAX_CALLIN_INFO]; // 保存两个信息
-
-    uint8          powerCaseState;          // 0 close 1 open
 #ifdef TWS_DEBUG
     bool           realInCase;              // true:充电盒中 false:空中
 #endif
@@ -176,4 +174,5 @@ bool appUICaseIsOpen(void);
 
 void appGetLocalBrEdrAddress(uint8* addrbuf);
 void appGetPeerBrEdrAddress(uint8* addrbuf);
+bool appGetCaseIsOpen(void);
 #endif // SUB_UI_H

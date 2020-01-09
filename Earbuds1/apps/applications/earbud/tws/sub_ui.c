@@ -1280,11 +1280,6 @@ void appUICaseEvent(int type)
     }
 }
 
-uint8 appUIGetPowerCaseState(void)
-{
-    return gProgRunInfo.powerCaseState;
-}
-
 int apolloWakeupCallback(void)
 {
     if(1 == g_commuType){
@@ -1519,10 +1514,18 @@ void appGetPeerBrEdrAddress(uint8* addrbuf) {
     }
 }
 
+bool appGetCaseIsOpen(void) {
+    ProgRIPtr  progRun = appSubGetProgRun();
+    return (progRun->caseLidOpen > 0) ? TRUE : FALSE;
+}
+
+
 void testPrintBrEdr(void);
 void testPrintBrEdr(void) {
     uint8 addr[32];
     appGetLocalBrEdrAddress(addr);
     appGetPeerBrEdrAddress(addr);
 }
+
+
 #endif
