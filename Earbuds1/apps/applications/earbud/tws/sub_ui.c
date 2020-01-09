@@ -190,7 +190,7 @@ static void subUiKeyDoubleTap(ProgRIPtr progRun)
                 appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
                 MessageSend(&appGetUi()->task, APP_ASSISTANT_TAP_AWAKEN, 0);
             }
-            else if(prm->rKeyFunc == TAP_SYSTEM){
+            else if(prm->lKeyFunc == TAP_SYSTEM){
                 HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
             }
             /* If AVRCP to handset connected, send play or pause */
