@@ -152,7 +152,8 @@ int16 ParamLoadBtAddrPrm(BtAddrPrmPtr pParam)
 //////// 一些用户可以修改的参数
 /////////////////////////////////////////////////////////////////////////////////
 UserParam gUserParam;
-static UserPrmPtr GetUserParam(void)
+UserPrmPtr GetUserParam(void);
+UserPrmPtr GetUserParam(void)
 {
     return &gUserParam;
 }
@@ -162,8 +163,8 @@ void UserParamDefault(void)
     UserPrmPtr prm = &gUserParam;
 
     memset(prm, 0, sizeof(UserParam));
-    prm->lKeyFunc = 0X04;
-    prm->rKeyFunc = 0X05;
+    prm->lKeyFunc = 0X02;
+    prm->rKeyFunc = 0X02;
 }
 
 

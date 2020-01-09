@@ -37,13 +37,15 @@ void appPeerSigMsgBleConfigConfirmation(Task task, peerSigStatus status);
  * Peer Signalling Message Definitions
  ******************************************************************************/
 #define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG                 0x71
-#define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE            2    /// 左+右
+#define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE            10    /// 左+右+软硬件版本号
 
 typedef struct
 {
     Task client_task;           /*!< Task to receive any response */
     uint8 left;
     uint8 right;
+    uint16 reserve;
+    uint8 peerver[DEV_HWSWVER_LEN];
 } PEER_SIG_INTERNAL_DOBULE_CLICK_CONFIG_REQ_T;
 
 void appPeerSigTxDoubleClickConfigRequest(Task task, const bdaddr *peer_addr, uint8 left, uint8 right);
@@ -76,4 +78,21 @@ void appPeerSigMsgNormalConfigConfirmation(Task task, peerSigStatus status);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////双击消息项////////////////////////////////////////////
+#define AVRCP_PEER_DOUBLE_CLICK_WAKEUP                 0x73
+#define AVRCP_PEER_DOUBLE_CLICK_WAKEUP_SYSTEM          0x74
+//#define AVRCP_PEER_DOUBLE_CLICK_WAKEUP_SIZE            10
+typedef struct
+{
+    Task client_task;           /*!< Task to receive any response */
+} PEER_SIG_DOUBLE_CLICK_WAKEUP_REQ_T;
+
+void appPeerSigTxDoubleClickWakeupRequest(Task task, const bdaddr *peer_addr, int num);
+void appPeerSigHandleInternalDoubleClickWakeupRequest(PEER_SIG_DOUBLE_CLICK_WAKEUP_REQ_T *req);
+void appPeerSigHandleInternalDoubleClickWakeupSystemRequest(PEER_SIG_DOUBLE_CLICK_WAKEUP_REQ_T *req);
+bool appPeerSigHandleDoubleClickWakeupCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind);
+bool appPeerSigHandleDoubleClickWakeupSystemCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind);
+void appPeerSigMsgDoubleClickWakeupConfirmation(Task task, peerSigStatus status);
+
+/////////////////////////////////////////////////////////////////////////////////////////
 #endif //EARBUDS1_PEER_H

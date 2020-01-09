@@ -79,11 +79,17 @@ void appPeerSigMsgBleConfigConfirmation(Task task, peerSigStatus status) {
 ////-------------------------------------------华丽的分割线-------------------------------------------------
 
 void appPeerSigTxDoubleClickConfigRequest(Task task, const bdaddr *peer_addr, uint8 left, uint8 right) {
+    uint8 ver[8];
     peerSigTaskData *peer_sig = appGetPeerSig();
     STAROT_MAKE_MESSAGE(PEER_SIG_INTERNAL_DOBULE_CLICK_CONFIG_REQ_T);
     message->client_task = task;
-    message->left = left;
-    message->right = right;
+    if(0xFF != left)
+        message->left = left;
+    if(0xFF != right)
+        message->right = right;
+
+    SystemGetCurrentVersion((uint8*)ver);
+    memcpy(message->peerver, ver, DEV_HWSWVER_LEN);
     MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_DOUBLE_CLICK_SETTING_REQ, message, appPeerSigStartup(peer_addr));
 }
 
@@ -96,9 +102,10 @@ void appPeerSigHandleInternalDoubleClickConfigRequest(PEER_SIG_INTERNAL_DOBULE_C
             /* Build data for message  */
             message[0] = req->left;
             message[1] = req->right;
+            memcpy(&message[2], req->peerver, DEV_HWSWVER_LEN);
             /* Send the handset address over AVRCP */
-            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_BLE_CONFIG,
-                                               AVRCP_PEER_CMD_BLE_CONFIG_SIZE, message);
+            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG,
+                                               AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE, message);
         }
             break;
 
@@ -123,9 +130,10 @@ bool appPeerSigHandleDoubleClickConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T 
 //        DEBUG_LOG("appPeerSigHandleConnectHandsetCommand %d", message->play_media);
         uint8 left = ind->payload[0];
         uint8 right = ind->payload[1];
-        UNUSED(left);
-        UNUSED(right);
         /// 是直接存储，还是调用ui
+        memcpy(gBtAddrParam.peerVer, &ind->payload[2], DEV_HWSWVER_LEN);
+        ParamSaveBtAddrPrm(&gBtAddrParam);
+        UserSetKeyFunc(left, right);
         return TRUE;
     }
 }
@@ -245,4 +253,71 @@ bool appPeerSigHandleNormalConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind)
 void appPeerSigMsgNormalConfigConfirmation(Task task, peerSigStatus status) {
     UNUSED(task);
     UNUSED(status);
+}
+
+////-------------------------------------------华丽的分割线-------------------------------------------------
+void appPeerSigTxDoubleClickWakeupRequest(Task task, const bdaddr *peer_addr, int num) {
+    peerSigTaskData *peer_sig = appGetPeerSig();
+    STAROT_MAKE_MESSAGE(PEER_SIG_DOUBLE_CLICK_WAKEUP_REQ_T);
+    message->client_task = task;
+    if(num == 0)
+        MessageSendConditionally(&peer_sig->task,PEER_SIG_INTERNAL_DOUBLE_CLICK_WAKEUP_REQ , message, appPeerSigStartup(peer_addr));
+    if(num == 1)
+        MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_DOUBLE_CLICK_WAKEUP_SYSTEM_REQ, message, appPeerSigStartup(peer_addr));
+}
+
+void appPeerSigHandleInternalDoubleClickWakeupRequest(PEER_SIG_DOUBLE_CLICK_WAKEUP_REQ_T *req) {
+    DEBUG_LOG("appPeerSigHandleInternalBleConfigRequest, state %u", appPeerSigGetState());
+
+    switch (appPeerSigGetState()) {
+        case PEER_SIG_STATE_CONNECTED: {
+//            uint8 message[AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE];
+//            /* Build data for message  */
+//            message[0] = req->left;
+//            message[1] = req->right;
+//            memcpy(&message[2], req->peerver, DEV_HWSWVER_LEN);
+            /* Send the handset address over AVRCP */
+            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_DOUBLE_CLICK_WAKEUP,
+                                               0, NULL);
+        }
+            break;
+
+        default: {
+            appPeerSigMsgConnectHandsetConfirmation(req->client_task, peerSigStatusLinkKeyTxFail);
+        }
+            break;
+    }
+}
+
+void appPeerSigHandleInternalDoubleClickWakeupSystemRequest(PEER_SIG_DOUBLE_CLICK_WAKEUP_REQ_T *req) {
+    DEBUG_LOG("appPeerSigHandleInternalBleConfigRequest, state %u", appPeerSigGetState());
+
+    switch (appPeerSigGetState()) {
+        case PEER_SIG_STATE_CONNECTED: {
+            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_DOUBLE_CLICK_WAKEUP_SYSTEM,
+                                               0, NULL);
+        }
+            break;
+
+        default: {
+            appPeerSigMsgConnectHandsetConfirmation(req->client_task, peerSigStatusLinkKeyTxFail);
+        }
+            break;
+    }
+}
+
+bool appPeerSigHandleDoubleClickWakeupCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
+    UNUSED(ind);
+    MessageSend(&appGetUi()->task, APP_ASSISTANT_TAP_AWAKEN, 0);
+    return TRUE;
+}
+
+bool appPeerSigHandleDoubleClickWakeupSystemCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
+    UNUSED(ind);
+    MessageSend(&appGetUi()->task, APP_TAP_SYSTEM, 0);
+    return TRUE;
+}
+void appPeerSigMsgDoubleClickWakeupConfirmation(Task task, peerSigStatus status) {
+    /// todo : 发送消息至指定task，告知同步情况
+    UNUSED(task), UNUSED(status);
 }

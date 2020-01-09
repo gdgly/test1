@@ -54,6 +54,11 @@ bool ParamUsingSingle(void);
 /////////////////////////////////////////////////////////////////////////////////
 //////// 一些用户可以修改的参数
 /////////////////////////////////////////////////////////////////////////////////
+///
+enum{TAP_PREVIOUS_TRACK = 0x01, TAP_NEXT_TRACK = 0x02,
+     TAP_PLAY_PAUSE = 0x03, TAP_WACKUP = 0x04, TAP_SYSTEM = 0x05,
+};
+
 typedef struct tagUSERPARAM {
     uint8          lKeyFunc, rKeyFunc;        // 耳机双击按键功能
     uint16         apolloEnable:1;            // 设置apollo是否使能0:不使能, 1:使能

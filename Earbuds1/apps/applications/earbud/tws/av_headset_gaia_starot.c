@@ -44,7 +44,7 @@ static void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message);//上报电
 static void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message);//App主动获取电量-位置-连接状态信息
 
 static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App请求录音
-static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message);//ui上报gaia助手唤醒消息
+static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type);//ui上报gaia助手唤醒消息
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
 static void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message);//接受设备传过来的停止信息
 
@@ -236,7 +236,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
     /// 助手52NN
     switch (message->command) {
         case GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START:
-            gaiaAssistantAwake(message);
+            gaiaAssistantAwake(message, message->payload[0]);
             break;
         case GAIA_COMMAND_STAROT_AI_BEGIN_RECORD:
             gaiaSetRequestRecord(message, TRUE);
@@ -744,8 +744,10 @@ void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     attrFree(body, NULL);
 }
 
+extern void appPeerSigTxDoubleClickConfigRequest(Task task, const bdaddr *peer_addr, uint8 left, uint8 right);
 // App设置设备的耳机的双击配置信息
 void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
+    bdaddr peer_addr;
     StarotAttr *body = attrDecode(message->payload, message->payloadLen);
     if (NULL == body) {
         return;
@@ -762,6 +764,9 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     }
     if ((0XFF != leftKey) || (0XFF != rightKey)) {
         UserSetKeyFunc(leftKey, rightKey);
+    }
+    if (appDeviceGetPeerBdAddr(&peer_addr)) {
+        appPeerSigTxDoubleClickConfigRequest(appGetGaiaTask(), &peer_addr, gUserParam.lKeyFunc, gUserParam.rKeyFunc);
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
     attrFree(body, NULL);
@@ -826,20 +831,33 @@ void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin) {
     forwardSetDataClient(DATA_CLIENT_GAIA);
 }
 
-void gaiaAssistantAwake(GAIA_STAROT_IND_T *message)
+
+
+void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type)
 {
+    (void)message;
     StarotAttr *head = NULL;
-    StarotAttr *attr = NULL;
 
     DEBUG_LOG("gaiaAssistantAwake");
-    attr = attrMalloc(&head, 1);
-    attr->attr = 0X01;
-    attr->payload[0] = 0X01;
+
+    {
+        StarotAttr *attr = NULL;
+        attr = attrMalloc(&head, 1);
+        attr->attr = 0X01;
+        attr->payload[0] = 0X01;
+    }
+
+    {
+        StarotAttr *attr = NULL;
+        attr = attrMalloc(&head, 1);
+        attr->attr = 0X02;
+        attr->payload[0] = type;
+    }
 
     if (NULL != head) {
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, message->command, 0xfe, len, data);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START, 0xfe, len, data);
         attrFree(head, data);
         DEBUG_LOG("call GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START");
     }
