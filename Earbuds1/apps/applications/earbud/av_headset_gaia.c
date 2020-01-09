@@ -408,11 +408,8 @@ void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status, uint1
  */
 void appGaiaDisconnect(void) {
     DEBUG_LOG("call appGaiaDisconnect");
-    if (NULL != appGetGaia()->transport) {
-        DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
-    }
-//    MessageSendLater(appGetGaiaTask(), APP_GAIA_INTERNAL_DISCONNECT, NULL, 100);
+    /// 如果不加延迟，disconnect会导致设备之前的消息没有发送出去
+//    MessageSendLater(appGetGaiaTask(), APP_GAIA_INTERNAL_DISCONNECT, NULL, 500);
     MessageSend(appGetGaiaTask(), APP_GAIA_INTERNAL_DISCONNECT, NULL);
 }
 

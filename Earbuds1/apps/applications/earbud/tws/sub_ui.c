@@ -39,7 +39,8 @@ static uint8 appUIGetCurrentConnectStatusInfo(void);
 static uint8 appUIGetPeerConnectStatusInfo(void);
 static uint8 appUIGetCaseConnectStatusInfo(void);
 static void appNotifyPeerDeviceConfig(uint16 source);
-
+extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
+                              uint16 payload_length, uint8 *payload);
 /*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
 #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
 
@@ -684,7 +685,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
        // if (appSmIsOutOfEar()) {
         phyStateTaskData* phy_state = appGetPhyState();
         MessageCancelAll(&phy_state->task, CHARGER_MESSAGE_ATTACHED);
-        MessageSend(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL);
+        if (appGaiaIsConnect()) {
+            DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
+            appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
+        }
+        MessageSendLater(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL, 50);
         gProgRunInfo.realInCase = TRUE;
        // }
 #endif
@@ -1533,5 +1538,9 @@ void testPrintBrEdr(void) {
     appGetPeerBrEdrAddress(addr);
 }
 
+void testSiri(void);
+void testSiri(void) {
+    HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
+}
 
 #endif

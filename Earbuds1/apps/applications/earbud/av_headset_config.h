@@ -530,8 +530,8 @@
 /*! Time to wait for successful disconnection of links to peer and handset
  *  in terminating substate before shutdown/sleep.
  * Setting this to zero will force the ACL to be disconnected immediately */
-//#define appConfigLinkDisconnectionTimeoutTerminatingMs() D_SEC(1)
-#define appConfigLinkDisconnectionTimeoutTerminatingMs() 200
+#define appConfigLinkDisconnectionTimeoutTerminatingMs() D_SEC(0)
+//#define appConfigLinkDisconnectionTimeoutTerminatingMs() 1000
 
 /*! Time to wait for successful dis connection of links to peer and handset
  *  in terminating substate before entering pairing. */
