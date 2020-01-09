@@ -777,7 +777,7 @@ static bool appPeerSigHandlePairHandsetCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T
         DEBUG_LOGF("appPeerSigHandlePairHandsetCommand %lx %x %x", message->handset_addr.lap, message->handset_addr.uap, message->handset_addr.nap);
 
         appBleClearBond();
-
+        appPairingHandsetPairCancel();
         return TRUE;
     }
 }

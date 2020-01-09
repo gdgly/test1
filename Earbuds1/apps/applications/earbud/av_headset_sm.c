@@ -368,10 +368,10 @@ static void appExitHandsetPairing(void)
     DEBUG_LOG("appExitHandsetPairing");
 
     appConnRulesSetRuleComplete(CONN_RULES_HANDSET_PAIR);
-    appPairingHandsetPairCancel();
     appPeerSyncSend(FALSE);
-
+    appPairingHandsetPairCancel();
     appGattSetAdvertisingMode(APP_ADVERT_RATE_SLOW);
+    GattManagerCancelWaitForRemoteClient();
 }
 
 /*! \brief Enter

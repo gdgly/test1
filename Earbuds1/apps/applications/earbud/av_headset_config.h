@@ -139,6 +139,8 @@
 #define appConfigHandsetPairingTimeout()    (120)
 /*! Timeout in seconds to disable page/inquiry scan after entering idle state */
 #define appConfigPairingScanDisableDelay()  (5)
+//#define appConfigPairingScanDisableDelay()  (0)
+
 
 /*! Timeout in seconds for automatic peer pairing */
 #define appConfigAutoPeerPairingTimeout()       (0)

@@ -1774,6 +1774,7 @@ static void appPairingHandlePeerSigPairHandsetConfirm(pairingTaskData* thePairin
     if (cfm->status == peerSigStatusSuccess)
     {
         appBleClearBond();
+        appPairingHandsetPairCancel();
         appDeviceSetHandsetAddressForwardReq(&cfm->handset_addr, FALSE);
     }
     else
