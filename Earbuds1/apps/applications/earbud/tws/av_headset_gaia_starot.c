@@ -31,7 +31,6 @@ static void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T *message);
 
 static void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T *message);
 
-static void gaiaNotifyAudioAcceptStatus(Task task, int command);
 
 static void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message);
 

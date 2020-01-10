@@ -1036,8 +1036,9 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
 
     if(lidOpen >= 0) {
         static uint8 beforeStatus = 0xFF;                   // 先设置为0xFF,这样第一次过来就能发送信息了
-        if (beforeStatus != progRun->caseLidOpen) {
-            beforeStatus = progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
+        if (beforeStatus != lidOpen) {
+            beforeStatus = lidOpen;
+            progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
             /// 之前状态和现在状态不一致，发送事件
             if (progRun->caseLidOpen > 0) {
                 DEBUG_LOG("call case open");
@@ -1366,6 +1367,10 @@ uint8 appUIGetCurrentPosition(void) {
 }
 
 uint8 appUIGetPeerPosition(void) {
+    if (!appDeviceIsPeerConnected()) {
+        return 0X00;
+    }
+
     if(appPeerSyncIsPeerInCase() == TRUE)
         return 0X01 << 2;
 
@@ -1379,7 +1384,7 @@ uint8 appUIGetPeerPosition(void) {
 }
 
 uint8 appUIGetMasterSlave(void) {
-    /// 展示不实现
+    /// 暂时不实现
     return 0X00;
 }
 
@@ -1406,14 +1411,26 @@ void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
         if ((CHARGE_ST_OK==progRun->chargeStat) || (CHARGE_ST_LOW == progRun->chargeStat)) {
             arr[0] |= 0X80;
         }
-        arr[1] = (uint8)progRun->peerElectrity;//对方电量
-        if (appPeerSyncIsPeerInCase()) {
-            arr[1] |= 0X80;
+        if (appDeviceIsPeerConnected()) {
+            arr[1] = (uint8)progRun->peerElectrity;//对方电量
+            if (appPeerSyncIsPeerInCase()) {
+                if (arr[1] != 100) {
+                    arr[1] |= 0X80;
+                }
+            }
+        } else {
+            arr[1] = 0XFF;
         }
     } else {
-        arr[0] = (uint8)progRun->peerElectrity;//对方电量
-        if (appPeerSyncIsPeerInCase()) {
-            arr[0] |= 0X80;
+        if (appDeviceIsPeerConnected()) {
+            arr[0] = (uint8)progRun->peerElectrity;//对方电量
+            if (appPeerSyncIsPeerInCase()) {
+                if (arr[0] != 100) {
+                    arr[0] |= 0X80;
+                }
+            }
+        } else {
+            arr[0] = 0XFF;
         }
         arr[1] = (uint8)progRun->iElectrity;
         if ((CHARGE_ST_OK==progRun->chargeStat) || (CHARGE_ST_LOW == progRun->chargeStat)) {

@@ -25,6 +25,7 @@
 #include <ps.h>
 #include <boot.h>
 #include <message.h>
+#include "tws/av_headset_gaia_starot.h"
 
 static void appSmHandleInternalDeleteHandsets(void);
 
@@ -1275,6 +1276,11 @@ static void appSmHandleConnRulesDisconnectGaia(void)
     appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_GAIA);
 }
 
+static void appSmHandleConnRulesNotifyAppPosition(void) {
+    gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+    appConnRulesSetRuleComplete(CONN_RULES_NOTIFY_APP_POSITION);
+}
+
 static void appSmHandleConnRulesEnterDfu(void)
 {
     DEBUG_LOG("appSmHandleConnRulesEnterDfu");
@@ -2363,6 +2369,9 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 #endif
         case CONN_RULES_DISCONNECT_GAIA:
             appSmHandleConnRulesDisconnectGaia();
+            break;
+        case CONN_RULES_NOTIFY_APP_POSITION:
+            appSmHandleConnRulesNotifyAppPosition();
             break;
         case CONN_RULES_ENTER_DFU:
             appSmHandleConnRulesEnterDfu();

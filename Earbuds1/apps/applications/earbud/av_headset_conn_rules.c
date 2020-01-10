@@ -181,6 +181,7 @@ DEFINE_RULE(ruleIdleHandsetPair);
 DEFINE_RULE(ruleCaseOpenAllowGaiaConnect);
 DEFINE_RULE(ruleCaseCloseNotAllowGaiaConnect);
 DEFINE_RULE(ruleAllowGaiaConnect);
+DEFINE_RULE(ruleAllRun);
 #endif
 DEFINE_RULE(ruleCheckGaiaIsNeedDisconnection);
 /*! \} */
@@ -207,6 +208,7 @@ ruleEntry appConnRules[] =
     /*! \{
         Rules that are run when peer link-loss happens */
     RULE(RULE_EVENT_PEER_LINK_LOSS,             rulePeerSync,               CONN_RULES_SEND_PEER_SYNC),
+    RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                  CONN_RULES_NOTIFY_APP_POSITION),
     /*! \} */
 
     /*! \{
@@ -315,11 +317,13 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleScoForwardingControl,           CONN_RULES_SCO_FORWARDING_CONTROL),
+    RULE(RULE_EVENT_PEER_IN_EAR,                ruleAllRun,                         CONN_RULES_NOTIFY_APP_POSITION),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleOutOfEarScoActive,              CONN_RULES_SCO_TIMEOUT),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleScoForwardingControl,           CONN_RULES_SCO_FORWARDING_CONTROL),
     RULE_WITH_FLAGS(RULE_EVENT_PEER_IN_CASE,    ruleSyncConnectHandset,             CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseScoTransferToHandset,     CONN_RULES_SCO_TRANSFER_TO_HANDSET),
+    RULE(RULE_EVENT_PEER_IN_CASE,               ruleAllRun,                         CONN_RULES_NOTIFY_APP_POSITION),
     RULE_WITH_FLAGS(RULE_EVENT_PEER_HANDSET_DISCONNECTED,  ruleSyncConnectHandset,  CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_PEER_HANDSET_CONNECTED,     ruleBothConnectedDisconnect,        CONN_RULES_DISCONNECT_HANDSET),
 
@@ -3293,4 +3297,8 @@ static ruleAction ruleAllowGaiaConnect(void)
         RULE_LOG("ruleAllowGaiaConnect, not all in case , so need ignore");
         return RULE_ACTION_IGNORE;
     }
+}
+
+static ruleAction ruleAllRun(void) {
+    return RULE_ACTION_RUN;
 }

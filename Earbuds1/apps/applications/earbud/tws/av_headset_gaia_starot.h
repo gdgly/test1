@@ -240,6 +240,8 @@ StarotResendCommand* starotResendCommandInit(uint16 command, uint16 len, uint8* 
 StarotResendCommand* starotResendCommandDo(StarotResendCommand* resendCommand, bool stillNeedResend);
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+void gaiaNotifyAudioAcceptStatus(Task task, int command);
+
 bool appGaiaIsConnectBySpp(void);
 
 #endif // AV_HEADSET_GAIA_STAROT_H
