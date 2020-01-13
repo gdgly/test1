@@ -156,12 +156,19 @@ static void subUiDoubleClickAB(bool isRL)
             }
             else if(prm->rKeyFunc == TAP_WACKUP){
                 appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
-                MessageSend(&appGetUi()->task, APP_ASSISTANT_TAP_AWAKEN, 0);
+                /// to qzj 这个为什么不发送
+                if (!appDeviceIsHandsetConnected() && appDeviceGetPeerBdAddr(&peer_addr)) {
+                    appPeerSigTxDoubleClickWakeupRequest(appGetGaiaTask(), &peer_addr, 0);
+                } else {
+                    MessageSend(&appGetUi()->task, APP_ASSISTANT_TAP_AWAKEN, 0);
+                }
             }
             else if(prm->rKeyFunc == TAP_SYSTEM){
-                if (appDeviceGetPeerBdAddr(&peer_addr))
+                if (!appDeviceIsHandsetConnected() && appDeviceGetPeerBdAddr(&peer_addr)) {
                     appPeerSigTxDoubleClickWakeupRequest(appGetGaiaTask(), &peer_addr, 1);
-                HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
+                } else {
+                    HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
+                }
             }
             /* If AVRCP to handset connected, send play or pause */
             else if (prm->rKeyFunc == TAP_PLAY_PAUSE)
