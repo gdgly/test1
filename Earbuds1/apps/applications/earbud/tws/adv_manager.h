@@ -29,4 +29,12 @@ void appBleSetBond(uint16 advCode, uint32 bondCode);
 void appBleSetSync(bool status);
 uint32 appBleGetBondCode(void);
 
+enum {
+    ADV_FETURE_GAIA,
+    ADV_FETURE_PAIR,
+    ADV_FETURE_UPGRADE,
+};
+
+void appBleAdvFeture(uint8 feture);
+void appBleSelectFeture(void);
 #endif

@@ -51,7 +51,7 @@ static const ringtone_note commupc_tone[] =
 };
 static void CummuPlayTone(void)
 {
-    appUiPlayToneCore(commupc_tone, FALSE, TRUE, NULL, 0);
+    appKymeraTonePlay(commupc_tone, TRUE, NULL, 0);
 }
 
 void CommpcParse(GAIA_STAROT_AUDIO_IND_T *message);
@@ -182,6 +182,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
 
             // 接收到测试命令，先打开各外设
             if(g_commuType == 0){
+                g_commuType == 0xFF;
                 progRun->iPowerSaveMode = POWER_MODE_IN_EAR;
                 appUiPowerSaveSync();
             }

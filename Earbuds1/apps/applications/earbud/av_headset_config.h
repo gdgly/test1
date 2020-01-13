@@ -139,6 +139,8 @@
 #define appConfigHandsetPairingTimeout()    (120)
 /*! Timeout in seconds to disable page/inquiry scan after entering idle state */
 #define appConfigPairingScanDisableDelay()  (5)
+//#define appConfigPairingScanDisableDelay()  (0)
+
 
 /*! Timeout in seconds for automatic peer pairing */
 #define appConfigAutoPeerPairingTimeout()       (0)
@@ -529,6 +531,7 @@
  *  in terminating substate before shutdown/sleep.
  * Setting this to zero will force the ACL to be disconnected immediately */
 #define appConfigLinkDisconnectionTimeoutTerminatingMs() D_SEC(0)
+//#define appConfigLinkDisconnectionTimeoutTerminatingMs() 1000
 
 /*! Time to wait for successful dis connection of links to peer and handset
  *  in terminating substate before entering pairing. */

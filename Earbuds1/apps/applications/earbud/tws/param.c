@@ -10,6 +10,7 @@
 #include <vm.h>
 #include <adv_manager.h>
 #include "param.h"
+#include "av_headset_gaia_starot.h"
 
 #define PSKEY_CUSTOMER0_VALUE   (200)                         // ID, from trap_api/ps.h
 
@@ -23,7 +24,7 @@
 
 
 /* SW版本共4字节： 00.01.01.xx   xx为测试使用*/
-const uint8 SYSTEM_SW_VERSION[DEV_SWVER_LEN] = {0x00,0x01,0x02,0x25};   // 每次发布版本修改这儿的值
+const uint8 SYSTEM_SW_VERSION[DEV_SWVER_LEN] = {0x00,0x01,0x02,0x26};   // 每次发布版本修改这儿的值
 
 // 保存参数，如果length=0,表示擦除当前PSK中的参数
 static int16 ParamSave(uint16 pskey, void *buffer, int length)
@@ -57,7 +58,7 @@ void FixParamDefault(void)
     FixPrmPtr prm = &gFixParam;
 
     prm->aud_adj      = 0;
-    prm->hw_ver[0]    = 0xE0;
+    prm->hw_ver[0]    = 0x00;
     prm->hw_ver[1]    = 0x01;
     prm->hw_ver[2]    = 0x00;
 }
@@ -152,7 +153,8 @@ int16 ParamLoadBtAddrPrm(BtAddrPrmPtr pParam)
 //////// 一些用户可以修改的参数
 /////////////////////////////////////////////////////////////////////////////////
 UserParam gUserParam;
-static UserPrmPtr GetUserParam(void)
+UserPrmPtr GetUserParam(void);
+UserPrmPtr GetUserParam(void)
 {
     return &gUserParam;
 }
@@ -162,8 +164,11 @@ void UserParamDefault(void)
     UserPrmPtr prm = &gUserParam;
 
     memset(prm, 0, sizeof(UserParam));
-    prm->lKeyFunc = 0X04;
-    prm->rKeyFunc = 0X05;
+    prm->lKeyFunc = 0X02;
+    prm->rKeyFunc = 0X02;
+    prm->apolloEnable = TRUE;
+    prm->sensorEnable = TRUE;
+    prm->assistantType = ASSISTANT_TYPE_APP;
 }
 
 

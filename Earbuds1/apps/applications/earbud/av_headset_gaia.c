@@ -188,6 +188,7 @@ static void appGaiaHandleInternalDisconnect(void) {
     GAIA_TRANSPORT *transport = appGetGaiaTransport();
 
     if (transport) {
+        DEBUG_LOG("call appGaiaHandleInternalDisconnect");
         GaiaDisconnectRequest(transport);
         appSetGaiaTransport(NULL);
     }
@@ -221,6 +222,7 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message) {
                machine, but it is mainly upgrade we care about. Not gaia connections. */
             DEBUG_LOG("appGaiaMessageHandler GAIA_DISCONNECT_CFM");
             appSetGaiaTransport(NULL);
+            appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
             break;
 
         case GAIA_START_SERVICE_CFM:             /* Confirmation that a Gaia server has started */
@@ -406,6 +408,9 @@ void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status, uint1
 /*! \brief Disconnect any active gaia connection
  */
 void appGaiaDisconnect(void) {
+    DEBUG_LOG("call appGaiaDisconnect");
+    /// 如果不加延迟，disconnect会导致设备之前的消息没有发送出去
+//    MessageSendLater(appGetGaiaTask(), APP_GAIA_INTERNAL_DISCONNECT, NULL, 500);
     MessageSend(appGetGaiaTask(), APP_GAIA_INTERNAL_DISCONNECT, NULL);
 }
 

@@ -25,6 +25,7 @@
 #include <ps.h>
 #include <boot.h>
 #include <message.h>
+#include "tws/av_headset_gaia_starot.h"
 
 static void appSmHandleInternalDeleteHandsets(void);
 
@@ -344,7 +345,6 @@ static void appExitPeerPairing(void)
     appPairingPeerPairCancel();
 }
 
-
 /*! \brief Start process to pairing with handset.
  */
 static void appEnterHandsetPairing(void)
@@ -357,7 +357,7 @@ static void appEnterHandsetPairing(void)
     appPeerSyncSend(FALSE);
 
     appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
-
+    GattManagerCancelWaitForRemoteClient();
     //appBleClearBond();  // todo 要不记录多个，要不在成功配对之后，或在收到配对地址时，给清除掉
     appGaiaDisconnect();
 }
@@ -369,10 +369,10 @@ static void appExitHandsetPairing(void)
     DEBUG_LOG("appExitHandsetPairing");
 
     appConnRulesSetRuleComplete(CONN_RULES_HANDSET_PAIR);
-    appPairingHandsetPairCancel();
     appPeerSyncSend(FALSE);
-
+    appPairingHandsetPairCancel();
     appGattSetAdvertisingMode(APP_ADVERT_RATE_SLOW);
+    GattManagerCancelWaitForRemoteClient();
 }
 
 /*! \brief Enter
@@ -1276,6 +1276,11 @@ static void appSmHandleConnRulesDisconnectGaia(void)
     appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_GAIA);
 }
 
+static void appSmHandleConnRulesNotifyAppPosition(void) {
+    gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+    appConnRulesSetRuleComplete(CONN_RULES_NOTIFY_APP_POSITION);
+}
+
 static void appSmHandleConnRulesEnterDfu(void)
 {
     DEBUG_LOG("appSmHandleConnRulesEnterDfu");
@@ -1681,7 +1686,6 @@ static void appSmHandleConnRulesScoForwardingControl(CONN_RULES_SCO_FORWARDING_C
 /*! \brief Handle rule action to update page scan settings. */
 static void appSmHandleBleConnectionUpdate(const CONN_RULES_BLE_CONNECTION_UPDATE_T* update)
 {
-
     if (appGattAllowBleConnections(update->enable))
     {
         DEBUG_LOGF("appSmHandleBleConnectionUpdate enable:%u Kicking peer sync", update->enable);
@@ -2365,6 +2369,9 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 #endif
         case CONN_RULES_DISCONNECT_GAIA:
             appSmHandleConnRulesDisconnectGaia();
+            break;
+        case CONN_RULES_NOTIFY_APP_POSITION:
+            appSmHandleConnRulesNotifyAppPosition();
             break;
         case CONN_RULES_ENTER_DFU:
             appSmHandleConnRulesEnterDfu();

@@ -9,6 +9,9 @@ extern int16 ParamLoadBlePair(BlePairInfo *blePairInfo);
 
 extern int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
 
+extern void appGetLocalBrEdrAddress(uint8* addrbuf);
+extern void appGetPeerBrEdrAddress(uint8* addrbuf);
+
 void appAdvManagerAdvertdatafunc(void);
 
 //static void appPrivateBleSetRandomCode(uint16 advCode);
@@ -41,7 +44,10 @@ struct AdvManufacturerSpecificData {
 //    4	左耳机电量，FF表示异常
 //    5	右耳机电量，FF表示异常
 //    6	盒子电量，FF表示异常
-//    7	随机连接码
+//    7-8	随机连接码
+//    9-17 left br/edr mac address
+//    18-24 right br/edr mac adddress
+//    25 ble feture
     uint8 product;
     uint8 version;
     uint8 position;
@@ -50,6 +56,9 @@ struct AdvManufacturerSpecificData {
     uint8 casePower;
     uint8 randomCodeHigh;
     uint8 randomCodeLow;
+    uint8 leftEarMac[6];
+    uint8 rightEarMac[6];
+    uint8 bleFeture;
 };
 
 struct AdvTaskData {
@@ -65,6 +74,13 @@ void appAdvManagerAdvertdatafunc(void){
     advTaskData.advManufacturerSpecificData.rightPower = progRun->peerElectrity;
     advTaskData.advManufacturerSpecificData.leftPower = progRun->iElectrity;
     advTaskData.advManufacturerSpecificData.casePower = progRun->caseElectrity;
+    if (appConfigIsLeft()) {
+        appGetLocalBrEdrAddress(advTaskData.advManufacturerSpecificData.leftEarMac);
+        appGetPeerBrEdrAddress(advTaskData.advManufacturerSpecificData.rightEarMac);
+    } else {
+        appGetPeerBrEdrAddress(advTaskData.advManufacturerSpecificData.leftEarMac);
+        appGetLocalBrEdrAddress(advTaskData.advManufacturerSpecificData.rightEarMac);
+    }
 }
 
 uint8 *appAdvManagerAdvertdataAddManufacturerSpecificData(uint8 *ad_data, uint8 *space) {
@@ -138,3 +154,18 @@ void appPrivateBleSetRandomCode(uint16 advCode) {
     DEBUG_LOG("random code : high %02X, low %02X", advTaskData.advManufacturerSpecificData.randomCodeHigh,
               advTaskData.advManufacturerSpecificData.randomCodeLow);
 }
+
+void appBleAdvFeture(uint8 feture) {
+    advTaskData.advManufacturerSpecificData.bleFeture = feture;
+}
+
+void appBleSelectFeture(void) {
+    if (appSmIsPairing()) {
+        appBleAdvFeture(ADV_FETURE_PAIR);
+    } else if (appSmIsOutOfCase()) {
+        appBleAdvFeture(ADV_FETURE_GAIA);
+    } else if (appSmIsInCase()) {
+        appBleAdvFeture(ADV_FETURE_UPGRADE);
+    }
+}
+

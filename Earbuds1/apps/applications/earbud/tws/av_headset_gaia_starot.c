@@ -31,20 +31,21 @@ static void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T *message);
 
 static void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T *message);
 
-static void gaiaNotifyAudioAcceptStatus(Task task, int command);
 
 static void gaiaParseCaseStatVer(const GAIA_STAROT_IND_T *message);
 
 static void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message);//APP主动获取耳机版本
 static void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message);//App获取设备的耳机的双击配置信息
 static void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message);//App设置设备的耳机的双击配置信息
-static void gaiaAppSetParameter(GAIA_STAROT_IND_T *mess, uint16 type);//App设置语言唤醒或者佩戴检测是否使能
-static void gaiaAppGetParameter(GAIA_STAROT_IND_T *message, uint16 type);//App获取语言type=1唤醒或type=0者佩戴检测是否使能
+static void gaiaAppSetWakeupParameter(GAIA_STAROT_IND_T *mess);
+static void gaiaAppGetWakeupParameter(GAIA_STAROT_IND_T *mess);
+static void gaiaAppSetWearParameter(GAIA_STAROT_IND_T *mess);
+static void gaiaAppGetWearParameter(GAIA_STAROT_IND_T *message);
 static void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message);//上报电量-位置-连接状态信息
 static void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message);//App主动获取电量-位置-连接状态信息
 
 static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App请求录音
-static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message);//ui上报gaia助手唤醒消息
+static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type);//ui上报gaia助手唤醒消息
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
 static void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message);//接受设备传过来的停止信息
 
@@ -200,16 +201,16 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             gaiaAppGetNotifyPowPositionConncet(message);
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB:
-            gaiaAppSetParameter(message, 1);
+            gaiaAppSetWakeupParameter(message);
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_APOLLO_WAKEUP_ENB:
-            gaiaAppGetParameter(message, 1);
+            gaiaAppGetWakeupParameter(message);
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB:
-            gaiaAppSetParameter(message, 0);
+            gaiaAppSetWearParameter(message);
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_ADORN_CHEAK_ENB:
-            gaiaAppGetParameter(message, 0);
+            gaiaAppGetWearParameter(message);
             break;
     }
     /// app控制耳机，发送相应蓝牙指令
@@ -236,7 +237,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
     /// 助手52NN
     switch (message->command) {
         case GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START:
-            gaiaAssistantAwake(message);
+            gaiaAssistantAwake(message, message->payload[0]);
             break;
         case GAIA_COMMAND_STAROT_AI_BEGIN_RECORD:
             gaiaSetRequestRecord(message, TRUE);
@@ -744,8 +745,10 @@ void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     attrFree(body, NULL);
 }
 
+extern void appPeerSigTxDoubleClickConfigRequest(Task task, const bdaddr *peer_addr, uint8 left, uint8 right);
 // App设置设备的耳机的双击配置信息
 void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
+    bdaddr peer_addr;
     StarotAttr *body = attrDecode(message->payload, message->payloadLen);
     if (NULL == body) {
         return;
@@ -763,43 +766,96 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     if ((0XFF != leftKey) || (0XFF != rightKey)) {
         UserSetKeyFunc(leftKey, rightKey);
     }
+    if (appDeviceGetPeerBdAddr(&peer_addr)) {
+        appPeerSigTxDoubleClickConfigRequest(appGetGaiaTask(), &peer_addr, gUserParam.lKeyFunc, gUserParam.rKeyFunc);
+    }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
     attrFree(body, NULL);
 }
 
-//App设置语言唤醒或者佩戴检测是否使能
-void gaiaAppSetParameter(GAIA_STAROT_IND_T *mess, uint16 type){
-    StarotAttr *body = attrDecode(mess->payload, mess->payloadLen);
-    if (NULL == body) {
+
+void gaiaAppSetWakeupParameter(GAIA_STAROT_IND_T *mess) {
+    StarotAttr *pAttr = attrDecode(mess->payload, mess->payloadLen);
+    if (NULL == pAttr) {
         return;
     }
-    if (0X01 == body->attr) {
-        MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_CONFIG_IND, body->len);
-        message->payloadLen = body->len;
-        message->messageFrom = MESSAGE_FROM_APP;
-        message->payload[0] = body->payload[0];
-        if(1 == type)
-            message->command = STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB;
-        if(0 == type)
-            message->command = STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB;
-        MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
+    DEBUG_LOG("gaiaAppSetWakeupParameter");
+
+    //   1           2        3
+    // enable(1) + type(1) + time(4)
+    MAKE_GAIA_MESSAGE_WITH_LEN(APP_STAROT_WAKEUP_CONFIG_IND, 6);
+    message->command = STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB;
+    message->messageFrom = MESSAGE_FROM_APP;
+    while (NULL != pAttr) {
+        if (0X01 == pAttr->attr) {
+            message->apollo_enable = pAttr->payload[0];
+        } else if (0X02 == pAttr->attr) {
+            message->assistant_type = pAttr->payload[0];
+        } else if (0X03 == pAttr->attr) {
+            memcpy(&(message->timestamp), pAttr->payload, pAttr->len);
+        }
+        pAttr = pAttr->next;
     }
+    MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
-    attrFree(body, NULL);
+    attrFree(pAttr, NULL);
 }
 
-//App获取语言唤醒或者佩戴检测是否使能
-void gaiaAppGetParameter(GAIA_STAROT_IND_T *message, uint16 type){
+void gaiaAppGetWakeupParameter(GAIA_STAROT_IND_T *message) {
     StarotAttr *head = NULL;
-    StarotAttr *attr = NULL;
 
-    DEBUG_LOG("gaiaAppGetApolloWakeupEnb");
-    attr = attrMalloc(&head, 1);
-    attr->attr = 0X01;
-    if(1 == type)
+    DEBUG_LOG("gaiaAppGetWakeupParameter");
+    {
+        StarotAttr *attr = attrMalloc(&head, 1);
+        attr->attr = 0X01;
         attr->payload[0] = gUserParam.apolloEnable;
-    if(0 == type)
+    }
+    {
+        StarotAttr *attr = attrMalloc(&head, 1);
+        attr->attr = 0X02;
+        attr->payload[0] = gUserParam.assistantType;
+    }
+
+    if (NULL != head) {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
+        attrFree(head, data);
+    }
+}
+
+void gaiaAppSetWearParameter(GAIA_STAROT_IND_T *mess){
+    StarotAttr *pAttr = attrDecode(mess->payload, mess->payloadLen);
+    if (NULL == pAttr) {
+        return;
+    }
+    DEBUG_LOG("gaiaAppSetWearParameter");
+
+    MAKE_GAIA_MESSAGE_WITH_LEN(APP_STAROT_WEAR_CONFIG_IND, 0);
+    message->command = STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB;
+
+    while (NULL != pAttr) {
+        if (0X01 == pAttr->attr) {
+            message->wear_enable =  pAttr->payload[0];
+        } else if (0X02 == pAttr->attr) {
+            memcpy((uint8*)(&(message->timestamp)), pAttr->payload, pAttr->len);
+        }
+        pAttr = pAttr->next;
+    }
+    MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
+    attrFree(pAttr, NULL);
+}
+
+void gaiaAppGetWearParameter(GAIA_STAROT_IND_T *message) {
+    StarotAttr *head = NULL;
+
+    DEBUG_LOG("gaiaAppGetWearParameter");
+    {
+        StarotAttr *attr = attrMalloc(&head, 1);
+        attr->attr = 0X01;
         attr->payload[0] = gUserParam.sensorEnable;
+    }
 
     if (NULL != head) {
         uint16 len = 0;
@@ -826,20 +882,33 @@ void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin) {
     forwardSetDataClient(DATA_CLIENT_GAIA);
 }
 
-void gaiaAssistantAwake(GAIA_STAROT_IND_T *message)
+
+
+void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type)
 {
+    (void)message;
     StarotAttr *head = NULL;
-    StarotAttr *attr = NULL;
 
     DEBUG_LOG("gaiaAssistantAwake");
-    attr = attrMalloc(&head, 1);
-    attr->attr = 0X01;
-    attr->payload[0] = 0X01;
+
+    {
+        StarotAttr *attr = NULL;
+        attr = attrMalloc(&head, 1);
+        attr->attr = 0X01;
+        attr->payload[0] = 0X01;
+    }
+
+    {
+        StarotAttr *attr = NULL;
+        attr = attrMalloc(&head, 1);
+        attr->attr = 0X02;
+        attr->payload[0] = type;
+    }
 
     if (NULL != head) {
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, message->command, 0xfe, len, data);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START, 0xfe, len, data);
         attrFree(head, data);
         DEBUG_LOG("call GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START");
     }
@@ -1088,6 +1157,13 @@ void gaiaSendDialogActiveStatus(int command, uint8* phone, int len) {
     appGaiaSendPacket(GAIA_VENDOR_STAROT, command, 0xfe, attrLen, attrData);
     attrFree(starotAttr, attrData);
 }
+
+bool appGaiaIsConnectBySpp(void)
+{
+    return  ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_rfcomm) ||
+             ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_spp)));
+}
+
 
 #endif
 

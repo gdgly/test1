@@ -115,6 +115,7 @@ enum    av_headset_conn_rules_messages
     CONN_RULES_CLEAR_HANDSET_PAIR,
 #endif
     CONN_RULES_DISCONNECT_GAIA,
+    CONN_RULES_NOTIFY_APP_POSITION, /// 通知ui，更新app的状态信息
     /*! Any rules with RULE_FLAG_PROGRESS_MATTERS are no longer in progress. */
     CONN_RULES_NOP,
 };

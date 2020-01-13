@@ -3,6 +3,7 @@
 
 
 static uint8  _em20168Runing = 0;              // poweroff后，设置为 0, 启动运行为1
+static uint8  _em20168StatInOut = 0xFF;           // 0xFF unknown, 0:in ear, 1:out ear
 
 em20168_str em20168_init_array[] = {
 #if 0
@@ -132,6 +133,7 @@ int EM20168Power(bool isOn)
         _em20168Runing = 0;
     }
     EM20168Disable(handle);
+    DEBUG_LOG("EM20168Power %d", isOn);
     return ret;
 }
 
@@ -146,7 +148,7 @@ unsigned short EM20168_Get_psvalue(void)
     EM20168ReadRegister(handle, 0x21, &value);
     em20168_ps0_value += value << 8;
     EM20168Disable(handle);
-    DEBUG_LOG("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
+    DEBUG_LOG("EM20168 reg = 0x%x", em20168_ps0_value);
     return em20168_ps0_value;
 }
 
@@ -174,9 +176,16 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     (void)id;(void)msg;(void)task;
     bitserial_handle handle;
     uint8 value;
-    unsigned short em20168_ps0_value;
+    unsigned short em20168_ps0_value, high_value, low_value;
     proximityTaskData *prox = appGetProximity();
     handle = EM20168Enable();
+    if(gFixParam.em20168_cal_already == 1){
+        high_value = gFixParam.em20168_high_value;
+        low_value = gFixParam.em20168_low_value;
+    }else{
+        high_value = EM20168_HIGH_VALUE;
+        low_value = EM20168_LOW_VALUE;
+    }
 
     EM20168ReadRegister(handle, 0x20, &value);
     em20168_ps0_value = value;
@@ -184,7 +193,7 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     em20168_ps0_value += value << 8;
 
 #ifndef EM20168_SEND_MSG
-    DEBUG_LOG("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
+    DEBUG_LOG("EM20168 reg = 0x%x", em20168_ps0_value);
 #endif
     EM20168WriteRegister(handle, 2, 0);
 
@@ -194,7 +203,7 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
         return;
     }
 
-    if(em20168_ps0_value >= EM20168_HIGH_VALUE &&
+    if(em20168_ps0_value >= high_value &&
             (prox->state->proximity != proximity_state_in_proximity) ){
         prox->state->proximity = proximity_state_in_proximity;
 #ifndef EM20168_SEND_MSG
@@ -205,10 +214,11 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
             appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_IN_PROXIMITY);
         }
 #endif
+        _em20168StatInOut = 0;
         if(0 == g_commuType && appInitCompleted() )
             MessageSend(appGetUiTask(), APP_PSENSOR_INEAR, NULL);
     }
-    if(em20168_ps0_value <= EM20168_LOW_VALUE &&
+    if(em20168_ps0_value <= low_value &&
             (prox->state->proximity == proximity_state_in_proximity) ){
         prox->state->proximity = proximity_state_not_in_proximity;
 #ifndef EM20168_SEND_MSG
@@ -219,6 +229,7 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
             appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY);
         }
 #endif
+        _em20168StatInOut = 1;
         if(0 == g_commuType && appInitCompleted() )
             MessageSend(appGetUiTask(), APP_PSENSOR_OUTEAR, NULL);
     }
@@ -338,7 +349,6 @@ void EM20168_init(void)
     uint32 mask;
     bitserial_handle handle;
     uint8 value;uint8 i;
-    FixParam pParam;
     value = 0;
 #ifdef EM20168_CAL_OFFSET_VALUE
     uint8 offset=0;
@@ -380,20 +390,19 @@ void EM20168_init(void)
     EM20168WriteRegister(handle,0x14,0x00);
     delay_ms(10);
 
-    ParamLoadFixPrm(&pParam);
-    if(pParam.em20168_cal_already == 1){//说明校准过了，使用校准过的value
+    if(gFixParam.em20168_cal_already == 1){//说明校准过了，使用校准过的value
         for(i=0; i<ARRAY_DIM(em20168_init_array); i++){
             if(em20168_init_array[i].reg == 3){
-                em20168_init_array[i].value = pParam.em20168_low_value & 0xff;
+                em20168_init_array[i].value = gFixParam.em20168_low_value & 0xff;
             }
             if(em20168_init_array[i].reg == 4){
-                em20168_init_array[i].value = (pParam.em20168_low_value & 0xff00) >> 8;
+                em20168_init_array[i].value = (gFixParam.em20168_low_value & 0xff00) >> 8;
             }
             if(em20168_init_array[i].reg == 5){
-                em20168_init_array[i].value = pParam.em20168_high_value & 0xff;
+                em20168_init_array[i].value = gFixParam.em20168_high_value & 0xff;
             }
             if(em20168_init_array[i].reg == 6){
-                em20168_init_array[i].value = (pParam.em20168_high_value & 0xff00) >> 8;
+                em20168_init_array[i].value = (gFixParam.em20168_high_value & 0xff00) >> 8;
             }
         }
         DEBUG_LOG("em20168 already cal, use cal value!");
@@ -461,30 +470,10 @@ void EM20168_init(void)
 
 int EM20168_statcheck(void)
 {
-    bitserial_handle handle;
-    uint8 value;
-    unsigned short em20168_ps0_value;
-    proximityTaskData *prox = appGetProximity();
-    handle = EM20168Enable();
-
-    EM20168ReadRegister(handle, 0x20, &value);
-    em20168_ps0_value = value;
-    EM20168ReadRegister(handle, 0x21, &value);
-    em20168_ps0_value += value << 8;
-
-#ifndef EM20168_SEND_MSG
-    DEBUG_LOG("EM20168 reg = 0x%x\n\n", em20168_ps0_value);
-#endif
-//    EM20168WriteRegister(handle, 2, 0);
-    EM20168Disable(handle);
-    if(em20168_ps0_value >= EM20168_HIGH_VALUE &&
-            (prox->state->proximity != proximity_state_in_proximity) )
-            return 1;
-
-     else return -2;
-//    else  if(em20168_ps0_value <= EM20168_LOW_VALUE &&
-//            (prox->state->proximity == proximity_state_in_proximity) )
-//            return -2;
+    if(1 == _em20168Runing)
+        return _em20168StatInOut;
+    else
+        return 0xFF;
 }
 
 #ifdef INCLUDE_PROXIMITY

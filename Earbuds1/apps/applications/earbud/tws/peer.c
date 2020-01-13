@@ -79,11 +79,17 @@ void appPeerSigMsgBleConfigConfirmation(Task task, peerSigStatus status) {
 ////-------------------------------------------华丽的分割线-------------------------------------------------
 
 void appPeerSigTxDoubleClickConfigRequest(Task task, const bdaddr *peer_addr, uint8 left, uint8 right) {
+    uint8 ver[8];
     peerSigTaskData *peer_sig = appGetPeerSig();
     STAROT_MAKE_MESSAGE(PEER_SIG_INTERNAL_DOBULE_CLICK_CONFIG_REQ_T);
     message->client_task = task;
-    message->left = left;
-    message->right = right;
+    if(0xFF != left)
+        message->left = left;
+    if(0xFF != right)
+        message->right = right;
+
+    SystemGetCurrentVersion((uint8*)ver);
+    memcpy(message->peerver, ver, DEV_HWSWVER_LEN);
     MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_DOUBLE_CLICK_SETTING_REQ, message, appPeerSigStartup(peer_addr));
 }
 
@@ -96,9 +102,10 @@ void appPeerSigHandleInternalDoubleClickConfigRequest(PEER_SIG_INTERNAL_DOBULE_C
             /* Build data for message  */
             message[0] = req->left;
             message[1] = req->right;
+            memcpy(&message[2], req->peerver, DEV_HWSWVER_LEN);
             /* Send the handset address over AVRCP */
-            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_BLE_CONFIG,
-                                               AVRCP_PEER_CMD_BLE_CONFIG_SIZE, message);
+            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG,
+                                               AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE, message);
         }
             break;
 
@@ -123,9 +130,10 @@ bool appPeerSigHandleDoubleClickConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T 
 //        DEBUG_LOG("appPeerSigHandleConnectHandsetCommand %d", message->play_media);
         uint8 left = ind->payload[0];
         uint8 right = ind->payload[1];
-        UNUSED(left);
-        UNUSED(right);
         /// 是直接存储，还是调用ui
+        memcpy(gBtAddrParam.peerVer, &ind->payload[2], DEV_HWSWVER_LEN);
+        ParamSaveBtAddrPrm(&gBtAddrParam);
+        UserSetKeyFunc(left, right);
         return TRUE;
     }
 }
@@ -157,9 +165,10 @@ void appPeerSigTxNormalConfigRequest(Task task, const bdaddr *peer_addr) {
     message->client_task = task;
     /// 获取对应的值，并填写
     message->apollo_config = (gUserParam.apolloEnable > 0 ? 1 : 0);
-    message->apollo_timestamp = 0X00;
+    message->assistant_type = gUserParam.assistantType;
+    message->apollo_timestamp = gUserParam.assistantModifyTime;
     message->wear_config = (gUserParam.sensorEnable > 0 ? 1 : 0);
-    message->wear_timestamp = 0X00;
+    message->wear_timestamp = gUserParam.sensorModifyTime;
 
     MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_NORMAL_SETTING_REQ, message, appPeerSigStartup(peer_addr));
 }
@@ -171,14 +180,18 @@ void appPeerSigHandleInternalNormalConfigRequest(PEER_SIG_INTERNAL_NORMAL_CONFIG
         case PEER_SIG_STATE_CONNECTED: {
             uint8 message[AVRCP_PEER_CMD_NORMAL_CONFIG_SIZE];
             uint8 pos = 0;
-
-            *((uint16*) (message + pos)) = req->apollo_config;
-            pos += sizeof(uint16);
-            *((uint16*) (message + pos)) = req->wear_config;
-            pos += sizeof(uint16);
-            *((uint32*) (message + pos)) = req->apollo_timestamp;
+            *((uint8*) (message + pos)) = req->apollo_config;
+            pos += sizeof(uint8);
+            *((uint8*) (message + pos)) = req->assistant_type;
+            pos += sizeof(uint8);
+            *((uint8*) (message + pos)) = req->wear_config;
+            pos += sizeof(uint8);
+            /// unused
+            *((uint8*) (message + pos)) = 0;
+            pos += sizeof(uint8);
+            memcpy(message + pos, &req->apollo_timestamp, sizeof(uint32));
             pos += sizeof(uint32);
-            *((uint32*) (message + pos)) = req->wear_timestamp;
+            memcpy(message + pos, &req->wear_timestamp, sizeof(uint32));
 
             appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_NORMAL_CONFIG,
                                                AVRCP_PEER_CMD_NORMAL_CONFIG_SIZE, message);
@@ -206,34 +219,34 @@ bool appPeerSigHandleNormalConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind)
         uint8 pos = 0;
         { // apollo
             pos = 0;
-            uint16 apollo_enable = *(uint16*)(data + pos);
-            pos = sizeof(uint16) + sizeof(uint16);
-            uint32 apollo_timestamp = *(uint32 *)(data + pos);
+            uint8 apollo_enable = *(uint8*)(data + pos);
+            pos = sizeof(uint8);
+            uint8 assistant_type = *(uint8*)(data + pos);
+            pos = sizeof(uint8) + sizeof(uint8) + sizeof(uint8) + sizeof(uint8);
+            uint32 apollo_timestamp = 0;
+            memcpy(&apollo_timestamp, (data + pos), sizeof(uint32));
             /// 比较当前的时间戳，如果大于保存的时间，则更新当前数据
-            UNUSED(apollo_enable);
-            UNUSED(apollo_timestamp);
 
-            MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_CONFIG_IND, 0);
-            message->payloadLen = 0X01;
-            message->messageFrom = MESSAGE_FROM_PEER;
-            message->payload[0] = (apollo_enable & 0XFF);
+            MAKE_GAIA_MESSAGE_WITH_LEN(APP_STAROT_WAKEUP_CONFIG_IND, 0);
             message->command = STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB;
+            message->messageFrom = MESSAGE_FROM_PEER;
+            message->apollo_enable = (apollo_enable & 0XFF);
+            message->assistant_type = (assistant_type & 0XFF);
+            message->timestamp = apollo_timestamp;
             MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
         }
 
         { // wear
-            pos = sizeof(uint16);
+            pos = sizeof(uint8) + sizeof(uint8);
             uint8 wear_enable = *(uint8*)(data + pos);
-            pos = sizeof(uint16) + sizeof(uint16) + sizeof(uint32);
-            uint32 wear_timestamp = *(uint32 *)(data + pos);
+            pos = sizeof(uint8) + sizeof(uint8) + sizeof(uint8) + sizeof(uint8) + sizeof(uint32);
+            uint32 wear_timestamp = 0;
+            memcpy(&wear_timestamp, (data + pos), sizeof(uint32));
             /// 比较当前的时间戳，如果大于保存的时间，则更新当前数据
-            UNUSED(wear_enable);
-            UNUSED(wear_timestamp);
-
-            MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_CONFIG_IND, 0);
-            message->payloadLen = 0X01;
+            MAKE_GAIA_MESSAGE_WITH_LEN(APP_STAROT_WEAR_CONFIG_IND, 0);
             message->messageFrom = MESSAGE_FROM_PEER;
-            message->payload[0] = (wear_enable & 0XFF);
+            message->wear_enable = wear_enable;
+            message->timestamp = wear_timestamp;
             message->command = STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB;
             MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
         }
@@ -245,4 +258,71 @@ bool appPeerSigHandleNormalConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind)
 void appPeerSigMsgNormalConfigConfirmation(Task task, peerSigStatus status) {
     UNUSED(task);
     UNUSED(status);
+}
+
+////-------------------------------------------华丽的分割线-------------------------------------------------
+void appPeerSigTxDoubleClickWakeupRequest(Task task, const bdaddr *peer_addr, int num) {
+    peerSigTaskData *peer_sig = appGetPeerSig();
+    STAROT_MAKE_MESSAGE(PEER_SIG_DOUBLE_CLICK_WAKEUP_REQ_T);
+    message->client_task = task;
+    if(num == 0)
+        MessageSendConditionally(&peer_sig->task,PEER_SIG_INTERNAL_DOUBLE_CLICK_WAKEUP_REQ , message, appPeerSigStartup(peer_addr));
+    if(num == 1)
+        MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_DOUBLE_CLICK_WAKEUP_SYSTEM_REQ, message, appPeerSigStartup(peer_addr));
+}
+
+void appPeerSigHandleInternalDoubleClickWakeupRequest(PEER_SIG_DOUBLE_CLICK_WAKEUP_REQ_T *req) {
+    DEBUG_LOG("appPeerSigHandleInternalBleConfigRequest, state %u", appPeerSigGetState());
+
+    switch (appPeerSigGetState()) {
+        case PEER_SIG_STATE_CONNECTED: {
+//            uint8 message[AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE];
+//            /* Build data for message  */
+//            message[0] = req->left;
+//            message[1] = req->right;
+//            memcpy(&message[2], req->peerver, DEV_HWSWVER_LEN);
+            /* Send the handset address over AVRCP */
+            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_DOUBLE_CLICK_WAKEUP,
+                                               0, NULL);
+        }
+            break;
+
+        default: {
+            appPeerSigMsgConnectHandsetConfirmation(req->client_task, peerSigStatusLinkKeyTxFail);
+        }
+            break;
+    }
+}
+
+void appPeerSigHandleInternalDoubleClickWakeupSystemRequest(PEER_SIG_DOUBLE_CLICK_WAKEUP_REQ_T *req) {
+    DEBUG_LOG("appPeerSigHandleInternalBleConfigRequest, state %u", appPeerSigGetState());
+
+    switch (appPeerSigGetState()) {
+        case PEER_SIG_STATE_CONNECTED: {
+            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_DOUBLE_CLICK_WAKEUP_SYSTEM,
+                                               0, NULL);
+        }
+            break;
+
+        default: {
+            appPeerSigMsgConnectHandsetConfirmation(req->client_task, peerSigStatusLinkKeyTxFail);
+        }
+            break;
+    }
+}
+
+bool appPeerSigHandleDoubleClickWakeupCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
+    UNUSED(ind);
+    MessageSend(&appGetUi()->task, APP_ASSISTANT_TAP_AWAKEN, 0);
+    return TRUE;
+}
+
+bool appPeerSigHandleDoubleClickWakeupSystemCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
+    UNUSED(ind);
+    MessageSend(&appGetUi()->task, APP_TAP_SYSTEM, 0);
+    return TRUE;
+}
+void appPeerSigMsgDoubleClickWakeupConfirmation(Task task, peerSigStatus status) {
+    /// todo : 发送消息至指定task，告知同步情况
+    UNUSED(task), UNUSED(status);
 }

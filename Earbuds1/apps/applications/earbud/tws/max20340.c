@@ -362,7 +362,7 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
             send_buf[2] = (checksum & 0xff);
             DEBUG_LOG("checksum buf1=%d, buf2=%d\n", send_buf[1], send_buf[2]);
         }else if(start_flag == 4){//开始包4 表示升级成功
-
+            _case_need_upgrade = 0;        // 升级完成，将这个标记置回
             send_buf[1] = 0;
             send_buf[2] = 0;
             DEBUG_LOG("update sucucess\n");
@@ -382,7 +382,7 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
         send_buf[2]=buffer_1k[1+(data_num)*2];
         break;
     case 2://结束包
-        _case_need_upgrade = 0;        // 升级完成，将这个标记置回
+
         //表示升级完成
         break;
     case 3://重发包
@@ -515,13 +515,19 @@ void singlebus_itr_process(void)
         if( ((value_a[MX20340_REG_STA1]&0x1c) == (5<<2)) ){
             //说明是插入动作,可能是芯片bug需要重写mask寄存器
             DEBUG_LOG("plc in");
-            if(0 == g_commuType)       // 非测试模式下去改变实际状态
-                MessageSend(appGetUiTask(), APP_ATTACH_PLC_IN, NULL);
+            if(0 == g_commuType){       // 非测试模式下去改变实际状态
+                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
+                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
+                MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_IN, NULL, 50);
+            }
         }else if( ((value_a[MX20340_REG_STA1]&0x1c) == (3<<2)) ){
             //说明是拔出动作,可能是芯片bug需要重写mask寄存器
             DEBUG_LOG("plc out");
-            if(0 == g_commuType)       // 非测试模式下去改变实际状态
-                MessageSend(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL);
+            if(0 == g_commuType) {       // 非测试模式下去改变实际状态
+                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
+                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
+                MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL, 50);
+            }
         }
         //max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x2);
         max20340WriteRegister(handle, MX20340_REG_CTRL1, 0xe1);
@@ -531,11 +537,17 @@ void singlebus_itr_process(void)
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x08){//总线接收数据出错，不做回应，master会重发
         ;
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x06){//总线接收到数据
+#ifdef MESSAGE_MAX30240_SEND_LATER
+      max20340Disable(handle);
+      handle = BITSERIAL_HANDLE_ERROR;
+#endif
         if(appInitCompleted())                    //没有初始化完成时，忽略接收到的数据处理
             recv_data_process_ear(handle, value_a);
     }
 #endif
-    max20340Disable(handle);
+
+    if(BITSERIAL_HANDLE_ERROR != handle)
+       max20340Disable(handle);
 }
 
 void singlebus_itr_handler(Task task, MessageId id, Message msg)

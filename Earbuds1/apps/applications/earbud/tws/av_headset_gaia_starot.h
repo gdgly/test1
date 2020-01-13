@@ -25,6 +25,31 @@ typedef struct
 } GAIA_STAROT_CONFIG_IND_T;
 typedef GAIA_STAROT_CONFIG_IND_T GAIA_STAROT_CONFIG_IND;
 
+enum {
+    ASSISTANT_TYPE_APP = 1,
+    ASSISTANT_TYPE_SYSTEM = 2
+};
+
+typedef struct
+{
+    uint16 command;
+    uint8 messageFrom;
+    uint8 apollo_enable;
+    uint32 timestamp;
+    uint8 assistant_type;
+    uint8 unused;
+} APP_STAROT_WAKEUP_CONFIG_IND_T;
+typedef APP_STAROT_WAKEUP_CONFIG_IND_T APP_STAROT_WAKEUP_CONFIG_IND;
+
+typedef struct
+{
+    uint16 command;
+    uint8 messageFrom;
+    uint8 wear_enable;
+    uint32 timestamp;
+} APP_STAROT_WEAR_CONFIG_IND_T;
+typedef APP_STAROT_WEAR_CONFIG_IND_T APP_STAROT_WEAR_CONFIG_IND;
+
 ////////////////////////////EVENT//////////////////////////////
 enum {
     /// 临时，不能这样定义，会冲突
@@ -83,6 +108,7 @@ enum {
     GAIA_COMMAND_STAROT_BASE_INFO_GET_APOLLO_WAKEUP_ENB = 0X5507,             // App获取语言唤醒是否使能
     GAIA_COMMAND_STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB = 0X5508,               // App设置佩戴检测是否使能
     GAIA_COMMAND_STAROT_BASE_INFO_GET_ADORN_CHEAK_ENB = 0X5509,               // App获取佩戴检测是否使能
+    GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT = 0X550A,                 // 设备主动断开连接
 };
 /////////////////////////////助手控制////////////////////////////////
 enum {
@@ -214,6 +240,8 @@ StarotResendCommand* starotResendCommandInit(uint16 command, uint16 len, uint8* 
 StarotResendCommand* starotResendCommandDo(StarotResendCommand* resendCommand, bool stillNeedResend);
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
+void gaiaNotifyAudioAcceptStatus(Task task, int command);
 
+bool appGaiaIsConnectBySpp(void);
 
 #endif // AV_HEADSET_GAIA_STAROT_H

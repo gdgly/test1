@@ -26,6 +26,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_CALL_ACTIVE            (2024)           // 拨号相关信息 接听
 #define APP_CALL_INACTIVE          (2025)           // 拨号相关信息 断开
 #define APP_ASSISTANT_AWAKEN       (2026)           // apollo启动语音助手
+#define APP_ASSISTANT_TAP_AWAKEN   (2027)           // 敲击启动语音助手
+#define APP_TAP_SYSTEM             (2028)           // 敲击启动系统助手
 
 #define APP_INTERNAL_HANDSET_PAIR  (2090)           // 内部消息，启动广播连接手机
 #define APP_INTERNAL_POWERSAVECHG  (2091)           // 当前模式变化
@@ -95,8 +97,6 @@ typedef struct tagPROGRUNINFO {
     //保存手机拨入的信息
     uint8          callIndex:2;
     CallIPtr       callInfo[MAX_CALLIN_INFO]; // 保存两个信息
-
-    uint8          powerCaseState;          // 0 close 1 open
 #ifdef TWS_DEBUG
     bool           realInCase;              // true:充电盒中 false:空中
 #endif
@@ -171,4 +171,8 @@ uint8 appUIGetPowerCaseState(void);
 bool appUIDeviceRealInCase(void);
 
 bool appUICaseIsOpen(void);
+
+void appGetLocalBrEdrAddress(uint8* addrbuf);
+void appGetPeerBrEdrAddress(uint8* addrbuf);
+bool appGetCaseIsOpen(void);
 #endif // SUB_UI_H

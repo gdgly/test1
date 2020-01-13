@@ -181,6 +181,7 @@ DEFINE_RULE(ruleIdleHandsetPair);
 DEFINE_RULE(ruleCaseOpenAllowGaiaConnect);
 DEFINE_RULE(ruleCaseCloseNotAllowGaiaConnect);
 DEFINE_RULE(ruleAllowGaiaConnect);
+DEFINE_RULE(ruleAllRun);
 #endif
 DEFINE_RULE(ruleCheckGaiaIsNeedDisconnection);
 /*! \} */
@@ -207,6 +208,7 @@ ruleEntry appConnRules[] =
     /*! \{
         Rules that are run when peer link-loss happens */
     RULE(RULE_EVENT_PEER_LINK_LOSS,             rulePeerSync,               CONN_RULES_SEND_PEER_SYNC),
+    RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                  CONN_RULES_NOTIFY_APP_POSITION),
     /*! \} */
 
     /*! \{
@@ -262,6 +264,8 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleUpdateMruHandset,       CONN_RULES_UPDATE_MRU_PEER_HANDSET),
     RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleSyncDisconnectPeer,     CONN_RULES_DISCONNECT_PEER),
     RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleSyncDisconnectHandset,  CONN_RULES_DISCONNECT_HANDSET),
+    /// todo 同步完成，通知app，设备状态，可能发生变化
+//    RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleAllRun,                 CONN_RULES_NOTIFY_APP_POSITION),
     /*! \} */
 
     /*! \{
@@ -315,11 +319,13 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleScoForwardingControl,           CONN_RULES_SCO_FORWARDING_CONTROL),
+    RULE(RULE_EVENT_PEER_IN_EAR,                ruleAllRun,                         CONN_RULES_NOTIFY_APP_POSITION),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleOutOfEarScoActive,              CONN_RULES_SCO_TIMEOUT),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleScoForwardingControl,           CONN_RULES_SCO_FORWARDING_CONTROL),
     RULE_WITH_FLAGS(RULE_EVENT_PEER_IN_CASE,    ruleSyncConnectHandset,             CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseScoTransferToHandset,     CONN_RULES_SCO_TRANSFER_TO_HANDSET),
+    RULE(RULE_EVENT_PEER_IN_CASE,               ruleAllRun,                         CONN_RULES_NOTIFY_APP_POSITION),
     RULE_WITH_FLAGS(RULE_EVENT_PEER_HANDSET_DISCONNECTED,  ruleSyncConnectHandset,  CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_PEER_HANDSET_CONNECTED,     ruleBothConnectedDisconnect,        CONN_RULES_DISCONNECT_HANDSET),
 
@@ -340,7 +346,7 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_CASE_OPEN,                  ruleCaseOpenAllowGaiaConnect,       CONN_RULES_ALLOW_HANDSET_CONNECT), /// 可连接，用户android升级
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleCaseCloseNotAllowGaiaConnect,   CONN_RULES_REJECT_HANDSET_CONNECT), //盒盖关闭，不可连接
-    RULE(RULE_EVENT_CASE_CLOSE,                 ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
+   // RULE(RULE_EVENT_CASE_CLOSE,                 ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
 #endif
     RULE(RULE_EVENT_CHECK_GAIA_CONNECTION,      ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
     RULE(RULE_EVENT_UPGRADE,                    ruleAllowGaiaConnect,               CONN_RULES_ALLOW_HANDSET_CONNECT),
@@ -2527,15 +2533,35 @@ static ruleAction bleDisable(void) {
     return RULE_ACTION_RUN_PARAM(st);
 }
 
+extern bool appGetCaseIsOpen(void);
+extern bool appGaiaIsConnectBySpp(void);
+
 static ruleAction ruleBleConnectionUpdate(void)
 {
+    if ((appGaiaIsConnect()) && appGaiaIsConnectBySpp()) {
+        DEBUG_LOG("ruleBleConnectionUpdate now have gaia(spp) connect, so ble disable");
+        return bleDisable();
+    }
+
+    if (appPeerSyncIsPeerPairing()) {
+        DEBUG_LOG("ruleBleConnectionUpdate now peer is in pair, so need ble adv disable");
+        return bleDisable();
+    }
+
+    if (appSmIsPairing()) {
+        DEBUG_LOG("ruleBleConnectionUpdate now is pair, so need ble adv for android");
+        appBleSelectFeture();
+        return bleEnable();
+    }
+
     if (!(appGaiaIsConnect()) && (TRUE == UpgradeInProgress())) {
-        DEBUG_LOG("gaia is connect, but now is upgrade, so need enable");
+        DEBUG_LOG("ruleBleConnectionUpdate gaia is connect, but now is upgrade, so need enable");
+        appBleSelectFeture();
         return bleEnable();
     }
 
     if (appGaiaIsConnect() && !handsetDisconnectAllowed()) {
-        RULE_LOG("current gaia is connect, and headset is connect");
+        RULE_LOG("ruleBleConnectionUpdate current gaia is connect, and headset is connect");
         return RULE_ACTION_IGNORE;
     }
 
@@ -2544,14 +2570,14 @@ static ruleAction ruleBleConnectionUpdate(void)
     bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
     /// 没有和另一只耳机交换地址
     if (FALSE == paired_with_peer) {
-        DEBUG_LOG("tws ble status ---------------------------0");
+        DEBUG_LOG("ruleBleConnectionUpdate paired_with_peer is false, ble disable");
         return bleDisable();
     }
     appState state = appGetState();
     bool allow_ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
-    DEBUG_LOG("ble connect, app get state is %04X all_ble_connectable is : %02X", state, allow_ble_connectable);
+    DEBUG_LOG("ruleBleConnectionUpdate ble connect, app get state is %04X all_ble_connectable is : %02X", state, allow_ble_connectable);
     if (FALSE == allow_ble_connectable) { /// 状态不允许连接
-        DEBUG_LOG("tws ble status ---------------------------not allow ble connectable");
+        DEBUG_LOG("ruleBleConnectionUpdate allow_ble_connectable is false, ble disable");
         return bleDisable();
     }
 
@@ -2561,34 +2587,28 @@ static ruleAction ruleBleConnectionUpdate(void)
         bool peer_sync = appPeerSyncIsComplete();
         /// 正在同步数据，等待
         if (FALSE == peer_sync) {
-            DEBUG_LOG("tws ble status ---------------------------peer sync ing");
+            DEBUG_LOG("ruleBleConnectionUpdate peer sync ing, ignore the rules");
             return RULE_ACTION_IGNORE;
         } else {
             bool peer_dfu = appPeerSyncPeerDfuInProgress();
             if (TRUE == peer_dfu) {
-                DEBUG_LOG("tws ble status ---------------------------dfu");
+                DEBUG_LOG("ruleBleConnectionUpdate peer in dfu, so we need disable ble adv");
                 return bleDisable();
             }
 
-            bool self_in_case = appSmIsInCase();
-            if (TRUE == self_in_case) { /// 当前耳机在充电盒中
-                bool peer_in_case = appPeerSyncIsPeerInCase();
-                if (TRUE == peer_in_case) {
-                    uint8 powerCaseState = appUIGetPowerCaseState();
-                    if (0 != powerCaseState) { /// 充电盒打开
-                        if(bleBattery(left)) {  /// 电量多
-                            DEBUG_LOG("tws ble status ---------------------------battery more");
-                            return bleEnable();
-                        } else { /// 电量少
-                            DEBUG_LOG("tws ble status ---------------------------battery less");
-                            return bleDisable();
-                        }
-                    } else {/// 充电盒关闭
-                        DEBUG_LOG("tws ble status ---------------------------power case close");
+            if (TRUE == appSmIsInCase()) { /// 当前耳机在充电盒中
+                if (appPeerSyncIsPeerInCase() && appGetCaseIsOpen()) {
+                    //1.比较版本号 2.比较电量信息
+                    if(bleBattery(left)) {  /// 电量多
+                        DEBUG_LOG("ruleBleConnectionUpdate self battery more, ble adv enable");
+                        appBleSelectFeture();
                         return bleEnable();
+                    } else { /// 电量少
+                        DEBUG_LOG("ruleBleConnectionUpdate self battery less, ble adv disable");
+                        return bleDisable();
                     }
                 } else {
-                    DEBUG_LOG("tws ble status ---------------------------only one in case");
+                    DEBUG_LOG("ruleBleConnectionUpdate only one in case ble adv disable");
                     return bleDisable();
                 }
             } else {  /// 当前耳机在空中
@@ -2599,10 +2619,11 @@ static ruleAction ruleBleConnectionUpdate(void)
                 bool bredrHaveConnected = appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetA2dpStreaming() ||
                         appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected();
                 if (TRUE == bredrHaveConnected) {
-                    DEBUG_LOG("tws ble status ---------------------------bredr have connected");
+                    DEBUG_LOG("ruleBleConnectionUpdate bredr have connected ble enable");
+                    appBleSelectFeture();
                     return bleEnable();
                 } else {
-                    DEBUG_LOG("tws ble status ---------------------------bredr don't connected");
+                    DEBUG_LOG("ruleBleConnectionUpdate bredr don't connected ble disable");
                     return bleDisable();
                 }
             }
@@ -2610,16 +2631,17 @@ static ruleAction ruleBleConnectionUpdate(void)
     } else { /// Peer连接未建立
         bool self_in_case = appSmIsInCase();
         if (TRUE == self_in_case) { /// 盒子中
-            uint8 powerCaseState = appUIGetPowerCaseState();
-            if (0 != powerCaseState) { /// 充电盒打开
-                DEBUG_LOG("tws ble status ---------------------------6");
+            if (appGetCaseIsOpen()) { /// 充电盒打开
+                DEBUG_LOG("ruleBleConnectionUpdate peer not connect, now in case, and case is open, so we ble adv enable");
+                appBleSelectFeture();
                 return bleEnable();
             } else {/// 充电盒关闭
-                DEBUG_LOG("tws ble status ---------------------------7");
-                return bleEnable();
+                DEBUG_LOG("ruleBleConnectionUpdate peer not connect, now in case, and case is close, so we ble adv disable");
+                return bleDisable();
             }
         } else { /// 不在盒子中
-            DEBUG_LOG("tws ble status ---------------------------8");
+            DEBUG_LOG("ruleBleConnectionUpdate not in case, ble enable");
+            appBleSelectFeture();
             return bleEnable();
         }
     }
@@ -3277,4 +3299,8 @@ static ruleAction ruleAllowGaiaConnect(void)
         RULE_LOG("ruleAllowGaiaConnect, not all in case , so need ignore");
         return RULE_ACTION_IGNORE;
     }
+}
+
+static ruleAction ruleAllRun(void) {
+    return RULE_ACTION_RUN;
 }
