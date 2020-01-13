@@ -537,11 +537,17 @@ void singlebus_itr_process(void)
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x08){//总线接收数据出错，不做回应，master会重发
         ;
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x06){//总线接收到数据
+#ifdef MESSAGE_MAX30240_SEND_LATER
+      max20340Disable(handle);
+      handle = BITSERIAL_HANDLE_ERROR;
+#endif
         if(appInitCompleted())                    //没有初始化完成时，忽略接收到的数据处理
             recv_data_process_ear(handle, value_a);
     }
 #endif
-    max20340Disable(handle);
+
+    if(BITSERIAL_HANDLE_ERROR != handle)
+       max20340Disable(handle);
 }
 
 void singlebus_itr_handler(Task task, MessageId id, Message msg)

@@ -92,6 +92,7 @@ ProdCmdIPtr _ProdCmdPtr = NULL;
 
 #define  PRODCMD_HANDSET_PAIR_STEP1   0x2500
 #define  PRODCMD_HANDSET_PAIR_STEP2   0x2501
+#define  PRODCMD_HANDSET_PAIR_STEP3   0x2502
 
 static void ProductTaskHandleMessage(Task task, MessageId id, Message message)
 {
@@ -99,10 +100,14 @@ static void ProductTaskHandleMessage(Task task, MessageId id, Message message)
     switch(id) {
     case PRODCMD_HANDSET_PAIR_STEP1:
         appSetState(APP_STATE_IN_CASE_IDLE);
-        MessageSendLater(&_ProdCmdPtr->task, PRODCMD_HANDSET_PAIR_STEP2, 0, 100);
+        MessageSendLater(&_ProdCmdPtr->task, PRODCMD_HANDSET_PAIR_STEP2, 0, 150);
         break;
     case PRODCMD_HANDSET_PAIR_STEP2:
         appSmPairHandset();
+        MessageSendLater(&_ProdCmdPtr->task, PRODCMD_HANDSET_PAIR_STEP3, 0, 150);
+        break;
+    case PRODCMD_HANDSET_PAIR_STEP3:
+        MessageSend(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL);
         break;
     }
 }
@@ -135,11 +140,14 @@ static void appEnterSingleforTest(void)
 }
 
 extern int apolloGetStatus(void);
+extern int apollo_evoke(void);
+extern void appSubUISetMicbias(int set);
 
 
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 {
     uint8 buf_get;
+    uint16 tmpval;
     (void)buf_get;
     FixPrmPtr prm = &gFixParam;
 
@@ -182,6 +190,18 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         case 0x01:   //复位左
             appSetState(APP_STATE_FACTORY_RESET);
             appSmFactoryReset();
+            break;
+        case 0x07:   // 启动或获取唤醒状态
+            if(0x00 == get_buf[2]) {
+                apollo_evoke();
+                OperatorFrameworkEnable(MAIN_PROCESSOR_ON);
+                appSubUISetMicbias(TRUE);
+                send_buf[2] = 0x00;
+                appSubGetProgRun()->iWakeupTimes = 0;
+            }
+            else if(0x01 == get_buf[2]){
+                send_buf[2] = appSubGetProgRun()->iWakeupTimes;
+            }
             break;
         case 0x08:   //主MIC
             ProductEnterReocrdMode(1);
@@ -262,9 +282,20 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             send_buf[1] = 0x43;  //需要返回值的话，给send_buf赋值
             send_buf[2] = 0x00;
             break;
+
+        case 0x44:
+            tmpval = EM20168_Get_psvalue();
+            send_buf[2] = (tmpval >> 8) & 0xFF;
+            break;
+        case 0x45:
+            tmpval = EM20168_Get_psvalue();
+            send_buf[2] = (tmpval >> 0) & 0xFF;
+            break;
+
         case 0x14:   //接近光验证打开
-            EM20168Power(1);
-             break;
+            appSubGetProgRun()->iPowerSaveMode = POWER_MODE_IN_EAR;
+            appUiPowerSaveSync();
+            break;
         case 0x15:   //接近光验证状态
             send_buf[1] = 0x15;//需要返回值的话，给send_buf赋值
             send_buf[2] = EM20168_statcheck();

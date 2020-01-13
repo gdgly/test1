@@ -51,7 +51,7 @@ static const ringtone_note commupc_tone[] =
 };
 static void CummuPlayTone(void)
 {
-    appUiPlayToneCore(commupc_tone, FALSE, TRUE, NULL, 0);
+    appKymeraTonePlay(commupc_tone, TRUE, NULL, 0);
 }
 
 void CommpcParse(GAIA_STAROT_AUDIO_IND_T *message);
