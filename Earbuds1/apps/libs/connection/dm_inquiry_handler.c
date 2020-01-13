@@ -1178,6 +1178,8 @@ static void localNameComplete(Task theAppTask, hci_status status, char* name, ui
     }
 }
 
+
+
 /****************************************************************************
 NAME    
     connectionHandleLocalNameComplete
@@ -1199,6 +1201,8 @@ void connectionHandleLocalNameComplete(connectionInquiryState *state, const DM_H
         /* Only handle the first segment */
         char*    name = VmGetPointerFromHandle(prim->name_part[0]);
 
+        writeLocalname_right_or_left(name);
+
         /* Find the length of the string in the first segment, limiting to     MAX_NAME_LENGTH bytes */
         for(length = 0; length < MAX_NAME_LENGTH; length++)
         {
@@ -1214,7 +1218,7 @@ void connectionHandleLocalNameComplete(connectionInquiryState *state, const DM_H
             if (prim->name_part[i] != NULL)
                 free(VmGetPointerFromHandle(prim->name_part[i]));
         }
-        
+
         /* Remote name read, send Client message to notify them of the result */
         localNameComplete(state->nameLock, connectionConvertHciStatus(prim->status), name, length);
     }
