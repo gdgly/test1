@@ -711,7 +711,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 #endif
         /// 从充电盒中取出，默认充电盒之后是关闭的，放入的时候，会收到case状态，打开的，会使这个事件失效
 //        progRun->caseLidOpen = 0;
+#ifdef DEVELOPE_BOARD
+        appUiPowerSave(POWER_MODE_IN_EAR);
+#else
         appUiPowerSave(POWER_MODE_OUT_CASE);
+#endif
     }
         break;
 

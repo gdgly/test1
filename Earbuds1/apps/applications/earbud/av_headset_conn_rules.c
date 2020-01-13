@@ -264,6 +264,8 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleUpdateMruHandset,       CONN_RULES_UPDATE_MRU_PEER_HANDSET),
     RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleSyncDisconnectPeer,     CONN_RULES_DISCONNECT_PEER),
     RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleSyncDisconnectHandset,  CONN_RULES_DISCONNECT_HANDSET),
+    /// todo 同步完成，通知app，设备状态，可能发生变化
+//    RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleAllRun,                 CONN_RULES_NOTIFY_APP_POSITION),
     /*! \} */
 
     /*! \{
