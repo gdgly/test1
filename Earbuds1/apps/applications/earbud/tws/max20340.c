@@ -362,7 +362,7 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
             send_buf[2] = (checksum & 0xff);
             DEBUG_LOG("checksum buf1=%d, buf2=%d\n", send_buf[1], send_buf[2]);
         }else if(start_flag == 4){//开始包4 表示升级成功
-
+            _case_need_upgrade = 0;        // 升级完成，将这个标记置回
             send_buf[1] = 0;
             send_buf[2] = 0;
             DEBUG_LOG("update sucucess\n");
@@ -382,7 +382,7 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
         send_buf[2]=buffer_1k[1+(data_num)*2];
         break;
     case 2://结束包
-        _case_need_upgrade = 0;        // 升级完成，将这个标记置回
+
         //表示升级完成
         break;
     case 3://重发包
