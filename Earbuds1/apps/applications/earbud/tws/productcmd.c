@@ -9,9 +9,7 @@
 void ProductEnterDutMode(void);
 void ProductEnterReocrdMode(int16 isLeft);      // 1: left, 0:right
 int appChangeCVCProcessMode(void);
-bool Em20168_h_w = 0;
-bool Em20168_l_w = 0;
-uint8 em20168_cal =0;
+
  #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
  static const ringtone_note product_tone[] =
  {
@@ -248,37 +246,25 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             send_buf[2] = prm->em20168_low_value&0xff;
             break;
         case 0x12:   //写接近光校准高_H
+            prm->em20168_cal_already = 0;         // 准备写设置为非校准
             prm->em20168_high_value = get_buf[2]<<8;
-            Em20168_h_w =1;
-            em20168_cal = 1;
             send_buf[1] = 0x12;  //需要返回值的话，给send_buf赋值
             send_buf[2] = 0x00;
             break;
         case 0x13:   //写接近光校准高_L
             prm->em20168_high_value |= get_buf[2];
-            if(Em20168_h_w) ParamSaveFixPrm(NULL);
-            Em20168_h_w =0;
-            em20168_cal = 2;
             send_buf[1] = 0x13;  //需要返回值的话，给send_buf赋值
             send_buf[2] = 0x00;
             break;
         case 0x42:   //写接近光校准低_H
             prm->em20168_low_value = get_buf[2]<<8;
-            Em20168_l_w =1;
-            em20168_cal = 3;
             send_buf[1] = 0x42;  //需要返回值的话，给send_buf赋值
             send_buf[2] = 0x00;
             break;
-        case 0x43:   //写接近光校准低_L
+        case 0x43:   //写接近光校准低_L，全部写完
             prm->em20168_low_value |= get_buf[2];
-            if(Em20168_l_w) ParamSaveFixPrm(NULL);
-            Em20168_l_w =0;
-            if(em20168_cal ==3)
-            {
-                prm->em20168_cal_already;
-                ParamSaveFixPrm(NULL);
-                em20168_cal = 0;
-            }
+            prm->em20168_cal_already = 1;
+            ParamSaveFixPrm(NULL);
             send_buf[1] = 0x43;  //需要返回值的话，给send_buf赋值
             send_buf[2] = 0x00;
             break;
