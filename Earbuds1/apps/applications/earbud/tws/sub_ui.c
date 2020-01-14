@@ -630,6 +630,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
     case APP_PAIR_HEADSET:
         DEBUG_LOG("plc call pair headset");
+        progRun->handsetPair = 0;           // 准备配对，设置为unknown
 #ifdef TWS_DEBUG
         appSmPairHandset();
 #endif
@@ -1016,6 +1017,25 @@ void appUiAvDisconnected(void)
     progRun->bredrconnect = 0;
 
     MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
+}
+
+/* EDR 配对成功与否 */
+void appUiPairingComplete(void)
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    progRun->handsetPair = 1;
+    appUiPlayPrompt(PROMPT_PAIRING_SUCCESSFUL);
+}
+
+
+/* Play pairing failed prompt */
+void appUiPairingFailed(void)
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    progRun->handsetPair = 2;
+    appUiPlayPrompt(PROMPT_PAIRING_FAILED);
 }
 
 

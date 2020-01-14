@@ -394,15 +394,34 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
 // get_buf[1]: bit6=盒盖信息 bit7=usb插拨信息
 static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
 {
-    uint8 status = appSmIsPairing();// 1 广播成功
-    uint8 peer_status = 1;//已peer
+    appState state = appGetState();
+    ProgRIPtr  progRun = appSubGetProgRun();
+    uint8 status = 0;             // 使用3BIT表示当前状态 0:未知 1:左右耳机配对中 2:广播（与手机配对中）3:与手机配对成功
+                                  // 6：双耳机间配对出错 7:与手机配对失败
+
+    switch(state) {
+    case APP_STATE_PEER_PAIRING:     // 左右耳机配对中
+        status = 1;
+        break;
+    case APP_STATE_HANDSET_PAIRING:  // 手机配对中
+        status = 2;
+        break;
+    case APP_STATE_IN_CASE_IDLE:    //  右耳 启动配对之前
+        break;
+    default:
+        if(1 == progRun->handsetPair)       // SUCC
+            status = 3;
+        else if(2 == progRun->handsetPair)  // 失败
+            status = 7;
+        else DEBUG_LOG("appState=0x%x", state);
+        break;
+    }
 
     send_buf[0] = get_buf[0];
 
     appUiCaseStatus(((get_buf[1] >> 6) & 0x01), -1, -1, -1, 0);	        // 发送是否在盒子中的信号
 
-    //status 高两位 1广播成功 2广播失败 3手机连接成功； 第5，6位 1表示已peer， 2表示未peer
-    send_buf[1] = ( (status<<6) & 0xc0 ) + ( (peer_status<<4) & 0x30 );
+    send_buf[1] = (status<<5) & 0xE0;
     send_buf[1] |= (1 == _case_need_upgrade) ? 0x08 : 0x00;         // 是否需要升级 BIT4
 
     //第二byte送回电量信息
