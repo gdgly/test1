@@ -116,6 +116,8 @@ enum    av_headset_conn_rules_messages
 #endif
     CONN_RULES_DISCONNECT_GAIA,
     CONN_RULES_NOTIFY_APP_POSITION, /// 通知ui，更新app的状态信息
+    /* 当充电盒关闭时，需要让设备断开hfp/a2dp/avrcp的连接，配对的时候，是连接的 */
+    CONN_RULES_DISCONNECT_HFP_AD2P_AVRCP,
     /*! Any rules with RULE_FLAG_PROGRESS_MATTERS are no longer in progress. */
     CONN_RULES_NOP,
 };

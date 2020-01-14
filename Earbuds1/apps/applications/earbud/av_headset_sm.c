@@ -1276,6 +1276,14 @@ static void appSmHandleConnRulesDisconnectGaia(void)
     appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_GAIA);
 }
 
+/*
+ * 与设备断开经典蓝牙的常用连接
+ */
+static void appSmHandleConnRulesDisconnectHfpA2dpAvrcp(void) {
+    DEBUG_LOG("appSmHandleConnRulesDisconnectHfpA2dpAvrcp");
+    appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_HFP_AD2P_AVRCP);
+}
+
 static void appSmHandleConnRulesNotifyAppPosition(void) {
     gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
     appConnRulesSetRuleComplete(CONN_RULES_NOTIFY_APP_POSITION);
@@ -2369,6 +2377,9 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 #endif
         case CONN_RULES_DISCONNECT_GAIA:
             appSmHandleConnRulesDisconnectGaia();
+            break;
+        case CONN_RULES_DISCONNECT_HFP_AD2P_AVRCP:
+            appSmHandleConnRulesDisconnectHfpA2dpAvrcp();
             break;
         case CONN_RULES_NOTIFY_APP_POSITION:
             appSmHandleConnRulesNotifyAppPosition();

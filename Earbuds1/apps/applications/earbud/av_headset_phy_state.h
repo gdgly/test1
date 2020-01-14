@@ -154,5 +154,8 @@ extern void appPhyStatePrepareToEnterDormant(void);
 */
 extern void appPhyStateInit(void);
 
+/* 从物理位置上判断，是否在充电盒中 */
+bool appPhyStateIsInCase(void);
+
 #endif /* AV_HEADSET_PHY_STATE_H */
 

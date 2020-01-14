@@ -534,3 +534,7 @@ void appPhyStateNotInMotionEvent(void)
     MessageSend(&phy_state->task, PHY_STATE_INTERNAL_NOT_IN_MOTION, NULL);
     appPhyStateClearLockBit(PHY_STATE_LOCK_MOTION);
 }
+
+bool appPhyStateIsInCase(void) {
+    return (PHY_STATE_IN_CASE == appGetPhyState()->state);
+}

@@ -182,6 +182,7 @@ DEFINE_RULE(ruleCaseOpenAllowGaiaConnect);
 DEFINE_RULE(ruleCaseCloseNotAllowGaiaConnect);
 DEFINE_RULE(ruleAllowGaiaConnect);
 DEFINE_RULE(ruleAllRun);
+DEFINE_RULE(ruleDisconnectHfpA2dpAvrcp);
 #endif
 DEFINE_RULE(ruleCheckGaiaIsNeedDisconnection);
 /*! \} */
@@ -346,6 +347,8 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_CASE_OPEN,                  ruleCaseOpenAllowGaiaConnect,       CONN_RULES_ALLOW_HANDSET_CONNECT), /// 可连接，用户android升级
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleCaseCloseNotAllowGaiaConnect,   CONN_RULES_REJECT_HANDSET_CONNECT), //盒盖关闭，不可连接
+    RULE(RULE_EVENT_CASE_CLOSE,                 ruleDisconnectHfpA2dpAvrcp,         CONN_RULES_DISCONNECT_HANDSET),
+
    // RULE(RULE_EVENT_CASE_CLOSE,                 ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
 #endif
     RULE(RULE_EVENT_CHECK_GAIA_CONNECTION,      ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
@@ -1763,11 +1766,11 @@ static ruleAction rulePairingConnectTwsPlusHfp(void)
 }
 
 static ruleAction ruleRealInCaseDisconnect(void) {
-    DEBUG_LOG("rule real in case disconnect check");
-    bool realInCase = appUIDeviceRealInCase();
-    if (TRUE == realInCase) {
-        return RULE_ACTION_RUN;
-    }
+//    DEBUG_LOG("rule real in case disconnect check");
+//    bool realInCase = appUIDeviceRealInCase();
+//    if (TRUE == realInCase) {
+//        return RULE_ACTION_RUN;
+//    }
     return RULE_ACTION_IGNORE;
 }
 
@@ -2124,14 +2127,23 @@ static ruleAction ruleSyncDisconnectPeer(void)
 }
 
 
+extern bool appPhyStateIsInCase(void);
+
 static ruleAction ruleSyncDisconnectHandset(void)
 {
+    // 如果当前连接了任何handset相关协议，并且在充电盒中，另一只耳机不在充电盒中，则需要断开连接
+    if (appDeviceIsHandsetConnected() && appPhyStateIsInCase() && !appPeerSyncIsPeerInCase()) {
+        RULE_LOG("ruleSyncDisconnectHandset, appDeviceIsHandsetConnected() && appPhyStateIsInCase() && !appPeerSyncIsPeerInCase() is true, so need run");
+        return RULE_ACTION_RUN;
+    }
     /* Peer sync must be complete as this rule uses peer state */
     if (!appPeerSyncIsComplete())
     {
         RULE_LOG("ruleSyncDisconnectHandset, defer as not sync'ed with peer");
         return RULE_ACTION_DEFER;
     }
+
+    DEBUG_LOG("appGetPhyState()->state is :%d", appGetPhyState()->state);
 
     /* Don't run rule if we're not connected to handset */
     if (!appDeviceIsHandsetA2dpConnected() &&
@@ -3303,4 +3315,11 @@ static ruleAction ruleAllowGaiaConnect(void)
 
 static ruleAction ruleAllRun(void) {
     return RULE_ACTION_RUN;
+}
+
+static ruleAction ruleDisconnectHfpA2dpAvrcp(void) {
+    if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
+        return RULE_ACTION_RUN;
+    }
+    return RULE_ACTION_COMPLETE;
 }
