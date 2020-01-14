@@ -180,6 +180,7 @@
     <file path="../../tws/attr.h"/>
     <file path="../../tws/audio_forward.c"/>
     <file path="../../tws/audio_forward.h"/>
+    <file path="../../tws/audio_param_tune.c"/>
     <file path="../../tws/av_headset_gaia_starot.c"/>
     <file path="../../tws/av_headset_gaia_starot.h"/>
     <file path="../../tws/bma400.c"/>
