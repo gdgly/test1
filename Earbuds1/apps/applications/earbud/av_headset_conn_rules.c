@@ -3244,21 +3244,29 @@ static ruleAction ruleIdleHandsetPair(void) {
         return RULE_ACTION_IGNORE;
     }
 
-    /// todo: 如果是单耳模式，需要单独设计条件
-    if (!(appSmIsInCase() && appPeerSyncIsPeerInCase())) {
-        RULE_LOG("ruleIdleHandsetPair, ignore, no paired handset, but left or right not in case");
-        return RULE_ACTION_IGNORE;
-    }
+//    /// todo: 如果是单耳模式，需要单独设计条件
+//    if (!(appSmIsInCase() && appPeerSyncIsPeerInCase())) {
+//        RULE_LOG("ruleIdleHandsetPair, ignore, no paired handset, but left or right not in case");
+//        return RULE_ACTION_IGNORE;
+//    }
 
-    if (appConfigIsLeft()) {
-        RULE_LOG(
-                "ruleIdleHandsetPair, run, no paired handset, we're in of case, peer is in of case, we're left earbud");
-        return RULE_ACTION_RUN;
-    } else {
-        RULE_LOG(
-                "ruleIdleHandsetPair, ignore, no paired handset, we're in of case, peer is in of case, we're right earbud");
+    if ((appSmIsInCase() && appPeerSyncIsPeerInCase()) || (!appSmIsInCase() && !appPeerSyncIsPeerInCase())) {
+        if (appConfigIsLeft()) {
+            RULE_LOG("ruleIdleHandsetPair, run, no paired handset, we're all in/out case, we're left earbud");
+            return RULE_ACTION_RUN;
+        } else {
+            RULE_LOG("ruleIdleHandsetPair, ignore, no paired handset, we're all in/out case,  we're right earbud");
+            return RULE_ACTION_IGNORE;
+        }
+    } else if (appSmIsInCase() && !appPeerSyncIsPeerInCase()) {
+        RULE_LOG("ruleIdleHandsetPair, ignore, no paired handset, i am in case, peer is't in case, so i ignore this rule");
         return RULE_ACTION_IGNORE;
+    } else if (!appSmIsInCase() && appPeerSyncIsPeerInCase()) {
+        RULE_LOG("ruleIdleHandsetPair, run, no paired handset, i am not in case, peer is in case, so i run this rule");
+        return RULE_ACTION_RUN;
     }
+    RULE_LOG("ruleIdleHandsetPair, unknow condition");
+    return RULE_ACTION_IGNORE;
 }
 
 #endif
