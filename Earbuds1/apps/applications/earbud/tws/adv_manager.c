@@ -162,7 +162,7 @@ void appBleAdvFeture(uint8 feture) {
 void appBleSelectFeture(void) {
     if (appSmIsPairing()) {
         appBleAdvFeture(ADV_FETURE_PAIR);
-    } else if (appSmIsOutOfCase()) {
+    } else if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
         appBleAdvFeture(ADV_FETURE_GAIA);
     } else if (appSmIsInCase()) {
         appBleAdvFeture(ADV_FETURE_UPGRADE);

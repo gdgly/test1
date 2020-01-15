@@ -2572,6 +2572,21 @@ static ruleAction ruleBleConnectionUpdate(void)
         return bleEnable();
     }
 
+    /* 当前耳机连接了经典蓝牙hfp、a2dp、avrcp，则允许发出ble广播 */
+    if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
+        DEBUG_LOG("ruleBleConnectionUpdate appDeviceIsHandset[Hfp/A2dp/Avrcp]Connected() is run, so need enable");
+        appBleSelectFeture();
+        return bleEnable();
+    }
+
+    /* 另一只耳机连接了经典蓝牙hfp、a2dp、avrcp，则不允许发出ble广播 */
+    if (appPeerSyncIsComplete()) {
+        if (appPeerSyncIsPeerHandsetHfpConnected() || appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()) {
+            DEBUG_LOG("ruleBleConnectionUpdate appPeerSyncIsPeerHandset[Hfp/A2dp/Avrcp]Connected() is run, so need disable");
+            return bleDisable();
+        }
+    }
+
     if (appGaiaIsConnect() && !handsetDisconnectAllowed()) {
         RULE_LOG("ruleBleConnectionUpdate current gaia is connect, and headset is connect");
         return RULE_ACTION_IGNORE;
@@ -2610,6 +2625,10 @@ static ruleAction ruleBleConnectionUpdate(void)
 
             if (TRUE == appSmIsInCase()) { /// 当前耳机在充电盒中
                 if (appPeerSyncIsPeerInCase() && appGetCaseIsOpen()) {
+                    if (appDeviceIsHandsetConnected()) {
+
+                    }
+
                     //1.比较版本号 2.比较电量信息
                     if(bleBattery(left)) {  /// 电量多
                         DEBUG_LOG("ruleBleConnectionUpdate self battery more, ble adv enable");
