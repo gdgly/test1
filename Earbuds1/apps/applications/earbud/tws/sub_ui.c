@@ -653,11 +653,22 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CASE_CLOSE:
         DEBUG_LOG("plc call case close");
 #ifdef TWS_DEBUG
+        if (appGaiaIsConnect()) {
+            DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
+            appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
+        }
+        ///  直接发送之后，又立即断开，导致数据没有发送出去，现在需要使用延迟发送
+        /// todo hjs 看看如果没有延迟，消息是否能发送出去
         /// 设置规则去处理
-        appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
-        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
+        MessageCancelAll(&appGetUi()->task, APP_CASE_CLOSE_LATER);
+        MessageSendLater(&appGetUi()->task, APP_CASE_CLOSE_LATER, NULL, 50);
 #endif
         break;
+    case APP_CASE_CLOSE_LATER:
+        appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
+        break;
+
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
@@ -1072,10 +1083,14 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
             /// 之前状态和现在状态不一致，发送事件
             if (progRun->caseLidOpen > 0) {
                 DEBUG_LOG("call case open");
-                MessageSend(&appGetUi()->task, APP_CASE_OPEN, 0);
+                MessageCancelAll(&appGetUi()->task, APP_CASE_OPEN);
+                MessageCancelAll(&appGetUi()->task, APP_CASE_CLOSE);
+                MessageSendLater(&appGetUi()->task, APP_CASE_OPEN, NULL, 50);
             } else {
                 DEBUG_LOG("call case close");
-                MessageSend(&appGetUi()->task, APP_CASE_CLOSE, 0);
+                MessageCancelAll(&appGetUi()->task, APP_CASE_OPEN);
+                MessageCancelAll(&appGetUi()->task, APP_CASE_CLOSE);
+                MessageSendLater(&appGetUi()->task, APP_CASE_CLOSE, NULL, 50);
             }
         }
     }

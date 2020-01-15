@@ -40,6 +40,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_RESET_FACTORY           (2103)           // 20340 -> ui 报告plc 恢复出厂设置
 #define APP_CASE_OPEN               (2104)           // 20340 -> ui 报告plc 充电盒打开
 #define APP_CASE_CLOSE              (2105)           // 20340 -> ui 报告plc 充电盒关闭
+#define APP_CASE_CLOSE_LATER        (2106)           // ui -> ui 延迟发送关闭规则
 
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
