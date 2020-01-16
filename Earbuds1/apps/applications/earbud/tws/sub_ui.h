@@ -77,6 +77,7 @@ typedef struct tagPROGRUNINFO {
     uint16         caseKeyLong:1;           // 按键按下长按键
     uint16         stopBle:1;               // BLE更新广播内容时，需要先停止广播
 
+    uint16         peerGaiaStat:1;          // 对方手机GAIA与手机是否连接0：disconect, 1:connect
     uint16         gaiaStat:1;              // GAIA与手机是否连接0：disconect, 1:connect
     uint16         bredrconnect:1;           // 与经典蓝牙建立连接0：disconect, 1:connect
     uint16         peerconnect:1;            // 与对方耳机建立连接0：disconect, 1:connect

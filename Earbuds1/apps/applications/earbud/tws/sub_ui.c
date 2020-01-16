@@ -544,6 +544,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         progRun->gaiaStat  = 1;
         if(1 == gUserParam.apolloEnable)
             apolloWakeupPower(1);
+        appPeerSigTxDataCommandUi(PEERTX_CMD_SYNCGAIA, 1);
         break;
     case APP_GAIA_DISCONNECTED:
         DEBUG_LOG("GAIA disconnect from phone");
@@ -560,6 +561,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         ///todo 添加通话录音停止操作
 #endif
         apolloWakeupPower(0);
+        appPeerSigTxDataCommandUi(PEERTX_CMD_SYNCGAIA, 0);
         break;
 
     case APP_BTN_DOUBLE_TAP:
