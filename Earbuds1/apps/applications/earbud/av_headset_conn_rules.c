@@ -2132,16 +2132,20 @@ extern bool appPhyStateIsInCase(void);
 
 static ruleAction ruleSyncDisconnectHandset(void)
 {
-    // 如果当前连接了任何handset相关协议，并且在充电盒中，另一只耳机不在充电盒中，则需要断开连接
-    if (appDeviceIsHandsetConnected() && appPhyStateIsInCase() && !appPeerSyncIsPeerInCase()) {
-        RULE_LOG("ruleSyncDisconnectHandset, appDeviceIsHandsetConnected() && appPhyStateIsInCase() && !appPeerSyncIsPeerInCase() is true, so need run");
-        return RULE_ACTION_RUN;
-    }
     /* Peer sync must be complete as this rule uses peer state */
     if (!appPeerSyncIsComplete())
     {
         RULE_LOG("ruleSyncDisconnectHandset, defer as not sync'ed with peer");
         return RULE_ACTION_DEFER;
+    }
+
+    // 如果当前连接了任何handset相关协议，并且在充电盒中，另一只耳机不在充电盒中，则需要断开连接
+    if (appDeviceIsHandsetConnected() && appPhyStateIsInCase() && !appPeerSyncIsPeerInCase()) {
+        RULE_LOG("ruleSyncDisconnectHandset, appDeviceIsHandsetConnected() && appPhyStateIsInCase() && !appPeerSyncIsPeerInCase() is true, so need run");
+        return RULE_ACTION_RUN;
+        /// 交互连接的权利，让另一只耳机连接
+//        bool handover = TRUE;
+//        return RULE_ACTION_RUN_PARAM(handover);
     }
 
     DEBUG_LOG("appGetPhyState()->state is :%d", appGetPhyState()->state);

@@ -237,7 +237,8 @@ static void appDeviceHandleConManagerConnectionInd(CON_MANAGER_CONNECTION_IND_T*
 #ifdef TWS_DEBUG
             // 如果配对的时候，just pair的耳机在空中，则触发请求连接手机的rule。规则中会判断sync的信息
             DEBUG_LOG("appDeviceHandleConManagerConnectionInd, clearing just paired flag, appGetStatue is :%04X", appGetState());
-            if (appSmStateInEar(appGetState()) || appSmStateOutOfCase(appGetState())) {
+            if (appPeerSyncIsPeerInCase() && appSmIsOutOfCase()) {
+                DEBUG_LOG("active rule RULE_EVENT_HANDOVER_RECONNECT");
                 appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDOVER_RECONNECT);
             }
 #endif
