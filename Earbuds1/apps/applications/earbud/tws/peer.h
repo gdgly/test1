@@ -7,6 +7,28 @@
 
 #include "av_headset_av.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/////////////// 左右耳机数据命令
+////////////////////////////////////////////////////////////////////////////////
+typedef struct {
+    Task    client_task;           /*!< Task to receive any response */
+    uint8   command;
+    uint8   data[7];
+} PEER_SIG_INTERNAL_TXDATA_REQ_T;
+
+#define AVRCP_PEER_CMD_TXDATA                   0x69
+#define AVRCP_PEER_CMD_TXDATA_SIZE              (7)         // command + data
+
+enum {PEERTX_CMD_SYNCGAIA=0,         /* 和附耳机发送gaia状态 [payload[0]: connect, 0:disconnect */
+     };
+void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload);
+void appPeerSigTxDataCommandUi(uint8 command, uint8 payload);  // task为UI 仅一个字节payhload
+void appPeerSigTxDataRequest(PEER_SIG_INTERNAL_TXDATA_REQ_T *req);           // 发送方： 请求发送给对方
+bool appPeerSigRxDataCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind);        // 接收方： 接收数据处理
+void appPeerSigTxDataConfirm(Task task, peerSigStatus status);               // 发送方： 获取对方返回值
+bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req);              // 接收方： 返回给上层处理
+
+
 ////////////////////////////////////ble配对信息////////////////////////////////////////////
 
 /******************************************************************************

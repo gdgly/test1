@@ -349,6 +349,9 @@ static void appPeerSigCancelInProgressOperation(void)
                                                peer_sig->current_msg_channel);
             break;
 #ifdef CONFIG_STAROT
+        case AVRCP_PEER_CMD_TXDATA:
+            appPeerSigTxDataConfirm(peer_sig->client_task, peerSigStatusPairHandsetTxFail);
+            break;
         case AVRCP_PEER_CMD_BLE_CONFIG:
             appPeerSigMsgBleConfigConfirmation(peer_sig->client_task, peerSigStatusPairHandsetTxFail);
             break;
@@ -875,6 +878,9 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughInd(AV_AVRCP_VENDOR_PASSTHRO
 
             /* add handlers for new incoming peer signalling message types here */
 #ifdef CONFIG_STAROT
+        case AVRCP_PEER_CMD_TXDATA:
+            rc = appPeerSigRxDataCommand(ind);
+            break;
         case AVRCP_PEER_CMD_BLE_CONFIG:
             rc = appPeerSigHandleBleConfigCommand(ind);
             break;
@@ -940,6 +946,10 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughConfirm(AV_AVRCP_VENDOR_PASS
 
         /* add handlers for new outgoing peer signalling message confirmations here */
 #ifdef CONFIG_STAROT
+        case AVRCP_PEER_CMD_TXDATA:
+            appPeerSigTxDataConfirm(peer_sig->client_task, cfm->status == avrcp_success ?
+                peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
+            break;
         case AVRCP_PEER_CMD_BLE_CONFIG:
             appPeerSigMsgBleConfigConfirmation(peer_sig->client_task, cfm->status == avrcp_success ?
                                                peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
@@ -1229,6 +1239,9 @@ static void appPeerSigHandleMessage(Task task, MessageId id, Message message)
             appPeerSigHandleInternalShutdownReq();
             break;
 #ifdef CONFIG_STAROT
+        case PEER_SIG_INTERNAL_TXDATA_REQ:
+            appPeerSigTxDataRequest((PEER_SIG_INTERNAL_TXDATA_REQ_T *)message);
+            break;
         case PEER_SIG_INTERNAL_BLE_CONFIG_REQ:
             appPeerSigHandleInternalBleConfigRequest((PEER_SIG_INTERNAL_BLE_CONFIG_REQ_T*) message);
             break;

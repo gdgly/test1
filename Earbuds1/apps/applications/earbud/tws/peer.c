@@ -6,6 +6,95 @@
 #define STAROT_MAKE_SIZE(TYPE) (((sizeof(TYPE)) / 8 * 8) + ((sizeof(TYPE)) % 8 > 0 ? 8 : 0))
 #define STAROT_MAKE_MESSAGE(TYPE) TYPE *message = (TYPE *) PanicUnlessMalloc(STAROT_MAKE_SIZE(TYPE))
 
+/// 将消息发送至对方耳机
+
+void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload) {
+    if (NULL == peer_addr) {
+        return;
+    }
+
+    peerSigTaskData *peer_sig = appGetPeerSig();
+    STAROT_MAKE_MESSAGE(PEER_SIG_INTERNAL_TXDATA_REQ_T);
+
+    message->client_task = task;
+    message->command     = command;
+    if(size_payload > 0) {
+        if(size_payload > (AVRCP_PEER_CMD_TXDATA_SIZE-1))
+            size_payload = AVRCP_PEER_CMD_TXDATA_SIZE-1;
+        memcpy(message->data, payload, size_payload);
+    }
+    MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_TXDATA_REQ, message, appPeerSigStartup(peer_addr));
+}
+
+void appPeerSigTxDataCommandUi(uint8 command, uint8 payload) {  // 仅一个字节payhload
+    bdaddr peer_addr;
+
+    if(FALSE == appDeviceGetPeerBdAddr(&peer_addr))
+        return;
+
+    appPeerSigTxDataCommand(appGetUiTask(), &peer_addr,  command, 1, &payload);
+}
+
+
+bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              // 接收方： 返回给上层处理
+    bool ret = TRUE;
+    ProgRIPtr progRun = appSubGetProgRun();
+
+    switch(req->command) {
+    case PEERTX_CMD_SYNCGAIA:
+        progRun->peerGaiaStat = (req->data[0] == 1) ? 1 : 0;
+        break;
+    default:
+        DEBUG_LOG("Unknown command:%d", req->command);
+        ret = FALSE;
+        break;
+    }
+
+    return ret;
+}
+
+///
+void appPeerSigTxDataRequest(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {
+    DEBUG_LOG("appPeerSigTxDataRequest, state %u", appPeerSigGetState());
+
+    switch (appPeerSigGetState()) {
+        case PEER_SIG_STATE_CONNECTED:
+            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_TXDATA,
+                    AVRCP_PEER_CMD_TXDATA_SIZE, &req->command);
+            break;
+
+        default:
+            appPeerSigMsgConnectHandsetConfirmation(req->client_task, peerSigStatusLinkKeyTxFail);
+            break;
+    }
+}
+
+/*! \brief Receive connect handset command. */
+bool appPeerSigRxDataCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
+    peerSigTaskData *peer_sig = appGetPeerSig();
+    DEBUG_LOG("appPeerSigRxDataCommand");
+
+    /* validate message */
+    if ((ind->size_payload != AVRCP_PEER_CMD_TXDATA_SIZE)
+        || !peer_sig->rx_handset_commands_task) {
+        return FALSE;
+    }
+    else {
+        PEER_SIG_INTERNAL_TXDATA_REQ_T peerReq;
+        memcpy(&peerReq.command, ind->payload, AVRCP_PEER_CMD_TXDATA_SIZE);
+        return appUiRecvPeerCommand(&peerReq);
+    }
+}
+
+void appPeerSigTxDataConfirm(Task task, peerSigStatus status) {
+    UNUSED(task), UNUSED(status);
+    DEBUG_LOG("appPeerSigTxDataConfirm:%d", status);
+}
+//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+
+
+
 void appPeerSigTxBleConfigRequest(Task task, const bdaddr *peer_addr, int advCode, int bondCode) {
     if (NULL == peer_addr) {
         return;
