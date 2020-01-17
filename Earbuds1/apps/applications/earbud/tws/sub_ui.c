@@ -23,6 +23,7 @@ extern bool appKymeraRecordIsRun(void);
 extern void disable_audio_forward(bool disable);
 #ifdef HAVE_MAX20340
 extern bool max20340_GetConnect(void);
+extern void max20340_notify_current_status(void);
 #endif
 void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
@@ -41,6 +42,8 @@ static uint8 appUIGetCaseConnectStatusInfo(void);
 static void appNotifyPeerDeviceConfig(uint16 source);
 extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                               uint16 payload_length, uint8 *payload);
+static void subUiEarInOutHandle(ProgRIPtr progRun, bool isIn);
+
 /*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
 #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
 
@@ -572,16 +575,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");    /* Get microphone sources */
 #ifdef HAVE_MAX20340
         appUiPowerSave((TRUE==max20340_GetConnect()) ? POWER_MODE_IN_CASE : POWER_MODE_OUT_CASE);
-
-        if (TRUE == max20340_GetConnect()) {
-            MessageSend(appGetUiTask(), APP_ATTACH_PLC_IN, NULL);
-        } else {
-            MessageSend(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL);
-        }
-
-
-        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_UPGRADE);
+        max20340_notify_current_status();
 #endif
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_UPGRADE);
         register_apollo_wakeup_cb(apolloWakeupCallback);                       //注册apollo唤醒函数
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
         /// todo hjs 暂时不启用自动配对
@@ -706,17 +702,17 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
 #ifdef TWS_DEBUG
        // if (appSmIsOutOfEar()) {
-        phyStateTaskData* phy_state = appGetPhyState();
-        MessageCancelAll(&phy_state->task, CHARGER_MESSAGE_ATTACHED);
+//        phyStateTaskData* phy_state = appGetPhyState();
+//        MessageCancelAll(&phy_state->task, CHARGER_MESSAGE_ATTACHED);
+//        MessageSendLater(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL, 50);
         if (appGaiaIsConnect()) {
             DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
             appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
         }
-        MessageSendLater(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL, 50);
-        gProgRunInfo.realInCase = TRUE;
+//        gProgRunInfo.realInCase = TRUE;
        // }
 #endif
-        appUiPowerSave(POWER_MODE_IN_CASE);
+//        appUiPowerSave(POWER_MODE_IN_CASE);
     }
         break;
 
@@ -724,29 +720,32 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("parse APP_ATTACH_PLC_OUT event");
 #ifdef TWS_DEBUG
        // if (appSmIsInCase()) {
-        phyStateTaskData* phy_state = appGetPhyState();
-        MessageCancelAll(&phy_state->task, CHARGER_MESSAGE_DETACHED);
-        MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
-        gProgRunInfo.realInCase = FALSE;
+//        phyStateTaskData* phy_state = appGetPhyState();
+//        MessageCancelAll(&phy_state->task, CHARGER_MESSAGE_DETACHED);
+//        MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
+//        gProgRunInfo.realInCase = FALSE;
        // }
 #endif
         /// 从充电盒中取出，默认充电盒之后是关闭的，放入的时候，会收到case状态，打开的，会使这个事件失效
 //        progRun->caseLidOpen = 0;
-#ifdef DEVELOPE_BOARD
-        appUiPowerSave(POWER_MODE_IN_EAR);
-#else
-        appUiPowerSave(POWER_MODE_OUT_CASE);
-#endif
+//#ifdef DEVELOPE_BOARD
+//        appUiPowerSave(POWER_MODE_IN_EAR);
+//#else
+//        appUiPowerSave(POWER_MODE_OUT_CASE);
+//#endif
     }
         break;
 
         // 入耳 出耳
     case APP_PSENSOR_INEAR:
-        appUiPowerSave(POWER_MODE_IN_EAR);
+//        appUiPowerSave(POWER_MODE_IN_EAR);
+        subUiEarInOutHandle(progRun, TRUE);
         break;
     case APP_PSENSOR_OUTEAR:
-        appUiPowerSave(POWER_MODE_OUT_CASE);
+        subUiEarInOutHandle(progRun, FALSE);
+//        appUiPowerSave(POWER_MODE_OUT_CASE);
         break;
+
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
@@ -1172,6 +1171,23 @@ void appUiPowerSave(PowerSaveMode mode)           // 省电模式
     MessageCancelAll(appGetUiTask(), APP_INTERNAL_POWERSAVECHG);
     MessageSendLater(appGetUiTask(), APP_INTERNAL_POWERSAVECHG, 0, timeout);
 
+}
+
+// 入耳、出耳 事件处理 /// todo 如果佩戴检测使能，需要暂停播放音乐
+void subUiEarInOutHandle(ProgRIPtr progRun, bool isIn){//
+    (void)progRun;
+    UNUSED(isIn);
+//    TaskData* phy_task = &appGetPhyState()->task;
+//    DEBUG_LOG("subUiInOutEar %d", isIn);
+//    if(TRUE == isIn)   {
+//        appUiPlayTone(app_tone_ear_in);
+//        // MessageSend(phy_task, PROXIMITY_MESSAGE_IN_PROXIMITY, NULL);
+//    } else {
+//        // MessageSend(phy_task, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY, NULL);
+//        appUiPlayTone(app_tone_ear_out);    //需要知道另外一只耳机是否也在耳朵中
+//        if (appDeviceIsHandsetAvrcpConnected())
+//            appAvPlayToggle(TRUE);
+//    }
 }
 
 void appUiPowerSaveSync(void)

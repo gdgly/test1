@@ -45,21 +45,30 @@ static void appPhyStateMsgSendStateChangedInd(phyState state)
 static void appPhyStateEnterInCase(void)
 {
     DEBUG_LOG("appPhyStateEnterInCase");
-    appPhyStateMsgSendStateChangedInd(PHY_STATE_IN_CASE); 
+    appPhyStateMsgSendStateChangedInd(PHY_STATE_IN_CASE);
+#ifdef CONFIG_STAROT
+    appUiPowerSave(POWER_MODE_IN_CASE);
+#endif
 }
 
 /*! \brief Perform actions on entering PHY_STATE_OUT_OF_EAR state. */
 static void appPhyStateEnterOutOfEar(void)
 {
     DEBUG_LOG("appPhyStateEnterOutOfEar");
-    appPhyStateMsgSendStateChangedInd(PHY_STATE_OUT_OF_EAR); 
+    appPhyStateMsgSendStateChangedInd(PHY_STATE_OUT_OF_EAR);
+#ifdef CONFIG_STAROT
+    appUiPowerSave(POWER_MODE_OUT_CASE);
+#endif
 }
 
 /*! \brief Perform actions on entering PHY_STATE_IN_EAR state. */
 static void appPhyStateEnterInEar(void)
 {
     DEBUG_LOG("appPhyStateEnterInEar");
-    appPhyStateMsgSendStateChangedInd(PHY_STATE_IN_EAR); 
+    appPhyStateMsgSendStateChangedInd(PHY_STATE_IN_EAR);
+#ifdef CONFIG_STAROT
+    appUiPowerSave(POWER_MODE_IN_EAR);
+#endif
 }
 
 /*! \brief Perform actions on entering PHY_STATE_OUT_OF_EAR_AT_REST state. */
@@ -105,6 +114,9 @@ static void appPhyStateHandleBadState(phyState phy_state)
 static void appPhyStateHandleInternalInCaseEvent(void)
 {
     phyStateTaskData *phy_state = appGetPhyState();
+#ifdef CONFIG_STAROT
+    phy_state->in_proximity = FALSE;
+#endif
 
     switch (phy_state->state)
     {

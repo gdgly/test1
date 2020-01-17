@@ -49,4 +49,5 @@ void singlebus_key_itr_handler(Task task, MessageId id, Message msg);
 void singlebus_itr_process(void);
 
 int imagecase_checkver(uint8 *recv_ver);      // return 1 is upgrade
+void max20340_notify_current_status(void);
 #endif // MAX20340_H

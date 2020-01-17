@@ -206,14 +206,10 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     if(em20168_ps0_value >= high_value &&
             (prox->state->proximity != proximity_state_in_proximity) ){
         prox->state->proximity = proximity_state_in_proximity;
-#ifndef EM20168_SEND_MSG
-        DEBUG_LOG("in ear");
-#else
         if (NULL != prox->clients){
             DEBUG_LOG("in ear");
             appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_IN_PROXIMITY);
         }
-#endif
         _em20168StatInOut = 0;
         if(0 == g_commuType && appInitCompleted() )
             MessageSend(appGetUiTask(), APP_PSENSOR_INEAR, NULL);
@@ -221,14 +217,10 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     if(em20168_ps0_value <= low_value &&
             (prox->state->proximity == proximity_state_in_proximity) ){
         prox->state->proximity = proximity_state_not_in_proximity;
-#ifndef EM20168_SEND_MSG
-        DEBUG_LOG("out ear");
-#else
         if (NULL != prox->clients){
             DEBUG_LOG("out ear");
             appTaskListMessageSendId(prox->clients, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY);
         }
-#endif
         _em20168StatInOut = 1;
         if(0 == g_commuType && appInitCompleted() )
             MessageSend(appGetUiTask(), APP_PSENSOR_OUTEAR, NULL);

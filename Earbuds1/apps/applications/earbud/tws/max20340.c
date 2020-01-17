@@ -9,6 +9,9 @@
 // 产生原因很可能 发送给对方耳机及对方耳机快速响应，导致本耳机中断没响应过来
 void max20340_timer_restart(int timeout);
 
+static void max20340_notify_plc_in(void);
+static void max20340_notify_plc_out(void);
+
 #define MESSAGE_MAX30240_SEND_LATER    2000    // (延时反馈数据)
 static uint8 g_send_data[4];                   // 需要发送的数据
 void max20340_timer_send(int timeout);
@@ -535,17 +538,13 @@ void singlebus_itr_process(void)
             //说明是插入动作,可能是芯片bug需要重写mask寄存器
             DEBUG_LOG("plc in");
             if(0 == g_commuType){       // 非测试模式下去改变实际状态
-                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
-                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
-                MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_IN, NULL, 50);
+                max20340_notify_plc_in();
             }
         }else if( ((value_a[MX20340_REG_STA1]&0x1c) == (3<<2)) ){
             //说明是拔出动作,可能是芯片bug需要重写mask寄存器
             DEBUG_LOG("plc out");
             if(0 == g_commuType) {       // 非测试模式下去改变实际状态
-                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
-                MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
-                MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL, 50);
+                max20340_notify_plc_out();
             }
         }
         //max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x2);
@@ -841,6 +840,32 @@ void max20340_init(void)
 
     max20340Disable(handle);
     return;
+}
+
+void max20340_notify_current_status(void) {
+    if (TRUE == max20340_GetConnect()) {
+        max20340_notify_plc_in();
+    } else {
+        max20340_notify_plc_out();
+    }
+}
+
+void max20340_notify_plc_in(void) {
+    phyStateTaskData* phy_state = appGetPhyState();
+    MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT);
+    MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT, NULL, 50);
+    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
+    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
+    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_IN, NULL, 50);
+}
+
+void max20340_notify_plc_out(void) {
+    phyStateTaskData* phy_state = appGetPhyState();
+    MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT);
+    MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT, NULL, 50);
+    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
+    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
+    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL, 50);
 }
 
 #endif
