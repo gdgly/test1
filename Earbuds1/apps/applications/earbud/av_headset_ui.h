@@ -421,6 +421,7 @@ do \
 #define appUiPairingInactive(is_user_initiated) \
     appLedStopPattern(LED_PRI_MED)
 
+#ifndef CONFIG_STAROT
 /*! \brief Play pairing complete prompt */
 #define appUiPairingComplete() \
     appUiPlayPrompt(PROMPT_PAIRING_SUCCESSFUL)
@@ -428,6 +429,7 @@ do \
 /*! \brief Play pairing failed prompt */
 #define appUiPairingFailed() \
     appUiPlayPrompt(PROMPT_PAIRING_FAILED)
+#endif
 
 /*! \brief Play pairing deleted tone */
 #define appUiPairingDeleted() \
