@@ -127,6 +127,11 @@ const promptConfig prompt_config[] =
         .rate = 16000,
         .format = PROMPT_FORMAT_SBC,
     },
+    [PROMPT_CONNECT_APP] = {
+        .filename = "connect_app.sbc",
+        .rate = 16000,
+        .format = PROMPT_FORMAT_SBC,
+    },
 };
 
 /*! A prompt configuration must be defined for each prompt. */
