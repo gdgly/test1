@@ -9,6 +9,7 @@
 void ProductEnterDutMode(void);
 void ProductEnterReocrdMode(int16 isLeft);      // 1: left, 0:right
 int appChangeCVCProcessMode(void);
+void appEnterSingleForTest(void);
 
  #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
  static const ringtone_note product_tone[] =
@@ -111,7 +112,7 @@ static void ProductTaskHandleMessage(Task task, MessageId id, Message message)
 }
 
 // 启动广播，供手机连接。耳机可能处在双耳配对过程中，需要多条指令来切换到对应的状态
-static void appEnterSingleforTest(void)
+void appEnterSingleForTest(void)
 {
 #if 1
     if(NULL == _ProdCmdPtr) {
@@ -227,7 +228,7 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             break;
 
         case 0x0f:
-            appEnterSingleforTest();
+            appEnterSingleForTest();
             break;
         case 0x10:   //读接近光校准高_H
             send_buf[1] = 0x10;

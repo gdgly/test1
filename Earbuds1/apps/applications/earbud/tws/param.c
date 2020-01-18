@@ -191,17 +191,13 @@ int16 ParamLoadUserPrm(UserPrmPtr pParam)
 /////////////////////////////////////////////////////////////////////////////////
 //////// 其它外部参数
 /////////////////////////////////////////////////////////////////////////////////
-#ifdef CONFIG_STAROT_SINGLE
+
 // 检查是否为独立使用，没有耳机配对
 // 单耳独立使用 0:daul 1:mon  ff:unknown
 bool ParamUsingSingle(void)
 {
     return (bool)gBtAddrParam.single_era;
 }
-#else
-bool ParamUsingSingle(void) { return TRUE; }
-#endif
-
 
 int16 ParamLoadAll(void)
 {
