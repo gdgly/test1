@@ -78,150 +78,183 @@ uint8 g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;      // 设置为 NO_
 #define RETURN_APP_NOT_INIT()  do{if(appInitCompleted() == FALSE) return; }while(0)
 extern UserPrmPtr GetUserParam(void);
 
-static void subUiDoubleClickAB(bool isRL)
+#define DBCLINK_LOG          DEBUG_LOG
+
+static void subUiReConnectHandset(ProgRIPtr progRun)
+{
+    if(progRun)
+        return;
+
+
+}
+
+// isTap: TRUE: 按键唤醒  FALSE:语音唤醒
+static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
+{
+    UserPrmPtr prm = GetUserParam();
+    uint8 keyFunc = (TRUE == appConfigIsLeft()) ? prm->lKeyFunc : prm->rKeyFunc;
+
+    if(appDeviceIsHandsetConnected()) {                  // 主耳机
+        DBCLINK_LOG("wakeappM,isTap=%d gaia=%d peerGaia=%d", isTap, progRun->gaiaStat, progRun->peerGaiaStat);
+
+        if (FALSE == isTap) {                           // 主耳机，APO唤醒
+            if(prm->assistantType == ASSISTANT_TYPE_APP)  {
+                if(progRun->gaiaStat == 1)              // 已经连接APP
+                    MessageSend(appGetUiTask(), APP_ASSISTANT_AWAKEN, 0);
+                else {
+                    appUiPlayPrompt(PROMPT_CONNECT_APP);        // 请连接手机APP;
+                    return;
+                }
+            }
+            else {
+                MessageSend(appGetUiTask(), APP_ASSISTANT_SYSTEM, 0);
+            }
+        }
+        else {                                     // 主耳机，TAP唤醒
+            if(TAP_WACKUP == keyFunc) {
+                if(progRun->gaiaStat == 1)
+                    MessageSend(appGetUiTask(), APP_ASSISTANT_TAP_AWAKEN, 0);
+                else {
+                    appUiPlayPrompt(PROMPT_CONNECT_APP);        // 请连接手机APP;
+                    return;
+                }
+            }
+            else if(TAP_SYSTEM == keyFunc)
+                MessageSend(appGetUiTask(), APP_ASSISTANT_TAP_SYSTEM, 0);
+            else {
+                DBCLINK_LOG("tap no set wakeup");
+                return;
+            }
+        }
+    }
+    else {                                              // 副耳机
+        DBCLINK_LOG("wakeapp,isTap=%d gaia=%d peerGaia=%d", isTap, progRun->gaiaStat, progRun->peerGaiaStat);
+
+        if(!appDeviceIsPeerAvrcpConnectedForAv() || !appPeerSyncIsComplete() || !appPeerSyncIsPeerHandsetAvrcpConnected()) {
+            appUiPlayPrompt(PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
+            return;
+        }
+
+        if (FALSE == isTap) {                           // 副耳机，APO唤醒
+            if(prm->assistantType == ASSISTANT_TYPE_APP) {
+                if(1 == progRun->peerGaiaStat)  {       // 对方已经启动APP
+                    appPeerSigTxWakeupApp(1);  // 1为APO
+                }
+                else {
+                    appUiPlayPrompt(PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
+                    return;
+                }
+            }
+            else {
+                appPeerSigTxWakeupSys(1);      // 1为APO
+            }
+        }
+        else {                                          // 副耳机，TAP唤醒
+            if(TAP_WACKUP == keyFunc) {
+                if(1 == progRun->peerGaiaStat)  {       // 对方已经启动APP
+                    appPeerSigTxWakeupApp(0);  // 0为tap
+                }
+                else {
+                    appUiPlayPrompt(PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
+                    return;
+                }
+            }
+            else if(TAP_SYSTEM == keyFunc)
+                appPeerSigTxWakeupSys(0);  // 0为tap
+            else {
+                DBCLINK_LOG("tap no set wakeup");
+                return;
+            }
+        }
+    }
+}
+
+
+static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
 {
     bdaddr peer_addr;
     UserPrmPtr prm = GetUserParam();
-    if(TRUE == isRL)
-        {
-            /* If voice call active, hangup */
-            if (appHfpIsCallActive())
-                appHfpCallHangup();
-            /* Sco Forward can be streaming a ring tone */
-            else if (appScoFwdIsReceiving() && !appScoFwdIsCallIncoming())
-                appScoFwdCallHangup();
-            /* If outgoing voice call, hangup */
-            else if (appHfpIsCallOutgoing())
-                appHfpCallHangup();
-            /* If incoming voice call, accept */
-            else if (appHfpIsCallIncoming())
-                appHfpCallAccept();
-            else if (appScoFwdIsCallIncoming())
-                appScoFwdCallAccept();
-            else if(appDeviceIsHandsetAvrcpConnected() && prm->lKeyFunc == TAP_PREVIOUS_TRACK){
-                appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
-                appAvBackward();
-            }else if(appDeviceIsHandsetAvrcpConnected() && prm->lKeyFunc == TAP_NEXT_TRACK){
-                appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
-                appAvForward();
-            }
-            else if(appDeviceIsHandsetAvrcpConnected() && prm->lKeyFunc == TAP_WACKUP){
-                appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
-                if (appDeviceGetPeerBdAddr(&peer_addr) && (appDeviceIsPeerAvrcpConnectedForAv() && appPeerSyncIsComplete() && appPeerSyncIsPeerHandsetAvrcpConnected()))
-                    appPeerSigTxDoubleClickWakeupRequest(appGetGaiaTask(), &peer_addr, 0);
-                else
-                    MessageSend(&appGetUi()->task, APP_ASSISTANT_TAP_AWAKEN, 0);
-            }
-            else if(prm->lKeyFunc == TAP_SYSTEM){
-                if (appDeviceGetPeerBdAddr(&peer_addr) && (appDeviceIsPeerAvrcpConnectedForAv() && appPeerSyncIsComplete() && appPeerSyncIsPeerHandsetAvrcpConnected()))
-                    appPeerSigTxDoubleClickWakeupRequest(appGetGaiaTask(), &peer_addr, 1);
-                else
-                    HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
-            }
-            /* If AVRCP to handset connected, send play or pause */
-            else if (appDeviceIsHandsetAvrcpConnected() && prm->lKeyFunc == TAP_PLAY_PAUSE)
-                appAvPlayToggle(TRUE);
-            /* If AVRCP is peer is connected and peer is connected to handset, send play or pause */
-            //        else if (appDeviceIsPeerAvrcpConnectedForAv() && appPeerSyncIsComplete() && appPeerSyncIsPeerHandsetAvrcpConnected())
-            //            appAvPlayToggle(TRUE);
-            else if (appDeviceIsHandsetHfpConnected() && appDeviceIsHandsetA2dpConnected())
-                appUiError();
-#ifndef TWS_DEBUG
-            else if(!appSmIsPairing())
-                appSmPairHandset();
-#endif
-            else
-            {
-                appSmConnectHandset();
-                appUiAvConnect();
-            }
-        } else {
-            /* If voice call active, hangup */
-            if (appHfpIsCallActive())
-                appHfpCallHangup();
-                /* Sco Forward can be streaming a ring tone */
-            else if (appScoFwdIsReceiving() && !appScoFwdIsCallIncoming())
-                appScoFwdCallHangup();
-            /* If outgoing voice call, hangup */
-            else if (appHfpIsCallOutgoing())
-                appHfpCallHangup();
-            /* If incoming voice call, accept */
-            else if (appHfpIsCallIncoming())
-                appHfpCallAccept();
-            else if (appScoFwdIsCallIncoming())
-                appScoFwdCallAccept();
-            else if(prm->rKeyFunc == TAP_PREVIOUS_TRACK){
-                appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
-                appAvBackward();
-            }else if(prm->rKeyFunc == TAP_NEXT_TRACK){
-                appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
-                appAvForward();
-            }
-            else if(prm->rKeyFunc == TAP_WACKUP){
-                appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
-                /// to qzj 这个为什么不发送
-                if (!appDeviceIsHandsetConnected() && appDeviceGetPeerBdAddr(&peer_addr)) {
-                    appPeerSigTxDoubleClickWakeupRequest(appGetGaiaTask(), &peer_addr, 0);
-                } else {
-                    MessageSend(&appGetUi()->task, APP_ASSISTANT_TAP_AWAKEN, 0);
-                }
-            }
-            else if(prm->rKeyFunc == TAP_SYSTEM){
-                if (!appDeviceIsHandsetConnected() && appDeviceGetPeerBdAddr(&peer_addr)) {
-                    appPeerSigTxDoubleClickWakeupRequest(appGetGaiaTask(), &peer_addr, 1);
-                } else {
-                    HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
-                }
-            }
-            /* If AVRCP to handset connected, send play or pause */
-            else if (prm->rKeyFunc == TAP_PLAY_PAUSE)
-                appAvPlayToggle(TRUE);
-            /* If AVRCP is peer is connected and peer is connected to handset, send play or pause */
-    //            else if (appDeviceIsPeerAvrcpConnectedForAv() && appPeerSyncIsComplete() && appPeerSyncIsPeerHandsetAvrcpConnected())
-    //                appAvPlayToggle(TRUE);
-            else if (appDeviceIsHandsetHfpConnected() && appDeviceIsHandsetA2dpConnected())
-                appUiError();
-        }
-}
+    uint8 handled, keyFunc = (TRUE == isLeft) ? prm->lKeyFunc : prm->rKeyFunc;
+
+    // 单耳机使用时
+
+
+    // 主副耳机是否已经正常配对成功
+    appDeviceGetPeerBdAddr(&peer_addr);
+
+
+    // 两只耳机都没有与手机连接,提示请连接手机
+    if((FALSE == appPeerSyncIsPeerHandsetHfpConnected()) && (FALSE == appDeviceIsHandsetConnected())) {
+        subUiReConnectHandset(progRun);
 
 #ifndef TWS_DEBUG
-static void subUiKeyDoubleTap(ProgRIPtr progRun)
-{
-    DEBUG_LOG("APP_MFB_BUTTON_PRESS %p", progRun);
-    if (appSmIsOutOfCase())
-    {
-        subUiDoubleClickAB(TRUE);
-    }
-}
+        if(!appSmIsPairing())
+            appSmPairHandset();
 #endif
 
-#ifdef TWS_DEBUG
-extern void appPeerSigTxDoubleClickWakeupRequest(Task task, const bdaddr *peer_addr, int num);
-static void subUiKeyDoubleTap(ProgRIPtr progRun)
-{
-    DEBUG_LOG("APP_MFB_BUTTON_PRESS %p", progRun);
-    if (appSmIsOutOfCase())
+        appSmConnectHandset();
+        appUiAvConnect();
+
+        DBCLINK_LOG("DBClink Two earbuds not connect phone");
+        goto key_done;
+    }
+
+    handled = 1;  /* 设置为已经处理 */
+    /* 电话操作时的控制，不能自己定义 */
+    if (appHfpIsCallActive())   /* If voice call active, hangup */
+        appHfpCallHangup();
+    else if (appScoFwdIsReceiving() && !appScoFwdIsCallIncoming()) /* Sco Forward can be streaming a ring tone */
+        appScoFwdCallHangup();
+    else if (appHfpIsCallOutgoing()) /* If outgoing voice call, hangup */
+        appHfpCallHangup();
+    else if (appHfpIsCallIncoming())    /* If incoming voice call, accept */
+        appHfpCallAccept();
+    else if (appScoFwdIsCallIncoming())
+        appScoFwdCallAccept();
+    else {     /* 非通话状态时的按键处理 */
+        handled = 0;   /* 设置为未处理 */
+    }
+
+    /* 已经处理或双击关闭 */
+    if(handled || TAP_DISABLED == keyFunc) {
+        DBCLINK_LOG("DBClink PhoneCall(%d) or keyDisable(%d)", handled, keyFunc);
+        goto key_done;
+    }
+
+    /* 音乐播放中 */
+    if(appDeviceIsHandsetAvrcpConnected() ||
+        (appDeviceIsPeerAvrcpConnectedForAv() && appPeerSyncIsComplete() && appPeerSyncIsPeerHandsetAvrcpConnected()))
     {
-        //副耳双击控制      调试需要看副耳log
-        if(appDeviceIsPeerAvrcpConnectedForAv() && appPeerSyncIsComplete() && appPeerSyncIsPeerHandsetAvrcpConnected())
-        {
-            if(appConfigIsRight())
-            {
-                subUiDoubleClickAB(FALSE);
-            } else {
-                subUiDoubleClickAB(TRUE);
-            }
-        }else{
-            if(appConfigIsLeft())
-            {
-                subUiDoubleClickAB(TRUE);
-            } else {
-                subUiDoubleClickAB(FALSE);
-            }
+        if( keyFunc == TAP_PREVIOUS_TRACK){          /*音乐播放中 -->音乐前一首 */
+            appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
+            appAvBackward();
+            goto key_done;
+        }
+        else if(keyFunc == TAP_NEXT_TRACK){          /*音乐播放中 -->音乐后一首 */
+            appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
+            appAvForward();
+            goto key_done;
+        }
+        else if(keyFunc == TAP_PLAY_PAUSE){          /*音乐播放中 -->暂停或播放 */
+            appAvPlayToggle(TRUE);
+            goto key_done;
         }
     }
+
+    subUiVoiceTapWakeup(progRun, TRUE);
+
+key_done:
+    return;
 }
-#endif
+
+static void subUiKeyDoubleTap(ProgRIPtr progRun)
+{
+    DEBUG_LOG("APP_MFB_BUTTON_PRESS outcase=0x%x", progRun, appSmIsOutOfCase());
+    if (appSmIsOutOfCase())
+    {
+        subUiDoubleClickAB(progRun, appConfigIsLeft() ? TRUE : FALSE);
+    }
+}
 
 // 唤醒时是需要设置BIAS
 void appSubUISetMicbias(int set)
@@ -347,24 +380,18 @@ static void subUiStopReport2Gaia(MessageId id)
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 }
 
-static void subUiStartTapSystem(void)
+static void subUiStarttAssistantSystem(bool isTap)
 {
+    (void)isTap;
     HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
 }
 
 static int16 subUiStartAssistant2Gaia(MessageId id, ProgRIPtr  progRun)
 {
-    UserPrmPtr prm = GetUserParam();
     if(1 != progRun->gaiaStat)
         return -1;
 
-    if (id == APP_ASSISTANT_AWAKEN) {
-        if (prm->assistantType == ASSISTANT_TYPE_SYSTEM) {
-            HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
-            return 0;
-        }
-    }
-
+    /* 唤醒系统助手，需要告诉APP是 APO还是TAP */
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
     if(id == APP_ASSISTANT_AWAKEN){
         message->command = GAIA_COMMAND_STAROT_AI_DEVICE_REQUEST_START;
@@ -689,15 +716,22 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case STAROT_RECORD_STOP_STATUS_REPORT:
         subUiStopReport2Gaia(id);
         break;
-    case APP_ASSISTANT_AWAKEN:     //语音唤醒助手
+
+     ///////////////////////////////////////////////////////////////////////
+     ///  此处理几个唤醒ID，仅执行功能，左右耳机或配置 都会执行这几个调用
+    case APP_ASSISTANT_AWAKEN:         //APO 语音唤醒助手APP
         subUiStartAssistant2Gaia(id, progRun);
         break;
-    case APP_ASSISTANT_TAP_AWAKEN:     //语音唤醒
+    case APP_ASSISTANT_TAP_AWAKEN:     //敲击 语音唤醒助手APP
         subUiStartAssistant2Gaia(id, progRun);
         break;
-    case APP_TAP_SYSTEM:     //敲击唤醒
-        subUiStartTapSystem();
+    case APP_ASSISTANT_SYSTEM:         //APO 敲击唤醒系统助手
+        subUiStarttAssistantSystem(FALSE);
         break;
+    case APP_ASSISTANT_TAP_SYSTEM:     //敲击唤醒系统助手
+        subUiStarttAssistantSystem(TRUE);
+        break;
+
     case APP_ATTACH_PLC_IN: {
         DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
 #ifdef TWS_DEBUG
@@ -1370,8 +1404,9 @@ int apolloWakeupCallback(void)
     progRun->iWakeupTimes  += 1;
     if((0 == progRun->recStat) &&
             ((progRun->dial_stat & (DIAL_ST_IN|DIAL_ST_OUT|DIAL_ST_ACT)) == 0)){
-        if(0 == g_commuType)
-            MessageSend(&appGetUi()->task, APP_ASSISTANT_AWAKEN, 0);
+        if(0 == g_commuType) {
+            subUiVoiceTapWakeup(progRun, FALSE);
+        }
     }
     appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
     return 0;
@@ -1556,6 +1591,9 @@ uint8 appUIGetCaseConnectStatusInfo(void) {
 ///     PYDBG 调试使用
 /////////////////////////////////////////////////////////////////////////////////////////
 void do_bias(int value);
+void do_chgkey(int value);
+void do_chgapo(int value);
+
 void do_bias(int value)
 {
     if(value) {
@@ -1566,6 +1604,32 @@ void do_bias(int value)
         appSubUISetMicbias(FALSE);
         OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
     }
+}
+
+void do_chgkey(int value)
+{
+    UserPrmPtr prm = GetUserParam();
+    if(appConfigIsLeft())
+        prm->lKeyFunc = value;
+    else
+        prm->rKeyFunc = value;
+
+    DEBUG_LOG("keyfunc,l=%d r=%d", prm->lKeyFunc, prm->rKeyFunc);
+    ParamSaveUserPrm(prm);
+}
+
+void do_chgapo(int value)
+{
+    UserPrmPtr prm = GetUserParam();
+
+    prm->apolloEnable = TRUE;
+    prm->assistantType = value;
+
+    apolloWakeupPower(1);
+
+    DEBUG_LOG("apollo,en=%d type=%d", prm->apolloEnable, prm->assistantType);
+    ParamSaveUserPrm(prm);
+
 }
 
 void appNotifyPeerDeviceConfig(uint16 source) {

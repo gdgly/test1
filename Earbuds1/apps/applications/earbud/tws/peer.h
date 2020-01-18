@@ -19,10 +19,14 @@ typedef struct {
 #define AVRCP_PEER_CMD_TXDATA                   0x69
 #define AVRCP_PEER_CMD_TXDATA_SIZE              (7)         // command + data
 
-enum {PEERTX_CMD_SYNCGAIA=0,         /* 和附耳机发送gaia状态 [payload[0]: connect, 0:disconnect */
+enum {PEERTX_CMD_SYNCGAIA=0,         /* 主副耳机发送gaia状态   [payload[0], 0:disconnect 1:connect */
+      PEERTX_CMD_WAKEUP_SYS,         /* 副耳机发送系统唤醒命令 [playload[0]:  0:keywakeup, 1:voice wakeup */
+      PEERTX_CMD_WAKEUP_APP,         /* 副耳机发送唤醒APP命令  [playload[0]:  0:keywakeup, 1:voice wakeup */
      };
 void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload);
 void appPeerSigTxDataCommandUi(uint8 command, uint8 payload);  // task为UI 仅一个字节payhload
+#define appPeerSigTxWakeupSys(apo)   appPeerSigTxDataCommandUi(PEERTX_CMD_WAKEUP_SYS, (apo))
+#define appPeerSigTxWakeupApp(apo)   appPeerSigTxDataCommandUi(PEERTX_CMD_WAKEUP_APP, (apo))
 void appPeerSigTxDataRequest(PEER_SIG_INTERNAL_TXDATA_REQ_T *req);           // 发送方： 请求发送给对方
 bool appPeerSigRxDataCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind);        // 接收方： 接收数据处理
 void appPeerSigTxDataConfirm(Task task, peerSigStatus status);               // 发送方： 获取对方返回值

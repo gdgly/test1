@@ -44,6 +44,12 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
     case PEERTX_CMD_SYNCGAIA:
         progRun->peerGaiaStat = (req->data[0] == 1) ? 1 : 0;
         break;
+    case PEERTX_CMD_WAKEUP_SYS:          /* 副耳机发送系统唤醒命令 [playload[0]:  0:keywakeup, 1:voice wakeup */
+        MessageSend(appGetUiTask(), (req->data[0] == 0) ? APP_ASSISTANT_TAP_SYSTEM : APP_ASSISTANT_SYSTEM, 0);
+        break;
+    case PEERTX_CMD_WAKEUP_APP:
+        MessageSend(appGetUiTask(), (req->data[0] == 0) ? APP_ASSISTANT_TAP_AWAKEN : APP_ASSISTANT_AWAKEN, 0);
+        break;
     default:
         DEBUG_LOG("Unknown command:%d", req->command);
         ret = FALSE;
@@ -408,7 +414,7 @@ bool appPeerSigHandleDoubleClickWakeupCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T 
 
 bool appPeerSigHandleDoubleClickWakeupSystemCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
     UNUSED(ind);
-    MessageSend(&appGetUi()->task, APP_TAP_SYSTEM, 0);
+    MessageSend(&appGetUi()->task, APP_ASSISTANT_TAP_SYSTEM, 0);
     return TRUE;
 }
 void appPeerSigMsgDoubleClickWakeupConfirmation(Task task, peerSigStatus status) {
