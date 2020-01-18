@@ -1093,7 +1093,6 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    (void)keyDown;
     DEBUG_LOG("CASE:%d key=%d %d %d", lidOpen, keyDown, keyLong, iElectrity);
 
     if(appConfigIsLeft()) {  // 只考虑对耳机是否在
