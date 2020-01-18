@@ -56,7 +56,7 @@ bool ParamUsingSingle(void);
 /////////////////////////////////////////////////////////////////////////////////
 ///
 enum{TAP_PREVIOUS_TRACK = 0x01, TAP_NEXT_TRACK = 0x02,
-     TAP_PLAY_PAUSE = 0x03, TAP_WACKUP = 0x04, TAP_SYSTEM = 0x05,
+     TAP_PLAY_PAUSE = 0x03, TAP_WACKUP = 0x04, TAP_SYSTEM = 0x05, TAP_DISABLED,
 };
 
 
