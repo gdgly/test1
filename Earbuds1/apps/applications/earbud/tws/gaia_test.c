@@ -50,10 +50,12 @@ bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
         /// 丢弃过多的数据，防止数据过多，导致source不可以使用
         int drop = size - (dropUnit * bufferSendUnit);
         drop = drop / bufferSendUnit * bufferSendUnit;
-        size -= drop;
-        dissNum += drop;
-        DEBUG_LOG("drop size %d", drop);
-        SourceDrop(source, drop);
+        if (drop > 0) {
+            size -= drop;
+            dissNum += drop;
+            DEBUG_LOG("drop size %d", drop);
+            SourceDrop(source, drop);
+        }
     }
 
     if(data_client == DATA_CLIENT_COMMUPC) {  //输出到comm2pc
