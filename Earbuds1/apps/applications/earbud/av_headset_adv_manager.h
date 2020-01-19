@@ -318,5 +318,8 @@ bool appAdvManagerSetAdvertData(advManagerAdvert *advert, Task requester);
 
 /*! Initialise the advertising manager */
 extern void appAdvManagerInit(void);
+#ifdef CONFIG_STAROT
+#define  MAX_NAME_LENGTH        (31)
+#endif
 
 #endif /* _AV_HEADSET_ADV_MANAGER_H_ */
