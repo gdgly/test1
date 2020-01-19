@@ -183,6 +183,8 @@ static void appInitDebug(void)
 }
 #endif
 
+extern void qact_tune_for_mic(void);
+
 /*! \brief Table of initialisation functions */
 static const appInitTableEntry appInitTable[] =
 {
@@ -257,6 +259,7 @@ static const appInitTableEntry appInitTable[] =
 #ifdef CUMMPC_PC_USB
     {CummuInit,             0, NULL},
 #endif
+    {qact_tune_for_mic, 0, NULL},
     {NULL,                  0, NULL}
 };
 
