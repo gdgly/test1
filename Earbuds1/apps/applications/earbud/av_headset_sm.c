@@ -1950,7 +1950,7 @@ static void appSmHandleHfpScoDisconnectedInd(void)
         appSmSetCoreState();
 }
 
-extern void appEnterSingleforTest(void);
+extern void appEnterSingleForTest(void);
 static void appSmHandleInternalPairHandset(void)
 {
     if (appSmStateIsIdle(appGetState()))
@@ -1960,7 +1960,7 @@ static void appSmHandleInternalPairHandset(void)
     }
     else if (ParamUsingSingle()) {
         DEBUG_LOG("appSmHandleInternalPairHandset: single ear pair");
-        appEnterSingleforTest();
+        appEnterSingleForTest();
     }
     else
         DEBUG_LOG("appSmHandleInternalPairHandset can only pair in IDLE state, cur state: %d", appGetState());
