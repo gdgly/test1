@@ -97,31 +97,6 @@ static void writeLocalName(void)
 }
 #endif
 
-#ifdef CONFIG_STAROT
-
-uint8 flag=FALSE;
-void writeLocalname_right_or_left(char *local_name)
-{
-    uint16 namelen=strlen(local_name);
-    if(!flag){
-        if(appGetInit()->appInitIsLeft==1)
-        {
-            flag=TRUE;
-            local_name[namelen]='-';
-            local_name[namelen+1]='l';
-        }else
-        {
-            flag=TRUE;
-            local_name[namelen]='-';
-            local_name[namelen+1]='r';
-
-        }
-
-     ConnectionChangeLocalName(namelen+2,(uint8 *) local_name);
-  }
-}
-#endif
-
 /*! \brief Handle Connection library confirmation message */
 static void appInitHandleClInitCfm(Message message)
 {

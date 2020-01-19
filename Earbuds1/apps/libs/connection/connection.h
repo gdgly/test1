@@ -1540,8 +1540,5 @@ typedef struct
 
 #endif    /* CONNECTION_H_ */
 
-
-void writeLocalname_right_or_left(char *local_name);
-
 /** @} */
 
