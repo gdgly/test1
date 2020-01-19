@@ -8,7 +8,7 @@
 #include "tws/audio_forward.h"
 #include "tws/peer.h"
 
-uint16 bufferSendUnit = 40;
+uint16 bufferSendUnit = 80;
 
 #ifdef GAIA_TEST
 
