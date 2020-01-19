@@ -266,7 +266,7 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 #undef  appConfigBleUseResolvablePrivateAddress()
 #define appConfigBleUseResolvablePrivateAddress() (FALSE)
 #undef  appConfigBleGattMtuMin()
-#define appConfigBleGattMtuMin()                (88)     // 加上协议头每次可传输80个字节
+#define appConfigBleGattMtuMin()                (168)     // 加上协议头每次可传输80个字节
 
 // ================================================
 //              audio forward 开关
