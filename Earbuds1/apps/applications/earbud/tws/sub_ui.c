@@ -131,7 +131,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
         DBCLINK_LOG("wakeapp,isTap=%d gaia=%d peerGaia=%d", isTap, progRun->gaiaStat, progRun->peerGaiaStat);
 
         if(!appDeviceIsPeerAvrcpConnectedForAv() || !appPeerSyncIsComplete() || !appPeerSyncIsPeerHandsetAvrcpConnected()) {
-            appUiPlayPrompt(PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
+            appUiPlayPrompt(PROMPT_PAIRING_FAILED);        // 没有与对方连接或对方没有连接手机,联接失败;
             return;
         }
 
@@ -1435,8 +1435,8 @@ void apolloWakeupPower(int enable)        // 开启或停止 APO2
     if(enable) {
         if(1 == gUserParam.apolloEnable && 1 == progRun->gaiaStat){          // 系统配置了启动
             progRun->apolloWakeup = 1;
+            OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 前,否则有时电压上不来
             appSubUISetMicbias(TRUE);
-            OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 需要放在SetMicbias之后，否则容易出现2.1V
             apollo_evoke();
         }
     }
@@ -1606,8 +1606,8 @@ void do_chgapo(int value);
 void do_bias(int value)
 {
     if(value) {
+        OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 需要放在SetMicbias之前,否则有时电压上不来
         appSubUISetMicbias(TRUE);
-        OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 需要放在SetMicbias之后，否则容易出现2.1V
     }
     else {
         appSubUISetMicbias(FALSE);
