@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ExecProcess.h"
+#include "MyComm.h"
 
 #include "bluesite\\include\\TestFlash.h"
 #include "bluesite\\include\\TestEngine.h"
@@ -42,6 +43,8 @@ enum {
 	ERROR_READ_XTALCAP,
 	ERROR_WRITE_XTALTRIM,
 	ERROR_WRITE_XTALCAP,
+
+	ERROR_UPGCASE,
 
 	ERROR_WAKEUP, ERROR_SENSOR, ERROR_PLC, ERROR_TAP,
 
@@ -91,6 +94,9 @@ enum {
 	REPORT_WRITE_XTALTRIM,
 	REPORT_WRITE_XTALCAP,
 
+	REPORT_UPGCASE,
+	REPORT_UPGCASE_STR,
+
 	REPORT_USER_EXIT,
 	REPORT_END_ALL,
 	REPORT_LAST,
@@ -124,6 +130,8 @@ enum {THREAD_NONE=0, THREAD_BURN=0x01, THREAD_BURN_APO=0x02,
 	THREAD_CHECK=0x10, THREAD_RECORD_0=0x20, THREAD_RECORD_1 = 0x40, THREAD_PLAY = 0x80,
 	THREAD_CRYSTGALTRIM=0x100, THREAD_CRYSTGALTRIM_READ=0x200, THREAD_CRYSTGALTRIM_WRITE = 0x400,
 	THREAD_WAKEUP = 0x1000, THREAD_SENSOR=0x2000, THREAD_PLC=0x4000, THREAD_TAP=0x8000,
+
+	THREAD_UPGCASE=0x10000,
 };
 
 typedef enum {INTR_T_WAKEUP = 0, INTR_T_SENSOR, INTR_T_PLC, INTR_T_TAP} IntrType;
@@ -133,6 +141,14 @@ class CDeviceCtrl
 public:
 	CDeviceCtrl();
 	~CDeviceCtrl();
+
+	// 盒子升级相关
+public:
+	CMyComm m_hCom;
+	int     m_comPort;
+	CString m_upgImageFile;
+	void    SetComPort(int port, CString sName) { m_comPort = port; m_upgImageFile = sName;}
+	int RuningUpgrade(CString sFile);
 
 public:       // 其它关函数
 	static int LoadIniParam(CString sFile, IniPrmPtr param);

@@ -76,6 +76,9 @@ CDeviceCtrl::CDeviceCtrl()
 	m_sFlashImage.Empty();
 	m_iThreadFunc = THREAD_NONE;
 	m_ctrlThread = INVALID_HANDLE_VALUE;
+
+	m_comPort   = 1;
+	m_upgImageFile.Empty();
 }
 
 
@@ -149,6 +152,9 @@ static CString _sReport[] = {
 	"REPORT_READ_XTALCAP",
 	"REPORT_WRITE_XTALTRIM",
 	"REPORT_WRITE_XTALCAP",
+
+	"REPORT_UPGCASE",
+	"REPORT_UPGCASE_STR",
 	
 	"REPORT_USER_EXIT",
 	"REPORT_END_ALL",
@@ -304,6 +310,11 @@ int CDeviceCtrl::RuningProc(void)
 	if ((m_iThreadFunc & THREAD_CRYSTGALTRIM_WRITE)) {
 		CrystalTrimmingWrite(m_xtalTrim, m_xtalCap, 0);
 		if (m_bExit == TRUE) goto out;
+	}
+
+	if ((m_iThreadFunc & THREAD_UPGCASE)) {
+		if ((ret=RuningUpgrade(m_upgImageFile)) < 0)
+			goto out;
 	}
 		
 
@@ -1624,3 +1635,108 @@ int CDeviceCtrl::CloseEngine(void)
 	return 0;
 }
 
+int CDeviceCtrl::RuningUpgrade(CString sFile)
+{
+	int ret = 0, rdsize, fsize, foffset;
+	CFile hFile;
+	BYTE wbuf[128], rbuf[128];
+	char sbuf[32], *msgbuf;
+
+	hFile.m_hFile = INVALID_HANDLE_VALUE;
+	if (m_hCom.InitComm(m_comPort, DEIGHT, SONE, PNONE, 115200) == FALSE) {
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_UPGCASE, (LPARAM)"-1");
+		return -1;
+	}
+
+	if (hFile.Open(m_upgImageFile, CFile::modeRead | CFile::typeBinary) == FALSE) {
+		MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_UPGCASE, (LPARAM)"-3");
+		ret = -3;
+		goto out;
+	}
+	fsize = (int)hFile.GetLength();
+
+	m_hCom.ClearReceiveBuffer();
+	while (m_bExit == FALSE) {
+		memset(rbuf, 0, sizeof(rbuf));
+		sprintf_s((char*)wbuf, sizeof(wbuf), "check upgrade %05d\r\n", fsize);
+		if (m_hCom.SendCMDAndWait((unsigned char*)wbuf, 21, 800, rbuf, sizeof(rbuf)) == FALSE) {
+			MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_UPGCASE, (LPARAM)"-2");
+			ret = -2;
+			goto out;
+		}
+		
+		if (strstr((char*)rbuf, "check upgrade succ")) {
+			msgbuf = (char*)GetMsgBuffer();
+			sprintf_s(msgbuf, 64, "%s", (char*)rbuf);
+			MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_UPGCASE_STR, (LPARAM)msgbuf);
+			break;
+		}
+	}
+	TRACE("RECV:%s", (char*)rbuf);
+
+
+	while(m_bExit == FALSE) {
+		rdsize = hFile.Read(wbuf, 32);
+		if (rdsize <= 0)
+			break;
+
+		foffset = (int)hFile.GetPosition();
+
+		for (int i = 0; i < 1; i++) {
+			memset(rbuf, 0, sizeof(rbuf));
+			if (m_hCom.SendCMDAndWait(wbuf, rdsize, 500, rbuf, sizeof(rbuf)) == FALSE) {
+				if (foffset == fsize) {    // 最后一个包返回很慢
+					TRACE("End=0x%x/%d/0x%x|%s", fsize, rdsize, foffset, (char*)rbuf);
+					goto finish;
+				}
+				TRACE("ErrRECV:wr=%d %s\n", rdsize, (char*)rbuf);
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_UPGCASE, (LPARAM)"-110");
+				goto out;
+			}
+
+			sprintf_s(sbuf, "RECV=0x%x", foffset);
+
+			if(strstr((char*)rbuf, sbuf))
+				break;
+		}
+
+		TRACE("cnt=0x%x/%d/0x%x|%s", fsize, rdsize, foffset,(char*)rbuf);
+		if ((foffset % 512) == 0) {
+			foffset = (foffset * 100 ) / fsize;
+			MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_UPGCASE, (LPARAM)foffset);
+		}
+
+		if (rdsize < 32)
+			break;
+	}
+
+finish:
+
+	ret = -99;
+	for (int i = 0; i < 300; i++) {
+		DWORD len = 0;
+		Sleep(10);
+		memset(rbuf, 0, sizeof(rbuf));
+		len = m_hCom.ReadCommBlock((LPSTR)rbuf, sizeof(rbuf));
+		if (len > 0) {
+			char *ptr;
+			TRACE("rdbuf=%s\n", (char*)rbuf);
+			msgbuf = (char*)GetMsgBuffer();
+			if ((ptr=strstr((char*)rbuf, "succ UpgradeEnd"))) {
+				sprintf_s((char*)msgbuf, 128, "fsize=%d %s", fsize, ptr);
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_UPGCASE_STR, (LPARAM)msgbuf);
+				ret = 0;
+				break;
+			}
+		}
+		if (m_bExit == TRUE)
+			break;
+	}
+	
+out:
+	if (hFile.m_hFile != INVALID_HANDLE_VALUE)
+		hFile.Close();
+
+	m_hCom.EndComm();
+	return ret;
+}

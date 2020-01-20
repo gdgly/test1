@@ -1093,7 +1093,7 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    DEBUG_LOG("CASE:%d key=%d %d %d", lidOpen, keyDown, keyLong, iElectrity);
+//    DEBUG_LOG("CASE:%d key=%d %d %d", lidOpen, keyDown, keyLong, iElectrity);
 
     if(appConfigIsLeft()) {  // 只考虑对耳机是否在
         if((bitEars & 0x20))  // mask BIT
@@ -1260,16 +1260,26 @@ void appUiPowerSaveSync(void)
 
 void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt)
 {
+    int16 iChange = 0;
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    if(lbatt >= 0)
+    if(lbatt >= 0 && progRun->iElectrity != lbatt ) {
         progRun->iElectrity = lbatt;
-    if(rbatt >= 0)
-        progRun->peerElectrity = rbatt;
-    if(cbatt >= 0)
-        progRun->caseElectrity = cbatt;
+        iChange = 1;
+    }
 
-    MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
+    if(rbatt >= 0 && progRun->peerElectrity != rbatt) {
+        progRun->peerElectrity = rbatt;
+        iChange = 1;
+    }
+
+    if(cbatt >= 0 && progRun->caseElectrity != cbatt) {
+        progRun->caseElectrity = cbatt;
+        iChange = 1;
+    }
+
+    if(iChange > 0)
+        MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
 }
 
 // 临时停止BLE广播，以便开始新的广播内容
@@ -1614,21 +1624,20 @@ void do_chgkey(int value)
         prm->rKeyFunc = value;
 
     DEBUG_LOG("keyfunc,l=%d r=%d", prm->lKeyFunc, prm->rKeyFunc);
-    ParamSaveUserPrm(prm);
 }
 
 void do_chgapo(int value)
 {
     UserPrmPtr prm = GetUserParam();
+    ProgRIPtr  progRun = appSubGetProgRun();
 
     prm->apolloEnable = TRUE;
-    prm->assistantType = value;
+    prm->assistantType = (value == 1) ? ASSISTANT_TYPE_APP : ASSISTANT_TYPE_SYSTEM;
 
+    progRun->gaiaStat = 1;
     apolloWakeupPower(1);
 
     DEBUG_LOG("apollo,en=%d type=%d", prm->apolloEnable, prm->assistantType);
-    ParamSaveUserPrm(prm);
-
 }
 
 void appNotifyPeerDeviceConfig(uint16 source) {
