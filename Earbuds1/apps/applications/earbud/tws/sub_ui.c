@@ -26,7 +26,7 @@ extern bool max20340_GetConnect(void);
 extern void max20340_notify_current_status(void);
 #endif
 void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8 *number);
-void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt);
+void appUiBatteryStat(int16 lbatt, int16 rbatt, int16 cbatt);
 void appSubUISetMicbias(int set);
 
 static void appUIGetPowerInfo(ProgRIPtr  progRun, uint8* arr);
@@ -1258,7 +1258,7 @@ void appUiPowerSaveSync(void)
 #endif
 }
 
-void appUiBatteryStat(uint8 lbatt, uint8 rbatt, uint16 cbatt)
+void appUiBatteryStat(int16 lbatt, int16 rbatt, int16 cbatt)
 {
     int16 iChange = 0;
     ProgRIPtr  progRun = appSubGetProgRun();
