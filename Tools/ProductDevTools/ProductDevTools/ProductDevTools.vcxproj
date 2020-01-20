@@ -191,6 +191,7 @@
   <ItemGroup>
     <ClInclude Include="DeviceCtrl.h" />
     <ClInclude Include="ExecProcess.h" />
+    <ClInclude Include="MyComm.h" />
     <ClInclude Include="ProductDevTools.h" />
     <ClInclude Include="ProductDevToolsDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -200,6 +201,7 @@
   <ItemGroup>
     <ClCompile Include="DeviceCtrl.cpp" />
     <ClCompile Include="ExecProcess.cpp" />
+    <ClCompile Include="MyComm.cpp" />
     <ClCompile Include="ProductDevTools.cpp" />
     <ClCompile Include="ProductDevToolsDlg.cpp" />
     <ClCompile Include="stdafx.cpp">

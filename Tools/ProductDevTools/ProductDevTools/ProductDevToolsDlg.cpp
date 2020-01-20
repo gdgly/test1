@@ -55,6 +55,7 @@ CProductDevToolsDlg::CProductDevToolsDlg(CWnd* pParent /*=NULL*/)
 	, m_edCap(9)
 	, m_edTrim(-10)
 	, m_btWrite(FALSE)
+	, m_comPort(7)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
@@ -78,6 +79,8 @@ void CProductDevToolsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_CAP, m_edCap);
 	DDX_Text(pDX, IDC_EDIT_TRIM, m_edTrim);
 	DDX_Check(pDX, IDC_CHECK_BT_WR, m_btWrite);
+	DDX_Control(pDX, IDC_EDIT_CASEIMAGE, m_sImageName);
+	DDX_Text(pDX, IDC_EDIT_COMPORT, m_comPort);
 }
 
 BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
@@ -112,6 +115,8 @@ BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_ALL, &CProductDevToolsDlg::OnBnClickedBtnAll)
 	ON_BN_CLICKED(IDC_BTN_CRITRIM_READ, &CProductDevToolsDlg::OnBnClickedBtnCritrimRead)
 	ON_BN_CLICKED(IDC_BTN_CRITRIM_WRITE, &CProductDevToolsDlg::OnBnClickedBtnCritrimWrite)
+	ON_BN_CLICKED(IDC_BTN_OPEN, &CProductDevToolsDlg::OnBnClickedBtnOpen)
+	ON_BN_CLICKED(IDC_BTN_CASE_UPG, &CProductDevToolsDlg::OnBnClickedBtnCaseUpg)
 END_MESSAGE_MAP()
 
 
@@ -146,8 +151,11 @@ BOOL CProductDevToolsDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
-
 	CString sText;
+
+	sText = ::AfxGetApp()->GetProfileString("PRODUCT_CONFIG", "IMAGECASE", "");
+	m_sImageName.SetWindowTextA(sText);
+
 	sText = ::AfxGetApp()->GetProfileString("PRODUCT_CONFIG", "IMAGENAME", "");
 	m_edFirmName.SetWindowTextA(sText);
 	CDeviceCtrl::LoadIniParam("./flash_image.ini", &m_Param);
@@ -991,6 +999,15 @@ LRESULT CProductDevToolsDlg::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 		sText.Format("result=%d", (int)lParam);
 		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
 		break;
+
+	case REPORT_UPGCASE:
+		sText.Format("progress=%d%%", (int)lParam);
+		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
+		break;
+	case REPORT_UPGCASE_STR:
+		sText.Format("%s", (char*)lParam);
+		m_ListCtrl.SetItemText(count, colum, sText); colum += 1;
+		break;
 	}
 
 	m_ListCtrl.EnsureVisible(count, FALSE);
@@ -1093,8 +1110,41 @@ void CProductDevToolsDlg::OnBnClickedBtnClear()
 	m_ListCtrl.DeleteAllItems();
 }
 
+////////////////////////////////////////////////////////////////////
+//            盒子升级
+////////////////////////////////////////////////////////////////////
+void CProductDevToolsDlg::OnBnClickedBtnOpen()
+{
+	CFileDialog dlg(TRUE, "*.txt", 0, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+		"固件文件(*.bin)|*.bin|所有文件(*.*)|*.*||", this);
+
+	if (IDOK != dlg.DoModal())
+		return;
+
+	CString sPath = dlg.GetPathName();
+
+	m_sImageName.SetWindowTextA(sPath);
+}
 
 
+void CProductDevToolsDlg::OnBnClickedBtnCaseUpg()
+{
+	CString sText;
 
+	UpdateData(TRUE);
 
+	m_sImageName.GetWindowTextA(sText);
+	if (sText.IsEmpty()) {
+		AfxMessageBox("请选择升级文件");
+		return;
+	}
+	::AfxGetApp()->WriteProfileString("PRODUCT_CONFIG", "IMAGECASE", sText);
+	m_devCtrl.SetComPort(m_comPort, sText);
 
+	m_edAddr.GetWindowText(sText); m_devCtrl.SetBtAddr(sText);
+	m_edHWver.GetWindowTextA(sText); m_devCtrl.SetHwVersion(sText);
+	m_devCtrl.SetEraseAll(m_bEraseAll);
+
+	m_devCtrl.SetThreadFunc(THREAD_UPGCASE);
+	m_devCtrl.Start(this->m_hWnd);
+}

@@ -94,6 +94,10 @@ public:
 	int m_edCap;
 	int m_edTrim;
 	BOOL m_btWrite;
+	CEdit m_sImageName;
+	afx_msg void OnBnClickedBtnOpen();
+	afx_msg void OnBnClickedBtnCaseUpg();
+	int m_comPort;
 };
 
 
