@@ -779,6 +779,7 @@ void gaiaAppSetWakeupParameter(GAIA_STAROT_IND_T *mess) {
     if (NULL == pAttr) {
         return;
     }
+    StarotAttr * head = pAttr;
     DEBUG_LOG("gaiaAppSetWakeupParameter");
 
     //   1           2        3
@@ -798,7 +799,7 @@ void gaiaAppSetWakeupParameter(GAIA_STAROT_IND_T *mess) {
     }
     MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
-    attrFree(pAttr, NULL);
+    attrFree(head, NULL);
 }
 
 void gaiaAppGetWakeupParameter(GAIA_STAROT_IND_T *message) {
@@ -829,6 +830,7 @@ void gaiaAppSetWearParameter(GAIA_STAROT_IND_T *mess){
     if (NULL == pAttr) {
         return;
     }
+    StarotAttr *head = pAttr;
     DEBUG_LOG("gaiaAppSetWearParameter");
 
     MAKE_GAIA_MESSAGE_WITH_LEN(APP_STAROT_WEAR_CONFIG_IND, 0);
@@ -844,7 +846,7 @@ void gaiaAppSetWearParameter(GAIA_STAROT_IND_T *mess){
     }
     MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
-    attrFree(pAttr, NULL);
+    attrFree(head, NULL);
 }
 
 void gaiaAppGetWearParameter(GAIA_STAROT_IND_T *message) {
