@@ -793,7 +793,7 @@ void gaiaAppSetWakeupParameter(GAIA_STAROT_IND_T *mess) {
         } else if (0X02 == pAttr->attr) {
             message->assistant_type = pAttr->payload[0];
         } else if (0X03 == pAttr->attr) {
-            memcpy(&(message->timestamp), pAttr->payload, pAttr->len);
+            memcpy(&(message->timestamp), pAttr->payload, pAttr->len - 1);
         }
         pAttr = pAttr->next;
     }
@@ -840,7 +840,7 @@ void gaiaAppSetWearParameter(GAIA_STAROT_IND_T *mess){
         if (0X01 == pAttr->attr) {
             message->wear_enable =  pAttr->payload[0];
         } else if (0X02 == pAttr->attr) {
-            memcpy((uint8*)(&(message->timestamp)), pAttr->payload, pAttr->len);
+            memcpy((uint8*)(&(message->timestamp)), pAttr->payload, pAttr->len - 1);
         }
         pAttr = pAttr->next;
     }
