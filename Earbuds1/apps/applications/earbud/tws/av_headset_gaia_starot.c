@@ -7,6 +7,7 @@
 #include "tws/attr.h"
 #include "tws/audio_forward.h"
 #include "tws/peer.h"
+#include "apollo.h"
 
 uint16 bufferSendUnit = 80;
 
@@ -258,6 +259,14 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_COMMAND_STAROT_TEST_PRODUCT_REST:
             gaiaTestProductRest(message);
             break;
+        case GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS:
+        {
+            uint8_t state = get_apollo_state();
+            DEBUG_LOG("get apollo state: %d", state);
+            appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS,
+                                GAIA_STATUS_SUCCESS, 1, &state);
+            break;
+        }
     }
     return TRUE;
 }
@@ -779,6 +788,7 @@ void gaiaAppSetWakeupParameter(GAIA_STAROT_IND_T *mess) {
     if (NULL == pAttr) {
         return;
     }
+    StarotAttr * head = pAttr;
     DEBUG_LOG("gaiaAppSetWakeupParameter");
 
     //   1           2        3
@@ -792,13 +802,13 @@ void gaiaAppSetWakeupParameter(GAIA_STAROT_IND_T *mess) {
         } else if (0X02 == pAttr->attr) {
             message->assistant_type = pAttr->payload[0];
         } else if (0X03 == pAttr->attr) {
-            memcpy(&(message->timestamp), pAttr->payload, pAttr->len);
+            memcpy(&(message->timestamp), pAttr->payload, pAttr->len - 1);
         }
         pAttr = pAttr->next;
     }
     MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
-    attrFree(pAttr, NULL);
+    attrFree(head, NULL);
 }
 
 void gaiaAppGetWakeupParameter(GAIA_STAROT_IND_T *message) {
@@ -829,6 +839,7 @@ void gaiaAppSetWearParameter(GAIA_STAROT_IND_T *mess){
     if (NULL == pAttr) {
         return;
     }
+    StarotAttr *head = pAttr;
     DEBUG_LOG("gaiaAppSetWearParameter");
 
     MAKE_GAIA_MESSAGE_WITH_LEN(APP_STAROT_WEAR_CONFIG_IND, 0);
@@ -838,13 +849,13 @@ void gaiaAppSetWearParameter(GAIA_STAROT_IND_T *mess){
         if (0X01 == pAttr->attr) {
             message->wear_enable =  pAttr->payload[0];
         } else if (0X02 == pAttr->attr) {
-            memcpy((uint8*)(&(message->timestamp)), pAttr->payload, pAttr->len);
+            memcpy((uint8*)(&(message->timestamp)), pAttr->payload, pAttr->len - 1);
         }
         pAttr = pAttr->next;
     }
     MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
-    attrFree(pAttr, NULL);
+    attrFree(head, NULL);
 }
 
 void gaiaAppGetWearParameter(GAIA_STAROT_IND_T *message) {

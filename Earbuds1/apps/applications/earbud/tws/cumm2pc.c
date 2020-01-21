@@ -61,7 +61,6 @@ extern int apolloGetStatus(void);
 extern void comGetApolloVer(uint8 *arr);
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
-extern void apollo_s_e(void);
 
 /* 延时赋值数据消息转发方向 */
 static void CommuForwardSetDataClient(void)
@@ -234,7 +233,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
             }
             if(strstr((char *)payload, "check WAKEUP")){
                 g_commuType = 1;
-                apollo_s_e();
+				apollo_sleep();
                 OperatorFrameworkEnable(MAIN_PROCESSOR_ON);
                 appSubUISetMicbias(TRUE);
                 CummuhandleSendData(task, (uint8*)"checkresp WAKEUP", 17);

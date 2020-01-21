@@ -431,6 +431,16 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
     send_buf[2] = appUiGetPower();
 }
 
+static void box_send_charge_event(uint8 *get_buf, uint8 *send_buf)
+{
+    if(get_buf[1] & 0x80){//盒子即将关闭充电
+
+    }
+    send_buf[0] = get_buf[0];
+    send_buf[1] = 0;
+    send_buf[2] = 0;
+}
+
 static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
 {
     uint8 send_buf[3];
@@ -469,6 +479,9 @@ static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
         break;
     case 10://查询耳机状态
         box_get_ear_status(&buf[MX20340_REG_RX_DATA0], send_buf);
+        break;
+    case 11://盒子关闭充电
+        box_send_charge_event(&buf[MX20340_REG_RX_DATA0], send_buf);
         break;
     }
 
