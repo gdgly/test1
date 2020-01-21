@@ -7,6 +7,7 @@
 #include "tws/attr.h"
 #include "tws/audio_forward.h"
 #include "tws/peer.h"
+#include "apollo.h"
 
 uint16 bufferSendUnit = 80;
 
@@ -258,6 +259,14 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_COMMAND_STAROT_TEST_PRODUCT_REST:
             gaiaTestProductRest(message);
             break;
+        case GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS:
+        {
+            uint8_t state = get_apollo_state();
+            DEBUG_LOG("get apollo state: %d", state);
+            appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS,
+                                GAIA_STATUS_SUCCESS, 1, &state);
+            break;
+        }
     }
     return TRUE;
 }

@@ -47,10 +47,10 @@ void register_apollo_wakeup_cb(apollo_wakeup_cb_t cb);
 /* apollo sleep and awake */
 int apollo_sleep(void);
 int apollo_evoke(void);
+uint8 get_apollo_state(void);
 
 int apolloGetStatus(void);
 void comGetApolloVer(uint8 *arr);
-void apollo_s_e(void);
 
 /* hw i2c/io def*/
 #define APOLLO_CHIPADDR         (0x10) // (0x68)

@@ -209,10 +209,7 @@ void comGetApolloVer(uint8 *arr) {
     memcpy(arr, (uint8*)&apollo_fw_ver, 4);
 }
 
-void apollo_s_e(void) {
-    if (APOLLO_STATE_SLEEP == apollo_state)
-        apollo_evoke();
-}
+uint8 get_apollo_state(void) { return apollo_state; }
 
 /*
  * static functions

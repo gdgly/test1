@@ -125,6 +125,7 @@ enum {
 /////////////////////////////测试与生产///////////////////////////////
 enum {
     GAIA_COMMAND_STAROT_TEST_PRODUCT_REST = 0X5600,                           // 恢复出厂设置
+    GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS = 0X5601                          // 读取apollo状态
 };
 
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))
