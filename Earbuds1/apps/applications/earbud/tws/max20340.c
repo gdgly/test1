@@ -433,7 +433,7 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
 
 static void box_send_charge_event(uint8 *get_buf, uint8 *send_buf)
 {
-    if(get_buf[0] & 0x80){//盒子即将关闭充电
+    if(get_buf[1] & 0x80){//盒子即将关闭充电
 
     }
     send_buf[0] = get_buf[0];
