@@ -1077,6 +1077,10 @@ static void appSmHandlePairingHandsetPairConfirm(PAIRING_HANDSET_PAIR_CFM_T *cfm
 
         default:
             /* Ignore, paired with handset with known address as requested by peer */
+            if (appPeerSyncIsPeerInCase() && appSmIsOutOfCase()) {
+                DEBUG_LOG("active rule RULE_EVENT_HANDOVER_RECONNECT");
+                appSmConnectHandset();
+            }
             break;
     }
 }
@@ -2733,6 +2737,7 @@ void appSmInit(void)
 void appSmConnectHandset(void)
 {
     /* Generate event that will run rules to connect to handset */
+    appConnRulesResetEvent(RULE_EVENT_USER_CONNECT);
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_USER_CONNECT);
 }
 
