@@ -179,8 +179,10 @@ static void appGaiaHandleDisconnectInd(const GAIA_DISCONNECT_IND_T *ind) {
         GaiaDisconnectResponse(ind->transport);
         appSetGaiaTransport(NULL);
     }
+#ifndef TWS_DEBUG
     appGaiaNotifyGaiaDisconnected();
     starotGaiaReset();
+#endif
 }
 
 
@@ -192,6 +194,10 @@ static void appGaiaHandleInternalDisconnect(void) {
         GaiaDisconnectRequest(transport);
         appSetGaiaTransport(NULL);
     }
+#ifdef TWS_DEBUG
+    appGaiaNotifyGaiaDisconnected();
+    starotGaiaReset();
+#endif
 }
 
 
