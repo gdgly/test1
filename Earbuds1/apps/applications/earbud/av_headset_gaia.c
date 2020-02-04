@@ -194,10 +194,6 @@ static void appGaiaHandleInternalDisconnect(void) {
         GaiaDisconnectRequest(transport);
         appSetGaiaTransport(NULL);
     }
-#ifdef TWS_DEBUG
-    appGaiaNotifyGaiaDisconnected();
-    starotGaiaReset();
-#endif
 }
 
 
@@ -226,6 +222,10 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message) {
         case GAIA_DISCONNECT_CFM:                /* Confirmation that a requested disconnection has completed */
             /* We probably want to take note of this to send an event to the state
                machine, but it is mainly upgrade we care about. Not gaia connections. */
+#ifdef TWS_DEBUG
+            appGaiaNotifyGaiaDisconnected();
+            starotGaiaReset();
+#endif
             DEBUG_LOG("appGaiaMessageHandler GAIA_DISCONNECT_CFM");
             appSetGaiaTransport(NULL);
             appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
