@@ -575,7 +575,11 @@
 
 /*! Timeout within which A2DP audio will be automatically restarted
  *  if placed back in the ear. */
+#ifdef TWS_DEBUG
+#define appConfigInEarA2dpStartTimeoutSecs()    (300)
+#else
 #define appConfigInEarA2dpStartTimeoutSecs()    (10)
+#endif
 
 /*! Timeout for SCO audio when earbud removed from ear. */
 #define appConfigOutOfEarScoTimeoutSecs()      (2)
