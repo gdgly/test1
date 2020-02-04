@@ -792,6 +792,7 @@ void appSubUIInit(void)
     batteryRegistrationForm battery_from;
 
     memset(progRun, 0, sizeof(ProgRunInfo));
+    progRun->caseLidOpen = UI_CASE_OPEN; /// 默认情况下，充电盒时开启状态，只有在收到明确的充电盒关闭事件，才设置为close
 
     // 运行到这个地方时外设都为正常打开状态
     apollo_sleep();
@@ -1111,7 +1112,7 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
         static uint8 beforeStatus = 0xFF;                   // 先设置为0xFF,这样第一次过来就能发送信息了
         if (beforeStatus != lidOpen) {
             beforeStatus = lidOpen;
-            progRun->caseLidOpen = (1 == lidOpen) ? 1 : 0;
+            progRun->caseLidOpen = (1 == lidOpen) ? UI_CASE_OPEN : UI_CASE_CLOSE;
             /// 之前状态和现在状态不一致，发送事件
             if (progRun->caseLidOpen > 0) {
                 DEBUG_LOG("call case open");
@@ -1452,7 +1453,7 @@ void apolloWakeupPower(int enable)        // 开启或停止 APO2
 
 bool appUICaseIsOpen(void) {
     ProgRIPtr  progRun = appSubGetProgRun();
-    return (progRun->caseLidOpen > 0 ? TRUE : FALSE);
+    return (progRun->caseLidOpen == UI_CASE_OPEN ? TRUE : FALSE);
 }
 
 uint8 appUIGetCurrentPosition(void) {

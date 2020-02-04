@@ -9,6 +9,7 @@
 // 产生原因很可能 发送给对方耳机及对方耳机快速响应，导致本耳机中断没响应过来
 void max20340_timer_restart(int timeout);
 
+/// 应用层可以处理多次plcin消息，但是在关盖的情况下，不处理plc out消息
 static void max20340_notify_plc_in(void);
 static void max20340_notify_plc_out(void);
 
@@ -873,6 +874,10 @@ void max20340_notify_plc_in(void) {
 }
 
 void max20340_notify_plc_out(void) {
+    if (FALSE == appGetCaseIsOpen()) {
+        DEBUG_LOG("max20340_notify_plc_out, now case is close, so don't send message to application");
+        return;
+    }
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT);
     MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT, NULL, 50);
