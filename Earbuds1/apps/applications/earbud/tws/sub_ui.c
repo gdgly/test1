@@ -590,7 +590,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         }
         ///todo 添加通话录音停止操作
 #endif
-        apolloWakeupPower(0);
+        // 退出APP时，如果设置的为唤醒APP，是停止它
+        if(gUserParam.assistantType != ASSISTANT_TYPE_SYSTEM)
+            apolloWakeupPower(0);
         appPeerSigTxDataCommandUi(PEERTX_CMD_SYNCGAIA, 0);
         break;
 
@@ -1062,6 +1064,7 @@ void appUiAvDisconnected(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->bredrconnect = 0;
+    apolloWakeupPower(0);               // 经典蓝牙断开，关闭APO
 
     MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
 }
@@ -1247,7 +1250,7 @@ void appUiPowerSaveSync(void)
         Lis2dw12Power(1);            // TAP
 #endif
         lis25Power(1);               // 骨麦
-        apolloWakeupPower(1);        // APO2
+        apolloWakeupPower(0);        // APO2
         break;
     case POWER_MODE_IN_EAR:
         EM20168Power(1);             // 接近光
@@ -1356,6 +1359,7 @@ void appUiChargerComplete(void)
 {
     DEBUG_LOG("appUiChargerComplete");
 
+    appSubGetProgRun()->iElectrity = 100;           // 设置为充电满
     appSubGetProgRun()->chargeStat = CHARGE_ST_FIN;
     MessageSendLater(&appGetUi()->task, APP_CHARGE_STATUS, 0, 500);
 }
@@ -1434,7 +1438,9 @@ void apolloWakeupPower(int enable)        // 开启或停止 APO2
     ProgRIPtr  progRun = appSubGetProgRun();
 
     if(enable) {
-        if(1 == gUserParam.apolloEnable && 1 == progRun->gaiaStat){          // 系统配置了启动
+        // 系统配置了启动并且 设置为唤醒APP需要APP连接，唤醒系统则不需要
+        if(1 == gUserParam.apolloEnable &&
+                (1 == progRun->gaiaStat || gUserParam.assistantType == ASSISTANT_TYPE_SYSTEM)){
             progRun->apolloWakeup = 1;
             OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 前,否则有时电压上不来
             appSubUISetMicbias(TRUE);
