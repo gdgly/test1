@@ -665,6 +665,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
    case APP_RESET_FACTORY:
        DEBUG_LOG("plc call reset headset");
 #ifdef TWS_DEBUG
+       appSmHandleResetStatusToNormal();
        appSmFactoryReset();
 #endif
        break;

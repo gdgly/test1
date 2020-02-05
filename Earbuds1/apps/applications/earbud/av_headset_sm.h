@@ -360,4 +360,10 @@ extern void appSmEnterDfuMode(void);
  */
 extern void appSmEnterDfuModeInCase(bool enable);
 
+#ifdef TWS_DEBUG
+/*! \brief 将非常规状态（比如与手机配对、与耳机配对）状态中跳转到InCase、OutCase等状态
+ */
+void appSmHandleResetStatusToNormal(void);
+#endif
+
 #endif
