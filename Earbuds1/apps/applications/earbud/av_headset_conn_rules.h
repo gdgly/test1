@@ -396,5 +396,9 @@ extern bool appConnRulesInProgress(void);
 */
 extern void appConnRulesNopClientRegister(Task task);
 
+#ifdef TWS_DEBUG
+extern bool ParamUsingSingle(void);
+#endif
+
 #endif /* _AV_HEADSET_CONN_RULES_H_ */
 

@@ -2415,6 +2415,11 @@ void appScoFwdInit(void)
 /*! \brief Set-up an L2CAP connection between the devices for forwarding SCO audio */
 void appScoFwdConnectPeer(void)
 {
+#ifdef CONFIG_STAROT_SINGLE
+    if (ParamUsingSingle()) {
+        return;
+    }
+#endif
     scoFwdTaskData *theScoFwd = appGetScoFwd();
     DEBUG_LOG("appScoFwdConnectPeer");
     MessageSendConditionally(appGetScoFwdTask(), SFWD_INTERNAL_LINK_CONNECT_REQ, NULL, &theScoFwd->lock);

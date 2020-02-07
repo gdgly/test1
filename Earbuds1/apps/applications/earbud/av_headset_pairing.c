@@ -227,8 +227,14 @@ static void appPairingExitInitialising(pairingTaskData *thePairing)
  */
 static void appPairingEnterCheckingHandsetLinkkeys(pairingTaskData* thePairing)
 {
+#ifdef CONFIG_STAROT_SINGLE
+    if (!ParamUsingSingle()) {
+#endif
     /* search for handsets that still require link key to be sent to peer */
     appPairingFindHandsetsNeedingLinkKeyTx();
+#ifdef CONFIG_STAROT_SINGLE
+    }
+#endif
 
     /* no more potential for conflicts reading device manager/attribute state
      * so return to idle and permit other pairing operations */
@@ -2225,6 +2231,12 @@ void appPairingPeerPairCancel(void)
 /*! \brief Request the pairing module checks if any paired handset still need link keys TX to peer. */
 void appPairingTransmitHandsetLinkKeysReq(void)
 {
+#ifdef CONFIG_STAROT_SINGLE
+    if (ParamUsingSingle()) {
+        DEBUG_LOG("using single mode, don't need sync link key");
+        return;
+    }
+#endif
     pairingTaskData *thePairing = appGetPairing();
 
     /* don't do this again if already in the process */

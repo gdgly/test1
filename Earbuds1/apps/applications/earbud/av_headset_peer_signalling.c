@@ -997,6 +997,11 @@ static void appPeerSigVendorPassthroughRequest(Task client_task,
                                                uint16 size_payload, const uint8 *payload)
 #endif
 {
+#ifdef CONFIG_STAROT_SINGLE
+    if (ParamUsingSingle()) {
+        return;
+    }
+#endif
     peerSigTaskData *peer_sig = appGetPeerSig();
 
     /* Store task for rsponse and oepration ID, so when confirmation comes back we can send

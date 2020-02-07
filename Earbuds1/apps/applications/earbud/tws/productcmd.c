@@ -10,6 +10,7 @@ void ProductEnterDutMode(void);
 void ProductEnterReocrdMode(int16 isLeft);      // 1: left, 0:right
 int appChangeCVCProcessMode(void);
 void appEnterSingleForTest(void);
+void appSetSingleModeTest(void);
 
  #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
  static const ringtone_note product_tone[] =
@@ -136,6 +137,15 @@ void appEnterSingleForTest(void)
     appSmSetUserPairing();
     appSetState(APP_STATE_HANDSET_PAIRING);
 #endif
+}
+
+void appSetSingleModeTest(void)
+{
+    BtAddrPrmPtr prm = &gBtAddrParam;
+    prm->single_era = TRUE;
+    prm->peer_addr.addr.nap = 0xFFFF;
+    prm->peer_addr.addr.uap = 0xFF;
+    prm->peer_addr.addr.lap = 0xFFFFFF;
 }
 
 extern int apolloGetStatus(void);

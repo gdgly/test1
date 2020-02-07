@@ -567,13 +567,30 @@ void appPeerSyncSend(bool response)
         /* dump contents to debug */
         appPeerSyncTxMsgDebug(message);
 
-        /* send message on our peer signalling peer sync channel */
-        appPeerSigMsgChannelTxRequest(&ps->task, &peer_addr, PEER_SIG_MSG_CHANNEL_PEER_SYNC,
-                                      message, PEER_SYNC_MSG_SIZE);
+#ifdef CONFIG_STAROT_SINGLE
+        if (ParamUsingSingle()) {
+            PEER_SYNC_STATE_CLEAR_SENDING(ps->peer_sync_state);
+            PEER_SYNC_STATE_SET_SENT(ps->peer_sync_state);
+            PEER_SYNC_STATE_SET_RECEIVED(ps->peer_sync_state);
+            if (appPeerSyncIsComplete()) {
+                DEBUG_LOG("use single mode, self send sync complete, peer sync complete");
+                appPeerSyncSendStatus();
+                /// 单耳模式下，不触发RULE_EVENT_PEER_SYNC_VALID规则
+                //appConnRulesResetEvent(RULE_EVENT_PEER_SYNC_VALID);
+                //appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_SYNC_VALID);
+            }
+        } else {
+#endif
+            /* send message on our peer signalling peer sync channel */
+            appPeerSigMsgChannelTxRequest(&ps->task, &peer_addr, PEER_SIG_MSG_CHANNEL_PEER_SYNC,
+                                          message, PEER_SYNC_MSG_SIZE);
 
-        /* reset the event marking peer sync as valid, we'll set it
-         * again once peer sync is completed */
-        appConnRulesResetEvent(RULE_EVENT_PEER_SYNC_VALID);
+            /* reset the event marking peer sync as valid, we'll set it
+             * again once peer sync is completed */
+            appConnRulesResetEvent(RULE_EVENT_PEER_SYNC_VALID);
+#ifdef  CONFIG_STAROT_SINGLE
+        }
+#endif
     }
 }
 

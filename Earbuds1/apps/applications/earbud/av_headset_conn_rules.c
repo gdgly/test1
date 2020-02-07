@@ -209,7 +209,7 @@ ruleEntry appConnRules[] =
     /*! \{
         Rules that are run when peer link-loss happens */
     RULE(RULE_EVENT_PEER_LINK_LOSS,             rulePeerSync,               CONN_RULES_SEND_PEER_SYNC),
-    RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                  CONN_RULES_NOTIFY_APP_POSITION),
+    RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                 CONN_RULES_NOTIFY_APP_POSITION),
     /*! \} */
 
     /*! \{
@@ -388,6 +388,13 @@ typedef enum
 */
 static ruleAction rulePeerPair(void)
 {
+#ifdef CONFIG_STAROT_SINGLE
+    if (ParamUsingSingle()) {
+        RULE_LOG("ruleStartupPeerPaired, use single mode, so auto complete");
+        return RULE_ACTION_COMPLETE;
+    }
+#endif
+
     if (!appDeviceGetPeerBdAddr(NULL))
     {
         RULE_LOG("ruleStartupPeerPaired, run");
@@ -512,6 +519,13 @@ static ruleAction ruleAutoHandsetPair(void)
 */
 static ruleAction rulePeerSync(void)
 {
+//#ifdef CONFIG_STAROT_SINGLE
+//    if (ParamUsingSingle()) {
+//        RULE_LOG("rulePeerSync, now is single mode, so auto complete");
+//        return RULE_ACTION_COMPLETE;
+//    }
+//#endif
+
     if (appDeviceGetPeerBdAddr(NULL) && !appSmIsInDfuMode())
     {
         RULE_LOGF("rulePeerSync, run (state x%x)",appGetState());
@@ -549,6 +563,12 @@ static ruleAction rulePeerSyncIfNotComplete(void)
 */
 static ruleAction ruleForwardLinkKeys(void)
 {
+#ifdef CONFIG_STAROT_SINGLE
+    if (ParamUsingSingle()) {
+        RULE_LOGF("rulePeerSync, now ",appGetState());
+        return RULE_ACTION_COMPLETE;
+    }
+#endif
     if (appDeviceGetPeerBdAddr(NULL))
     {
         RULE_LOG("ruleForwardLinkKeys, run");
@@ -1054,6 +1074,13 @@ static ruleAction ruleNoSyncConnectHandset(void)
 */
 static ruleAction ruleConnectPeerHandset(ruleConnectReason reason)
 {
+#ifdef CONFIG_STAROT_SINGLE
+    if (ParamUsingSingle()) {
+        RULE_LOG("ruleConnectHandset, ignore as already auto complete");
+        return RULE_ACTION_COMPLETE;
+    }
+#endif
+
     connRulesTaskData *conn_rules = appGetConnRules();
 
     /* Don't attempt to connect if we're in the case */
@@ -1251,6 +1278,13 @@ static ruleAction rulePairingConnectPeerHandset(void)
 */
 static ruleAction ruleConnectPeer(ruleConnectReason reason)
 {
+#ifdef CONFIG_STAROT_SINGLE
+    if (ParamUsingSingle()) {
+        RULE_LOG("ruleConnectPeer, ignore as already auto complete");
+        return RULE_ACTION_COMPLETE;
+    }
+#endif
+
     bdaddr handset_addr;
 
     /* Don't run rule if we're connected to peer */
@@ -2025,6 +2059,13 @@ static ruleAction ruleCheckUpgradable(void)
 */
 static ruleAction ruleDisconnectPeer(void)
 {
+#ifdef CONFIG_STAROT_SINGLE
+    if (ParamUsingSingle()) {
+        RULE_LOG("ruleDisconnectPeer, now is single mode, so auto complete");
+        return RULE_ACTION_COMPLETE;
+    }
+#endif
+
     bdaddr handset_addr;
 
     /* Don't run rule if we're not connected to peer */
@@ -2313,6 +2354,13 @@ static ruleAction ruleInCaseScoTransferToHandset(void)
 
 static ruleAction ruleSelectMicrophone(void)
 {
+#ifdef CONFIG_STAROT_SINGLE
+    if (ParamUsingSingle()) {
+        RULE_LOG("ruleSelectMicrophone, use single mode, so auto complete");
+        return RULE_ACTION_COMPLETE;
+    }
+#endif
+
     micSelection selected_mic = MIC_SELECTION_LOCAL;
 
     /* peer sync must be complete as this rule uses peer state information */
@@ -3254,21 +3302,34 @@ static ruleAction ruleIdleHandsetPair(void) {
 //        return RULE_ACTION_IGNORE;
 //    }
 
-    if ((appSmIsInCase() && appPeerSyncIsPeerInCase()) || (!appSmIsInCase() && !appPeerSyncIsPeerInCase())) {
-        if (appConfigIsLeft()) {
-            RULE_LOG("ruleIdleHandsetPair, run, no paired handset, we're all in/out case, we're left earbud");
+#ifdef CONFIG_STAROT_SINGLE
+    if (ParamUsingSingle()) {
+        if (appSmIsInCase()) {
+            RULE_LOG("ruleIdleHandsetPair, run, no paired handset, this ear in case, and using single mode");
             return RULE_ACTION_RUN;
-        } else {
-            RULE_LOG("ruleIdleHandsetPair, ignore, no paired handset, we're all in/out case,  we're right earbud");
-            return RULE_ACTION_IGNORE;
         }
-    } else if (appSmIsInCase() && !appPeerSyncIsPeerInCase()) {
-        RULE_LOG("ruleIdleHandsetPair, ignore, no paired handset, i am in case, peer is't in case, so i ignore this rule");
-        return RULE_ACTION_IGNORE;
-    } else if (!appSmIsInCase() && appPeerSyncIsPeerInCase()) {
-        RULE_LOG("ruleIdleHandsetPair, run, no paired handset, i am not in case, peer is in case, so i run this rule");
-        return RULE_ACTION_RUN;
+    } else {
+#endif
+        if ((appSmIsInCase() && appPeerSyncIsPeerInCase()) || (!appSmIsInCase() && !appPeerSyncIsPeerInCase())) {
+            if (appConfigIsLeft()) {
+                RULE_LOG("ruleIdleHandsetPair, run, no paired handset, we're all in/out case, we're left earbud");
+                return RULE_ACTION_RUN;
+            } else {
+                RULE_LOG("ruleIdleHandsetPair, ignore, no paired handset, we're all in/out case,  we're right earbud");
+                return RULE_ACTION_IGNORE;
+            }
+        } else if (appSmIsInCase() && !appPeerSyncIsPeerInCase()) {
+            RULE_LOG(
+                    "ruleIdleHandsetPair, ignore, no paired handset, i am in case, peer is't in case, so i ignore this rule");
+            return RULE_ACTION_IGNORE;
+        } else if (!appSmIsInCase() && appPeerSyncIsPeerInCase()) {
+            RULE_LOG(
+                    "ruleIdleHandsetPair, run, no paired handset, i am not in case, peer is in case, so i run this rule");
+            return RULE_ACTION_RUN;
+        }
+#ifdef CONFIG_STAROT_SINGLE
     }
+#endif
     RULE_LOG("ruleIdleHandsetPair, unknow condition");
     return RULE_ACTION_IGNORE;
 }
