@@ -13,11 +13,12 @@
 typedef struct {
     Task    client_task;           /*!< Task to receive any response */
     uint8   command;
-    uint8   data[7];
+    uint8   length;                // 总数据长度，包括command+length+data
+    uint8   data[2];
 } PEER_SIG_INTERNAL_TXDATA_REQ_T;
 
 #define AVRCP_PEER_CMD_TXDATA                   0x69
-#define AVRCP_PEER_CMD_TXDATA_SIZE              (7)         // command + data
+#define AVRCP_PEER_CMD_TXDATA_BASE_SIZE         2  // command + length
 
 enum {PEERTX_CMD_SYNCGAIA=0,         /* 主副耳机发送gaia状态   [payload[0], 0:disconnect 1:connect */
       PEERTX_CMD_WAKEUP_SYS,         /* 副耳机发送系统唤醒命令 [playload[0]:  0:keywakeup, 1:voice wakeup */

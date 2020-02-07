@@ -5,6 +5,7 @@
 
 #define STAROT_MAKE_SIZE(TYPE) (((sizeof(TYPE)) / 8 * 8) + ((sizeof(TYPE)) % 8 > 0 ? 8 : 0))
 #define STAROT_MAKE_MESSAGE(TYPE) TYPE *message = (TYPE *) PanicUnlessMalloc(STAROT_MAKE_SIZE(TYPE))
+#define STAROT_MAKE_MESSAGE_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) PanicUnlessMalloc((((sizeof(TYPE) + LEN + 3) / 4) * 4))
 
 /// 将消息发送至对方耳机
 
@@ -14,13 +15,12 @@ void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, 
     }
 
     peerSigTaskData *peer_sig = appGetPeerSig();
-    STAROT_MAKE_MESSAGE(PEER_SIG_INTERNAL_TXDATA_REQ_T);
+    STAROT_MAKE_MESSAGE_WITH_LEN(PEER_SIG_INTERNAL_TXDATA_REQ_T, size_payload);
 
     message->client_task = task;
     message->command     = command;
+    message->length      = AVRCP_PEER_CMD_TXDATA_BASE_SIZE + size_payload;
     if(size_payload > 0) {
-        if(size_payload > (AVRCP_PEER_CMD_TXDATA_SIZE-1))
-            size_payload = AVRCP_PEER_CMD_TXDATA_SIZE-1;
         memcpy(message->data, payload, size_payload);
     }
     MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_TXDATA_REQ, message, appPeerSigStartup(peer_addr));
@@ -66,7 +66,7 @@ void appPeerSigTxDataRequest(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {
     switch (appPeerSigGetState()) {
         case PEER_SIG_STATE_CONNECTED:
             appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_TXDATA,
-                    AVRCP_PEER_CMD_TXDATA_SIZE, &req->command);
+                    req->length, &req->command);
             break;
 
         default:
@@ -78,17 +78,21 @@ void appPeerSigTxDataRequest(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {
 /*! \brief Receive connect handset command. */
 bool appPeerSigRxDataCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
     peerSigTaskData *peer_sig = appGetPeerSig();
-    DEBUG_LOG("appPeerSigRxDataCommand");
+    int length = ind->payload[1];      // payload0=command payload1:length
+    DEBUG_LOG("appPeerSigRxDataCommand(%d-%d)", ind->size_payload, length);
 
     /* validate message */
-    if ((ind->size_payload != AVRCP_PEER_CMD_TXDATA_SIZE)
+    if ((ind->size_payload != length)
         || !peer_sig->rx_handset_commands_task) {
         return FALSE;
     }
     else {
-        PEER_SIG_INTERNAL_TXDATA_REQ_T peerReq;
-        memcpy(&peerReq.command, ind->payload, AVRCP_PEER_CMD_TXDATA_SIZE);
-        return appUiRecvPeerCommand(&peerReq);
+        bool bRet;
+        STAROT_MAKE_MESSAGE_WITH_LEN(PEER_SIG_INTERNAL_TXDATA_REQ_T, length);
+        memcpy(&message->command, ind->payload, length);
+        bRet = appUiRecvPeerCommand(message);
+        free(message);
+        return bRet;
     }
 }
 
