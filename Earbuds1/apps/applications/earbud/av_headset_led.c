@@ -17,6 +17,7 @@
 #include "av_headset_led.h"
 #include "av_headset_log.h"
 
+#ifndef CONFIG_STAROT
 /*! Define to prefer use of PIOs for LED control, rather than the use of the LED
     hardware blocks.
     PIOs were found to use lower power for the use cases here */
@@ -578,4 +579,16 @@ void appLedSetWallclock(Sink sink)
     ledTaskData *theLed = appGetLed();
     theLed->wallclock_sink = sink;
 }
+#else
+void appLedInit(void) {}
+void appLedEnable(bool enable) { (void)enable;}
+
+void appLedSetPattern(const ledPattern *pattern, int8 priority){(void)pattern;(void) priority;}
+void appLedStopPattern(int8 priority){ (void)priority;}
+
+void appLedSetFilter(ledFilter filter_func, uint8 priority){(void)filter_func;(void) priority;}
+void appLedCancelFilter(uint8 filter_pri){ (void)filter_pri;}
+
+void appLedSetWallclock(Sink sink){ (void)sink;}
+#endif
 
