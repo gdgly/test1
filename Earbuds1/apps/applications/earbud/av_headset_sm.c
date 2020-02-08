@@ -2010,7 +2010,11 @@ static void appSmHandleInternalFactoryReset(void)
     if (appSmStateIsIdle(appGetState()))
         appSetState(APP_STATE_FACTORY_RESET);
     else
+#ifdef CONFIG_STAROT
+        appSetState(APP_STATE_FACTORY_RESET);
+#else
         DEBUG_LOG("appSmHandleInternalFactoryReset can only factory reset in IDLE state");
+#endif
 }
 
 /*! \brief Handle failure to successfully disconnect links within timeout.
