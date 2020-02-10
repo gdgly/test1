@@ -962,8 +962,7 @@ void appUiHfpCallIncomingActive(void)
 
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
 
-    progRun->dial_stat  &= ~DIAL_ST_INACT;
-    progRun->dial_stat  |= DIAL_ST_IN;
+    progRun->dial_stat = DIAL_ST_IN;
 
     MessageSend(&appGetUi()->task, APP_CALLIN_ACT, 0);
 
@@ -991,8 +990,7 @@ void appUiHfpCallOutcomingActive(void)
 
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
 
-    progRun->dial_stat  &= ~DIAL_ST_INACT;
-    progRun->dial_stat  |= DIAL_ST_OUT;
+    progRun->dial_stat = DIAL_ST_OUT;
 
     MessageSend(&appGetUi()->task, APP_CALLOUT_ACT, 0);
 
@@ -1004,27 +1002,15 @@ void appUiHfpCallOutcomingActive(void)
 /* Cancel HFP incoming call */
 void appUiHfpCallIncomingInactive(int16 isEnd)
 {
-    ProgRIPtr  progRun = appSubGetProgRun();
-
-    if(isEnd)
-        progRun->dial_stat  &= ~(DIAL_ST_IN | DIAL_ST_ACT);
-
-    if (isEnd) {
-        MessageSend(&appGetUi()->task, APP_CALLIN_INACT, 0);
-    }
+    UNUSED(isEnd);
+	return;
 }
 
 /* Cancel HFP outcoming call */
 void appUiHfpCallOutcomingInactive(int16 isEnd)
 {
-    ProgRIPtr  progRun = appSubGetProgRun();
-
-    if(isEnd)
-        progRun->dial_stat  &= ~(DIAL_ST_OUT | DIAL_ST_ACT);
-
-    if (isEnd) {
-        MessageSend(&appGetUi()->task, APP_CALLOUT_INACT, 0);
-    }
+    UNUSED(isEnd);
+        return;
 }
 
 /* Show HFP call active */
@@ -1032,7 +1018,7 @@ void appUiHfpCallActive(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    progRun->dial_stat  |= DIAL_ST_ACT;
+    progRun->dial_stat = DIAL_ST_ACT;
 
     MessageSend(&appGetUi()->task, APP_CALL_ACTIVE, 0);
 }
@@ -1042,8 +1028,7 @@ void appUiHfpCallInactive(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    progRun->dial_stat  &= ~(DIAL_ST_IN | DIAL_ST_OUT | DIAL_ST_ACT);
-    progRun->dial_stat  |= DIAL_ST_INACT;
+    progRun->dial_stat = DIAL_ST_INACT;
 
     MessageSend(&appGetUi()->task, APP_CALL_INACTIVE, 0);
 }
