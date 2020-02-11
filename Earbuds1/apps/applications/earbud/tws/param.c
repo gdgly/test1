@@ -128,7 +128,6 @@ void BtAddrParamDefault(void)
 
     // 默认ble配对码和双击配置，已经同步至另一只耳机
     // todo 后期如果有要同步的消息标识位，需要在这里添加
-    prm->ble_pair.bleIsSync = TRUE;
 
     // 其它版本信息设置为无效
     memset(prm->peerVer, 0xFF, DEV_HWSWVER_LEN);
@@ -243,16 +242,128 @@ int16 ParamSavePeerAddr( typed_bdaddr *taddr)
     return ParamSaveBtAddrPrm(&gBtAddrParam);
 }
 
-int16 ParamSaveBlePair(BlePairInfo *blePairInfo)
+void bdaddr2buffer(bdaddr *addr, uint8* addrbuf)
 {
-    memcpy(&gBtAddrParam.ble_pair, blePairInfo, sizeof(BlePairInfo));
+    addrbuf[0] = (addr->nap >> 8) & 0xFF;
+    addrbuf[1] = (addr->nap & 0xFF);
+    addrbuf[2] = addr->uap;
+    addrbuf[3] = (addr->lap >> 16) & 0xFF;
+    addrbuf[4] = (addr->lap >> 8) & 0xFF;
+    addrbuf[5] = (addr->lap & 0xFF);
+}
 
-    return ParamSaveBtAddrPrm(&gBtAddrParam);
+// ret: <0 没找到 (根据蓝牙地址来查找）
+//      >=0 对应的序号
+static int16 ParamSearchBlePair(BlePairInfo *pairArr, uint8 *btAddr)
+{
+    int i, ret = -1;
+
+    for(i = 0; i < BLEPAIR_COUNT; i++) {
+        if(memcmp(pairArr[i].btAddr, btAddr, 6) != 0)
+            continue;
+
+        ret = i;
+        break;
+    }
+
+    return ret;
+}
+
+// 将所有的配对码后移一个序号
+static int16 ParamMoveBlePair(BlePairInfo *pairArr, uint8 endNo)
+{
+    int i;
+
+    if(endNo < 0 || endNo >= BLEPAIR_COUNT)
+        endNo = BLEPAIR_COUNT - 1;
+
+    for(i = endNo; i > 0; i--) {
+        memcpy(&pairArr[i], &pairArr[i-1], sizeof(BlePairInfo));
+    }
+
+    return 0;
+}
+
+
+// 这儿能保存多组配对码，需要将最后使用的给保存在第一个位置上，其它后移
+int16 ParamSaveBlePair(BlePairInfo *blePairInfo, uint32 timeModfy)
+{
+    int iFind = -1;
+    BtAddrPrmPtr prm = &gBtAddrParam;
+    deviceTaskData *theDevice = appGetDevice();
+
+    if(theDevice->handset_connected && !BdaddrIsZero(&theDevice->handset_bd_addr)) {
+        bdaddr2buffer(&theDevice->handset_bd_addr, blePairInfo->btAddr);
+    }
+
+    iFind = ParamSearchBlePair(prm->ble_pair, blePairInfo->btAddr);
+    ParamMoveBlePair(prm->ble_pair, iFind);
+    DEBUG_LOG("SAVE Pair iFind=%d handset=%d", iFind, theDevice->handset_connected);
+
+    // 保存在第一个节点上
+    prm->ble_pair_sync = 1;
+    memcpy(&prm->ble_pair[0], blePairInfo, sizeof(BlePairInfo));
+
+    prm->timeModfy  = timeModfy;
+    return ParamSaveBtAddrPrm(prm);
+}
+
+// 已经成功同步给对方耳机了
+int16 ParamSyncBlePairSucc(void)
+{
+    BtAddrPrmPtr prm = &gBtAddrParam;
+
+    if(0 == prm->ble_pair_sync) {
+        return 0;
+    }
+    prm->ble_pair_sync = 1;
+    return ParamSaveBtAddrPrm(prm);
+}
+
+// 主耳机同步数配对码以副耳机
+// payload : BtAddrParam.syncTime 开始
+int16 ParamSyncBlePair(int16 size_payload, uint8 *payload)
+{
+    uint32 timeModfy;
+    BtAddrPrmPtr prm = &gBtAddrParam;
+
+    if(size_payload < (4+sizeof(BlePairInfo))) {
+        DEBUG_LOG("Error SysncBlePair");
+        return -1;
+    }
+
+    memcpy(&timeModfy, payload, 4);
+    if(timeModfy > prm->timeModfy) {
+        prm->ble_pair_sync = 0;
+        memcpy(&prm->timeModfy, payload, size_payload);
+        ParamSaveBtAddrPrm(prm);
+    }
+    else
+        timeModfy = 0;
+
+    DEBUG_LOG("SynclePair, timeNow=%d", timeModfy);
+    return 0;
 }
 
 int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
-{    
-    memcpy(blePairInfo, &gBtAddrParam.ble_pair, sizeof(BlePairInfo));
+{
+    int iNo = 0;
+    BtAddrPrmPtr prm = &gBtAddrParam;
+    deviceTaskData *theDevice = appGetDevice();
+
+    // 检查当前经典蓝牙是否已经连接,没有连接返回第一组
+    if(theDevice->handset_connected && !BdaddrIsZero(&theDevice->handset_bd_addr)) {
+        bdaddr2buffer(&theDevice->handset_bd_addr, blePairInfo->btAddr);
+        iNo = ParamSearchBlePair(prm->ble_pair, blePairInfo->btAddr);
+        if(iNo >= 0 && iNo < BLEPAIR_COUNT) {   // 返回对应蓝牙地址的那一组
+            memcpy(blePairInfo, &prm->ble_pair[iNo], sizeof(BlePairInfo));
+            goto out;
+        }
+    }
+
+    // 返回全0
+    memset(blePairInfo, 0x00, sizeof(BlePairInfo));
+out:
     return sizeof(BlePairInfo);
 }
 

@@ -28,14 +28,17 @@ void FixParamDefault(void);
 int16 ParamSaveFixPrm(FixPrmPtr pParam);
 int16 ParamLoadFixPrm(FixPrmPtr pParam);
 
+#define BLEPAIR_COUNT         (4)      // 最多保存4组BLE配对码
 /////////////////////////////////////////////////////////////////////////////////
 /////// 蓝牙配对相关参数
 /////////////////////////////////////////////////////////////////////////////////
 typedef struct tagBTADDRPARAM {
     uint8          single_era;         // 1:单耳使用 0:TWS
-    uint8          rev1[3];
+    uint8          rev1[2];
+    uint8          ble_pair_sync;      // BLE配对数据同步到对方耳机 0:不需要同步， 1：需要成功
+    uint32         timeModfy;          // 最后一次改变本结构的时间
+    BlePairInfo    ble_pair[BLEPAIR_COUNT];   // 保存ble配对信息adv广播，bind码
     typed_bdaddr   peer_addr;          // 保存双方配对耳机蓝牙地址
-    BlePairInfo    ble_pair;           // 保存ble配对信息adv广播，bind码
 
     uint8          peerVer[DEV_HWSWVER_LEN];        // 对方耳机版本信息
     uint8          caseVer[DEV_HWSWVER_LEN];        // 盒子版本信息
@@ -81,7 +84,10 @@ int16 ParamLoadAll(void);
 int16 ParamGetPeerAddr( typed_bdaddr *taddr);       // 从内存中获取
 int16 ParamSavePeerAddr( typed_bdaddr *taddr);      // 盒子发来地址，需要保存
 int16 ParamLoadBlePair( BlePairInfo *blePairInfo);
-int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
+int16 ParamSaveBlePair(BlePairInfo *blePairInfo, uint32 timeModfy);
+int16 ParamSyncBlePair(int16 size_payload, uint8 *payload);    // 对方耳机发送过来的同步配对数据
+int16 ParamSyncBlePairSucc(void); // 已经成功同步给对方耳机了
+void bdaddr2buffer(bdaddr *addr, uint8* addrbuf);
 
 // 获取软硬件版本信息
 // type: 0:盒子，1:LEFT， 2耳机(右）

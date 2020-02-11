@@ -1005,16 +1005,13 @@ static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {
         uint8 *data = message->payload;
         uint16 advCode = (((uint16) data[0]) << 8) | data[1];
         uint32 bindCode = (((uint32) data[2]) << 24) | (((uint32) data[3]) << 16) | (((uint32) data[4]) << 8) | data[5];
-        appBleSetBond(advCode, bindCode);
+        appBleSetBond(advCode, bindCode, 100);   // 修改APP传入真正的时间值 
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
         gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
         GattManagerCancelWaitForRemoteClient();
-        /// 查找对方地址
-        bdaddr peer_addr;
-        if (appDeviceGetPeerBdAddr(&peer_addr)) {
-            appPeerSigTxBleConfigRequest(appGetGaiaTask(), &peer_addr, advCode, (int) bindCode);
-        }
-        /// 取消超时如果没有发送bondCode断开连接的定时器
+
+        /// 同步给对方耳机
+        appPeerSigTxSyncPair(appGetGaiaTask());
     } else {
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_NOT_SUPPORTED, 0, NULL);
     }

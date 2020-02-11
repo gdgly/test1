@@ -8,7 +8,7 @@
 #define STAROT_MAKE_MESSAGE_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) PanicUnlessMalloc((((sizeof(TYPE) + LEN + 3) / 4) * 4))
 
 /// 将消息发送至对方耳机
-
+uint8 g_last_tx_command = 0xFF;     // 记录最后一次发送出去的命令，在CONFIrm函数中来使用
 void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload) {
     if (NULL == peer_addr) {
         return;
@@ -26,15 +26,25 @@ void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, 
     MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_TXDATA_REQ, message, appPeerSigStartup(peer_addr));
 }
 
-void appPeerSigTxDataCommandUi(uint8 command, uint8 payload) {  // 仅一个字节payhload
+void appPeerSigTxDataCommandExt(Task task, uint8 command, uint16 size_payload, const uint8 *payload)
+{
     bdaddr peer_addr;
 
-    if(FALSE == appDeviceGetPeerBdAddr(&peer_addr))
-        return;
+     if(FALSE == appDeviceGetPeerBdAddr(&peer_addr))
+         return;
 
-    appPeerSigTxDataCommand(appGetUiTask(), &peer_addr,  command, 1, &payload);
+     appPeerSigTxDataCommand(task, &peer_addr,  command, size_payload, payload);
 }
 
+void appPeerSigTxDataCommandUi(uint8 command, uint8 payload) {  // 仅一个字节payhload
+    appPeerSigTxDataCommandExt(appGetUiTask(), command, 1, &payload);
+}
+
+void appPeerSigTxSyncPair(Task task)          // 同步配对信息
+{
+    appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_BLEPAIR,
+        sizeof(BlePairInfo)*BLEPAIR_COUNT+4/*Timer*/, (uint8*)&gBtAddrParam.timeModfy);
+}
 
 bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              // 接收方： 返回给上层处理
     bool ret = TRUE;
@@ -49,6 +59,9 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
         break;
     case PEERTX_CMD_WAKEUP_APP:
         MessageSend(appGetUiTask(), (req->data[0] == 0) ? APP_ASSISTANT_TAP_AWAKEN : APP_ASSISTANT_AWAKEN, 0);
+        break;
+    case PEERTX_CMD_SYNC_BLEPAIR:
+        ParamSyncBlePair(req->length-2, req->data);
         break;
     default:
         DEBUG_LOG("Unknown command:%d", req->command);
@@ -65,12 +78,13 @@ void appPeerSigTxDataRequest(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {
 
     switch (appPeerSigGetState()) {
         case PEER_SIG_STATE_CONNECTED:
+            g_last_tx_command = req->command;
             appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_TXDATA,
                     req->length, &req->command);
             break;
 
         default:
-            appPeerSigMsgConnectHandsetConfirmation(req->client_task, peerSigStatusLinkKeyTxFail);
+            appPeerSigTxDataConfirm(req->client_task, peerSigStatusLinkKeyTxFail);
             break;
     }
 }
@@ -98,11 +112,21 @@ bool appPeerSigRxDataCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
 
 void appPeerSigTxDataConfirm(Task task, peerSigStatus status) {
     UNUSED(task), UNUSED(status);
-    DEBUG_LOG("appPeerSigTxDataConfirm:%d", status);
+    DEBUG_LOG("appPeerSigTxDataConfirm:%d, lasttxcmd=%d", status, g_last_tx_command);
+
+    switch(g_last_tx_command) {
+    case PEERTX_CMD_SYNC_BLEPAIR:
+        if(peerSigStatusSuccess == status)
+            ParamSyncBlePairSucc();
+        break;
+
+    }
+    g_last_tx_command = 0xFF;
 }
 //////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef CONFIG_SINGLE_SYNC_BLE_PAIR
 
 
 void appPeerSigTxBleConfigRequest(Task task, const bdaddr *peer_addr, int advCode, int bondCode) {
@@ -174,6 +198,7 @@ void appPeerSigMsgBleConfigConfirmation(Task task, peerSigStatus status) {
         appBleSetSync(TRUE);
     }
 }
+#endif
 
 ////-------------------------------------------华丽的分割线-------------------------------------------------
 

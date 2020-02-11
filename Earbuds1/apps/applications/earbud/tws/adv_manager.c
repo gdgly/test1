@@ -7,7 +7,7 @@
 
 extern int16 ParamLoadBlePair(BlePairInfo *blePairInfo);
 
-extern int16 ParamSaveBlePair(BlePairInfo *blePairInfo);
+extern int16 ParamSaveBlePair(BlePairInfo *blePairInfo, uint32 timeModfy);
 
 extern void appGetLocalBrEdrAddress(uint8* addrbuf);
 extern void appGetPeerBrEdrAddress(uint8* addrbuf);
@@ -112,8 +112,8 @@ bool appAdvParamInit(void) {
     return TRUE;
 }
 
-void appAdvParamSave(void) {
-    int res = ParamSaveBlePair(&advTaskData.bleBondInfo);
+void appAdvParamSave(uint32 timeModfy) {
+    int res = ParamSaveBlePair(&advTaskData.bleBondInfo, timeModfy);
     if (res < 0) {
         printf("save adv param failed\n");
     }
@@ -122,26 +122,24 @@ void appAdvParamSave(void) {
 void appBleClearBond(void) {
     DEBUG_LOG("call appBleClearBond");
     advTaskData.bleBondInfo.bleIsBond = FALSE;
-    advTaskData.bleBondInfo.bleIsSync = FALSE;
     advTaskData.bleBondInfo.advCode = 0X00;
     advTaskData.bleBondInfo.bondCode = 0X00;
-    appAdvParamSave();
+//    appAdvParamSave(0);            // 保存多个时候，不需要CLEAR了
     appPrivateBleSetRandomCode(0X00);
 }
 
-void appBleSetBond(uint16 advCode, uint32 bondCode) {
+void appBleSetBond(uint16 advCode, uint32 bondCode, uint32 timeModfy) {
     DEBUG_LOG("set pair ble code is : adv %04X, bond %04X", advCode, bondCode);
     advTaskData.bleBondInfo.bleIsBond = TRUE;
-    advTaskData.bleBondInfo.bleIsSync = FALSE;
     advTaskData.bleBondInfo.advCode = advCode;
     advTaskData.bleBondInfo.bondCode = bondCode;
-    appAdvParamSave();
+
+    appAdvParamSave(timeModfy);
     appPrivateBleSetRandomCode(advCode);
 }
 
 void appBleSetSync(bool status) {
-    advTaskData.bleBondInfo.bleIsSync = status;
-    appAdvParamSave();
+    (void)status;       // 这个函数在使用时间作为比较后，不需要单独保存了
 }
 
 uint32 appBleGetBondCode(void) {

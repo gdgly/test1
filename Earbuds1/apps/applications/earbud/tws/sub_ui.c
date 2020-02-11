@@ -1041,6 +1041,7 @@ void appUiAvConnected(unsigned cad)
 
     progRun->bredrconnect = 1;
 
+    appAdvParamInit();
     MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
 }
 

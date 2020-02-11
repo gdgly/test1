@@ -2212,7 +2212,7 @@ static void appSmHandleInternalAllRequestedLinksDisconnected(SM_INTERNAL_LINK_DI
     }
 }
 
-
+extern void appPeerSigTxSyncPair(Task task);          // 同步配对信息
 static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
 {
     UNUSED(status);
@@ -2222,6 +2222,13 @@ static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
     {
         appSmSetInitialCoreState();
     }
+
+#ifdef CONFIG_STAROT
+    if(gBtAddrParam.ble_pair_sync) {
+        DEBUG_LOG("Sync pair from StARTUP");
+        appPeerSigTxSyncPair(appGetUiTask());
+    }
+#endif
 }
 
 
