@@ -3,5 +3,5 @@ file=bt2
 # Change bluetooth address and device name to appropriate values
 # using variable markers from the template.xml file.
 pskey_bdaddr={0x4D3000, 0xD5, 0x70B3}
-pskey_device_name="iFlyBuds"
+pskey_device_name="iFLYBUDS"
 
