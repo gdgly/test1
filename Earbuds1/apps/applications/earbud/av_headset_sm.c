@@ -503,6 +503,10 @@ static void appExitSubStateTerminating(void)
 static void appEnterInEarIdle(void)
 {
     DEBUG_LOG("appEnterInEarIdle");
+
+    if (MessageCancelAll(appGetUiTask(), APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT) > 0) {
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_IN_EAR);
+    }
 }
 
 /*! \brief Exit

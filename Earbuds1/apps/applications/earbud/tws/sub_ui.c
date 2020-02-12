@@ -633,11 +633,16 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         subUiCaller2Gaia(id, progRun);
         subUiCallType2Gaia(id, progRun);
         break;
+    case APP_CALL_ACTIVE:          // 拨号相关信息 接听
+    {
+        //添加一个空的定时消息，如果在指定的时间内，发生了该定时器，则可以忽略hfp切换音频链路的问题
+        MessageCancelAll(appGetUiTask(), APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT);
+        MessageSendLater(appGetUiTask(), APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT, NULL, D_SEC(1));
+    }
     case APP_CALLIN_ACT:           // 拨号相关信息 拨入
     case APP_CALLIN_INACT:         // 拨号相关信息 拨入断开
     case APP_CALLOUT_ACT:          // 拨号相关信息 拨出
     case APP_CALLOUT_INACT:        // 拨号相关信息 拨出断开
-    case APP_CALL_ACTIVE:          // 拨号相关信息 接听
     case APP_CALL_INACTIVE:        // 拨号相关信息 断开
         subUiCaller2Gaia(id, progRun);
         break;
