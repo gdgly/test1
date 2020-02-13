@@ -742,10 +742,8 @@ void gaiaGetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     attrFree(body, NULL);
 }
 
-extern void appPeerSigTxDoubleClickConfigRequest(Task task, const bdaddr *peer_addr, uint8 left, uint8 right);
 // App设置设备的耳机的双击配置信息
 void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
-    bdaddr peer_addr;
     StarotAttr *body = attrDecode(message->payload, message->payloadLen);
     if (NULL == body) {
         return;
@@ -763,9 +761,8 @@ void gaiaSetDoubleClickSet(GAIA_STAROT_IND_T *message) {
     if ((0XFF != leftKey) || (0XFF != rightKey)) {
         UserSetKeyFunc(leftKey, rightKey);
     }
-    if (appDeviceGetPeerBdAddr(&peer_addr)) {
-        appPeerSigTxDoubleClickConfigRequest(appGetGaiaTask(), &peer_addr, gUserParam.lKeyFunc, gUserParam.rKeyFunc);
-    }
+    appPeerSigTxSyncDoubleClick(appGetUiTask(), gUserParam.lKeyFunc, gUserParam.rKeyFunc);
+
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
     attrFree(body, NULL);
 }

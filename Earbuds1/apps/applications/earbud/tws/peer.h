@@ -25,6 +25,7 @@ enum {PEERTX_CMD_SYNCGAIA=0,         /* 主副耳机发送gaia状态   [payload[
       PEERTX_CMD_WAKEUP_APP,         /* 副耳机发送唤醒APP命令  [playload[0]:  0:keywakeup, 1:voice wakeup */
       PEERTX_CMD_SYNC_BLEPAIR,       /* 同步BLE配对码 */
       PEERTX_CMD_NOTIFY_VERSION,     /* 同步左右耳机版本 */
+      PEERTX_CMD_SYNC_DOUBLE_CLICK,  /* 同步双击 */
      };
 void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload);
 void appPeerSigTxDataCommandExt(Task task,uint8 command, uint16 size_payload, const uint8 *payload);
@@ -35,12 +36,15 @@ void appPeerSigTxDataCommandUi(uint8 command, uint8 payload);  // task为UI 仅�
  * 同步耳机版本信息
  */
 void appPeerSigTxSyncVersion(Task task);
+/*
+ * 同步耳机双击的配置
+ */
+void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right);
 void appPeerSigTxSyncPair(Task task);          // 同步配对信息
 void appPeerSigTxDataRequest(PEER_SIG_INTERNAL_TXDATA_REQ_T *req);           // 发送方： 请求发送给对方
 bool appPeerSigRxDataCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind);        // 接收方： 接收数据处理
 void appPeerSigTxDataConfirm(Task task, peerSigStatus status);               // 发送方： 获取对方返回值
 bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req);              // 接收方： 返回给上层处理
-
 
 #ifdef CONFIG_SINGLE_SYNC_BLE_PAIR   // 保存多组配对码后，直接一次性同步
 ////////////////////////////////////ble配对信息////////////////////////////////////////////
@@ -64,33 +68,6 @@ bool appPeerSigHandleBleConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind);
 void appPeerSigMsgBleConfigConfirmation(Task task, peerSigStatus status);
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-////////////////////////////////////双击配置项////////////////////////////////////////////
-
-/******************************************************************************
- * Peer Signalling Message Definitions
- ******************************************************************************/
-#define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG                 0x71
-#define AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE            10    /// 左+右+软硬件版本号
-
-typedef struct
-{
-    Task client_task;           /*!< Task to receive any response */
-    uint8 left;
-    uint8 right;
-    uint16 reserve;
-    uint8 peerver[DEV_HWSWVER_LEN];
-} PEER_SIG_INTERNAL_DOBULE_CLICK_CONFIG_REQ_T;
-
-void appPeerSigTxDoubleClickConfigRequest(Task task, const bdaddr *peer_addr, uint8 left, uint8 right);
-void appPeerSigHandleInternalDoubleClickConfigRequest(PEER_SIG_INTERNAL_DOBULE_CLICK_CONFIG_REQ_T *req);
-bool appPeerSigHandleDoubleClickConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind);
-void appPeerSigMsgDoubleClickConfigConfirmation(Task task, peerSigStatus status);
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
 
 ////////////////////////////////////通用配置项////////////////////////////////////////////
 

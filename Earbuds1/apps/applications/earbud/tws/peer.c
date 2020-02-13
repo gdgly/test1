@@ -28,12 +28,15 @@ void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, 
 
 void appPeerSigTxDataCommandExt(Task task, uint8 command, uint16 size_payload, const uint8 *payload)
 {
+    if (ParamUsingSingle()) {
+        return;
+    }
+
     bdaddr peer_addr;
+    if(FALSE == appDeviceGetPeerBdAddr(&peer_addr))
+        return;
 
-     if(FALSE == appDeviceGetPeerBdAddr(&peer_addr))
-         return;
-
-     appPeerSigTxDataCommand(task, &peer_addr,  command, size_payload, payload);
+    appPeerSigTxDataCommand(task, &peer_addr,  command, size_payload, payload);
 }
 
 void appPeerSigTxDataCommandUi(uint8 command, uint8 payload) {  // 仅一个字节payhload
@@ -44,6 +47,11 @@ void appPeerSigTxSyncVersion(Task task) {
     uint8 buffer[DEV_HWSWVER_LEN] = {0};
     SystemGetCurrentVersion(buffer);
     appPeerSigTxDataCommandExt(task, PEERTX_CMD_NOTIFY_VERSION, DEV_HWSWVER_LEN, buffer);
+}
+
+void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right) {
+    uint8 buffer[2] = {left, right};
+    appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_DOUBLE_CLICK, 2, buffer);
 }
 
 void appPeerSigTxSyncPair(Task task)          // 同步配对信息
@@ -72,6 +80,10 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
     case PEERTX_CMD_NOTIFY_VERSION:
         SystemSetVersion(appConfigIsLeft() ? DEV_RIGHT : DEV_LEFT, req->data);
         break;
+    case PEERTX_CMD_SYNC_DOUBLE_CLICK:
+        UserSetKeyFunc((req->data)[0], (req->data)[1]);
+        break;
+
     default:
         DEBUG_LOG("Unknown command:%d", req->command);
         ret = FALSE;
@@ -208,76 +220,6 @@ void appPeerSigMsgBleConfigConfirmation(Task task, peerSigStatus status) {
     }
 }
 #endif
-
-////-------------------------------------------华丽的分割线-------------------------------------------------
-
-void appPeerSigTxDoubleClickConfigRequest(Task task, const bdaddr *peer_addr, uint8 left, uint8 right) {
-    uint8 ver[8];
-    peerSigTaskData *peer_sig = appGetPeerSig();
-    STAROT_MAKE_MESSAGE(PEER_SIG_INTERNAL_DOBULE_CLICK_CONFIG_REQ_T);
-    message->client_task = task;
-    if(0xFF != left)
-        message->left = left;
-    if(0xFF != right)
-        message->right = right;
-
-    SystemGetCurrentVersion((uint8*)ver);
-    memcpy(message->peerver, ver, DEV_HWSWVER_LEN);
-    MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_DOUBLE_CLICK_SETTING_REQ, message, appPeerSigStartup(peer_addr));
-}
-
-void appPeerSigHandleInternalDoubleClickConfigRequest(PEER_SIG_INTERNAL_DOBULE_CLICK_CONFIG_REQ_T *req) {
-    DEBUG_LOG("appPeerSigHandleInternalBleConfigRequest, state %u", appPeerSigGetState());
-
-    switch (appPeerSigGetState()) {
-        case PEER_SIG_STATE_CONNECTED: {
-            uint8 message[AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE];
-            /* Build data for message  */
-            message[0] = req->left;
-            message[1] = req->right;
-            memcpy(&message[2], req->peerver, DEV_HWSWVER_LEN);
-            /* Send the handset address over AVRCP */
-            appPeerSigVendorPassthroughRequest(req->client_task, AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG,
-                                               AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE, message);
-        }
-            break;
-
-        default: {
-            appPeerSigMsgConnectHandsetConfirmation(req->client_task, peerSigStatusLinkKeyTxFail);
-        }
-            break;
-    }
-}
-
-bool appPeerSigHandleDoubleClickConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
-    peerSigTaskData *peer_sig = appGetPeerSig();
-
-    /* validate message */
-    if ((ind->size_payload != AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG_SIZE) || !peer_sig->rx_handset_commands_task) {
-        return FALSE;
-    } else {
-//        MAKE_MESSAGE(PEER_SIG_CONNECT_HANDSET_IND);
-//        message->play_media = !!(ind->payload[0] & AVRCP_PEER_CMD_CONNECT_HANDSET_FLAG_PLAY_MEDIA);
-//        /* tell client to connect to handset */
-//        MessageSend(peer_sig->rx_handset_commands_task, PEER_SIG_CONNECT_HANDSET_IND, message);
-//        DEBUG_LOG("appPeerSigHandleConnectHandsetCommand %d", message->play_media);
-        uint8 left = ind->payload[0];
-        uint8 right = ind->payload[1];
-        /// 是直接存储，还是调用ui
-        memcpy(gBtAddrParam.peerVer, &ind->payload[2], DEV_HWSWVER_LEN);
-        ParamSaveBtAddrPrm(&gBtAddrParam);
-        UserSetKeyFunc(left, right);
-        return TRUE;
-    }
-}
-
-void appPeerSigMsgDoubleClickConfigConfirmation(Task task, peerSigStatus status) {
-    /// todo : 发送消息至指定task，告知同步情况
-    UNUSED(task), UNUSED(status);
-//    MAKE_MESSAGE(PEER_SIG_CONNECT_HANDSET_CFM);
-//    message->status = status;
-//    MessageSend(task, PEER_SIG_CONNECT_HANDSET_CFM, message);
-}
 
 extern UserParam gUserParam;
 

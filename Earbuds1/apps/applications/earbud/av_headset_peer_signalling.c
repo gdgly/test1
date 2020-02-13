@@ -358,10 +358,6 @@ static void appPeerSigCancelInProgressOperation(void)
             break;
   #endif
 
-        case AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG:
-            appPeerSigMsgDoubleClickConfigConfirmation(peer_sig->client_task, peerSigStatusPairHandsetTxFail);
-            break;
-
         case AVRCP_PEER_CMD_NORMAL_CONFIG:
             appPeerSigMsgNormalConfigConfirmation(peer_sig->client_task, peerSigStatusPairHandsetTxFail);
             break;
@@ -888,9 +884,6 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughInd(AV_AVRCP_VENDOR_PASSTHRO
             rc = appPeerSigHandleBleConfigCommand(ind);
             break;
   #endif
-        case AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG:
-            rc = appPeerSigHandleDoubleClickConfigCommand(ind);
-            break;
         case AVRCP_PEER_CMD_NORMAL_CONFIG:
             rc = appPeerSigHandleNormalConfigCommand(ind);
             break;
@@ -960,12 +953,6 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughConfirm(AV_AVRCP_VENDOR_PASS
                                                peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
             break;
   #endif
-
-        case AVRCP_PEER_CMD_DOUBLE_CLICK_CONFIG:
-            appPeerSigMsgDoubleClickConfigConfirmation(peer_sig->client_task, cfm->status == avrcp_success ?
-                                                       peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
-            break;
-
         case AVRCP_PEER_CMD_NORMAL_CONFIG:
             appPeerSigMsgNormalConfigConfirmation(peer_sig->client_task, cfm->status == avrcp_success ?
                                                        peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
@@ -1259,9 +1246,7 @@ static void appPeerSigHandleMessage(Task task, MessageId id, Message message)
             break;
   #endif
 
-        case PEER_SIG_INTERNAL_DOUBLE_CLICK_SETTING_REQ:
-            appPeerSigHandleInternalDoubleClickConfigRequest((PEER_SIG_INTERNAL_DOBULE_CLICK_CONFIG_REQ_T *)message);
-            break;
+
 
         case PEER_SIG_INTERNAL_NORMAL_SETTING_REQ:
             appPeerSigHandleInternalNormalConfigRequest((PEER_SIG_INTERNAL_NORMAL_CONFIG_REQ_T*)message);
