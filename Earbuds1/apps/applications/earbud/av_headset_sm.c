@@ -2217,6 +2217,8 @@ static void appSmHandleInternalAllRequestedLinksDisconnected(SM_INTERNAL_LINK_DI
 }
 
 extern void appPeerSigTxSyncPair(Task task);          // 同步配对信息
+extern void appPeerSigTxSyncVersion(Task task);          // 同步配对信息
+
 static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
 {
     UNUSED(status);
@@ -2225,6 +2227,11 @@ static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
     if (appGetState() == APP_STATE_STARTUP)
     {
         appSmSetInitialCoreState();
+#ifdef CONFIG_STAROT
+        /// 同步对方耳机版本
+        DEBUG_LOG("call appPeerSigTxSyncVersion for send version to peer");
+        appPeerSigTxSyncVersion(appGetUiTask());
+#endif
     }
 
 #ifdef CONFIG_STAROT

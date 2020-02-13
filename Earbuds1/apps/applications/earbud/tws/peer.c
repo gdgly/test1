@@ -40,6 +40,12 @@ void appPeerSigTxDataCommandUi(uint8 command, uint8 payload) {  // 仅一个字�
     appPeerSigTxDataCommandExt(appGetUiTask(), command, 1, &payload);
 }
 
+void appPeerSigTxSyncVersion(Task task) {
+    uint8 buffer[DEV_HWSWVER_LEN] = {0};
+    SystemGetCurrentVersion(buffer);
+    appPeerSigTxDataCommandExt(task, PEERTX_CMD_NOTIFY_VERSION, DEV_HWSWVER_LEN, buffer);
+}
+
 void appPeerSigTxSyncPair(Task task)          // 同步配对信息
 {
     appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_BLEPAIR,
@@ -62,6 +68,9 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
         break;
     case PEERTX_CMD_SYNC_BLEPAIR:
         ParamSyncBlePair(req->length-2, req->data);
+        break;
+    case PEERTX_CMD_NOTIFY_VERSION:
+        SystemSetVersion(appConfigIsLeft() ? DEV_RIGHT : DEV_LEFT, req->data);
         break;
     default:
         DEBUG_LOG("Unknown command:%d", req->command);
