@@ -863,6 +863,7 @@ void max20340_init(void)
     return;
 }
 
+extern void appChargeFromUi(bool bEnable);
 void max20340_notify_current_status(void) {
     if (TRUE == max20340_GetConnect()) {
         max20340_notify_plc_in();
@@ -878,9 +879,11 @@ void max20340_notify_plc_in(void) {
     MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
     MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
     MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_IN, NULL, 50);
+    appChargeFromUi(TRUE);
 }
 
 void max20340_notify_plc_out(void) {
+    appChargeFromUi(FALSE);
     if (FALSE == appGetCaseIsOpen()) {
         DEBUG_LOG("max20340_notify_plc_out, now case is close, so don't send message to application");
         return;
