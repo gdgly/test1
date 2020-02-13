@@ -30,9 +30,11 @@ typedef struct {
 
 // 根据上面的结构体，升级固件的版本是在第四到第十二字节，共8字节
 static uint8 _case_image_ver[DEV_HWSWVER_LEN], _case_need_upgrade = 0;
+uint8 _case_real_ver[DEV_HWSWVER_LEN] = {0,0,0,0};   // 读取过来盒子实际运行版本信息
 int imagecase_checkver(uint8 *recv_ver)      // return 1 is upgrade
 {
     memcpy(_case_image_ver, &AP[16+4], DEV_HWSWVER_LEN);
+    memcpy(_case_real_ver, recv_ver, DEV_HWSWVER_LEN);
 
     // only compile SW ver, >0比较版本更新
     _case_need_upgrade = (memcmp(&_case_image_ver[4], &recv_ver[4], DEV_SWVER_LEN) > 0) ? 1 : 0;
