@@ -2604,16 +2604,19 @@ extern bool appGaiaIsConnectBySpp(void);
 
 static ruleAction ruleBleConnectionUpdate(void)
 {
+    /// 如果使用spp建立的gaia连接，停止ble广播
     if ((appGaiaIsConnect()) && appGaiaIsConnectBySpp()) {
         DEBUG_LOG("ruleBleConnectionUpdate now have gaia(spp) connect, so ble disable");
         return bleDisable();
     }
 
+    /// 当前正在与另一只耳机配对，禁用BLE
     if (appPeerSyncIsPeerPairing()) {
         DEBUG_LOG("ruleBleConnectionUpdate now peer is in pair, so need ble adv disable");
         return bleDisable();
     }
 
+    /// 经典蓝牙配对中，发送配对的广播
     if (appSmIsPairing()) {
         DEBUG_LOG("ruleBleConnectionUpdate now is pair, so need ble adv for android");
         appBleSelectFeture();
@@ -2646,14 +2649,13 @@ static ruleAction ruleBleConnectionUpdate(void)
         return RULE_ACTION_IGNORE;
     }
 
-    bool left = appConfigIsLeft();
 
-    bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
-    /// 没有和另一只耳机交换地址
-    if (FALSE == paired_with_peer) {
-        DEBUG_LOG("ruleBleConnectionUpdate paired_with_peer is false, ble disable");
-        return bleDisable();
-    }
+//    bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
+//    /// 没有和另一只耳机交换地址
+//    if (FALSE == paired_with_peer) {
+//        DEBUG_LOG("ruleBleConnectionUpdate paired_with_peer is false, ble disable");
+//        return bleDisable();
+//    }
     appState state = appGetState();
     bool allow_ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
     DEBUG_LOG("ruleBleConnectionUpdate ble connect, app get state is %04X all_ble_connectable is : %02X", state, allow_ble_connectable);
@@ -2679,11 +2681,23 @@ static ruleAction ruleBleConnectionUpdate(void)
 
             if (TRUE == appSmIsInCase()) { /// 当前耳机在充电盒中
                 if (appPeerSyncIsPeerInCase() && appGetCaseIsOpen()) {
-                    if (appDeviceIsHandsetConnected()) {
-
+                    //1.比较版本号
+                    /// Peer ? 0 | Peer > Current 1 | Peer = Current 2 | Peer < Current 3
+                    int st = SystemCheckVersionWithPeer();
+                    if (0 == st) { /// Peer版本未知，暂缓处理
+                        DEBUG_LOG("ruleBleConnectionUpdate now is all ear in case, but version not know, so defer");
+                        return RULE_ACTION_IGNORE;
+                    } else if (1 == st) {
+                        DEBUG_LOG("ruleBleConnectionUpdate now is all ear in case, and peer > current, so ble adv enable");
+                        appBleSelectFeture();
+                        return bleEnable();
+                    } else if (3 == st) {
+                        DEBUG_LOG("ruleBleConnectionUpdate now is all ear in case, and peer < current, so ble adv disable");
+                        return bleDisable();
                     }
 
-                    //1.比较版本号 2.比较电量信息
+                    // 2.比较电量信息
+                    bool left = appConfigIsLeft();
                     if(bleBattery(left)) {  /// 电量多
                         DEBUG_LOG("ruleBleConnectionUpdate self battery more, ble adv enable");
                         appBleSelectFeture();

@@ -408,6 +408,33 @@ int16 SystemGetCurrentVersion(uint8 *buffer)             // Get Current Earbuds 
     return SystemGetVersion(appConfigIsLeft() ? DEV_LEFT : DEV_RIGHT, buffer);
 }
 
+/// 比较当前耳机版本，与另一只耳机版本，当前耳机版本是否更低
+int SystemCheckVersionWithPeer(void) {
+    int unkonw = 0, peerLast = 1, sameLast = 2, currentLast = 3;
+
+    if (appPeerVersionIsEmpty()) {
+        ///没有对方地址信息，情况不明，认为对方版本更低(保守策略)
+        return unkonw;
+    }
+
+    uint8 current[DEV_HWVER_LEN];
+    memcpy(current, gFixParam.hw_ver, DEV_HWVER_LEN);
+    current[DEV_HWVER_LEN] = ' ';
+    memcpy(&current[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
+
+    uint8* peer = appPeerVersionGet();
+
+    for (int i = 5; i < 8; ++i) {
+        if (current[i] < peer[i]) {
+            return  peerLast;
+        } else if (current[i] > peer[i]) {
+            return currentLast;
+        }
+    }
+    return sameLast;
+}
+
+
 int16 SystemSetVersion(DevType type, uint8 *buffer)
 {
     uint8 *ptr = (uint8*)buffer;

@@ -92,6 +92,12 @@ void bdaddr2buffer(bdaddr *addr, uint8* addrbuf);
 // type: 0:盒子，1:LEFT， 2耳机(右）
 int16 SystemGetVersion(DevType type, uint8 *buffer);
 int16 SystemGetCurrentVersion(uint8 *buffer);             // Get Current Earbuds version
+/// 比较当前耳机版本，与另一只耳机版本，当前耳机版本是否更低
+/// Peer ? 0
+/// Peer > Current 1
+/// Peer = Current 2
+/// Peer < Current 3
+int SystemCheckVersionWithPeer(void);
 int16 SystemSetVersion(DevType type, uint8 *buffer);
 int16 UserGetKeyFunc(uint8 *lKeyFunc, uint8 *rKeyFunc);   // 获取功能键
 int16 UserSetKeyFunc(uint8 lKeyFunc, uint8 rKeyFunc);     // 设置功能键
