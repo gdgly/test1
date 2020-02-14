@@ -2237,7 +2237,7 @@ static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
 
 #ifdef CONFIG_STAROT
     /// 同步对方耳机版本
-    if (appPeerVersionIsEmpty()) {
+    if (status->peer_sync_complete && !ParamUsingSingle() && !appPeerVersionSyncStatusHaveSent()) {
         DEBUG_LOG("call appPeerSigTxSyncVersion for send version to peer");
         appPeerSigTxSyncVersion(appGetUiTask());
     }

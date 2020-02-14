@@ -406,6 +406,7 @@ enum {
     PeerVersionSyncStatusComplete = PeerVersionSyncStatusSent | PeerVersionSyncStatusRecv,
 };
 bool appPeerVersionSyncStatusIsComplete(void);
+bool appPeerVersionSyncStatusHaveSent(void);
 void appPeerVersionSyncStatusSet(uint8 status);  ///如果发生disconnect peer，重置状态
 void appPeerVersionSyncSent(void);
 void appPeerVersionClearCache(void);

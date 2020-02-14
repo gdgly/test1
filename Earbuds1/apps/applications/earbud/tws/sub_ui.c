@@ -1729,6 +1729,10 @@ void appPeerVersionClearCache(void) {
     }
 }
 
+bool appPeerVersionSyncStatusHaveSent(void) {
+    return (gProgRunInfo.peerVerSyncStatus & PeerVersionSyncStatusSent) > 0;
+}
+
 void testPrintBrEdr(void);
 void testPrintBrEdr(void) {
     uint8 addr[32];
