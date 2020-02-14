@@ -24,7 +24,7 @@ enum {PEERTX_CMD_SYNCGAIA=0,         /* 主副耳机发送gaia状态   [payload[
       PEERTX_CMD_WAKEUP_SYS,         /* 副耳机发送系统唤醒命令 [playload[0]:  0:keywakeup, 1:voice wakeup */
       PEERTX_CMD_WAKEUP_APP,         /* 副耳机发送唤醒APP命令  [playload[0]:  0:keywakeup, 1:voice wakeup */
       PEERTX_CMD_SYNC_BLEPAIR,       /* 同步BLE配对码 */
-      PEERTX_CMD_NOTIFY_VERSION,     /* 同步左右耳机版本 */
+      PEERTX_CMD_SYNC_VERSION,     /* 同步左右耳机版本 */
       PEERTX_CMD_SYNC_DOUBLE_CLICK,  /* 同步双击 */
      };
 void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload);

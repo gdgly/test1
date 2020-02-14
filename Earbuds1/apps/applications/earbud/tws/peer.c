@@ -46,7 +46,7 @@ void appPeerSigTxDataCommandUi(uint8 command, uint8 payload) {  // 仅一个字�
 void appPeerSigTxSyncVersion(Task task) {
     uint8 buffer[DEV_HWSWVER_LEN] = {0};
     SystemGetCurrentVersion(buffer);
-    appPeerSigTxDataCommandExt(task, PEERTX_CMD_NOTIFY_VERSION, DEV_HWSWVER_LEN, buffer);
+    appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_VERSION, DEV_HWSWVER_LEN, buffer);
 }
 
 void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right) {
@@ -77,9 +77,16 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
     case PEERTX_CMD_SYNC_BLEPAIR:
         ParamSyncBlePair(req->length-2, req->data);
         break;
-    case PEERTX_CMD_NOTIFY_VERSION:
-        SystemSetVersion(appConfigIsLeft() ? DEV_RIGHT : DEV_LEFT, req->data);
+
+    case PEERTX_CMD_SYNC_VERSION:
+        appPeerVersionSet(req->data);
+        appPeerVersionSyncStatusSet(PeerVersionSyncStatusRecv);
+        if (!appPeerVersionSyncStatusIsComplete()) {
+            appPeerVersionSyncSent();
+        }
+//        SystemSetVersion(appConfigIsLeft() ? DEV_RIGHT : DEV_LEFT, req->data);
         break;
+
     case PEERTX_CMD_SYNC_DOUBLE_CLICK:
         UserSetKeyFunc((req->data)[0], (req->data)[1]);
         break;

@@ -1301,6 +1301,11 @@ static void appSmHandleConnRulesNotifyAppPosition(void) {
     appConnRulesSetRuleComplete(CONN_RULES_NOTIFY_APP_POSITION);
 }
 
+static void appSmHandleConnRulesClearPeerVersionCache(void) {
+    appPeerVersionClearCache();
+    appConnRulesSetRuleComplete(CONN_RULES_CLEAR_PEER_VERSION_CACHE);
+}
+
 static void appSmHandleConnRulesEnterDfu(void)
 {
     DEBUG_LOG("appSmHandleConnRulesEnterDfu");
@@ -2227,12 +2232,16 @@ static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
     if (appGetState() == APP_STATE_STARTUP)
     {
         appSmSetInitialCoreState();
+
+    }
+
 #ifdef CONFIG_STAROT
-        /// 同步对方耳机版本
+    /// 同步对方耳机版本
+    if (appPeerVersionIsEmpty()) {
         DEBUG_LOG("call appPeerSigTxSyncVersion for send version to peer");
         appPeerSigTxSyncVersion(appGetUiTask());
-#endif
     }
+#endif
 
 #ifdef CONFIG_STAROT
     if(gBtAddrParam.ble_pair_sync) {
@@ -2418,6 +2427,9 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             break;
         case CONN_RULES_NOTIFY_APP_POSITION:
             appSmHandleConnRulesNotifyAppPosition();
+            break;
+        case CONN_RULES_CLEAR_PEER_VERSION_CACHE:
+            appSmHandleConnRulesClearPeerVersionCache();
             break;
         case CONN_RULES_ENTER_DFU:
             appSmHandleConnRulesEnterDfu();

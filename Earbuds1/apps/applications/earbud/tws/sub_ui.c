@@ -801,6 +801,7 @@ void appSubUIInit(void)
 
     memset(progRun, 0, sizeof(ProgRunInfo));
     progRun->caseLidOpen = UI_CASE_OPEN; /// 默认情况下，充电盒时开启状态，只有在收到明确的充电盒关闭事件，才设置为close
+    appPeerVersionClearCache();
 
     // 运行到这个地方时外设都为正常打开状态
     apollo_sleep();
@@ -1687,6 +1688,46 @@ bool appGetCaseIsOpen(void) {
     return (progRun->caseLidOpen > 0) ? TRUE : FALSE;
 }
 
+void appPeerVersionSet(uint8* buffer) {
+    memcpy(gProgRunInfo.peerVer, buffer, sizeof(gProgRunInfo.peerVer));
+}
+
+bool appPeerVersionIsEmpty(void) {
+    bool isEmpty = TRUE;
+    int i = 0;
+    for (i = 0; i < sizeof(gProgRunInfo.peerVer); ++i) {
+        if ((gProgRunInfo.peerVer)[i] != 0XFF) {
+            isEmpty = FALSE;
+            break;
+        }
+    }
+    return isEmpty;
+}
+
+uint8* appPeerVersionGet(void) {
+    return gProgRunInfo.peerVer;
+}
+
+bool appPeerVersionSyncStatusIsComplete(void) {
+    return (gProgRunInfo.peerVerSyncStatus == (uint8)PeerVersionSyncStatusComplete);
+}
+
+void appPeerVersionSyncStatusSet(uint8 status) {
+    gProgRunInfo.peerVerSyncStatus |= status;
+}
+
+void appPeerVersionSyncSent(void) {
+    appPeerSigTxSyncVersion(appGetUiTask());
+    appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
+}
+
+void appPeerVersionClearCache(void) {
+    gProgRunInfo.peerVerSyncStatus = 0;
+    int i = 0;
+    for (i = 0; i < DEV_HWSWVER_LEN; ++i) {
+        gProgRunInfo.peerVer[i] = 0XFF;
+    }
+}
 
 void testPrintBrEdr(void);
 void testPrintBrEdr(void) {

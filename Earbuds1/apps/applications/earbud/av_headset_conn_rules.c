@@ -210,6 +210,7 @@ ruleEntry appConnRules[] =
         Rules that are run when peer link-loss happens */
     RULE(RULE_EVENT_PEER_LINK_LOSS,             rulePeerSync,               CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                 CONN_RULES_NOTIFY_APP_POSITION),
+    RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                 CONN_RULES_CLEAR_PEER_VERSION_CACHE),
     /*! \} */
 
     /*! \{

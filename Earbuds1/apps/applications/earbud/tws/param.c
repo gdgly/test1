@@ -385,7 +385,7 @@ int16 SystemGetVersion(DevType type, uint8 *buffer)
             memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
         }
         else {
-            memcpy(ptr, gBtAddrParam.peerVer, DEV_HWSWVER_LEN);
+            memcpy(ptr, appPeerVersionGet(), DEV_HWSWVER_LEN);
         }
         break;
     case DEV_RIGHT:
@@ -395,7 +395,7 @@ int16 SystemGetVersion(DevType type, uint8 *buffer)
             memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
         }
         else {
-            memcpy(ptr, gBtAddrParam.peerVer, DEV_HWSWVER_LEN);
+            memcpy(ptr, appPeerVersionGet(), DEV_HWSWVER_LEN);
         }
         break;
     }

@@ -40,9 +40,8 @@ typedef struct tagBTADDRPARAM {
     BlePairInfo    ble_pair[BLEPAIR_COUNT];   // 保存ble配对信息adv广播，bind码
     typed_bdaddr   peer_addr;          // 保存双方配对耳机蓝牙地址
 
-    uint8          peerVer[DEV_HWSWVER_LEN];        // 对方耳机版本信息
+    uint8          peerVer[DEV_HWSWVER_LEN];        // 对方耳机版本信息;    废弃，不在使用
     uint8          caseVer[DEV_HWSWVER_LEN];        // 盒子版本信息
-
 
     uint8          rev[8];
 }BtAddrParam, *BtAddrPrmPtr;
