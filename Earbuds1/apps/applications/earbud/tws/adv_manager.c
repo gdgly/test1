@@ -158,12 +158,23 @@ void appBleAdvFeture(uint8 feture) {
 }
 
 void appBleSelectFeture(void) {
+    static int beforeAdvFeture = 0XFF;
+    int nowAdvFeture = -1;
     if (appSmIsPairing()) {
-        appBleAdvFeture(ADV_FETURE_PAIR);
+        nowAdvFeture = ADV_FETURE_PAIR;
     } else if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
-        appBleAdvFeture(ADV_FETURE_GAIA);
+        nowAdvFeture = ADV_FETURE_GAIA;
     } else if (appSmIsInCase()) {
-        appBleAdvFeture(ADV_FETURE_UPGRADE);
+        nowAdvFeture = ADV_FETURE_UPGRADE;
+    }
+
+    if (nowAdvFeture >= 0) {
+        appBleAdvFeture(nowAdvFeture);
+        if (beforeAdvFeture != nowAdvFeture) {
+            /// 停止ble
+            GattManagerCancelWaitForRemoteClient();
+            beforeAdvFeture = nowAdvFeture;
+        }
     }
 }
 

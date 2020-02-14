@@ -2664,88 +2664,104 @@ static ruleAction ruleBleConnectionUpdate(void)
         return bleDisable();
     }
 
-    bool peer_connected = appDeviceIsPeerConnected();
+    if (ParamUsingSingle()) {
+        /// 单耳模式下，如果在充电盒中，处于空闲，直接发送可升级的广播
+        if (appSmIsInCase()) {
+            DEBUG_LOG("ruleBleConnectionUpdate single mode, so enable");
+            appBleSelectFeture();
+            return bleEnable();
+        }
+    } else {
+        bool peer_connected = appDeviceIsPeerConnected();
 
-    if (TRUE == peer_connected) {   /// Peer连接建立
-        bool peer_sync = appPeerSyncIsComplete();
-        /// 正在同步数据，等待
-        if (FALSE == peer_sync) {
-            DEBUG_LOG("ruleBleConnectionUpdate peer sync ing, ignore the rules");
-            return RULE_ACTION_IGNORE;
-        } else {
-            bool peer_dfu = appPeerSyncPeerDfuInProgress();
-            if (TRUE == peer_dfu) {
-                DEBUG_LOG("ruleBleConnectionUpdate peer in dfu, so we need disable ble adv");
-                return bleDisable();
-            }
-
-            if (TRUE == appSmIsInCase()) { /// 当前耳机在充电盒中
-                if (appPeerSyncIsPeerInCase() && appGetCaseIsOpen()) {
-                    //1.比较版本号
-                    /// Peer ? 0 | Peer > Current 1 | Peer = Current 2 | Peer < Current 3
-                    int st = SystemCheckVersionWithPeer();
-                    if (0 == st) { /// Peer版本未知，暂缓处理
-                        DEBUG_LOG("ruleBleConnectionUpdate now is all ear in case, but version not know, so defer");
-                        return RULE_ACTION_IGNORE;
-                    } else if (1 == st) {
-                        DEBUG_LOG("ruleBleConnectionUpdate now is all ear in case, and peer > current, so ble adv enable");
-                        appBleSelectFeture();
-                        return bleEnable();
-                    } else if (3 == st) {
-                        DEBUG_LOG("ruleBleConnectionUpdate now is all ear in case, and peer < current, so ble adv disable");
-                        return bleDisable();
-                    }
-
-                    // 2.比较电量信息
-                    bool left = appConfigIsLeft();
-                    if(bleBattery(left)) {  /// 电量多
-                        DEBUG_LOG("ruleBleConnectionUpdate self battery more, ble adv enable");
-                        appBleSelectFeture();
-                        return bleEnable();
-                    } else { /// 电量少
-                        DEBUG_LOG("ruleBleConnectionUpdate self battery less, ble adv disable");
-                        return bleDisable();
-                    }
-                } else {
-                    DEBUG_LOG("ruleBleConnectionUpdate only one in case ble adv disable");
+        if (TRUE == peer_connected) {   /// Peer连接建立
+            bool peer_sync = appPeerSyncIsComplete();
+            /// 正在同步数据，等待
+            if (FALSE == peer_sync) {
+                DEBUG_LOG("ruleBleConnectionUpdate peer sync ing, ignore the rules");
+                return RULE_ACTION_IGNORE;
+            } else {
+                bool peer_dfu = appPeerSyncPeerDfuInProgress();
+                if (TRUE == peer_dfu) {
+                    DEBUG_LOG("ruleBleConnectionUpdate peer in dfu, so we need disable ble adv");
                     return bleDisable();
                 }
-            } else {  /// 当前耳机在空中
+
+                if (TRUE == appSmIsInCase()) { /// 当前耳机在充电盒中
+                    if (appPeerSyncIsPeerInCase() && appGetCaseIsOpen()) {
+                        //1.比较版本号
+                        /// Peer ? 0 | Peer > Current 1 | Peer = Current 2 | Peer < Current 3
+                        int st = SystemCheckVersionWithPeer();
+                        if (0 == st) { /// Peer版本未知，暂缓处理
+                            DEBUG_LOG("ruleBleConnectionUpdate now is all ear in case, but version not know, so defer");
+                            return RULE_ACTION_IGNORE;
+                        } else if (1 == st) {
+                            DEBUG_LOG(
+                                    "ruleBleConnectionUpdate now is all ear in case, and peer > current, so ble adv enable");
+                            appBleSelectFeture();
+                            return bleEnable();
+                        } else if (3 == st) {
+                            DEBUG_LOG(
+                                    "ruleBleConnectionUpdate now is all ear in case, and peer < current, so ble adv disable");
+                            return bleDisable();
+                        }
+
+                        // 2.比较电量信息
+                        bool left = appConfigIsLeft();
+                        if (bleBattery(left)) {  /// 电量多
+                            DEBUG_LOG("ruleBleConnectionUpdate self battery more, ble adv enable");
+                            appBleSelectFeture();
+                            return bleEnable();
+                        } else { /// 电量少
+                            DEBUG_LOG("ruleBleConnectionUpdate self battery less, ble adv disable");
+                            return bleDisable();
+                        }
+                    } else {
+                        DEBUG_LOG("ruleBleConnectionUpdate only one in case ble adv disable");
+                        return bleDisable();
+                    }
+                } else {  /// 当前耳机在空中
 //                const uint8 state = (PEER_SYNC_STATE_SET_A2DP_CONNECTED(appDeviceIsHandsetA2dpConnected())) +
 //                                    (PEER_SYNC_STATE_SET_A2DP_STREAMING(appDeviceIsHandsetA2dpStreaming())) +
 //                                    (PEER_SYNC_STATE_SET_AVRCP_CONNECTED(appDeviceIsHandsetAvrcpConnected())) +
 //                                    (PEER_SYNC_STATE_SET_HFP_CONNECTED(appDeviceIsHandsetHfpConnected())) +
-                bool bredrHaveConnected = appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetA2dpStreaming() ||
-                        appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected();
-                if (TRUE == bredrHaveConnected) {
-                    DEBUG_LOG("ruleBleConnectionUpdate bredr have connected ble enable");
-                    appBleSelectFeture();
-                    return bleEnable();
-                } else {
-                    DEBUG_LOG("ruleBleConnectionUpdate bredr don't connected ble disable");
-                    return bleDisable();
+                    bool bredrHaveConnected = appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetA2dpStreaming() ||
+                                              appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected();
+                    if (TRUE == bredrHaveConnected) {
+                        DEBUG_LOG("ruleBleConnectionUpdate bredr have connected ble enable");
+                        appBleSelectFeture();
+                        return bleEnable();
+                    } else {
+                        DEBUG_LOG("ruleBleConnectionUpdate bredr don't connected ble disable");
+                        return bleDisable();
+                    }
                 }
             }
-        }
-    } else { /// Peer连接未建立
-        bool self_in_case = appSmIsInCase();
-        if (TRUE == self_in_case) { /// 盒子中
-            if (appGetCaseIsOpen()) { /// 充电盒打开
-                DEBUG_LOG("ruleBleConnectionUpdate peer not connect, now in case, and case is open, so we ble adv enable");
+        } else { /// Peer连接未建立
+            bool self_in_case = appSmIsInCase();
+            if (TRUE == self_in_case) { /// 盒子中
+                DEBUG_LOG("ruleBleConnectionUpdate peer not connect, now in case, ble adv disable");
+                return bleDisable();
+
+//                if (appGetCaseIsOpen()) { /// 充电盒打开
+//                    DEBUG_LOG(
+//                            "ruleBleConnectionUpdate peer not connect, now in case, and case is open, so we ble adv enable");
+//                    appBleSelectFeture();
+//                    return bleEnable();
+//                } else {/// 充电盒关闭
+//                    DEBUG_LOG(
+//                            "ruleBleConnectionUpdate peer not connect, now in case, and case is close, so we ble adv disable");
+//                    return bleDisable();
+//                }
+            } else { /// 不在盒子中
+                DEBUG_LOG("ruleBleConnectionUpdate not in case, ble enable");
                 appBleSelectFeture();
                 return bleEnable();
-            } else {/// 充电盒关闭
-                DEBUG_LOG("ruleBleConnectionUpdate peer not connect, now in case, and case is close, so we ble adv disable");
-                return bleDisable();
             }
-        } else { /// 不在盒子中
-            DEBUG_LOG("ruleBleConnectionUpdate not in case, ble enable");
-            appBleSelectFeture();
-            return bleEnable();
         }
     }
-//    DEBUG_LOG("tws ble status ---------------------------9999");
-//    return RULE_ACTION_IGNORE;
+    DEBUG_LOG("ruleBleConnectionUpdate last ignore");
+    return RULE_ACTION_IGNORE;
 
 //
 //    //// 运行ble连接
