@@ -45,6 +45,9 @@ extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status
                               uint16 payload_length, uint8 *payload);
 static void subUiEarInOutHandle(ProgRIPtr progRun, bool isIn);
 
+static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg);
+
+
 /*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
 #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
 
@@ -266,65 +269,47 @@ void appSubUISetMicbias(int set)
     MicbiasConfigure(MIC_BIAS_0, MIC_BIAS_ENABLE, value);
 }
 
-
 /////////////////////////////////////////////////////////////////////////
 ///     向GAIA发送信息
 /////////////////////////////////////////////////////////////////////////
-// Task HFP 通过这个函数来发送消息给GAIA
-// payload=[状态1 + 状态2 + 号码]
-static int16 subUiCaller2Gaia(MessageId id, ProgRIPtr  progRun)
+static int16 subUiCallNumber2Gaia(ProgRIPtr progRun, const CALL_NUMBER_T* msg)
 {
-    uint8 count = 2;
-
-    if(1 != progRun->gaiaStat)
-        return -1;
-    (void)id;
-
-//    if(id == APP_CALLIN_INACT )
-//        return -1;
+    if ((!progRun->gaiaStat) || (!msg)) return -1;
 
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
 
-    message->command      = STAROT_DIALOG_STATUS;
-    message->payload[0]   = progRun->dial_stat;
-    message->payload[1]   = 0;
-
-    if(progRun->callIndex < MAX_CALLIN_INFO) {
-        CallIPtr   pCall;
-
-        pCall = progRun->callInfo[progRun->callIndex];
-        if(pCall && (NULL != pCall->number)) {
-            memcpy(&message->payload[2], pCall->number, pCall->size_number);
-            count += pCall->size_number;
-        }
-    }
-    message->payloadLen    = count;
+    message->command = STAROT_DIALOG_CALL_NUMBER;
+    memcpy(message->payload, msg->number, msg->length);
+    message->payloadLen = msg->length;
 
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
-    DEBUG_LOG("HFP CALL Status=0x%x LEN=%d", progRun->dial_stat, count);
+    DEBUG_LOG("subUiCallNumber2Gaia Call Number: ");
+    int i = 0;
+    for (; i < msg->length; i++) printf("%c", msg->number[i]);
+    printf("\n");
+
     return 0;
 }
 
-// Task HFP 通过这个函数来发送消息给GAIA,报告当前为语音通话还是WX等其它
-// payload=[状态1] 1：语音通话，0：其它
-static int16 subUiCallType2Gaia(MessageId id, ProgRIPtr  progRun)
+static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg)
 {
-    if(1 != progRun->gaiaStat)
-        return -1;
+    if ((!progRun->gaiaStat) || (!msg)) return -1;
 
-    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 2);
+    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
 
-    (void)id;
-    message->command      = STAROT_DIALOG_TYPE;
-    message->payload[0]   = progRun->dial_type;
-    message->payloadLen   = 1;
+    message->command    = STAROT_DIALOG_STATUS;
+    message->payload[0] = msg->command;
+    message->payloadLen = 1;
 
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
-    DEBUG_LOG("Audio for Status=%d", progRun->dial_type);
+    DEBUG_LOG("subUiCallIndicator2Gaia Status=0x%x, call indicator: 0x%02x",
+              progRun->dial_stat, msg->command);
+
     return 0;
 }
+
 
 //盒子状态的信息
 // payload=[盒盖[1]+ 按键[1] + 长按键[1] + 电量[]]
@@ -550,7 +535,7 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
 void appSubUiHandleMessage(Task task, MessageId id, Message message)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
-    (void)task, (void)message;
+    UNUSED(task);
 
     switch(id) {
     case MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT:
@@ -629,12 +614,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     // 拨号、电话相关的消息
     case HFP_CALLER_ID_IND:
-        subUiCaller2Gaia(id, progRun);
-        subUiCallType2Gaia(id, progRun);
-        break;
     case HFP_CURRENT_CALLS_IND:
-        subUiCaller2Gaia(id, progRun);
-        subUiCallType2Gaia(id, progRun);
+        subUiCallNumber2Gaia(progRun, message);
+        subUiCallNumber2Gaia(progRun, message);
         break;
     case APP_CALL_ACTIVE:          // 拨号相关信息 接听
     {
@@ -647,7 +629,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CALLOUT_ACT:          // 拨号相关信息 拨出
     case APP_CALLOUT_INACT:        // 拨号相关信息 拨出断开
     case APP_CALL_INACTIVE:        // 拨号相关信息 断开
-        subUiCaller2Gaia(id, progRun);
+        subUiCallIndicator2Gaia(progRun, message);		
         break;
 
     case GAIA_STAROT_COMMAND_IND:           // GAIA 返回过来的消息
@@ -923,13 +905,18 @@ static int16 appUiHfpSaveId(uint8 *number, uint16 size_number,
 // HFP TASK调用，新的号码拨入
 int16 appUiHfpCallerId(uint8 *number, uint16 size_number, uint8 *name, uint16 size_name)
 {
-    if(appUiHfpSaveId(number, size_number, name, size_name, 1) < 0)
-        return 0;       // 重复信息
+    appUiHfpSaveId(number, size_number, name, size_name, 1);
+    // if(appUiHfpSaveId(number, size_number, name, size_name, 1) < 0)
+    //     return 0;       // 重复信息
 
     appSubGetProgRun()->dial_type = 1;
 
+    MAKE_CALL_2_GAIA_MESSAGE(CALL_NUMBER);
+    memcpy(message->number, number, size_number);
+    message->length = size_number;
+
     // 通知一下UI
-    MessageSend(&appGetUi()->task, HFP_CALLER_ID_IND, 0);
+    MessageSend(&appGetUi()->task, HFP_CALLER_ID_IND, message);
     return 0;
 }
 
@@ -939,11 +926,14 @@ int16 appUiHfpDialId(uint8 *number, uint16 size_number)
     if(0 == size_number)
         appSubGetProgRun()->dial_type = 0;
     else {
-        appSubGetProgRun()->dial_type = 1;
-        appUiHfpSaveId(number, size_number, NULL, 0, 0);
-    }
+            appSubGetProgRun()->dial_type = 1;
+            appUiHfpSaveId(number, size_number, NULL, 0, 0);
+        }
 
-    MessageSend(&appGetUi()->task, HFP_CURRENT_CALLS_IND, 0);
+    MAKE_CALL_2_GAIA_MESSAGE(CALL_NUMBER);
+    memcpy(message->number, number, size_number);
+
+    MessageSend(&appGetUi()->task, HFP_CURRENT_CALLS_IND, message);
     return 0;
 }
 
@@ -955,11 +945,12 @@ int16 appUiHfpDialId(uint8 *number, uint16 size_number)
 //                           --> 挂断 appUiHfpCallOutcomingInactive(1)
 
 /* Show HFP incoming call */
+
 void appUiHfpCallIncomingActive(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
-//如果此时有录音
+    //如果此时有录音
 #ifdef CONFIG_REC_ASSISTANT
     if (appKymeraRecordIsRun()){
         appKymeraRecordStop();
@@ -973,13 +964,16 @@ void appUiHfpCallIncomingActive(void)
 
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
 
-    progRun->dial_stat = DIAL_ST_IN;
+    DEBUG_LOG("appUiHfpCallIncomingActive");
 
-    MessageSend(&appGetUi()->task, APP_CALLIN_ACT, 0);
+    progRun->dial_stat = DIAL_IN_ACTIVE;
+    MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
+    message->command = DIAL_IN_ACTIVE;
+
+    MessageSend(&appGetUi()->task, APP_CALLIN_ACT, message);
 
     if(1 == progRun->recStat)
         MessageSend(&appGetUi()->task, STAROT_RECORD_CALLIN_STOP_STATUS_REPORT, 0);
-
 }
 
 /* Show HFP outcoming call */
@@ -987,7 +981,9 @@ void appUiHfpCallOutcomingActive(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
-//如果此时有录音
+    DEBUG_LOG("appUiHfpCallOutcomingActive");
+
+    //如果此时有录音
 #ifdef CONFIG_REC_ASSISTANT
     if (appKymeraRecordIsRun()){
         appKymeraRecordStop();
@@ -1000,10 +996,12 @@ void appUiHfpCallOutcomingActive(void)
 #endif
 
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
+    progRun->dial_stat = DIAL_OUT_ACTIVE;
 
-    progRun->dial_stat = DIAL_ST_OUT;
+    MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
+    message->command = DIAL_OUT_ACTIVE;
 
-    MessageSend(&appGetUi()->task, APP_CALLOUT_ACT, 0);
+    MessageSend(&appGetUi()->task, APP_CALLOUT_ACT, message);
 
     if(1 == progRun->recStat)
         MessageSend(&appGetUi()->task, STAROT_RECORD_CALLOUT_STOP_STATUS_REPORT, 0);
@@ -1014,14 +1012,37 @@ void appUiHfpCallOutcomingActive(void)
 void appUiHfpCallIncomingInactive(int16 isEnd)
 {
     UNUSED(isEnd);
-	return;
+
+    DEBUG_LOG("appUiHfpCallIncomingInactive");
+
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    progRun->dial_stat = DIAL_IN_INACTIVE;
+
+    MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
+    message->command = DIAL_IN_INACTIVE;
+
+    MessageSend(&appGetUi()->task, APP_CALLIN_INACT, message);
+
+    return;
 }
 
 /* Cancel HFP outcoming call */
 void appUiHfpCallOutcomingInactive(int16 isEnd)
 {
     UNUSED(isEnd);
-        return;
+    DEBUG_LOG("appUiHfpCallOutcomingInactive");
+
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    progRun->dial_stat = DIAL_OUT_INACTIVE;
+
+    MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
+    message->command = DIAL_OUT_INACTIVE;
+
+    MessageSend(&appGetUi()->task, APP_CALLOUT_INACT, message);
+
+    return;
 }
 
 /* Show HFP call active */
@@ -1029,9 +1050,12 @@ void appUiHfpCallActive(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    progRun->dial_stat = DIAL_ST_ACT;
+    progRun->dial_stat = DIAL_ACTIVE;
 
-    MessageSend(&appGetUi()->task, APP_CALL_ACTIVE, 0);
+    MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
+    message->command = DIAL_ACTIVE;
+
+    MessageSend(&appGetUi()->task, APP_CALL_ACTIVE, message);
 }
 
 /* Show HFP call imactive */
@@ -1039,9 +1063,12 @@ void appUiHfpCallInactive(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    progRun->dial_stat = DIAL_ST_INACT;
+    progRun->dial_stat = DIAL_INACTIVE;
 
-    MessageSend(&appGetUi()->task, APP_CALL_INACTIVE, 0);
+    MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
+    message->command = DIAL_INACTIVE;
+
+    MessageSend(&appGetUi()->task, APP_CALL_INACTIVE, message);
 }
 
 /*EDR connect state*/
@@ -1442,7 +1469,7 @@ int apolloWakeupCallback(void)
     ProgRIPtr  progRun = appSubGetProgRun();
     progRun->iWakeupTimes  += 1;
     if((0 == progRun->recStat) &&
-            ((progRun->dial_stat & (DIAL_ST_IN|DIAL_ST_OUT|DIAL_ST_ACT)) == 0)){
+            ((progRun->dial_stat & (DIAL_IN_ACTIVE|DIAL_OUT_ACTIVE|DIAL_ACTIVE)) == 0)){
         if(0 == g_commuType) {
             subUiVoiceTapWakeup(progRun, FALSE);
         }

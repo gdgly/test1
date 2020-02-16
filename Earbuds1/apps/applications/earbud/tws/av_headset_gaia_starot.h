@@ -5,6 +5,13 @@
 #include <gaia.h>
 #include <../av_headset.h>
 
+#define CALL_IN_ACTIVE          (1 << 0)
+#define CALL_OUT_ACTIVE         (1 << 1)
+#define CALL_ACTIVE             (1 << 2)
+#define CALL_INACTIVE           (1 << 3)
+#define CALL_IN_INACTIVE        (1 << 4)
+#define CALL_OUT_INACTIVE       (1 << 5)
+
 enum GAIA_AUDIO_TYPE {
     GAIA_AUDIO_SPEAKER = 1,
     GAIA_AUDIO_MIC = 2
@@ -65,8 +72,8 @@ enum {
 ///////////////////////////dialog//////////////////////////////////
 /// 电话开始
 enum {
-    GAIA_COMMAND_STAROT_CALL_BEGIN = 0X5005,                            // 通话接入 还没有接通
-    GAIA_COMMAND_STAROT_CALL_END =0x5006 ,                              // 电话结束
+    GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN = 0X5005,                   // 通话接入 还没有接通
+    GAIA_COMMAND_STAROT_CALL_SETUP_END =0x5006 ,
     GAIA_COMMAND_STAROT_CALL_AUDIO_IND = 0x5007,                        //
     GAIA_COMMAND_STAROT_CALL_AUDIO_CFM = 0x5008,                        // xxx
     GAIA_COMMAND_STAROT_CALL_AUDIO_END = 0x5009,                        // xxx
@@ -212,6 +219,7 @@ enum {
     STAROT_DIALOG_CALL_END_TIMEOUT,                       // gaia -> gaia 电话结束发送超时
     STAROT_DIALOG_CASE_STAT,                              // ui -> gaia 盒子当前信息
     STAROT_DIALOG_CASE_VER,                               // ui -> gaia 盒子当前版本
+    STAROT_DIALOG_CALL_NUMBER,							  // ui -> gaia 当前通话的电话号码
     STAROT_AI_USER_START_RECORD,                          // ui -> (ui & dsp) AI请求录音
     STAROT_AI_USER_STOP_RECORD,                           // ui -> (ui & dsp) AI停止录音
     STAROT_RECORD_STOP_STATUS_REPORT,                     // dsp -> ui 上报停止录音状态

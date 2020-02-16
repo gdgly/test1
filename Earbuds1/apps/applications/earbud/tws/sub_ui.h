@@ -7,6 +7,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define MAKE_GAIA_MESSAGE_WITH_LEN(TYPE, LEN) \
     TYPE##_T *message = (TYPE##_T *) PanicUnlessMalloc(sizeof(TYPE##_T) + LEN);
 
+#define MAKE_CALL_2_GAIA_MESSAGE(TYPE) \
+    TYPE##_T *message = (TYPE##_T *) PanicUnlessMalloc(sizeof(TYPE##_T));
 
 // 盒子发送相关的命令操作
 #define APP_CASE_REPORT_VERSION    (2000)           // 盒子硬件版本信息等
@@ -59,10 +61,24 @@ typedef struct tagCALLINFO {
 }CallInfo, *CallIPtr;
 #define MAX_CALLIN_INFO       (2)
 
-/* 使用BIT位表示当前实时状态 */
-enum {DIAL_ST_IN=1, DIAL_ST_OUT=2,                    // 电话拨入/出
-      DIAL_ST_ACT=4, DIAL_ST_INACT=8,                 // 电话拨入接听中
-     };
+typedef struct {
+	uint32 command;
+} CALL_INDICATOR_T;
+
+typedef struct {
+	uint8_t number[20];
+	uint8_t length;
+} CALL_NUMBER_T;
+
+enum {
+    DIAL_IN_ACTIVE      = 1 << 0,
+    DIAL_OUT_ACTIVE     = 1 << 1,
+    DIAL_ACTIVE         = 1 << 2,
+    DIAL_INACTIVE       = 1 << 3,
+    DIAL_IN_INACTIVE    = 1 << 4,
+    DIAL_OUT_INACTIVE   = 1 << 5
+};
+	
 enum {CHARGE_ST_NONE=0, CHARGE_ST_CONNECT,
       CHARGE_ST_OK, CHARGE_ST_LOW,
       CHARGE_ST_FIN};
