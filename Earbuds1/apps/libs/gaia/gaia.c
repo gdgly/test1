@@ -3406,6 +3406,7 @@ void gaiaProcessCommand(gaia_transport *transport, uint16 vendor_id, uint16 comm
             case GAIA_COMMAND_TYPE_STAROT_BASE_INFO:
             case GAIA_COMMAND_TYPE_STAROT_TEST_PRODUCT:
             case GAIA_COMMAND_TYPE_STAROT_UPDATA_FIRMWARE:
+            case GAIA_COMMAND_TYPE_STAROT_UPGRADE:
                  handled = gaia_handle_starot_command(transport, command_id, size_payload, payload);
                 break;
 #endif

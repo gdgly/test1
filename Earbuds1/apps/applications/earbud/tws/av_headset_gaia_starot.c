@@ -80,6 +80,9 @@ static void gaiaSendCallNumber(GAIA_STAROT_IND_T* message);
 
 
 
+static void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message);
+
 struct GaiaStarotPrivateData_T {
     Source dialogSpeaker;
     Source dialogMic;
@@ -319,6 +322,17 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE:
             starotGaiaHandleData(message);
         break;
+    }
+
+    /// 升级
+    switch (message->command) {
+        case GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU:
+            appGaiaHandlerEnterDfu(message);
+            break;
+        case GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU:
+            /// 强制停止升级流程，后续并断开连接
+            appGaiaHandlerExitDfu(message);
+            break;
     }
 
     /// 测试与生产
@@ -1285,6 +1299,41 @@ bool appGaiaIsConnectBySpp(void)
              ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_spp)));
 }
 
+
+static bool appGaiaIsCanEnterDfu(void) {
+    /// todo 加多点规则
+
+    ///  任何一只耳机在空中，不允许升级
+    if (ParamUsingSingle()) {
+        if (!appSmIsInCase()) {
+            return FALSE;
+        }
+    } else {
+        if (!(appSmIsInCase() && appPeerSyncIsPeerInCase())) {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message) {
+    bool isCanEnterDfu = appGaiaIsCanEnterDfu();
+    if (isCanEnterDfu) {
+        appSmEnterDfuMode();
+        DEBUG_LOG("Upgrade command enter dfu mode");
+    }
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, isCanEnterDfu ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE, 0, NULL);
+}
+
+void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message) {
+    /// 强制停止升级流程，后续并断开连接
+    if (appSmIsInDfuMode()) {
+        appSmExitDfuMode();
+        DEBUG_LOG("Upgrade command exit dfu mode");
+    }
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
 
 #endif
 

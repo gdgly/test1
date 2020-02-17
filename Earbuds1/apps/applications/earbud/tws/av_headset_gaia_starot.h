@@ -139,6 +139,12 @@ enum {
 enum {
     GAIA_CONNECT_STAROT_UPDATE_FIRMWARE = 0X5800,                             //固件升级使用
 };
+/////////////////////////////测试与生产///////////////////////////////
+enum {
+    GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU = 0X5700,                           // 进入升级模式
+    GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU = 0X5701,                            // 退出升级模式
+};
+
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))
 #define GAIA_OFFS_VENDOR_ID (4)
 #define GAIA_OFFS_COMMAND_ID (6)

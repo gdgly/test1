@@ -2691,6 +2691,14 @@ void appSmEnterDfuMode(void)
     MessageSend(appGetSmTask(),SM_INTERNAL_ENTER_DFU_UI, NULL);
 }
 
+void appSmExitDfuMode(void) {
+    DEBUG_LOG("appSmExitDfuMode");
+    if (appGetState() == APP_STATE_IN_CASE_DFU) {
+        appSetState(APP_STATE_STARTUP);
+        //appGaiaDisconnect();
+    }
+}
+
 static void appSmStartDfuTimer(void)
 {
     appSmHandleEnterDfuWithTimeout(appConfigDfuTimeoutAfterGaiaConnectionMs());
