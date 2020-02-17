@@ -244,6 +244,8 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 #undef appConfigScoMic2()
 #define appConfigScoMic2()                    (g_appConfigSocMic2)
 
+#undef appConfigAacEnabled()
+#define appConfigAacEnabled()               FALSE    /* AAC 功能禁止 */
 
 
 // 充电电流及电压使用
