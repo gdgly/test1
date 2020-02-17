@@ -321,7 +321,12 @@ static void appUpgradeMessageHandler(Task task, MessageId id, Message message)
         case UPGRADE_APPLY_IND:
             DEBUG_LOG("appUpgradeMessageHandler. UPGRADE_APPLY_IND saying now !");
             appUpgradeNotifyActivity();
-            UpgradeApplyResponse(0);
+            //UpgradeApplyResponse(0);
+
+            // todo 现在不能重启，等待自定义的重启消息
+            // 临时修改版本号
+            // 如果双耳模式，查看另一只耳机版本。如果另一只耳机已经升级成功，向另一只耳机发送重启命令，当前耳机在收到重启命令的确认时重启，并设置定时器
+            // 如果单耳模式，直接重启
             break;
                 
             /* Message sent to application to request blocking the system for an extended
