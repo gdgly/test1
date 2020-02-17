@@ -360,7 +360,6 @@ void starotGaiaDefaultParse(MessageId id, Message message) {
             break;
 
         case GAIA_STAROT_MORE_SPACE: {
-            DEBUG_LOG("Call GAIA_STAROT_MORE_SPACE");
             starotGaiaParseMessageMoreSpace();
         }
             break;

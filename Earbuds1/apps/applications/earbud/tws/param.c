@@ -119,12 +119,7 @@ void BtAddrParamDefault(void)
     BtAddrPrmPtr prm = &gBtAddrParam;
 
     memset(prm, 0, sizeof(BtAddrParam));
-#ifdef CONFIG_STAROT_SINGLE
-    prm->single_era      = TRUE;
-#else
-    //// todo hjs 使用tws模式
     prm->single_era      = FALSE;
-#endif
 
     // 默认ble配对码和双击配置，已经同步至另一只耳机
     // todo 后期如果有要同步的消息标识位，需要在这里添加

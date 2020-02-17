@@ -294,7 +294,10 @@ static void box_get_earpower(uint8 *get_buf, uint8 *send_buf)
     send_buf[0] = get_buf[0];
     send_buf[1] = appUiGetPower();
     send_buf[2] = 0;
-    DEBUG_LOG("Case GetPower=%d", send_buf[1]);
+    static int c  = 0;
+    if (c++ % 100 == 0) {
+        DEBUG_LOG("Case GetPower=%d", send_buf[1]);
+    }
 }
 
 static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
