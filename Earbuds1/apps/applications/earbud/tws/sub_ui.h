@@ -124,6 +124,7 @@ typedef struct tagPROGRUNINFO {
     bool           realInCase;              // true:充电盒中 false:空中
 #endif
     uint8          peerVer[DEV_HWSWVER_LEN];        // 对方耳机版本信息
+    uint8          tempCurrentVer[3];               // 临时当前耳机版本
     uint8          peerVerSyncStatus;               // 对方耳机版本信息同步状态
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;

@@ -1317,10 +1317,24 @@ static bool appGaiaIsCanEnterDfu(void) {
 }
 
 void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message) {
+    DEBUG_LOG("appGaiaHandlerEnterDfu");
     bool isCanEnterDfu = appGaiaIsCanEnterDfu();
     if (isCanEnterDfu) {
         appSmEnterDfuMode();
+        StarotAttr *pAttr = attrDecode(message->payload, message->payloadLen);
+        if (NULL == pAttr) {
+            return;
+        }
+
+        StarotAttr * head = pAttr;
+        const uint8 VERSION_CMD = 0X01;
+        if(VERSION_CMD == pAttr->attr) {
+            gProgRunInfo.tempCurrentVer[0] = pAttr->payload[0];
+            gProgRunInfo.tempCurrentVer[1] = pAttr->payload[1];
+            gProgRunInfo.tempCurrentVer[2] = pAttr->payload[2];
+        }
         DEBUG_LOG("Upgrade command enter dfu mode");
+        attrFree(head, NULL);
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, isCanEnterDfu ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE, 0, NULL);
 }
@@ -1333,6 +1347,8 @@ void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message) {
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
+
+
 
 #endif
 
