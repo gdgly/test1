@@ -2514,14 +2514,6 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case APP_UPGRADE_ACTIVITY:
             /* We do not monitor activity at present.
                Might be a use to detect long upgrade stalls without a disconnect */
-//#ifdef CONFIG_STAROT
-//        {
-//            DEBUG_LOG("APP_UPGRADE_ACTIVITY parse, now sync version to peer earbuds");
-//            UserTempSetVersionToMemory(gProgRunInfo.tempCurrentVer);
-//            // 同步版本到另一只耳机
-//            appPeerVersionSyncSent();
-//        }
-//#endif
             break;
 
         case APP_UPGRADE_STARTED:
@@ -2746,6 +2738,7 @@ static void appSmNotifyUpgradeStarted(void)
 {
     appSmCancelDfuTimers();
 }
+
 #endif /* INCLUDE_DFU */
 
 

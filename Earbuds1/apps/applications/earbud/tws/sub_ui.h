@@ -45,6 +45,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_CASE_CLOSE              (2105)           // 20340 -> ui 报告plc 充电盒关闭
 #define APP_CASE_CLOSE_LATER        (2106)           // ui -> ui 延迟发送关闭规则
 #define APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT (2107)           // ui -> ui 空处理
+#define APP_UPGRADE_APPLY_IND        (2108)          // upgrade -> ui 升级基本工作已经完毕，等待重启
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
 //#define APP_CASE_GET_BTINFO        (2011)           // 盒子获取耳机经典蓝牙地址

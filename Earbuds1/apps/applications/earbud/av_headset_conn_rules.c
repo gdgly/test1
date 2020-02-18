@@ -2623,11 +2623,11 @@ static ruleAction ruleBleConnectionUpdate(void)
         return bleEnable();
     }
 
-    if (!(appGaiaIsConnect()) && (TRUE == UpgradeInProgress())) {
-        DEBUG_LOG("ruleBleConnectionUpdate gaia is connect, but now is upgrade, so need enable");
-        appBleSelectFeture();
-        return bleEnable();
-    }
+//    if (!(appGaiaIsConnect()) && (TRUE == UpgradeInProgress())) {
+//        DEBUG_LOG("ruleBleConnectionUpdate gaia is connect, but now is upgrade, so need enable");
+//        appBleSelectFeture();
+//        return bleEnable();
+//    }
 
     /* 当前耳机连接了经典蓝牙hfp、a2dp、avrcp，则允许发出ble广播 */
     if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
@@ -2656,13 +2656,14 @@ static ruleAction ruleBleConnectionUpdate(void)
 //        DEBUG_LOG("ruleBleConnectionUpdate paired_with_peer is false, ble disable");
 //        return bleDisable();
 //    }
-    appState state = appGetState();
-    bool allow_ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
-    DEBUG_LOG("ruleBleConnectionUpdate ble connect, app get state is %04X all_ble_connectable is : %02X", state, allow_ble_connectable);
-    if (FALSE == allow_ble_connectable) { /// 状态不允许连接
-        DEBUG_LOG("ruleBleConnectionUpdate allow_ble_connectable is false, ble disable");
-        return bleDisable();
-    }
+
+//    appState state = appGetState();
+//    bool allow_ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
+//    DEBUG_LOG("ruleBleConnectionUpdate ble connect, app get state is %04X all_ble_connectable is : %02X", state, allow_ble_connectable);
+//    if (FALSE == allow_ble_connectable) { /// 状态不允许连接
+//        DEBUG_LOG("ruleBleConnectionUpdate allow_ble_connectable is false, ble disable");
+//        return bleDisable();
+//    }
 
     if (ParamUsingSingle()) {
         /// 单耳模式下，如果在充电盒中，处于空闲，直接发送可升级的广播

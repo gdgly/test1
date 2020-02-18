@@ -44,6 +44,7 @@ static void appNotifyPeerDeviceConfig(uint16 source);
 extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                               uint16 payload_length, uint8 *payload);
 static void subUiEarInOutHandle(ProgRIPtr progRun, bool isIn);
+static void appUIUpgradeApplyInd(void);
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg);
 
@@ -771,6 +772,10 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_PSENSOR_OUTEAR:
         subUiEarInOutHandle(progRun, FALSE);
 //        appUiPowerSave(POWER_MODE_OUT_CASE);
+        break;
+
+    case APP_UPGRADE_APPLY_IND:
+        appUIUpgradeApplyInd();
         break;
 
     default:
@@ -1779,8 +1784,12 @@ void appPeerVersionSyncStatusSet(uint8 status) {
 }
 
 void appPeerVersionSyncSent(void) {
-    appPeerSigTxSyncVersion(appGetUiTask());
-    appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
+    if (ParamUsingSingle()) {
+        appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent | PeerVersionSyncStatusRecv);
+    } else {
+        appPeerSigTxSyncVersion(appGetUiTask());
+        appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
+    }
 }
 
 void appPeerVersionClearCache(void) {
@@ -1793,6 +1802,32 @@ void appPeerVersionClearCache(void) {
 
 bool appPeerVersionSyncStatusHaveSent(void) {
     return (gProgRunInfo.peerVerSyncStatus & PeerVersionSyncStatusSent) > 0;
+}
+
+static void appUIUpgradeApplyInd(void) {
+    DEBUG_LOG("appUIUpgradeApplyInd parse, now sync version to peer earbuds");
+    // 临时修改版本号
+    UserTempSetVersionToMemory(gProgRunInfo.tempCurrentVer);
+
+    // 如果双耳模式，查看另一只耳机版本。如果另一只耳机已经升级成功，向另一只耳机发送重启命令，当前耳机在收到重启命令的确认时重启，并设置定时器
+    // 如果单耳模式，直接重启
+    if (ParamUsingSingle()) {
+        UpgradeApplyResponse(0);
+    } else {
+        /// 等待另一只耳机版本变化
+        if (2 != SystemCheckVersionWithPeer()) {
+            DEBUG_LOG("SystemCheckVersionWithPeer is not same, so disconnect gaia");
+            appGaiaDisconnect();
+            appSmExitDfuMode();
+        } else {
+            DEBUG_LOG("SystemCheckVersionWithPeer is same, now need think how reboot");
+            /// 可以执行重启
+        }
+    }
+
+    // 同步版本到另一只耳机
+    appPeerVersionClearCache();
+    appPeerVersionSyncSent();
 }
 
 void testPrintBrEdr(void);

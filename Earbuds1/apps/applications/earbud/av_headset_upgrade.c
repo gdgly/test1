@@ -321,19 +321,9 @@ static void appUpgradeMessageHandler(Task task, MessageId id, Message message)
         case UPGRADE_APPLY_IND:
             DEBUG_LOG("appUpgradeMessageHandler. UPGRADE_APPLY_IND saying now !");
             appUpgradeNotifyActivity();
-            //UpgradeApplyResponse(0);
-
-            // todo 现在不能重启，等待自定义的重启消息
-            // 临时修改版本号
-            // 如果双耳模式，查看另一只耳机版本。如果另一只耳机已经升级成功，向另一只耳机发送重启命令，当前耳机在收到重启命令的确认时重启，并设置定时器
-            // 如果单耳模式，直接重启
+//            UpgradeApplyResponse(0);
 #ifdef CONFIG_STAROT
-        {
-            DEBUG_LOG("APP_UPGRADE_ACTIVITY parse, now sync version to peer earbuds");
-            UserTempSetVersionToMemory(gProgRunInfo.tempCurrentVer);
-            // 同步版本到另一只耳机
-            appPeerVersionSyncSent();
-        }
+            MessageSend(appGetUiTask(), APP_UPGRADE_APPLY_IND, NULL);
 #endif
             break;
                 
@@ -432,8 +422,13 @@ bool appUpgradeAllowUpgrades(bool allow)
        not been called previously */
     if (appInitCompleted())
     {
-//         sts = UpgradePermit(allow ? upgrade_perm_assume_yes : upgrade_perm_no);
-        sts = UpgradePermit(allow ? upgrade_perm_always_ask: upgrade_perm_no);
+#ifdef CONFIG_STAROT
+//        sts = UpgradePermit(allow ? upgrade_perm_always_ask: upgrade_perm_no);
+        sts = UpgradePermit(allow ? upgrade_perm_assume_yes : upgrade_perm_no);
+#else
+        sts = UpgradePermit(allow ? upgrade_perm_assume_yes : upgrade_perm_no);
+#endif
+
         successful = (sts == upgrade_status_success);
     }
 
