@@ -1329,9 +1329,7 @@ void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message) {
         StarotAttr * head = pAttr;
         const uint8 VERSION_CMD = 0X01;
         if(VERSION_CMD == pAttr->attr) {
-            gProgRunInfo.tempCurrentVer[0] = pAttr->payload[0];
-            gProgRunInfo.tempCurrentVer[1] = pAttr->payload[1];
-            gProgRunInfo.tempCurrentVer[2] = pAttr->payload[2];
+            memcpy(gProgRunInfo.tempCurrentVer, pAttr->payload, DEV_SWVER_LEN);
         }
         DEBUG_LOG("Upgrade command enter dfu mode");
         attrFree(head, NULL);

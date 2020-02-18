@@ -111,4 +111,6 @@ int16 SystemParamSn(uint8 type, uint8 *sn, bool bSave);        // Load/Save SN
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf);
 int16 ParamSaveSN(void *buff);
 int16 ParamLoadSN(void *buff);
+
+void UserTempSetVersionToMemory(uint8* ptr);
 #endif // PARAM_H

@@ -562,3 +562,10 @@ void UserParamResetFactory(void) {
     UserParamDefault();
     ParamSaveUserPrm(NULL);
 }
+
+void UserTempSetVersionToMemory(uint8* ptr) {
+    int i = 0;
+    for (; i < DEV_SWVER_LEN; ++i) {
+        SYSTEM_SW_VERSION[i] = ptr[i];
+    }
+}

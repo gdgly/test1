@@ -327,6 +327,14 @@ static void appUpgradeMessageHandler(Task task, MessageId id, Message message)
             // 临时修改版本号
             // 如果双耳模式，查看另一只耳机版本。如果另一只耳机已经升级成功，向另一只耳机发送重启命令，当前耳机在收到重启命令的确认时重启，并设置定时器
             // 如果单耳模式，直接重启
+#ifdef CONFIG_STAROT
+        {
+            DEBUG_LOG("APP_UPGRADE_ACTIVITY parse, now sync version to peer earbuds");
+            UserTempSetVersionToMemory(gProgRunInfo.tempCurrentVer);
+            // 同步版本到另一只耳机
+            appPeerVersionSyncSent();
+        }
+#endif
             break;
                 
             /* Message sent to application to request blocking the system for an extended
@@ -346,16 +354,19 @@ static void appUpgradeMessageHandler(Task task, MessageId id, Message message)
                 
             /* Message sent to application to inform of the current status of an upgrade. */
         case UPGRADE_STATUS_IND:
+            DEBUG_LOG("appUpgradeMessageHandler. UPGRADE_STATUS_IND");
             appUpgradeHandleUpgradeStatusInd((const UPGRADE_STATUS_IND_T *)message);
             break;
 
             /* Message sent to application to request any audio to get shut */
         case UPGRADE_SHUT_AUDIO:
+            DEBUG_LOG("appUpgradeMessageHandler. UPGRADE_SHUT_AUDIO");
             appUpgradeHandleUpgradeShutAudio();
             break;
 
             /* Message sent to application set the audio busy flag and copy audio image */
         case UPRGADE_COPY_AUDIO_IMAGE_OR_SWAP:
+            DEBUG_LOG("appUpgradeMessageHandler. UPRGADE_COPY_AUDIO_IMAGE_OR_SWAP");
             appUpgradeHandleUpgradeCopyAudioImageOrSwap();
             break;
 
@@ -421,8 +432,9 @@ bool appUpgradeAllowUpgrades(bool allow)
        not been called previously */
     if (appInitCompleted())
     {
-         sts = UpgradePermit(allow ? upgrade_perm_assume_yes : upgrade_perm_no);
-         successful = (sts == upgrade_status_success);
+//         sts = UpgradePermit(allow ? upgrade_perm_assume_yes : upgrade_perm_no);
+        sts = UpgradePermit(allow ? upgrade_perm_always_ask: upgrade_perm_no);
+        successful = (sts == upgrade_status_success);
     }
 
     DEBUG_LOG("appUpgradeAllowUpgrades(%d) - success:%d (sts:%d)", allow, successful, sts);

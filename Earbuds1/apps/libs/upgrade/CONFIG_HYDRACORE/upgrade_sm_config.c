@@ -151,7 +151,7 @@ bool UpgradeSMHandleValidated(MessageId id, Message message)
          * The apps p0 will initiate a warm reset.
          */
         PRINT(("IsValidatedToTrySwap() in UPGRADE_VM_IMAGE_UPGRADE_COPY_SUCCESSFUL\n"));
-        IsValidatedToTrySwap(FALSE);
+        //IsValidatedToTrySwap(FALSE);
         break;
 
     case UPGRADE_VM_DFU_COPY_VALIDATION_SUCCESS:
