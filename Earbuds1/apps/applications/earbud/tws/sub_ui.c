@@ -1543,8 +1543,7 @@ void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
         }
     }
     ///现在使用假的电量数据
-//    arr[2] = (uint8)progRun->caseElectrity;//盒子电量
-    arr[2] = 0X42;
+    arr[2] = (uint8)progRun->caseElectrity;//盒子电量
 }
 
 uint8 appUIGetConnectStatusInfo(void) {
