@@ -45,6 +45,7 @@ extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status
                               uint16 payload_length, uint8 *payload);
 static void subUiEarInOutHandle(ProgRIPtr progRun, bool isIn);
 static void appUIUpgradeApplyInd(void);
+static void appUICheckVersion(void);
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg);
 
@@ -775,7 +776,15 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
 
     case APP_UPGRADE_APPLY_IND:
+        DEBUG_LOG("do APP_UPGRADE_APPLY_IND");
         appUIUpgradeApplyInd();
+        break;
+
+    case APP_UPGRADE_REBOOT_TIMEOUT:
+        DEBUG_LOG("do APP_UPGRADE_REBOOT_TIMEOUT");
+    case APP_CHECK_VERSION:
+        DEBUG_LOG("do APP_CHECK_VERSION");
+        appUICheckVersion();
         break;
 
     default:
@@ -1814,20 +1823,32 @@ static void appUIUpgradeApplyInd(void) {
     if (ParamUsingSingle()) {
         UpgradeApplyResponse(0);
     } else {
-        /// 等待另一只耳机版本变化
-        if (2 != SystemCheckVersionWithPeer()) {
-            DEBUG_LOG("SystemCheckVersionWithPeer is not same, so disconnect gaia");
-            appGaiaDisconnect();
+        // 同步版本到另一只耳机
+        gProgRunInfo.upgradeNeedReboot = TRUE;
+        appPeerVersionSyncStatusSet(0);
+        appPeerVersionSyncSent();
+        const int versionSame = 2;
+        if (versionSame != SystemCheckVersionWithPeer()) {
+            DEBUG_LOG("SystemCheckVersionWithPeer is not same, so need exit dfu mode");
             appSmExitDfuMode();
         } else {
             DEBUG_LOG("SystemCheckVersionWithPeer is same, now need think how reboot");
-            /// 可以执行重启
+            /// 可以执行重启，添加定时器，在版本同步确认的时候，去重新启动
+            MessageSendLater(appGetUiTask(), APP_UPGRADE_REBOOT_TIMEOUT, NULL, D_SEC(5));
         }
     }
+}
 
-    // 同步版本到另一只耳机
-    appPeerVersionClearCache();
-    appPeerVersionSyncSent();
+static void appUICheckVersion(void) {
+    DEBUG_LOG("enter appUICheckVersion");
+    if (gProgRunInfo.upgradeNeedReboot) {
+        const int versionSame = 2;
+        if (versionSame == SystemCheckVersionWithPeer()) {
+            DEBUG_LOG("appUICheckVersion SystemCheckVersionWithPeer is same, so need reboot self");
+            gProgRunInfo.upgradeNeedReboot = FALSE;
+            UpgradeApplyResponse(0);
+        }
+    }
 }
 
 void testPrintBrEdr(void);

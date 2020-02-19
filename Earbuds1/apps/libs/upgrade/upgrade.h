@@ -905,5 +905,7 @@ bool UpgradePartialUpdateInterrupted(void);
 */
 bool UpgradeIsRunningNewImage(void);
 
+///// 自定义函数
 bool UpgradeInProgress(void);
+
 #endif /* UPGRADE_H_ */

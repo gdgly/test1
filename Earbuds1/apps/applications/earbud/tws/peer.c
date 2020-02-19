@@ -84,6 +84,7 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
         if (!appPeerVersionSyncStatusIsComplete()) {
             appPeerVersionSyncSent();
         }
+        MessageSendLater(appGetUiTask(), APP_CHECK_VERSION, NULL, 500);
 //        SystemSetVersion(appConfigIsLeft() ? DEV_RIGHT : DEV_LEFT, req->data);
         break;
 
@@ -150,6 +151,13 @@ void appPeerSigTxDataConfirm(Task task, peerSigStatus status) {
         if(peerSigStatusSuccess == status)
             ParamSyncBlePairSucc();
         break;
+
+    case PEERTX_CMD_SYNC_VERSION:
+        if (peerSigStatusSuccess == status) {
+            MessageSend(appGetUiTask(), APP_CHECK_VERSION, NULL);
+        }
+        break;
+
 
     }
     g_last_tx_command = 0xFF;

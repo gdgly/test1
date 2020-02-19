@@ -2695,7 +2695,7 @@ void appSmExitDfuMode(void) {
     DEBUG_LOG("appSmExitDfuMode");
     if (appGetState() == APP_STATE_IN_CASE_DFU) {
         appSetState(APP_STATE_STARTUP);
-        //appGaiaDisconnect();
+        appGaiaDisconnect();
     }
 }
 

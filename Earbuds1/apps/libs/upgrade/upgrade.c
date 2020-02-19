@@ -783,4 +783,3 @@ bool UpgradeInProgress(void) {
     return ((upgradeCtx->smState) >= UPGRADE_STATE_READY);
 }
 
-
