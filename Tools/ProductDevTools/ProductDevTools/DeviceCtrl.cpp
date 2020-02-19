@@ -1637,7 +1637,8 @@ int CDeviceCtrl::CloseEngine(void)
 
 int CDeviceCtrl::RuningUpgrade(CString sFile)
 {
-	int ret = 0, rdsize, fsize, foffset;
+	int ret = 0, rdsize, fsize, foffset, start_loops = 0;
+	unsigned int checksum = 0;
 	CFile hFile;
 	BYTE wbuf[128], rbuf[128];
 	char sbuf[32], *msgbuf;
@@ -1647,38 +1648,61 @@ int CDeviceCtrl::RuningUpgrade(CString sFile)
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_UPGCASE, (LPARAM)"-1");
 		return -1;
 	}
+	TRACE("Open Com success\n");
 
 	if (hFile.Open(m_upgImageFile, CFile::modeRead | CFile::typeBinary) == FALSE) {
 		MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_UPGCASE, (LPARAM)"-3");
-		ret = -3;
-		goto out;
+ret = -3;
+goto out;
 	}
+
 	fsize = (int)hFile.GetLength();
+	// 还是存在升级不正确情况，增加checksum
+	while (m_bExit == FALSE) {
+		rdsize = hFile.Read(wbuf, 128);
+		if (rdsize > 0) {
+			for (int i = 0; i < rdsize; i++)
+				checksum += wbuf[i];
+		}
+
+		if (rdsize <= 0)
+			break;
+	}
+	hFile.SeekToBegin();
+	TRACE("checksum=%d\r\n", checksum);
 
 	m_hCom.ClearReceiveBuffer();
 	while (m_bExit == FALSE) {
 		memset(rbuf, 0, sizeof(rbuf));
-		sprintf_s((char*)wbuf, sizeof(wbuf), "check upgrade %05d\r\n", fsize);
-		if (m_hCom.SendCMDAndWait((unsigned char*)wbuf, 21, 800, rbuf, sizeof(rbuf)) == FALSE) {
+		memset(wbuf, 0, sizeof(wbuf));
+		sprintf_s((char*)wbuf, sizeof(wbuf), "check upgrade %05d %05d\r\n", fsize, checksum);
+		if (m_hCom.SendCMDAndWait((unsigned char*)wbuf, (unsigned short)strlen((char*)wbuf), 1200, rbuf, sizeof(rbuf)) == FALSE) {
 			MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_UPGCASE, (LPARAM)"-2");
 			ret = -2;
 			goto out;
 		}
-		
+
+		TRACE("RECV:%s", (char*)rbuf);
 		if (strstr((char*)rbuf, "check upgrade succ")) {
 			msgbuf = (char*)GetMsgBuffer();
 			sprintf_s(msgbuf, 64, "%s", (char*)rbuf);
 			MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_UPGCASE_STR, (LPARAM)msgbuf);
 			break;
 		}
+
+		if (start_loops++ > 10) {
+			MESSAGE2DIALOG(m_hWnd, WM_DEV_ERROR, ERROR_UPGCASE, (LPARAM)"-22");
+			ret = -22;
+			goto out;
+		}
 	}
-	TRACE("RECV:%s", (char*)rbuf);
 
-
-	while(m_bExit == FALSE) {
+	while (m_bExit == FALSE) {
 		rdsize = hFile.Read(wbuf, 32);
-		if (rdsize <= 0)
+		if (rdsize <= 0) {
+			TRACE("EndFile\r\n");
 			break;
+		}
 
 		foffset = (int)hFile.GetPosition();
 
@@ -1686,7 +1710,7 @@ int CDeviceCtrl::RuningUpgrade(CString sFile)
 			memset(rbuf, 0, sizeof(rbuf));
 			if (m_hCom.SendCMDAndWait(wbuf, rdsize, 500, rbuf, sizeof(rbuf)) == FALSE) {
 				if (foffset == fsize) {    // 最后一个包返回很慢
-					TRACE("End=0x%x/%d/0x%x|%s", fsize, rdsize, foffset, (char*)rbuf);
+					TRACE("End=0x%x/%d/0x%x|%s\r\n", fsize, rdsize, foffset, (char*)rbuf);
 					goto finish;
 				}
 				TRACE("ErrRECV:wr=%d %s\n", rdsize, (char*)rbuf);
@@ -1696,13 +1720,13 @@ int CDeviceCtrl::RuningUpgrade(CString sFile)
 
 			sprintf_s(sbuf, "RECV=0x%x", foffset);
 
-			if(strstr((char*)rbuf, sbuf))
+			if (strstr((char*)rbuf, sbuf))
 				break;
 		}
-
-		TRACE("cnt=0x%x/%d/0x%x|%s", fsize, rdsize, foffset,(char*)rbuf);
+		if (rbuf[0] == '\0') sprintf_s((char*)rbuf, 16, "\r\n");
+		TRACE("cnt=0x%x/%d/0x%x|%s", fsize, rdsize, foffset, (char*)rbuf);
 		if ((foffset % 512) == 0) {
-			foffset = (foffset * 100 ) / fsize;
+			foffset = (foffset * 100) / fsize;
 			MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_UPGCASE, (LPARAM)foffset);
 		}
 
@@ -1711,7 +1735,7 @@ int CDeviceCtrl::RuningUpgrade(CString sFile)
 	}
 
 finish:
-
+	TRACE("Waite Finish Data\r\n");
 	ret = -99;
 	for (int i = 0; i < 300; i++) {
 		DWORD len = 0;
@@ -1720,12 +1744,17 @@ finish:
 		len = m_hCom.ReadCommBlock((LPSTR)rbuf, sizeof(rbuf));
 		if (len > 0) {
 			char *ptr;
-			TRACE("rdbuf=%s\n", (char*)rbuf);
+			TRACE("rdbuf %d=%s\n", len, (char*)rbuf);
 			msgbuf = (char*)GetMsgBuffer();
-			if ((ptr=strstr((char*)rbuf, "succ UpgradeEnd"))) {
+			if ((ptr = strstr((char*)rbuf, "succ UpgradeEnd"))) {
 				sprintf_s((char*)msgbuf, 128, "fsize=%d %s", fsize, ptr);
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_UPGCASE_STR, (LPARAM)msgbuf);
 				ret = 0;
+				break;
+			}
+			else if ((ptr = strstr((char*)rbuf, "UpgradeEnd fail"))) {
+				sprintf_s((char*)msgbuf, 128, "%s", ptr);
+				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_UPGCASE_STR, (LPARAM)msgbuf);
 				break;
 			}
 		}

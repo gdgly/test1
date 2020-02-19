@@ -154,6 +154,7 @@ BOOL CProductDevToolsDlg::OnInitDialog()
 	CString sText;
 
 	sText = ::AfxGetApp()->GetProfileString("PRODUCT_CONFIG", "IMAGECASE", "");
+	m_comPort = ::AfxGetApp()->GetProfileInt("PRODUCT_CONFIG", "UPGPORT", 1);
 	m_sImageName.SetWindowTextA(sText);
 
 	sText = ::AfxGetApp()->GetProfileString("PRODUCT_CONFIG", "IMAGENAME", "");
@@ -161,6 +162,7 @@ BOOL CProductDevToolsDlg::OnInitDialog()
 	CDeviceCtrl::LoadIniParam("./flash_image.ini", &m_Param);
 	CDeviceCtrl::LoadIniParam(sText, &m_Param);
 	m_devCtrl.LoadIniParam(sText);
+	UpdateData(FALSE);
 
 
 	m_edHWver.SetWindowText(m_Param.hwVer);
@@ -179,7 +181,7 @@ BOOL CProductDevToolsDlg::OnInitDialog()
 	m_ListCtrl.InsertColumn(nCol++, _T("序号"), LVCFMT_CENTER, 60);
 	m_ListCtrl.InsertColumn(nCol++, _T("项目"), LVCFMT_CENTER, 100);
 	m_ListCtrl.InsertColumn(nCol++, _T("测试"), LVCFMT_LEFT, 200);
-	m_ListCtrl.InsertColumn(nCol++, _T("其它"), LVCFMT_LEFT, 300);
+	m_ListCtrl.InsertColumn(nCol++, _T("其它"), LVCFMT_LEFT, 500);
 
 	dwStyle = m_ListCheck.GetExtendedStyle();
 	dwStyle |= LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES;           //
@@ -1139,6 +1141,7 @@ void CProductDevToolsDlg::OnBnClickedBtnCaseUpg()
 		return;
 	}
 	::AfxGetApp()->WriteProfileString("PRODUCT_CONFIG", "IMAGECASE", sText);
+	::AfxGetApp()->WriteProfileInt("PRODUCT_CONFIG", "UPGPORT", m_comPort);
 	m_devCtrl.SetComPort(m_comPort, sText);
 
 	m_edAddr.GetWindowText(sText); m_devCtrl.SetBtAddr(sText);
