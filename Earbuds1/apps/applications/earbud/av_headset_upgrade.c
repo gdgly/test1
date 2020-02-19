@@ -183,7 +183,6 @@ void appUpgradeInit(void)
             upgrade_perm_always_ask,
             &earbud_upgrade_init_version,
             earbud_upgrade_init_config_version);
-
 }
 
 
@@ -268,6 +267,23 @@ static void appUpgradeHandleUpgradeStatusInd(const UPGRADE_STATUS_IND_T *sts)
     }
 }
 
+#ifdef CONFIG_STAROT
+static void appUpgradeHandleUpgradeSmStateInd(const UPGRADE_SM_STATE_IND_T*sts) {
+    DEBUG_LOG("appUpgradeHandleUpgradeSmStateInd recv state:%d", sts->state);
+    //const int UPGRADE_SM_STATE_COMMIT_HOST_CONTINUE = 14;
+    switch (sts->state) {
+        case 14:
+            // 使用定时器，检测版本是否一致，如果一致，可以提交;upgrade的定时不在处理，统一在这里提交，防止冲突
+            DEBUG_LOG("send later APP_CHECK_PEER_FOR_UPDATE for debug");
+            MessageSend(appGetUiTask(), APP_CHECK_PEER_FOR_UPDATE, NULL);
+            break;
+        default:
+            DEBUG_LOG("appUpgradeHandleUpgradeSmStateInd don't parse state:%d", sts->state);
+            break;
+    }
+}
+#endif
+
 static void appUpgradeSwapImage(void)
 {
     UpgradeImageSwap();
@@ -347,6 +363,12 @@ static void appUpgradeMessageHandler(Task task, MessageId id, Message message)
             DEBUG_LOG("appUpgradeMessageHandler. UPGRADE_STATUS_IND");
             appUpgradeHandleUpgradeStatusInd((const UPGRADE_STATUS_IND_T *)message);
             break;
+#ifdef CONFIG_STAROT
+        case UPGRADE_SM_STATE_IND:
+            DEBUG_LOG("appUpgradeMessageHandler. UPGRADE_SM_STATE_IND");
+            appUpgradeHandleUpgradeSmStateInd((const UPGRADE_SM_STATE_IND_T* )message);
+            break;
+#endif
 
             /* Message sent to application to request any audio to get shut */
         case UPGRADE_SHUT_AUDIO:

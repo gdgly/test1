@@ -64,13 +64,22 @@ static UpgradeState GetState(void);
 
 static void FatalError(UpgradeHostErrorCode ec);
 static void PsSpaceError(void);
+
+#ifdef CONFIG_STAROT_LIB
+void CommitConfirmYes(void);
+#else
 static void CommitConfirmYes(void);
+#endif
 
 /* permission related functions */
 static void UpgradeSMBlockingOpIsDone(void);
 static void PsFloodAndReboot(void);
 static void InformAppsCompleteGotoSync(void);
 static void UpgradeSendUpgradeStatusInd(Task task, upgrade_state_t state);
+
+#ifdef CONFIG_STAROT_LIB
+static void UpgradeSendUpgradeSmStateInd(Task task, int state);
+#endif
 
 static bool asynchronous_abort = FALSE;
 
@@ -106,8 +115,11 @@ void UpgradeSMInit(void)
     case UPGRADE_RESUME_POINT_POST_REBOOT:
         PRINT(("UpgradeSMInit() in UPGRADE_RESUME_POINT_POST_REBOOT\n"));
         UpgradeSMSetState(UPGRADE_STATE_COMMIT_HOST_CONTINUE);
+#ifndef CONFIG_STAROT_LIB
+        /// 修改理由：application中收到UPGRADE_STATE_COMMIT_HOST_CONTINUE,统一处理timeout
         MessageSendLater(UpgradeGetUpgradeTask(), UPGRADE_INTERNAL_RECONNECTION_TIMEOUT, NULL,
                 D_SEC(UPGRADE_WAIT_FOR_RECONNECTION_TIME_SEC));
+#endif
         break;
 
     /*case UPGRADE_RESUME_POINT_ERASE:
@@ -731,6 +743,15 @@ bool HandleCommitHostContinue(MessageId id, Message message)
 
     case UPGRADE_INTERNAL_RECONNECTION_TIMEOUT:
         {
+#ifdef CONFIG_STAROT_LIB  //如果启动的时候，没有交换版本成功，自动回滚
+            /* Revert */
+            UpgradeRevertUpgrades();
+            UpgradeCtxGetPSKeys()->upgrade_in_progress_key = UPGRADE_RESUME_POINT_ERROR;
+            UpgradeSavePSKeys();
+            PRINT(("P&R: UPGRADE_RESUME_POINT_ERROR saved\n"));
+            UpgradeSMSetState(UPGRADE_STATE_SYNC);
+            BootSetMode(BootGetMode());
+#else
             bool dfu = UpgradePartitionDataIsDfuUpdate();
             uint16 err = UpgradeSMNewImageStatus();
 
@@ -749,6 +770,7 @@ bool HandleCommitHostContinue(MessageId id, Message message)
                 UpgradeSMSetState(UPGRADE_STATE_SYNC);
                 BootSetMode(BootGetMode());
             }
+#endif
         }
         break;
 
@@ -1130,6 +1152,9 @@ bool DefaultHandler(MessageId id, Message message, bool handled)
 void UpgradeSMSetState(UpgradeState nextState)
 {
     UpgradeCtxGet()->smState = nextState;
+#ifdef CONFIG_STAROT_LIB
+    UpgradeSendUpgradeSmStateInd(UpgradeGetAppTask(), nextState);
+#endif
 }
 
 UpgradeState GetState(void)
@@ -1453,5 +1478,13 @@ void UpgradeSMHashAllSectionsUpdateStatus(Message message)
     {
         (void)UpgradeSMHandleMsg(UPGRADE_VM_HASH_ALL_SECTIONS_FAILED, message);
     }
+}
+#endif
+
+#ifdef CONFIG_STAROT_LIB
+void UpgradeSendUpgradeSmStateInd(Task task, int state) {
+    UPGRADE_SM_STATE_IND_T *upgradeStatusInd = (UPGRADE_SM_STATE_IND_T *)PanicUnlessMalloc(sizeof(UPGRADE_SM_STATE_IND_T));
+    upgradeStatusInd->state = state;
+    MessageSend(task, UPGRADE_SM_STATE_IND, upgradeStatusInd);
 }
 #endif

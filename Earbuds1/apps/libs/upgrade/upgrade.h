@@ -136,6 +136,11 @@ typedef enum
     UPGRADE_START_DATA_IND,
     /*! Message sent to application to inform that the actual upgrade has ended */
     UPGRADE_END_DATA_IND,
+
+#ifdef CONFIG_STAROT_LIB
+    /*! upgrade sm 状态*/
+    UPGRADE_SM_STATE_IND,
+#endif
     /*! ID for first message outside of this range */
     UPGRADE_UPSTREAM_MESSAGE_TOP
 } upgrade_application_message;
@@ -402,6 +407,13 @@ typedef struct
     /*! Current library state. */
     upgrade_state_t state;
 } UPGRADE_STATUS_IND_T;
+
+typedef struct
+{
+    /*! Current library state. */
+    int state;
+} UPGRADE_SM_STATE_IND_T;
+
 
 /*!
     @brief Message indicating end of Upgrade download state.
@@ -905,7 +917,14 @@ bool UpgradePartialUpdateInterrupted(void);
 */
 bool UpgradeIsRunningNewImage(void);
 
-///// 自定义函数
+#ifdef CONFIG_STAROT_LIB
 bool UpgradeInProgress(void);
+
+void UpgradeCommitNewImage(void);
+
+void UpgradeRevertNewImage(void);
+
+int UpgradeGetState(void);
+#endif
 
 #endif /* UPGRADE_H_ */

@@ -98,7 +98,7 @@ int16 SystemGetCurrentVersion(uint8 *buffer);             // Get Current Earbuds
 /// Peer > Current 1
 /// Peer = Current 2
 /// Peer < Current 3
-int SystemCheckVersionWithPeer(void);
+int SystemCheckMemoryVersion(void);
 int16 SystemSetVersion(DevType type, uint8 *buffer);
 int16 UserGetKeyFunc(uint8 *lKeyFunc, uint8 *rKeyFunc);   // 获取功能键
 int16 UserSetKeyFunc(uint8 lKeyFunc, uint8 rKeyFunc);     // 设置功能键
@@ -112,5 +112,5 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf);
 int16 ParamSaveSN(void *buff);
 int16 ParamLoadSN(void *buff);
 
-void UserTempSetVersionToMemory(uint8* ptr);
+uint8* SystemGetCurrentSoftware(void);
 #endif // PARAM_H

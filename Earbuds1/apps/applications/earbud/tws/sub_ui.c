@@ -46,6 +46,8 @@ extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status
 static void subUiEarInOutHandle(ProgRIPtr progRun, bool isIn);
 static void appUIUpgradeApplyInd(void);
 static void appUICheckVersion(void);
+static void appUICheckPeerVersionForUpdate(void);
+static void appUIUpgradeCommit(void);
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg);
 
@@ -787,7 +789,17 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appUICheckVersion();
         break;
 
-    default:
+    case APP_CHECK_PEER_FOR_UPDATE:
+        DEBUG_LOG("do appUICheckPeerVersionForUpdate");
+        appUICheckPeerVersionForUpdate();
+        break;
+
+    case APP_UPGRADE_COMMIT:
+        DEBUG_LOG("do APP_UPGRADE_COMMIT");
+        appUIUpgradeCommit();
+        break;
+
+        default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
     }
@@ -801,6 +813,10 @@ void appSubUIInit(void)
     memset(progRun, 0, sizeof(ProgRunInfo));
     progRun->caseLidOpen = UI_CASE_OPEN; /// 默认情况下，充电盒时开启状态，只有在收到明确的充电盒关闭事件，才设置为close
     appPeerVersionClearCache();
+
+    memcpy(progRun->currVer, gFixParam.hw_ver, DEV_HWVER_LEN);
+    progRun->currVer[DEV_HWVER_LEN] = ' ';
+    memcpy(&progRun->currVer[DEV_HWVER_LEN+1], SystemGetCurrentSoftware(), DEV_SWVER_LEN);
 
     // 运行到这个地方时外设都为正常打开状态
 #ifdef ENABLE_APOLLO
@@ -1784,6 +1800,11 @@ uint8* appPeerVersionGet(void) {
     return gProgRunInfo.peerVer;
 }
 
+uint8* appCurrVersionGet(void) {
+    return gProgRunInfo.currVer;
+}
+
+
 bool appPeerVersionSyncStatusIsComplete(void) {
     return (gProgRunInfo.peerVerSyncStatus == (uint8)PeerVersionSyncStatusComplete);
 }
@@ -1816,7 +1837,7 @@ bool appPeerVersionSyncStatusHaveSent(void) {
 static void appUIUpgradeApplyInd(void) {
     DEBUG_LOG("appUIUpgradeApplyInd parse, now sync version to peer earbuds");
     // 临时修改版本号
-    UserTempSetVersionToMemory(gProgRunInfo.tempCurrentVer);
+    appUITempSetVersionToMemory(gProgRunInfo.tempCurrentVer);
 
     // 如果双耳模式，查看另一只耳机版本。如果另一只耳机已经升级成功，向另一只耳机发送重启命令，当前耳机在收到重启命令的确认时重启，并设置定时器
     // 如果单耳模式，直接重启
@@ -1828,12 +1849,13 @@ static void appUIUpgradeApplyInd(void) {
         appPeerVersionSyncStatusSet(0);
         appPeerVersionSyncSent();
         const int versionSame = 2;
-        if (versionSame != SystemCheckVersionWithPeer()) {
+        if (versionSame != SystemCheckMemoryVersion()) {
             DEBUG_LOG("SystemCheckVersionWithPeer is not same, so need exit dfu mode");
             appSmExitDfuMode();
         } else {
             DEBUG_LOG("SystemCheckVersionWithPeer is same, now need think how reboot");
             /// 可以执行重启，添加定时器，在版本同步确认的时候，去重新启动
+            // todo 此处需要考虑如果两只耳机连接不上，会发生什么事情
             MessageSendLater(appGetUiTask(), APP_UPGRADE_REBOOT_TIMEOUT, NULL, D_SEC(5));
         }
     }
@@ -1843,12 +1865,43 @@ static void appUICheckVersion(void) {
     DEBUG_LOG("enter appUICheckVersion");
     if (gProgRunInfo.upgradeNeedReboot) {
         const int versionSame = 2;
-        if (versionSame == SystemCheckVersionWithPeer()) {
+        if (versionSame == SystemCheckMemoryVersion()) {
             DEBUG_LOG("appUICheckVersion SystemCheckVersionWithPeer is same, so need reboot self");
             gProgRunInfo.upgradeNeedReboot = FALSE;
             UpgradeApplyResponse(0);
         }
     }
+}
+
+extern void UpgradeCommitNewImage(void);
+extern void UpgradeRevertNewImage(void);
+
+static void appUICheckPeerVersionForUpdate(void) {
+    if (ParamUsingSingle()) {
+        /// 提交版本信息
+        UpgradeCommitNewImage();
+    } else {
+        /// note:只有重启才会进入该段code，所以不用重置(不管成功还是失败)
+        static int count = 3;
+        if (count >= 0) {
+            /// 重新发送同步version信息
+            appPeerSigTxUpgradeCheckVersion(appGetUiTask(), SystemGetCurrentSoftware(), DEV_SWVER_LEN);
+            count -= 1;
+        } else {
+            /// 回滚版本
+            UpgradeRevertNewImage();
+        }
+    }
+}
+
+void appUITempSetVersionToMemory(uint8* ptr) {
+    for (int i = 0; i < DEV_SWVER_LEN; ++i) {
+        gProgRunInfo.currVer[DEV_SWVER_LEN + i] = ptr[i];
+    }
+}
+
+static void appUIUpgradeCommit(void) {
+    UpgradeCommitNewImage();
 }
 
 void testPrintBrEdr(void);

@@ -27,6 +27,7 @@ enum {PEERTX_CMD_SYNCGAIA=0,         /* 主副耳机发送gaia状态   [payload[
       PEERTX_CMD_SYNC_VERSION,     /* 同步左右耳机版本 */
       PEERTX_CMD_SYNC_DOUBLE_CLICK,  /* 同步双击 */
       PEERTX_CMD_SYNC_CASEST,        /* 一只耳机在盒中，另外一只不在，可以做同步 */
+      PEERTX_CMD_UPGRADE_CHECK_VERSION,  /* 升级之后，校验两边版本是否一致 */
      };
 void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload);
 void appPeerSigTxDataCommandExt(Task task,uint8 command, uint16 size_payload, const uint8 *payload);
@@ -41,6 +42,11 @@ void appPeerSigTxSyncVersion(Task task);
  * 同步耳机双击的配置
  */
 void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right);
+/*
+ * 比较两边的真实版本是否一致
+ */
+void appPeerSigTxUpgradeCheckVersion(Task task, uint8* data, int len);
+
 void appPeerSigTxSyncPair(Task task);          // 同步配对信息
 void appPeerSigTxDataRequest(PEER_SIG_INTERNAL_TXDATA_REQ_T *req);           // 发送方： 请求发送给对方
 bool appPeerSigRxDataCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind);        // 接收方： 接收数据处理

@@ -401,22 +401,16 @@ int16 SystemGetVersion(DevType type, uint8 *buffer)
         break;
     case DEV_LEFT:
         if(appConfigIsLeft()) {
-            memcpy(ptr, gFixParam.hw_ver, DEV_HWVER_LEN);
-            ptr[DEV_HWVER_LEN] = ' ';
-            memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
-        }
-        else {
+            memcpy(ptr, appCurrVersionGet(), DEV_HWSWVER_LEN);
+        } else {
             memcpy(ptr, appPeerVersionGet(), DEV_HWSWVER_LEN);
         }
         break;
     case DEV_RIGHT:
-        if(appConfigIsRight() ) {
-            memcpy(ptr, gFixParam.hw_ver, DEV_HWVER_LEN);
-            ptr[DEV_HWVER_LEN] = ' ';
-            memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
-        }
-        else {
+        if(appConfigIsLeft()) {
             memcpy(ptr, appPeerVersionGet(), DEV_HWSWVER_LEN);
+        } else {
+            memcpy(ptr, appCurrVersionGet(), DEV_HWSWVER_LEN);
         }
         break;
     }
@@ -430,21 +424,18 @@ int16 SystemGetCurrentVersion(uint8 *buffer)             // Get Current Earbuds 
 }
 
 /// 比较当前耳机版本，与另一只耳机版本，当前耳机版本是否更低
-int SystemCheckVersionWithPeer(void) {
-    int unkonw = 0, peerLast = 1, sameLast = 2, currentLast = 3;
+
+int SystemCheckMemoryVersion(void) {
+    int unkonw = 0;
 
     if (appPeerVersionIsEmpty()) {
         ///没有对方地址信息，情况不明，认为对方版本更低(保守策略)
         return unkonw;
     }
 
-    uint8 current[DEV_HWVER_LEN];
-    memcpy(current, gFixParam.hw_ver, DEV_HWVER_LEN);
-    current[DEV_HWVER_LEN] = ' ';
-    memcpy(&current[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
-
-    uint8* peer = appPeerVersionGet();
-
+    int peerLast = 1, sameLast = 2, currentLast = 3;
+    uint8* current = gProgRunInfo.currVer;
+    uint8* peer = gProgRunInfo.peerVer;
     for (int i = 5; i < 8; ++i) {
         if (current[i] < peer[i]) {
             return  peerLast;
@@ -454,7 +445,6 @@ int SystemCheckVersionWithPeer(void) {
     }
     return sameLast;
 }
-
 
 int16 SystemSetVersion(DevType type, uint8 *buffer)
 {
@@ -563,9 +553,7 @@ void UserParamResetFactory(void) {
     ParamSaveUserPrm(NULL);
 }
 
-void UserTempSetVersionToMemory(uint8* ptr) {
-    int i = 0;
-    for (; i < DEV_SWVER_LEN; ++i) {
-        SYSTEM_SW_VERSION[i] = ptr[i];
-    }
+
+uint8 *SystemGetCurrentSoftware(void) {
+    return SYSTEM_SW_VERSION;
 }

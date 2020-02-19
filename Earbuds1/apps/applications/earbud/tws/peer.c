@@ -54,6 +54,11 @@ void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right) {
     appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_DOUBLE_CLICK, 2, buffer);
 }
 
+
+void appPeerSigTxUpgradeCheckVersion(Task task, uint8* data, int len) {
+    appPeerSigTxDataCommandExt(task, PEERTX_CMD_UPGRADE_CHECK_VERSION, len, data);
+}
+
 void appPeerSigTxSyncPair(Task task)          // 同步配对信息
 {
     appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_BLEPAIR,
@@ -86,6 +91,17 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
         }
         MessageSendLater(appGetUiTask(), APP_CHECK_VERSION, NULL, 500);
 //        SystemSetVersion(appConfigIsLeft() ? DEV_RIGHT : DEV_LEFT, req->data);
+        break;
+
+    case PEERTX_CMD_UPGRADE_CHECK_VERSION: {
+        uint8 *v = SystemGetCurrentSoftware();
+        for (int i = 0; i < DEV_SWVER_LEN; ++i) {
+            if (req->data[i] != v[i]) {
+                ret = FALSE;
+                break;
+            }
+        }
+    }
         break;
 
     case PEERTX_CMD_SYNC_DOUBLE_CLICK:
@@ -158,7 +174,13 @@ void appPeerSigTxDataConfirm(Task task, peerSigStatus status) {
         }
         break;
 
-
+    case PEERTX_CMD_UPGRADE_CHECK_VERSION:
+        if (peerSigStatusSuccess == status) {
+            MessageSend(appGetUiTask(), APP_UPGRADE_COMMIT, NULL);
+        } else {
+            MessageSendLater(appGetUiTask(), APP_CHECK_PEER_FOR_UPDATE, NULL, D_SEC(5));
+        }
+        break;
     }
     g_last_tx_command = 0xFF;
 }

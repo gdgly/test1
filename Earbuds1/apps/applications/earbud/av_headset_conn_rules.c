@@ -2692,7 +2692,7 @@ static ruleAction ruleBleConnectionUpdate(void)
                     if (appPeerSyncIsPeerInCase() && appGetCaseIsOpen()) {
                         //1.比较版本号
                         /// Peer ? 0 | Peer > Current 1 | Peer = Current 2 | Peer < Current 3
-                        int st = SystemCheckVersionWithPeer();
+                        int st = SystemCheckMemoryVersion();
                         if (0 == st) { /// Peer版本未知，暂缓处理
                             DEBUG_LOG("ruleBleConnectionUpdate now is all ear in case, but version not know, so defer");
                             return RULE_ACTION_IGNORE;

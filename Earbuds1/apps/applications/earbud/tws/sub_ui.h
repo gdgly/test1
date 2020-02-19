@@ -48,6 +48,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_UPGRADE_APPLY_IND        (2108)          // upgrade -> ui 升级基本工作已经完毕，等待重启
 #define APP_CHECK_VERSION            (2109)          //  sync -> ui 版本同步成功之后，检查版本
 #define APP_UPGRADE_REBOOT_TIMEOUT   (2111)          //  ui -> ui 升级中，确定了对方版本和当前耳机一致，在同步版本之后，添加定时器，防止版本同步失败不能重启
+#define APP_CHECK_PEER_FOR_UPDATE     2112           // upgrade/peersync -> ui 重启之后，如果是host continue状态，需要查询另一只耳机版本及其状态信息
+#define APP_UPGRADE_COMMIT            2113           // peersync -> ui 比较版本之后，可以提交commit
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
 //#define APP_CASE_GET_BTINFO        (2011)           // 盒子获取耳机经典蓝牙地址
@@ -126,6 +128,7 @@ typedef struct tagPROGRUNINFO {
 #ifdef TWS_DEBUG
     bool           realInCase;              // true:充电盒中 false:空中
 #endif
+    uint8          currVer[DEV_HWSWVER_LEN];        // 对方耳机版本信息
     uint8          peerVer[DEV_HWSWVER_LEN];        // 对方耳机版本信息
     uint8          tempCurrentVer[DEV_SWVER_LEN];   // Gaia设置的临时当前耳机版本，当版本文件校验完毕之后更新系统的版本信息
     uint8          peerVerSyncStatus;               // 对方耳机版本信息同步状态
@@ -438,5 +441,7 @@ void appPeerVersionClearCache(void);
 bool appPeerVersionIsEmpty(void);
 void appPeerVersionSet(uint8* buffer);
 uint8* appPeerVersionGet(void);
+uint8* appCurrVersionGet(void);
+void appUITempSetVersionToMemory(uint8* ptr);
 
 #endif // SUB_UI_H
