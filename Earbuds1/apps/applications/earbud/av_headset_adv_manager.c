@@ -108,14 +108,14 @@ static void writeLocalname_right_or_left(CL_DM_LOCAL_NAME_COMPLETE_T *name)
         name->local_name[name->size_local_name] = '-';
         if(appGetInit()->appInitIsLeft==1)
         {
-             name->local_name[name->size_local_name+1] = 'l';
+             name->local_name[name->size_local_name+1] = 'L';
 
         }else if(appGetInit()->appInitIsLeft==0)
         {
-             name->local_name[name->size_local_name+1] = 'r';
+             name->local_name[name->size_local_name+1] = 'R';
         }else
         {
-             name->local_name[name->size_local_name+1] = 'e';
+             name->local_name[name->size_local_name+1] = 'E';
         }
 
         name->size_local_name += 2;
