@@ -298,7 +298,8 @@ int16 ParamSaveBlePair(BlePairInfo *blePairInfo, uint32 timeModfy)
 
     iFind = ParamSearchBlePair(prm->ble_pair, blePairInfo->btAddr);
     ParamMoveBlePair(prm->ble_pair, iFind);
-    DEBUG_LOG("SAVE Pair iFind=%d handset=%d", iFind, theDevice->handset_connected);
+    DEBUG_LOG("SAVE Pair iFind=%d handset=%d adv=%x bond=%x", iFind, theDevice->handset_connected,
+        blePairInfo->advCode, blePairInfo->bondCode);
 
     // 保存在第一个节点上
     prm->ble_pair_sync = 1;
@@ -316,7 +317,7 @@ int16 ParamSyncBlePairSucc(void)
     if(0 == prm->ble_pair_sync) {
         return 0;
     }
-    prm->ble_pair_sync = 1;
+    prm->ble_pair_sync = 0;
     return ParamSaveBtAddrPrm(prm);
 }
 
@@ -349,6 +350,7 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
 {
     int iNo = 0;
     BtAddrPrmPtr prm = &gBtAddrParam;
+#if 0
     deviceTaskData *theDevice = appGetDevice();
 
     // 检查当前经典蓝牙是否已经连接,没有连接返回第一组
@@ -360,6 +362,30 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
             goto out;
         }
     }
+    else {         // 查找最后一次连接的手机地址
+        bdaddr bd_addr;
+        appDeviceAttributes attributes;
+        if(appDeviceGetAttributes(&bd_addr, DEVICE_TYPE_HANDSET, &attributes, NULL) == TRUE) {
+            bdaddr2buffer(&bd_addr, blePairInfo->btAddr);
+            iNo = ParamSearchBlePair(prm->ble_pair, blePairInfo->btAddr);
+            if(iNo >= 0 && iNo < BLEPAIR_COUNT) {   // 返回对应蓝牙地址的那一组
+                memcpy(blePairInfo, &prm->ble_pair[iNo], sizeof(BlePairInfo));
+                goto out;
+            }
+        }
+    }
+#else
+    bdaddr bd_addr;
+    if(appDeviceGetHandsetBdAddr(&bd_addr) == TRUE) {
+        bdaddr2buffer(&bd_addr, blePairInfo->btAddr);
+        iNo = ParamSearchBlePair(prm->ble_pair, blePairInfo->btAddr);
+        if(iNo >= 0 && iNo < BLEPAIR_COUNT) {   // 返回对应蓝牙地址的那一组
+            memcpy(blePairInfo, &prm->ble_pair[iNo], sizeof(BlePairInfo));
+            DEBUG_LOG("LoadBlePair: adv=%x bond=%x", blePairInfo->advCode, blePairInfo->bondCode);
+            goto out;
+        }
+    }
+#endif
 
     // 返回全0
     memset(blePairInfo, 0x00, sizeof(BlePairInfo));
