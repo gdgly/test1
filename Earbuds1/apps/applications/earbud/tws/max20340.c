@@ -431,6 +431,7 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
     power = get_buf[2] & 0X7F;
 
     appUiCaseStatus(((get_buf[1] >> 6) & 0x01), -1, -1, power, 0);	        // 发送是否在盒子中的信号
+    appUiCaseStatus2((get_buf[1] >> 7) & 0x01, power);
 
     send_buf[1] = (status<<5) & 0xE0;
     send_buf[1] |= (1 == _case_need_upgrade) ? 0x08 : 0x00;         // 是否需要升级 BIT4

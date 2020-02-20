@@ -1085,6 +1085,33 @@ void appUiPairingFailed(void)
 ///////////////////////////////////////////////////////////////////////////////
 ///  盒子状态变化
 ///////////////////////////////////////////////////////////////////////////////
+/// stat: 0：USB没有连接  1：USB连接中
+void appUiCaseStatus2(int16 stat, int16 power)           // 当前USB状态
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    if(progRun->caseUsb != stat) {
+        uint8 buff[4];
+
+        // 获取到状态变化，同步给对方
+        buff[0] = stat;
+        buff[1] = (uint8)power;
+        appPeerSigTxDataCommandExt(appGetUiTask(), PEERTX_CMD_SYNC_CASEST, 2, buff);
+        // MessageSend
+        progRun->caseUsb = stat;
+    }
+}
+
+// 对方同步过来的盒子状态
+void appUiCaseStatus2FromPeer(uint8 *buff)
+{
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    progRun->caseUsb       = buff[0];
+    progRun->caseElectrity = buff[1];
+}
+
+
 // 数值小于0，表示不确定，不设置
 void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectrity, uint16 bitEars)
 {

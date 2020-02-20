@@ -79,6 +79,7 @@ typedef struct tagPROGRUNINFO {
     uint16         caseLidOpen:1;           // 盒子盖状态 0:close 1:opened
     uint16         caseKeyDown:1;           // 按键按下   0:up 1:down
     uint16         caseKeyLong:1;           // 按键按下长按键
+    uint16         caseUsb:1;               // 盒子USB充电是否接上
     uint16         stopBle:1;               // BLE更新广播内容时，需要先停止广播
 
     uint16         peerGaiaStat:1;          // 对方手机GAIA与手机是否连接0：disconect, 1:connect
@@ -146,6 +147,8 @@ void apolloWakeupPower(int enable);        // 开启或停止 APO2
 ///////////////////////////////////////////////////////////////////////////////
 ///  盒子状态变化
 ///////////////////////////////////////////////////////////////////////////////
+void appUiCaseStatus2(int16 stat, int16 power);           // 当前USB状态
+void appUiCaseStatus2FromPeer(uint8 *buff);
 // bitEars: BIT0/1:Left/Right Mask; Bit4/5 Left/Right in or Not
 void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectrity, uint16 bitEars);
 void appUiCaseVersion(uint16 hwVer, uint16 swVer);
