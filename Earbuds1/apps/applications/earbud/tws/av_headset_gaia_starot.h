@@ -143,6 +143,7 @@ enum {
 enum {
     GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU = 0X5700,                           // 进入升级模式
     GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU = 0X5701,                            // 退出升级模式
+    GAIA_COMMAND_STAROT_UPGRADE_GET_CURRENT_VERSION_DETAIL = 0X5702,          // 获取升级的详细信息
 };
 
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))

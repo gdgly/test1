@@ -448,6 +448,7 @@ void appPeerVersionSet(uint8* buffer);
 uint8* appPeerVersionGet(void);
 uint8* appCurrVersionGet(void);
 void appUITempSetVersionToMemory(uint8* ptr);
+void appUIConvertTempVersionToMemory(void);
 
 bool appUICanContinueUpgrade(void);
 

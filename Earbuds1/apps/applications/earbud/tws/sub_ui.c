@@ -1912,8 +1912,17 @@ static void appUICheckPeerVersionForUpdate(void) {
 
 void appUITempSetVersionToMemory(uint8* ptr) {
     for (int i = 0; i < DEV_SWVER_LEN; ++i) {
-        gProgRunInfo.currVer[DEV_SWVER_LEN + i] = ptr[i];
+        gProgRunInfo.currVer[DEV_HWVER_LEN + 1 + i] = ptr[i];
     }
+    appPeerVersionSyncSent();
+}
+
+void appUIConvertTempVersionToMemory(void) {
+    uint8* ptr = SystemGetCurrentSoftware();
+    for (int i = 0; i < DEV_SWVER_LEN; ++i) {
+        gProgRunInfo.currVer[DEV_HWVER_LEN + 1 + i] = ptr[i];
+    }
+    appPeerVersionSyncSent();
 }
 
 static void appUIUpgradeCommit(void) {

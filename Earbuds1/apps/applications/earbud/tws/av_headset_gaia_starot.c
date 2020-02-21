@@ -84,6 +84,7 @@ static void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerPeerExitCfm(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerGetVersionDetail(GAIA_STAROT_IND_T *message);
 
 struct GaiaStarotPrivateData_T {
     Source dialogSpeaker;
@@ -334,6 +335,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU:
             /// 强制停止升级流程，后续并断开连接
             appGaiaHandlerExitDfu(message);
+            break;
+        case GAIA_COMMAND_STAROT_UPGRADE_GET_CURRENT_VERSION_DETAIL:
+            appGaiaHandlerGetVersionDetail(message);
             break;
 
         case STAROT_APP_NOTIFY_PEER_UPGRADE_ENTER_CFM:
@@ -1387,6 +1391,34 @@ static void appGaiaHandlerPeerExitCfm(GAIA_STAROT_IND_T *message) {
                         (TRUE == st) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE, 0, NULL);
 }
 
+static void appGaiaHandlerGetVersionDetail(GAIA_STAROT_IND_T *message) {
+    StarotAttr *head = NULL;
+    {
+        const uint8 RUN_SF_VERSION_ATTR = 1;
+        StarotAttr *attr = attrMalloc(&head, DEV_SWVER_LEN);
+        attr->attr = RUN_SF_VERSION_ATTR;
+        memcpy(attr->payload, SystemGetCurrentSoftware(), DEV_SWVER_LEN);
+    }
+    {
+        const uint8 UPGRADE_SF_VERSION_ATTR = 2;
+        StarotAttr *attr = attrMalloc(&head, DEV_SWVER_LEN);
+        attr->attr = UPGRADE_SF_VERSION_ATTR;
+        if (0 != memcmp(SystemGetCurrentSoftware(), appCurrVersionGet() + DEV_HWVER_LEN + 1, DEV_SWVER_LEN)) {
+            memcpy(attr->payload, appCurrVersionGet() + DEV_HWVER_LEN + 1, DEV_SWVER_LEN);
+        }
+    }
+    {
+        const uint8 UPGRADE_STATUS_ATTR = 3;
+        StarotAttr *attr = attrMalloc(&head, 1);
+        attr->attr = UPGRADE_STATUS_ATTR;
+        attr->payload[0] = UpgradeGetState();
+    }
+
+    uint16 len = 0;
+    uint8 *data = attrEncode(head, &len);
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
+    attrFree(head, data);
+}
 
 
 #endif
