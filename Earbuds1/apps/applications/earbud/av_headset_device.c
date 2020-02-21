@@ -314,6 +314,9 @@ void appDeviceInit(void)
 
     /* register to receive notifications of connections */
     appConManagerRegisterConnectionsClient(&theDevice->task);
+
+    /* 根据最后一次连接信息载入对应的配对码 */
+    appAdvParamInit();
 }
 
 void appDeviceInitAttributes(appDeviceAttributes *attributes)

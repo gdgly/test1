@@ -87,7 +87,6 @@ uint8 *appAdvManagerAdvertdataAddManufacturerSpecificData(uint8 *ad_data, uint8 
     advTaskData.advManufacturerSpecificData.product = 0X01;
     advTaskData.advManufacturerSpecificData.version = 0X01;
 
-    appAdvParamInit();
     appAdvManagerAdvertdatafunc();
 //    advManufacturerSpecificData.randomCode = 0X66;
 
