@@ -57,8 +57,8 @@ static void CummuPlayTone(void)
 void CommpcParse(GAIA_STAROT_AUDIO_IND_T *message);
 
 extern int lis25GetStatus(void);
-extern int apolloGetStatus(void);
-extern void comGetApolloVer(uint8 *arr);
+//extern int apolloGetStatus(void);
+//extern void comGetApolloVer(uint8 *arr);
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
 
@@ -113,17 +113,21 @@ static int CummuCheckAllItem(CommuInfo *com, char *outbuf, int bufize)
                     (status == 0) ? "PASS" : "FAIL");
             break;
 #endif
+#ifdef ENABLE_APOLLO
         case TYPE_APOLLO:
             status = apolloGetStatus();
             outsize = sprintf(outbuf, "check APOLLO %s",
                     (status == 0) ? "PASS" : "FAIL");
             break;
+#endif
+#ifdef ENABLE_APOLLO
         case TYPE_APO_VER:
             comGetApolloVer((uint8*)ver);
             outsize = sprintf(outbuf, "check APOLLOVERSION %02X.%02X.%02X.%02X",
                     ver[0], ver[1], ver[2], ver[3]);
             break;
-        default:
+#endif
+    default:
             return 0;
     }
 
@@ -196,7 +200,9 @@ static void CummuHandler(Task task, MessageId id, Message message)
             }
 
             if(strstr((char *)payload, "check STARTRECORD0")){
+#ifdef ENABLE_APOLLO
                 apollo_sleep();
+#endif
                 progRun->apolloWakeup = 0;
                 g_commuType        = 5;
                 g_appConfigSocMic1 = 0;
@@ -210,7 +216,9 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 CummuhandleSendData(task, (uint8*)"checkresp STARTRECORD", 22);
             }
             if(strstr((char *)payload, "check STARTRECORD1")){
+#ifdef ENABLE_APOLLO
                 apollo_sleep();
+#endif
                 progRun->apolloWakeup = 0;
                 g_commuType        = 6;
                 g_appConfigSocMic1 = NO_MIC;
@@ -233,7 +241,9 @@ static void CummuHandler(Task task, MessageId id, Message message)
             }
             if(strstr((char *)payload, "check WAKEUP")){
                 g_commuType = 1;
+#ifdef ENABLE_APOLLO
 				apollo_sleep();
+#endif
                 OperatorFrameworkEnable(MAIN_PROCESSOR_ON);
                 appSubUISetMicbias(TRUE);
                 CummuhandleSendData(task, (uint8*)"checkresp WAKEUP", 17);

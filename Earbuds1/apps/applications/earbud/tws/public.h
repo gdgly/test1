@@ -9,7 +9,7 @@
 //#define CONFIG_BOARD_V1_EARBARD //v1耳机板与demo板io不一样，打开此宏表示是耳机
 
 #define CONFIG_BOARD_V2
-
+//#define CONFIG_BOARD_V2_LIS25  //在CONFIG_BOARD_V2的基础上增加LIS25去掉APOLLO
 //==============================================================================================
 // TBR 调试器在DEMO板上使用使用的IO脚列表如下，可能会与我们系统中的冲突，注意不能同时使用
 //    上面一排右为1脚
@@ -189,11 +189,28 @@ int Lis2dw12Power(bool isOn);//1 打开，0关闭
 
 #endif
 
+
+
 #ifdef CONFIG_BOARD_V2
 #undef CONFIG_LIS25BA
 #undef UART_RX_PIO
 #undef UART_TX_PIO
 #define UART_TX_PIO   (53)
+
+
+// ================================================
+//              apollo 开关
+// ================================================
+#define ENABLE_APOLLO
+// ================================================
+//              apollo 关   LIS25开
+// ================================================
+
+
+#ifdef CONFIG_BOARD_V2_LIS25
+#undef ENABLE_APOLLO
+#define CONFIG_LIS25BA
+#endif
 
 #define CONFIG_I2CADDR_FOR_LEFT_RIGHT       // V1版本 使用I2C地址来确认是左右耳
 #undef  appConfigLeftAudioChannel
@@ -283,11 +300,6 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 
 #define ENABLE_WATCHDOG
 
-// ================================================
-//              apollo 开关
-// ================================================
-
-#define ENABLE_APOLLO
 
 // ================================================
 //              录音助手功能

@@ -100,7 +100,7 @@ int lis25GetStatus(void)
 #else
 void lis25Init(void) { return; }
 int lis25Power(bool isOn) { UNUSED(isOn); return 0; }
-int lis25GetStatus(void){return 0;}
+int lis25GetStatus(void){return -1;}
 #endif
 
 
