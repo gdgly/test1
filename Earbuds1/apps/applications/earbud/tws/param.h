@@ -70,6 +70,7 @@ typedef struct tagUSERPARAM {
     uint16         assistantType;             // 1:App 2:System
     uint32         assistantModifyTime;       // 助手修改时间
     uint32         sensorModifyTime;          // 佩戴检测修改时间
+    uint8          caseSn[DEV_SN_LEN];        // 保存盒子的SN号用于显示
 
 }UserParam, *UserPrmPtr;
 
@@ -104,6 +105,7 @@ int16 UserSetKeyFunc(uint8 lKeyFunc, uint8 rKeyFunc);     // 设置功能键
 
 void ParamConfigInit(void);
 void ParamInitHandleClDmLocalBdAddrCfm(Message message);
+int16 SystemParamSn(uint8 type, uint8 *sn, bool bSave);        // Load/Save SN
 
 // 组装测试使用
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf);

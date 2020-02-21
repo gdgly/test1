@@ -481,6 +481,37 @@ int16 SystemSetVersion(DevType type, uint8 *buffer)
 
 }
 
+// type: 0=本机SN 1=盒子SN
+int16 SystemParamSn(uint8 type, uint8 *sn, bool bSave)        // Load/Save SN
+{
+    if(0 == type) {
+        FixPrmPtr prm = &gFixParam;
+        if(bSave) {
+            if(memcmp(prm->sn, sn, DEV_SN_LEN) == 0)
+                return 0;
+
+            memcpy(prm->sn, sn, DEV_SN_LEN);
+            ParamSaveFixPrm(prm);
+        }
+        else {
+            memcpy(sn, prm->sn, DEV_SN_LEN);
+        }
+    }
+    else {
+        UserPrmPtr prm = GetUserParam();
+        if(bSave) {
+            if(memcmp(prm->caseSn, sn, DEV_SN_LEN) == 0)
+                return 0;
+
+            memcpy(prm->caseSn, sn, DEV_SN_LEN);
+            ParamSaveUserPrm(prm);
+        }
+        else
+            memcpy(sn, prm->caseSn, DEV_SN_LEN);
+    }
+    return 0;
+}
+
 int16 UserGetKeyFunc(uint8 *lKeyFunc, uint8 *rKeyFunc)     // 获取功能键
 {
     UserPrmPtr prm = GetUserParam();

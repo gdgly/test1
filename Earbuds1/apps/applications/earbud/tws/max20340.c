@@ -275,12 +275,17 @@ static void box_send_boxhwsoft_version(uint8 *get_buf, uint8 *send_buf)
     box_send_data_process(get_buf, send_buf, version, 8/2, &offset);
 }
 
-static void box_send_boxpower(uint8 *get_buf, uint8 *send_buf)
+// 盒子发送自己的SN给耳机，耳机发送给APP用于显示
+static void box_send_boxsn(uint8 *get_buf, uint8 *send_buf)
 {
-    appUiCaseStatus(-1, -1, -1, get_buf[1], 0x00);
-    send_buf[0] = get_buf[0];
-    send_buf[1] = 0;
-    send_buf[2] = 0;
+    static uint8 casesn[17];
+    static uint8 offset = 0;
+    uint8 type;
+    type = (get_buf[0] & 0x3);
+    if(type == 2){//版本号接收完整，可以通知出去了
+        SystemParamSn(1, casesn, TRUE);
+    }
+    box_send_data_process(get_buf, send_buf, casesn, 16/2, &offset);
 }
 
 static void box_get_earpower(uint8 *get_buf, uint8 *send_buf)
@@ -474,8 +479,8 @@ static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
     case 5://盒子发送自己软硬件版本
         box_send_boxhwsoft_version(&buf[MX20340_REG_RX_DATA0], send_buf);
         break;
-    case 6://盒子发送自己电量
-        box_send_boxpower(&buf[MX20340_REG_RX_DATA0], send_buf);
+    case 6://盒子发送自己SN
+        box_send_boxsn(&buf[MX20340_REG_RX_DATA0], send_buf);
         break;
     case 7://盒子获取耳机电量
         box_get_earpower(&buf[MX20340_REG_RX_DATA0], send_buf);
