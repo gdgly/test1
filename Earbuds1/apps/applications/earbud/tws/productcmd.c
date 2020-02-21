@@ -4,7 +4,7 @@
 #include <message.h>
 
 #include "av_headset.h"
-
+#include "public.h"
 // 生产测试相关命令及涵数
 void ProductEnterDutMode(void);
 void ProductEnterReocrdMode(int16 isLeft);      // 1: left, 0:right
@@ -148,8 +148,10 @@ void appSetSingleModeTest(void)
     prm->peer_addr.addr.lap = 0xFFFFFF;
 }
 
+#ifdef ENABLE_APOLLO
 extern int apolloGetStatus(void);
 extern int apollo_evoke(void);
+#endif
 extern void appSubUISetMicbias(int set);
 
 
@@ -202,7 +204,9 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             break;
         case 0x07:   // 启动或获取唤醒状态
             if(0x00 == get_buf[2]) {
+#ifdef ENABLE_APOLLO
                 apollo_evoke();
+#endif
                 OperatorFrameworkEnable(MAIN_PROCESSOR_ON);
                 appSubUISetMicbias(TRUE);
                 send_buf[2] = 0x00;
@@ -234,7 +238,12 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 #ifdef HAVE_MAX20340
         send_buf[2] |= (max20340_GetStatus() == 0) ? 0x04 : 0;
 #endif
+#ifdef ENABLE_APOLLO
         send_buf[2] |= (apolloGetStatus() == 0) ? 0x08 : 0;
+#endif
+#ifdef CONFIG_BOARD_V2_LIS25
+        send_buf[2] |= (lis25GetStatus() == 0) ? 0x10 : 0;
+#endif
             break;
 
         case 0x0f:

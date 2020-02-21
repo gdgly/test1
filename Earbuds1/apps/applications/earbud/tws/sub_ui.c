@@ -5,6 +5,7 @@
 #include <pmalloc.h>
 #include <input_event_manager.h>
 
+//#include "public.h"
 #include "av_headset.h"
 #include "av_headset_ui.h"
 #include "av_headset_sm.h"
@@ -607,7 +608,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         max20340_notify_current_status();
 #endif
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_UPGRADE);
+#ifdef ENABLE_APOLLO
         register_apollo_wakeup_cb(apolloWakeupCallback);                       //注册apollo唤醒函数
+#endif
         appGaiaClientRegister(appGetUiTask());                         // 获取GAIA的连接断开消息
         /// todo hjs 暂时不启用自动配对
 #ifndef TWS_DEBUG
@@ -804,7 +807,9 @@ void appSubUIInit(void)
     appPeerVersionClearCache();
 
     // 运行到这个地方时外设都为正常打开状态
+#ifdef ENABLE_APOLLO
     apollo_sleep();
+#endif
 
 #ifdef TWS_DEBUG
     progRun->realInCase = TRUE;
@@ -1464,12 +1469,16 @@ void apolloWakeupPower(int enable)        // 开启或停止 APO2
             progRun->apolloWakeup = 1;
             OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 前,否则有时电压上不来
             appSubUISetMicbias(TRUE);
+#ifdef ENABLE_APOLLO
             apollo_evoke();
+#endif
         }
     }
     else {
         if(1 == progRun->apolloWakeup) {          // 当前已经启动
+#ifdef ENABLE_APOLLO
             apollo_sleep();                  // APO2,可能不成功
+#endif
             appSubUISetMicbias(FALSE);
             OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
             progRun->apolloWakeup = 0;
