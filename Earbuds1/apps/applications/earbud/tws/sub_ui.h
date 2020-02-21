@@ -50,6 +50,10 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_UPGRADE_REBOOT_TIMEOUT   (2111)          //  ui -> ui 升级中，确定了对方版本和当前耳机一致，在同步版本之后，添加定时器，防止版本同步失败不能重启
 #define APP_CHECK_PEER_FOR_UPDATE     2112           // upgrade/peersync -> ui 重启之后，如果是host continue状态，需要查询另一只耳机版本及其状态信息
 #define APP_UPGRADE_COMMIT            2113           // peersync -> ui 比较版本之后，可以提交commit
+#define APP_UPGRADE_ENTER_BY_PEER     2114           // peersync -> ui Peer通知当前耳机，进入升级模式
+#define APP_UPGRADE_EXIT_BY_PEER      2115           // peersync -> ui Peer通知当前耳机，退出升级模式
+#define APP_UPGRADE_ENTER_BY_GAIA     2116           // gaia -> ui Gaia通知当前耳机，进入升级模式
+#define APP_UPGRADE_EXIT_BY_GAIA      2117           // gaia -> ui Gaia通知当前耳机，退出升级模式
 
 //#define APP_CASE_GET_INFO          (2010)           // 获取版本信息
 //#define APP_CASE_GET_BTINFO        (2011)           // 盒子获取耳机经典蓝牙地址
@@ -133,6 +137,7 @@ typedef struct tagPROGRUNINFO {
     uint8          tempCurrentVer[DEV_SWVER_LEN];   // Gaia设置的临时当前耳机版本，当版本文件校验完毕之后更新系统的版本信息
     uint8          peerVerSyncStatus;               // 对方耳机版本信息同步状态
     bool           upgradeNeedReboot;               // 升级需要重启
+    bool           canContinueUpgrade;                    // 是否持续进入升级状态
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;
 void appSubUIInit(void);
@@ -443,5 +448,7 @@ void appPeerVersionSet(uint8* buffer);
 uint8* appPeerVersionGet(void);
 uint8* appCurrVersionGet(void);
 void appUITempSetVersionToMemory(uint8* ptr);
+
+bool appUICanContinueUpgrade(void);
 
 #endif // SUB_UI_H

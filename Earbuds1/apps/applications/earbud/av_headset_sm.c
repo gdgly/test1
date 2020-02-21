@@ -1137,6 +1137,13 @@ static void appSmHandlePhyStateChangedInd(smTaskData* sm, PHY_STATE_CHANGED_IND_
 
     DEBUG_LOGF("appSmHandlePhyStateChangedInd new phy state %d", ind->new_state);
 
+#ifdef CONFIG_STAROT
+    if (appSmIsInDfuMode() && (ind->new_state != PHY_STATE_IN_CASE))
+    {
+        appSmExitDfuMode();
+    }
+#endif
+
     sm->phy_state = ind->new_state;
 
     switch (ind->new_state)
@@ -1970,7 +1977,11 @@ static void appSmHandleHfpScoDisconnectedInd(void)
 //extern void appEnterSingleForTest(void);
 static void appSmHandleInternalPairHandset(void)
 {
+#ifdef CONFIG_STAROT
+    if (appSmStateIsIdle(appGetState()) || (appSmIsInDfuMode() && !UpgradeInProgress()))
+#else
     if (appSmStateIsIdle(appGetState()))
+#endif
     {
         appSmSetUserPairing();
         appSetState(APP_STATE_HANDSET_PAIRING);
@@ -2551,7 +2562,11 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 
 #ifdef INCLUDE_DFU
         case SM_INTERNAL_ENTER_DFU_UI:
+#ifdef CONFIG_STAROT
+            appSmHandleEnterDfuWithTimeout(appUICanContinueUpgrade() ? 0 : appConfigDfuTimeoutAfterEnteringCaseMs());
+#else
             appSmHandleEnterDfuWithTimeout(appConfigDfuTimeoutAfterEnteringCaseMs());
+#endif
             break;
 
         case SM_INTERNAL_ENTER_DFU_UPGRADED:

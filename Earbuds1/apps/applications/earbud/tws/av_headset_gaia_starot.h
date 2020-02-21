@@ -139,7 +139,7 @@ enum {
 enum {
     GAIA_CONNECT_STAROT_UPDATE_FIRMWARE = 0X5800,                             //固件升级使用
 };
-/////////////////////////////测试与生产///////////////////////////////
+/////////////////////////////升级///////////////////////////////
 enum {
     GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU = 0X5700,                           // 进入升级模式
     GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU = 0X5701,                            // 退出升级模式
@@ -240,6 +240,8 @@ enum {
     STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB,                 // gaia -> ui App设置是否佩戴使能
     STAROT_APP_CONTROL_PREVIOUS_TRACK,                    // gaia -> ui App控制上一首
     STAROT_APP_CONTROL_NEXT_TRACK,                        // gaia -> ui App控制下一首
+    STAROT_APP_NOTIFY_PEER_UPGRADE_ENTER_CFM,             // sync -> gaia 通知进入升级状态结果
+    STAROT_APP_NOTIFY_PEER_UPGRADE_EXIT_CFM,              // sync -> gaia 通知进入升级状态结果
 };
 
 #define STAROT_COMMAND_TIMEOUT 1000 // 命令超时时间

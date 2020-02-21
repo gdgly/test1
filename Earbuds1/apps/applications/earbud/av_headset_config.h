@@ -58,7 +58,7 @@
     requested DFU and then placed the device into the case.
 
     The timeout can be set to 0, in which case there is no limit. */
-#define appConfigDfuTimeoutAfterEnteringCaseMs()    (D_SEC(50))
+#define appConfigDfuTimeoutAfterEnteringCaseMs()    (D_SEC(30))
 
 /*! Timeout for DFU mode, requested from GAIA
 

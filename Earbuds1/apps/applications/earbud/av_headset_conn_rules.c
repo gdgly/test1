@@ -178,7 +178,7 @@ DEFINE_RULE(ruleBleConnectionUpdate);
 DEFINE_RULE(ruleClearHandsetPair);
 DEFINE_RULE(ruleDisconnectGaia);
 DEFINE_RULE(ruleIdleHandsetPair);
-DEFINE_RULE(ruleCaseOpenAllowGaiaConnect);
+DEFINE_RULE(ruleCaseOpenEnterDfu);
 DEFINE_RULE(ruleCaseCloseNotAllowGaiaConnect);
 DEFINE_RULE(ruleAllowGaiaConnect);
 DEFINE_RULE(ruleAllRun);
@@ -345,10 +345,10 @@ ruleEntry appConnRules[] =
 #ifdef TWS_DEBUG
     RULE(RULE_EVENT_CLEAR_PAIR_HEADSET,         ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
     RULE(RULE_EVENT_CASE_OPEN,                  ruleIdleHandsetPair,                CONN_RULES_HANDSET_PAIR),
-    RULE(RULE_EVENT_CASE_OPEN,                  ruleCaseOpenAllowGaiaConnect,       CONN_RULES_ALLOW_HANDSET_CONNECT), /// 可连接，用户android升级
+    RULE(RULE_EVENT_CASE_OPEN,                  ruleCaseOpenEnterDfu,               CONN_RULES_ENTER_DFU),
     /// 关闭充电盒时，触发的规则
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
-    RULE(RULE_EVENT_CASE_CLOSE,                 ruleCaseCloseNotAllowGaiaConnect,   CONN_RULES_REJECT_HANDSET_CONNECT), //盒盖关闭，不可连接
+//    RULE(RULE_EVENT_CASE_CLOSE,                 ruleCaseCloseNotAllowGaiaConnect,   CONN_RULES_REJECT_HANDSET_CONNECT), //盒盖关闭，不可连接
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleDisconnectHfpA2dpAvrcp,         CONN_RULES_DISCONNECT_HANDSET),
 
    // RULE(RULE_EVENT_CASE_CLOSE,                 ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
@@ -1936,8 +1936,31 @@ static ruleAction ruleInCaseDisconnectPeer(void)
 */
 static ruleAction ruleInCaseEnterDfu(void)
 {
+#ifdef CONFIG_STAROT
+    if (!appGetCaseIsOpen()) {
+        /// 从dfu退出的时候，重新计算state，会发生重新incase规则
+        RULE_LOG("ruleInCaseEnterDfu, case is close, so don't enter dfu");
+        return RULE_ACTION_IGNORE;
+    }
+    if (ParamUsingSingle()) {
+        RULE_LOG("ruleInCaseEnterDfu, single mode, so auto enter dfu");
+        return RULE_ACTION_RUN;
+    } else {
+        if (!appPeerSyncIsComplete()) {
+            RULE_LOG("ruleInCaseEnterDfu, but peer sync is not complete, so defer");
+            return RULE_ACTION_DEFER;
+        }
+        if (appSmIsInCase() && appPeerSyncIsPeerInCase()) {
+            RULE_LOG("ruleInCaseEnterDfu, all in case, so enter dfu");
+            return RULE_ACTION_RUN;
+        } else {
+            RULE_LOG("ruleInCaseEnterDfu, two earbuds not all in case, so ignore");
+            return RULE_ACTION_IGNORE;
+        }
+    }
+#else
 #ifdef INCLUDE_DFU
-    if (appSmIsInCase() && appSmIsDfuPending())
+     if (appSmIsInCase() && (appSmIsDfuPending())
     {
         RULE_LOG("ruleInCaseCheckDfu, run as still in case & DFU pending/active");
         return RULE_ACTION_RUN;
@@ -1949,6 +1972,7 @@ static ruleAction ruleInCaseEnterDfu(void)
     }
 #else
     return RULE_ACTION_IGNORE;
+#endif
 #endif
 }
 
@@ -2589,6 +2613,7 @@ static ruleAction bleEnable(void) {
     if (TRUE == has_ble_connection || TRUE == is_ble_connecting) {
         return RULE_ACTION_IGNORE;
     } else {
+        MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
         bool connectable = TRUE;
         return RULE_ACTION_RUN_PARAM(connectable);
     }
@@ -2596,6 +2621,7 @@ static ruleAction bleEnable(void) {
 
 static ruleAction bleDisable(void) {
     bool st = FALSE;
+    MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
     return RULE_ACTION_RUN_PARAM(st);
 }
 
@@ -2667,7 +2693,7 @@ static ruleAction ruleBleConnectionUpdate(void)
 
     if (ParamUsingSingle()) {
         /// 单耳模式下，如果在充电盒中，处于空闲，直接发送可升级的广播
-        if (appSmIsInCase()) {
+        if (appSmIsInCase() && appSmIsInDfuMode()) {
             DEBUG_LOG("ruleBleConnectionUpdate single mode, so enable");
             appBleSelectFeture();
             return bleEnable();
@@ -2689,7 +2715,7 @@ static ruleAction ruleBleConnectionUpdate(void)
                 }
 
                 if (TRUE == appSmIsInCase()) { /// 当前耳机在充电盒中
-                    if (appPeerSyncIsPeerInCase() && appGetCaseIsOpen()) {
+                    if (appPeerSyncIsPeerInCase() && (appGetCaseIsOpen() || appSmIsInDfuMode())) {
                         //1.比较版本号
                         /// Peer ? 0 | Peer > Current 1 | Peer = Current 2 | Peer < Current 3
                         int st = SystemCheckMemoryVersion();
@@ -2718,7 +2744,8 @@ static ruleAction ruleBleConnectionUpdate(void)
                             return bleDisable();
                         }
                     } else {
-                        DEBUG_LOG("ruleBleConnectionUpdate only one in case ble adv disable");
+                        DEBUG_LOG("ruleBleConnectionUpdate current in case, but appPeerSyncIsPeerInCase()[%d] && (appGetCaseIsOpen()[%d] || appSmIsInDfuMode()[%d]) is false, ble adv disable",
+                                  appPeerSyncIsPeerInCase(), appGetCaseIsOpen(), appSmIsInDfuMode());
                         return bleDisable();
                     }
                 } else {  /// 当前耳机在空中
@@ -3393,18 +3420,27 @@ static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
     return RULE_ACTION_IGNORE;
 }
 
-static ruleAction ruleCaseOpenAllowGaiaConnect(void)
+static ruleAction ruleCaseOpenEnterDfu(void)
 {
-    if (appPeerSyncIsPeerInCase() && appSmIsInCase()) {
+    if (ParamUsingSingle()) {
         if (appUICaseIsOpen()) {
-            RULE_LOG("ruleCaseOpenAllowGaiaConnect, appUICaseIsOpen is true, run");
+            RULE_LOG("ruleCaseOpenEnterDfu, appUICaseIsOpen is true, run");
             return RULE_ACTION_RUN;
         } else {
             return RULE_ACTION_IGNORE;
         }
+    } else {
+        if (appPeerSyncIsPeerInCase() && appSmIsInCase()) {
+            if (appUICaseIsOpen()) {
+                RULE_LOG("ruleCaseOpenEnterDfu, appUICaseIsOpen is true, run");
+                return RULE_ACTION_RUN;
+            } else {
+                return RULE_ACTION_IGNORE;
+            }
+        }
     }
 
-    RULE_LOG("ruleCaseOpenAllowGaiaConnect, but not all in case,  so ignore");
+    RULE_LOG("ruleCaseOpenEnterDfu, but not all in case,  so ignore");
     return RULE_ACTION_IGNORE;
 }
 

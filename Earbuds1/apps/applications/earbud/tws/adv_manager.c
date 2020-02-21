@@ -164,7 +164,7 @@ void appBleSelectFeture(void) {
         nowAdvFeture = ADV_FETURE_PAIR;
     } else if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
         nowAdvFeture = ADV_FETURE_GAIA;
-    } else if (appSmIsInCase()) {
+    } else if (appSmIsInDfuMode()) {
         nowAdvFeture = ADV_FETURE_UPGRADE;
     }
 

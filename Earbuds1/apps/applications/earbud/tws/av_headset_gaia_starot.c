@@ -81,7 +81,9 @@ static void gaiaSendCallNumber(GAIA_STAROT_IND_T* message);
 
 
 static void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerPeerExitCfm(GAIA_STAROT_IND_T *message);
 
 struct GaiaStarotPrivateData_T {
     Source dialogSpeaker;
@@ -332,6 +334,14 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU:
             /// 强制停止升级流程，后续并断开连接
             appGaiaHandlerExitDfu(message);
+            break;
+
+        case STAROT_APP_NOTIFY_PEER_UPGRADE_ENTER_CFM:
+            appGaiaHandlerPeerEnterCfm(message);
+            break;
+
+        case STAROT_APP_NOTIFY_PEER_UPGRADE_EXIT_CFM:
+            appGaiaHandlerPeerExitCfm(message);
             break;
     }
 
@@ -1316,11 +1326,16 @@ static bool appGaiaIsCanEnterDfu(void) {
     return TRUE;
 }
 
+/// 用户临时记录准备升级的版本，如果左右耳机都同意升级，则使用
+static uint8 tempForUpgradeVersion[DEV_SWVER_LEN];
+
 void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message) {
     DEBUG_LOG("appGaiaHandlerEnterDfu");
     bool isCanEnterDfu = appGaiaIsCanEnterDfu();
     if (isCanEnterDfu) {
-        appSmEnterDfuMode();
+        appPeerSigTxUpgradeEnter(appGetGaiaTask());
+        memset(tempForUpgradeVersion, 0x00, sizeof(tempForUpgradeVersion));
+
         StarotAttr *pAttr = attrDecode(message->payload, message->payloadLen);
         if (NULL == pAttr) {
             return;
@@ -1329,21 +1344,47 @@ void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message) {
         StarotAttr * head = pAttr;
         const uint8 VERSION_CMD = 0X01;
         if(VERSION_CMD == pAttr->attr) {
-            memcpy(gProgRunInfo.tempCurrentVer, pAttr->payload, DEV_SWVER_LEN);
+            memcpy(tempForUpgradeVersion, pAttr->payload, DEV_SWVER_LEN);
+            DEBUG_LOG("appGaiaHandlerEnterDfu want upgrade software version is :%02X%02X%02X", tempForUpgradeVersion[1],
+                      tempForUpgradeVersion[2], tempForUpgradeVersion[3]);
         }
-        DEBUG_LOG("Upgrade command enter dfu mode");
         attrFree(head, NULL);
+    } else {
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_INCORRECT_STATE, 0, NULL);
     }
-    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, isCanEnterDfu ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE, 0, NULL);
+}
+
+static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message) {
+    bool st = message->payload[0];
+    if (TRUE == st) {
+        memcpy(gProgRunInfo.tempCurrentVer, tempForUpgradeVersion, DEV_SWVER_LEN);
+        DEBUG_LOG("appGaiaHandlerPeerEnterCfm want upgrade software version is :%02X%02X%02X", gProgRunInfo.tempCurrentVer[1],
+                  gProgRunInfo.tempCurrentVer[2], gProgRunInfo.tempCurrentVer[3]);
+        memset(tempForUpgradeVersion, 0x00, sizeof(tempForUpgradeVersion));
+        MessageSend(appGetUiTask(), APP_UPGRADE_ENTER_BY_GAIA, NULL);
+    }
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU,
+            (TRUE == st) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE, 0, NULL);
 }
 
 void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message) {
+    DEBUG_LOG("appGaiaHandlerExitDfu");
     /// 强制停止升级流程，后续并断开连接
-    if (appSmIsInDfuMode()) {
-        appSmExitDfuMode();
-        DEBUG_LOG("Upgrade command exit dfu mode");
+    if (appUICanContinueUpgrade()) {
+        appPeerSigTxUpgradeExit(appGetGaiaTask());
+    } else {
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
     }
-    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+static void appGaiaHandlerPeerExitCfm(GAIA_STAROT_IND_T *message) {
+    bool st = message->payload[0];
+    if (TRUE == st) {
+        MessageSend(appGetUiTask(), APP_UPGRADE_EXIT_BY_GAIA, NULL);
+        memset(tempForUpgradeVersion, 0x00, sizeof(tempForUpgradeVersion));
+    }
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU,
+                        (TRUE == st) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE, 0, NULL);
 }
 
 

@@ -316,7 +316,9 @@ void appDeviceInit(void)
     appConManagerRegisterConnectionsClient(&theDevice->task);
 
     /* 根据最后一次连接信息载入对应的配对码 */
+#ifdef CONFIG_STAROT
     appAdvParamInit();
+#endif
 }
 
 void appDeviceInitAttributes(appDeviceAttributes *attributes)

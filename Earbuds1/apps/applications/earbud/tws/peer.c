@@ -7,6 +7,9 @@
 #define STAROT_MAKE_MESSAGE(TYPE) TYPE *message = (TYPE *) PanicUnlessMalloc(STAROT_MAKE_SIZE(TYPE))
 #define STAROT_MAKE_MESSAGE_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) PanicUnlessMalloc((((sizeof(TYPE) + LEN + 3) / 4) * 4))
 
+static void internalSendStarotAppNotifyPeerUpgradeEnterCfm(bool status);
+static void internalSendStarotAppNotifyPeerUpgradeExitCfm(bool status);
+
 /// 将消息发送至对方耳机
 uint8 g_last_tx_command = 0xFF;     // 记录最后一次发送出去的命令，在CONFIrm函数中来使用
 void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload) {
@@ -59,6 +62,22 @@ void appPeerSigTxUpgradeCheckVersion(Task task, uint8* data, int len) {
     appPeerSigTxDataCommandExt(task, PEERTX_CMD_UPGRADE_CHECK_VERSION, len, data);
 }
 
+void appPeerSigTxUpgradeEnter(Task task) {
+    if (ParamUsingSingle()) {
+        internalSendStarotAppNotifyPeerUpgradeEnterCfm(TRUE);
+    } else {
+        appPeerSigTxDataCommandExt(task, PEERTX_CMD_UPGRADE_ENTER, 0, NULL);
+    }
+}
+
+void appPeerSigTxUpgradeExit(Task task) {
+    if (ParamUsingSingle()) {
+        internalSendStarotAppNotifyPeerUpgradeExitCfm(TRUE);
+    } else {
+        appPeerSigTxDataCommandExt(task, PEERTX_CMD_UPGRADE_EXIT, 0, NULL);
+    }
+}
+
 void appPeerSigTxSyncPair(Task task)          // 同步配对信息
 {
     appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_BLEPAIR,
@@ -101,6 +120,18 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
                 break;
             }
         }
+    }
+        break;
+
+    case PEERTX_CMD_UPGRADE_ENTER: {
+        DEBUG_LOG("parse PEERTX_CMD_UPGRADE_ENTER");
+        MessageSend(appGetUiTask(), APP_UPGRADE_ENTER_BY_PEER, NULL);
+    }
+        break;
+
+    case PEERTX_CMD_UPGRADE_EXIT: {
+        DEBUG_LOG("parse PEERTX_CMD_UPGRADE_EXIT");
+        MessageSend(appGetUiTask(), APP_UPGRADE_EXIT_BY_PEER, NULL);
     }
         break;
 
@@ -180,6 +211,16 @@ void appPeerSigTxDataConfirm(Task task, peerSigStatus status) {
         } else {
             MessageSendLater(appGetUiTask(), APP_CHECK_PEER_FOR_UPDATE, NULL, D_SEC(5));
         }
+        break;
+
+    case PEERTX_CMD_UPGRADE_ENTER:
+        DEBUG_LOG("confirm PEERTX_CMD_UPGRADE_ENTER");
+        internalSendStarotAppNotifyPeerUpgradeEnterCfm(peerSigStatusSuccess == status ? TRUE : FALSE);
+        break;
+
+    case PEERTX_CMD_UPGRADE_EXIT:
+        DEBUG_LOG("confirm PEERTX_CMD_UPGRADE_EXIT");
+        internalSendStarotAppNotifyPeerUpgradeExitCfm(peerSigStatusSuccess == status ? TRUE : FALSE);
         break;
     }
     g_last_tx_command = 0xFF;
@@ -440,4 +481,20 @@ bool appPeerSigHandleDoubleClickWakeupSystemCommand(AV_AVRCP_VENDOR_PASSTHROUGH_
 void appPeerSigMsgDoubleClickWakeupConfirmation(Task task, peerSigStatus status) {
     /// todo : 发送消息至指定task，告知同步情况
     UNUSED(task), UNUSED(status);
+}
+
+static void internalSendStarotAppNotifyPeerUpgradeEnterCfm(bool status) {
+    GAIA_STAROT_IND_T *starot = PanicUnlessNew(GAIA_STAROT_IND_T);
+    starot->command = STAROT_APP_NOTIFY_PEER_UPGRADE_ENTER_CFM;
+    starot->payloadLen = 1;
+    starot->payload[0] = status;
+    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
+}
+
+static void internalSendStarotAppNotifyPeerUpgradeExitCfm(bool status) {
+    GAIA_STAROT_IND_T *starot = PanicUnlessNew(GAIA_STAROT_IND_T);
+    starot->command = STAROT_APP_NOTIFY_PEER_UPGRADE_EXIT_CFM;
+    starot->payloadLen = 1;
+    starot->payload[0] = status;
+    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
 }

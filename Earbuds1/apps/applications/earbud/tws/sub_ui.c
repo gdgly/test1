@@ -48,6 +48,8 @@ static void appUIUpgradeApplyInd(void);
 static void appUICheckVersion(void);
 static void appUICheckPeerVersionForUpdate(void);
 static void appUIUpgradeCommit(void);
+static void appUIUpgradeEnter(void);
+static void appUIUpgradeExit(void);
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg);
 
@@ -673,7 +675,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CASE_CLOSE:
         DEBUG_LOG("plc call case close");
 #ifdef TWS_DEBUG
-        if (appGaiaIsConnect()) {
+        if (appGaiaIsConnect() && !(appSmIsInDfuMode() && UpgradeInProgress())) {
             DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
             appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
         }
@@ -799,7 +801,21 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appUIUpgradeCommit();
         break;
 
-        default:
+    case APP_UPGRADE_ENTER_BY_PEER:
+        DEBUG_LOG("do APP_UPGRADE_ENTER_BY_PEER");
+    case APP_UPGRADE_ENTER_BY_GAIA:
+        DEBUG_LOG("do APP_UPGRADE_ENTER_BY_GAIA");
+        appUIUpgradeEnter();
+        break;
+
+    case APP_UPGRADE_EXIT_BY_PEER:
+        DEBUG_LOG("do APP_UPGRADE_EXIT_BY_PEER");
+    case APP_UPGRADE_EXIT_BY_GAIA:
+        DEBUG_LOG("do APP_UPGRADE_EXIT_BY_GAIA");
+        appUIUpgradeExit();
+        break;
+
+    default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
     }
@@ -1902,6 +1918,22 @@ void appUITempSetVersionToMemory(uint8* ptr) {
 
 static void appUIUpgradeCommit(void) {
     UpgradeCommitNewImage();
+}
+
+static void appUIUpgradeEnter(void) {
+    DEBUG_LOG("call appUIUpgradeEnter");
+    gProgRunInfo.canContinueUpgrade = TRUE;
+    appSmEnterDfuMode();
+}
+
+static void appUIUpgradeExit(void) {
+    DEBUG_LOG("call appUIUpgradeExit");
+    gProgRunInfo.canContinueUpgrade = FALSE;
+    appSmExitDfuMode();
+}
+
+bool appUICanContinueUpgrade(void) {
+    return gProgRunInfo.canContinueUpgrade;
 }
 
 void testPrintBrEdr(void);

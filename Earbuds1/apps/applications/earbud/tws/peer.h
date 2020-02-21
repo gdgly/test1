@@ -28,7 +28,9 @@ enum {PEERTX_CMD_SYNCGAIA=0,         /* 主副耳机发送gaia状态   [payload[
       PEERTX_CMD_SYNC_DOUBLE_CLICK,  /* 同步双击 */
       PEERTX_CMD_SYNC_CASEST,        /* 一只耳机在盒中，另外一只不在，可以做同步 */
       PEERTX_CMD_UPGRADE_CHECK_VERSION,  /* 升级之后，校验两边版本是否一致 */
-     };
+      PEERTX_CMD_UPGRADE_ENTER,   /* 通知Peer，app希望进入upgrade状态 */
+      PEERTX_CMD_UPGRADE_EXIT,    /* 通知Peer，app希望退出upgrade状态 */
+};
 void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload);
 void appPeerSigTxDataCommandExt(Task task,uint8 command, uint16 size_payload, const uint8 *payload);
 void appPeerSigTxDataCommandUi(uint8 command, uint8 payload);  // task为UI 仅一个字节payhload
@@ -46,6 +48,11 @@ void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right);
  * 比较两边的真实版本是否一致
  */
 void appPeerSigTxUpgradeCheckVersion(Task task, uint8* data, int len);
+/*
+ * 通知Peer，进入升级状态DFU
+ */
+void appPeerSigTxUpgradeEnter(Task task);
+void appPeerSigTxUpgradeExit(Task task);
 
 void appPeerSigTxSyncPair(Task task);          // 同步配对信息
 void appPeerSigTxDataRequest(PEER_SIG_INTERNAL_TXDATA_REQ_T *req);           // 发送方： 请求发送给对方

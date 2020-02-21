@@ -270,6 +270,7 @@ static void appUpgradeHandleUpgradeStatusInd(const UPGRADE_STATUS_IND_T *sts)
 #ifdef CONFIG_STAROT
 static void appUpgradeHandleUpgradeSmStateInd(const UPGRADE_SM_STATE_IND_T*sts) {
     DEBUG_LOG("appUpgradeHandleUpgradeSmStateInd recv state:%d", sts->state);
+    appPeerSyncSend(FALSE);
     //const int UPGRADE_SM_STATE_COMMIT_HOST_CONTINUE = 14;
     switch (sts->state) {
         case 14:
