@@ -85,6 +85,7 @@ static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerPeerExitCfm(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerGetVersionDetail(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerNotifyCommitStatus(GAIA_STAROT_IND_T *message);
 
 struct GaiaStarotPrivateData_T {
     Source dialogSpeaker;
@@ -346,6 +347,10 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 
         case STAROT_APP_NOTIFY_PEER_UPGRADE_EXIT_CFM:
             appGaiaHandlerPeerExitCfm(message);
+            break;
+
+        case STAROT_UI_NOTIFY_COMMIT_STATUS:
+            appGaiaHandlerNotifyCommitStatus(message);
             break;
     }
 
@@ -1418,6 +1423,29 @@ static void appGaiaHandlerGetVersionDetail(GAIA_STAROT_IND_T *message) {
     uint8 *data = attrEncode(head, &len);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
     attrFree(head, data);
+}
+
+
+static void appGaiaHandlerNotifyCommitStatus(GAIA_STAROT_IND_T *message) {
+    DEBUG_LOG("call appGaiaHandlerNotifyCommitStatus, gaia connect status : %d", appGaiaIsConnect());
+    if (!(appGaiaIsConnect())) {
+        return;
+    }
+
+    StarotAttr *head = NULL;
+    {
+        const uint8 COMMIT_STATUS_ATTR = 1;
+        StarotAttr *attr = attrMalloc(&head, 1);
+        attr->attr = COMMIT_STATUS_ATTR;
+        attr->payload[0] = message->payload[0]; // 1:commit 0 revert
+    }
+    uint16 len = 0;
+    uint8 *data = attrEncode(head, &len);
+    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_UPGRADE_NOTIFY_COMMIT_STATUS, 0xfe, len, data);
+    attrFree(head, data);
+
+    appUICancelAllUpgradeTime();
+    appPeerSigTxCancelNotifyCommitStatus(appGetUiTask());
 }
 
 

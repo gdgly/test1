@@ -50,6 +50,10 @@ static void appUICheckPeerVersionForUpdate(void);
 static void appUIUpgradeCommit(void);
 static void appUIUpgradeEnter(void);
 static void appUIUpgradeExit(void);
+static void appUIUpgradeNotifyCommitStatusInit(UI_APP_UPGRADE_COMMIT_STATUS* message);
+static void appUIUpgradeNotifyCommitStatusDo(UI_APP_UPGRADE_COMMIT_STATUS* message);
+static void appUIUpgradeNotifyCommitStatusTimeOut(UI_APP_UPGRADE_COMMIT_STATUS* message);
+static void appUIUpgradeNotifyCommitStatusTimeOutGrade(void);
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg);
 
@@ -813,6 +817,16 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_UPGRADE_EXIT_BY_GAIA:
         DEBUG_LOG("do APP_UPGRADE_EXIT_BY_GAIA");
         appUIUpgradeExit();
+        break;
+
+    case APP_UPGRADE_COMMIT_STATUS:
+        appUIUpgradeNotifyCommitStatusInit((UI_APP_UPGRADE_COMMIT_STATUS *) message);
+        break;
+    case APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT:
+        appUIUpgradeNotifyCommitStatusTimeOut((UI_APP_UPGRADE_COMMIT_STATUS*)message);
+        break;
+    case APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE:
+        appUIUpgradeNotifyCommitStatusTimeOutGrade();
         break;
 
     default:
@@ -1943,6 +1957,42 @@ static void appUIUpgradeExit(void) {
 
 bool appUICanContinueUpgrade(void) {
     return gProgRunInfo.canContinueUpgrade;
+}
+
+void appUICancelAllUpgradeTime(void) {
+    MessageCancelAll(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT);
+    MessageCancelAll(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE);
+}
+
+static void appUIUpgradeNotifyCommitStatusInit(UI_APP_UPGRADE_COMMIT_STATUS* message) {
+    MessageSendLater(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE, NULL, D_SEC(5 * 60));
+    appUIUpgradeNotifyCommitStatusDo(message);
+}
+
+static void appUIUpgradeNotifyCommitStatusDo(UI_APP_UPGRADE_COMMIT_STATUS* message) {
+
+    { // send to gaia
+        GAIA_STAROT_MESSAGE_T *msg = (GAIA_STAROT_MESSAGE_T *) PanicUnlessMalloc(sizeof(GAIA_STAROT_MESSAGE_T));
+        msg->command = STAROT_UI_NOTIFY_COMMIT_STATUS;
+        msg->payloadLen = 1;
+        msg->payload[0] = message->status;
+        MessageSend(appGetGaiaTask(), STAROT_UI_NOTIFY_COMMIT_STATUS, msg);
+    }
+    { // set timeout for resend
+        UI_APP_UPGRADE_COMMIT_STATUS *msg = (UI_APP_UPGRADE_COMMIT_STATUS *) PanicUnlessMalloc(
+                sizeof(UI_APP_UPGRADE_COMMIT_STATUS));
+        msg->status = message->status;
+        MessageSendLater(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT, msg, D_SEC(5));
+    }
+}
+
+static void appUIUpgradeNotifyCommitStatusTimeOut(UI_APP_UPGRADE_COMMIT_STATUS* message) {
+    appUIUpgradeNotifyCommitStatusDo(message);
+}
+
+static void appUIUpgradeNotifyCommitStatusTimeOutGrade(void) {
+    DEBUG_LOG("call appUIUpgradeNotifyCommitStatusTimeOutGrade");
+    MessageCancelAll(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT);
 }
 
 void testPrintBrEdr(void);

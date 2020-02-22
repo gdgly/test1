@@ -78,6 +78,14 @@ void appPeerSigTxUpgradeExit(Task task) {
     }
 }
 
+void appPeerSigTxCancelNotifyCommitStatus(Task task) {
+    if (ParamUsingSingle()) {
+        return;
+    } else {
+        appPeerSigTxDataCommandExt(task, PEERTX_CMD_CANCEL_NOTIFY_COMMIT_STATUS, 0, NULL);
+    }
+}
+
 void appPeerSigTxSyncPair(Task task)          // 同步配对信息
 {
     appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_BLEPAIR,
@@ -132,6 +140,12 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
     case PEERTX_CMD_UPGRADE_EXIT: {
         DEBUG_LOG("parse PEERTX_CMD_UPGRADE_EXIT");
         MessageSend(appGetUiTask(), APP_UPGRADE_EXIT_BY_PEER, NULL);
+    }
+        break;
+
+    case PEERTX_CMD_CANCEL_NOTIFY_COMMIT_STATUS: {
+        DEBUG_LOG("parse PEERTX_CMD_UPGRADE_EXIT");
+        appUICancelAllUpgradeTime();
     }
         break;
 

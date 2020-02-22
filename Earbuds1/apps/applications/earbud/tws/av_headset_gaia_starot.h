@@ -144,6 +144,7 @@ enum {
     GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU = 0X5700,                           // 进入升级模式
     GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU = 0X5701,                            // 退出升级模式
     GAIA_COMMAND_STAROT_UPGRADE_GET_CURRENT_VERSION_DETAIL = 0X5702,          // 获取升级的详细信息
+    GAIA_COMMAND_STAROT_UPGRADE_NOTIFY_COMMIT_STATUS = 0X5703,                // 通知升级提交的信息
 };
 
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))
@@ -243,6 +244,7 @@ enum {
     STAROT_APP_CONTROL_NEXT_TRACK,                        // gaia -> ui App控制下一首
     STAROT_APP_NOTIFY_PEER_UPGRADE_ENTER_CFM,             // sync -> gaia 通知进入升级状态结果
     STAROT_APP_NOTIFY_PEER_UPGRADE_EXIT_CFM,              // sync -> gaia 通知进入升级状态结果
+    STAROT_UI_NOTIFY_COMMIT_STATUS,                       // ui -> gaia 升级提交的状态
 };
 
 #define STAROT_COMMAND_TIMEOUT 1000 // 命令超时时间

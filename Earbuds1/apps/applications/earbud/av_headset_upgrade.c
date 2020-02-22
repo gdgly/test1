@@ -273,10 +273,19 @@ static void appUpgradeHandleUpgradeSmStateInd(const UPGRADE_SM_STATE_IND_T*sts) 
     appPeerSyncSend(FALSE);
     //const int UPGRADE_SM_STATE_COMMIT_HOST_CONTINUE = 14;
     switch (sts->state) {
-        case 14:
+        case 14: // UPGRADE_STATE_COMMIT_HOST_CONTINUE
             // 使用定时器，检测版本是否一致，如果一致，可以提交;upgrade的定时不在处理，统一在这里提交，防止冲突
             DEBUG_LOG("send later APP_CHECK_PEER_FOR_UPDATE for debug");
             MessageSend(appGetUiTask(), APP_CHECK_PEER_FOR_UPDATE, NULL);
+            break;
+
+        case 17:  // UPGRADE_STATE_COMMIT
+        {
+            /// note:如果失败了，就重启了，没有消息到这边来
+            UI_APP_UPGRADE_COMMIT_STATUS* msg = PanicUnlessMalloc(sizeof(UI_APP_UPGRADE_COMMIT_STATUS));
+            msg->status = TRUE;
+            MessageSend(appGetUiTask(), APP_UPGRADE_COMMIT_STATUS, msg);
+        }
             break;
         default:
             DEBUG_LOG("appUpgradeHandleUpgradeSmStateInd don't parse state:%d", sts->state);
