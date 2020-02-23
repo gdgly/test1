@@ -416,11 +416,15 @@ static void appUpgradeMessageHandler(Task task, MessageId id, Message message)
             UpgradeEraseStatus(message);
             break;
 
-        case MESSAGE_IMAGE_UPGRADE_COPY_STATUS:
+        case MESSAGE_IMAGE_UPGRADE_COPY_STATUS: {
             DEBUG_LOG("appUpgradeMessageHandler. MESSAGE_IMAGE_UPGRADE_COPY_STATUS");
-
+            bool* t = (bool*) message;
+            if (TRUE == (bool)(t[0])) {
+                MessageSendLater(appGetUiTask(), APP_UPGRADE_COPY_STATUS_GRADE, NULL, D_SEC(300));
+            }
             appUpgradeNotifyActivity();
             UpgradeCopyStatus(message);
+        }
             break;
 
         case MESSAGE_IMAGE_UPGRADE_HASH_ALL_SECTIONS_UPDATE_STATUS:

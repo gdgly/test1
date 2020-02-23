@@ -788,6 +788,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appUIUpgradeApplyInd();
         break;
 
+    case APP_UPGRADE_COPY_STATUS_GRADE:
+        DEBUG_LOG("do APP_UPGRADE_COPY_STATUS_GRADE");
+        MessageSendLater(appGetUiTask(), APP_UPGRADE_COPY_STATUS_GRADE, NULL, D_SEC(300));
+        break;
+
     case APP_UPGRADE_REBOOT_TIMEOUT:
         DEBUG_LOG("do APP_UPGRADE_REBOOT_TIMEOUT");
     case APP_CHECK_VERSION:
@@ -800,9 +805,16 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appUICheckPeerVersionForUpdate();
         break;
 
-    case APP_UPGRADE_COMMIT:
+    case APP_UPGRADE_COMMIT: {
         DEBUG_LOG("do APP_UPGRADE_COMMIT");
-        appUIUpgradeCommit();
+        /// 每次启动，只会触发一次提交，现在测试一下，定时发送校验版本请求
+        static int onlyOne = 1;
+        MessageCancelAll(appGetUiTask(), APP_CHECK_PEER_FOR_UPDATE);
+        if (onlyOne > 0) {
+            appUIUpgradeCommit();
+            onlyOne -= 1;
+        }
+    }
         break;
 
     case APP_UPGRADE_ENTER_BY_PEER:
@@ -1866,7 +1878,13 @@ bool appPeerVersionSyncStatusHaveSent(void) {
 
 static void appUIUpgradeApplyInd(void) {
     DEBUG_LOG("appUIUpgradeApplyInd parse, now sync version to peer earbuds");
-    // 临时修改版本号
+    // 使用定时器，如果MESSAGE_IMAGE_UPGRADE_COPY_STATUS（耗时操作）收到了，说明文件拷贝已经结束了
+    if (MessageCancelAll(appGetUiTask(), APP_UPGRADE_COPY_STATUS_GRADE) <= 0) {
+        // copy 还没有完成，不需要及时修改版本信息
+        DEBUG_LOG("appUIUpgradeApplyInd, copy not over, so defer this operation");
+        MessageSendLater(appGetUiTask(), APP_UPGRADE_APPLY_IND, NULL, 100);
+        return;
+    }
     appUITempSetVersionToMemory(gProgRunInfo.tempCurrentVer);
 
     // 如果双耳模式，查看另一只耳机版本。如果另一只耳机已经升级成功，向另一只耳机发送重启命令，当前耳机在收到重启命令的确认时重启，并设置定时器
@@ -1906,19 +1924,24 @@ static void appUICheckVersion(void) {
 extern void UpgradeCommitNewImage(void);
 extern void UpgradeRevertNewImage(void);
 
+static int haveCallappUICheckPeerVersionForUpdate = 0;
 static void appUICheckPeerVersionForUpdate(void) {
+    haveCallappUICheckPeerVersionForUpdate += 1;
+    DEBUG_LOG("call appUICheckPeerVersionForUpdate");
     if (ParamUsingSingle()) {
         /// 提交版本信息
         UpgradeCommitNewImage();
     } else {
         /// note:只有重启才会进入该段code，所以不用重置(不管成功还是失败)
-        static int count = 3;
+        static int count = 1000;
         if (count >= 0) {
+            DEBUG_LOG("appUICheckPeerVersionForUpdate, resend appUICheckPeerVersionForUpdate, count is :%d", count);
             /// 重新发送同步version信息
             appPeerSigTxUpgradeCheckVersion(appGetUiTask(), SystemGetCurrentSoftware(), DEV_SWVER_LEN);
             count -= 1;
         } else {
             /// 回滚版本
+            DEBUG_LOG("appUICheckPeerVersionForUpdate, revert image, count is :%d", count);
             UpgradeRevertNewImage();
         }
     }
@@ -1973,7 +1996,7 @@ static void appUIUpgradeNotifyCommitStatusDo(UI_APP_UPGRADE_COMMIT_STATUS* messa
         msg->command = STAROT_UI_NOTIFY_COMMIT_STATUS;
         msg->payloadLen = 1;
         msg->payload[0] = message->status;
-        MessageSend(appGetGaiaTask(), STAROT_UI_NOTIFY_COMMIT_STATUS, msg);
+        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, msg);
     }
     { // set timeout for resend
         UI_APP_UPGRADE_COMMIT_STATUS *msg = (UI_APP_UPGRADE_COMMIT_STATUS *) PanicUnlessMalloc(

@@ -57,6 +57,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_UPGRADE_COMMIT_STATUS               2118 // upgrade -> ui 通知升级状态
 #define APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT       2119 // ui -> ui 定时返送，防止gaia没有连接，如果连接上了，不能收到升级状态
 #define APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE 2120 // ui -> ui 如果到了这个时间，还没有发送成功，取消通知
+#define APP_UPGRADE_COPY_STATUS_GRADE 2121  // upgrade/ui -> ui 拷贝成功之后，再去更新临时版本，copy操作很耗时，10s以上，导致不同步问题
 
 struct UI_APP_UPGRADE_COMMIT_STATUS_T {
     bool status;   // true:commit ;false:revert
@@ -145,7 +146,7 @@ typedef struct tagPROGRUNINFO {
     uint8          tempCurrentVer[DEV_SWVER_LEN];   // Gaia设置的临时当前耳机版本，当版本文件校验完毕之后更新系统的版本信息
     uint8          peerVerSyncStatus;               // 对方耳机版本信息同步状态
     bool           upgradeNeedReboot;               // 升级需要重启
-    bool           canContinueUpgrade;                    // 是否持续进入升级状态
+    bool           canContinueUpgrade;              // 是否持续进入升级状态
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;
 void appSubUIInit(void);

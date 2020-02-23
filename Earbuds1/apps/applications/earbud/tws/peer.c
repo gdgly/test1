@@ -121,9 +121,15 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
         break;
 
     case PEERTX_CMD_UPGRADE_CHECK_VERSION: {
-        if (!memcmp(SystemGetCurrentSoftware(), req->data, DEV_SWVER_LEN)) {
+        const uint8* self = SystemGetCurrentSoftware();
+        if (0 == memcmp(self, req->data, DEV_SWVER_LEN)) {
+            ret = TRUE;
+        } else {
             ret = FALSE;
         }
+        DEBUG_LOG("PEERTX_CMD_UPGRADE_CHECK_VERSION self:%02X%02X%02X%02X, peer:%02X%02X%02X%02X, ret is :%d",
+                  self[0], self[1], self[2], self[3],
+                  req->data[0], req->data[1],req->data[2],req->data[3], ret);
     }
         break;
 
@@ -216,6 +222,7 @@ void appPeerSigTxDataConfirm(Task task, peerSigStatus status) {
         break;
 
     case PEERTX_CMD_UPGRADE_CHECK_VERSION:
+        DEBUG_LOG("PEERTX_CMD_UPGRADE_CHECK_VERSION status is : %d", status);
         if (peerSigStatusSuccess == status) {
             MessageSend(appGetUiTask(), APP_UPGRADE_COMMIT, NULL);
         } else {
