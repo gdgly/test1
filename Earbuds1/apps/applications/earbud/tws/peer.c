@@ -58,7 +58,7 @@ void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right) {
 }
 
 
-void appPeerSigTxUpgradeCheckVersion(Task task, uint8* data, int len) {
+void appPeerSigTxUpgradeCheckVersion(Task task, const uint8* data, int len) {
     appPeerSigTxDataCommandExt(task, PEERTX_CMD_UPGRADE_CHECK_VERSION, len, data);
 }
 
@@ -121,12 +121,8 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
         break;
 
     case PEERTX_CMD_UPGRADE_CHECK_VERSION: {
-        uint8 *v = SystemGetCurrentSoftware();
-        for (int i = 0; i < DEV_SWVER_LEN; ++i) {
-            if (req->data[i] != v[i]) {
-                ret = FALSE;
-                break;
-            }
+        if (!memcmp(SystemGetCurrentSoftware(), req->data, DEV_SWVER_LEN)) {
+            ret = FALSE;
         }
     }
         break;

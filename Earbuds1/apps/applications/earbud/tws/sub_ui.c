@@ -1932,10 +1932,7 @@ void appUITempSetVersionToMemory(uint8* ptr) {
 }
 
 void appUIConvertTempVersionToMemory(void) {
-    uint8* ptr = SystemGetCurrentSoftware();
-    for (int i = 0; i < DEV_SWVER_LEN; ++i) {
-        gProgRunInfo.currVer[DEV_HWVER_LEN + 1 + i] = ptr[i];
-    }
+    memcpy(gProgRunInfo.currVer + DEV_HWVER_LEN, SystemGetCurrentSoftware(), DEV_SWVER_LEN);
     appPeerVersionSyncSent();
 }
 

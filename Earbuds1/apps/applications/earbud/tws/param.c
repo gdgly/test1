@@ -554,6 +554,6 @@ void UserParamResetFactory(void) {
 }
 
 
-uint8 *SystemGetCurrentSoftware(void) {
+const uint8 *SystemGetCurrentSoftware(void) {
     return SYSTEM_SW_VERSION;
 }

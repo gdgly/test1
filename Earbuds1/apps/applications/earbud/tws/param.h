@@ -112,5 +112,5 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf);
 int16 ParamSaveSN(void *buff);
 int16 ParamLoadSN(void *buff);
 
-uint8* SystemGetCurrentSoftware(void);
+const uint8* SystemGetCurrentSoftware(void);
 #endif // PARAM_H

@@ -48,7 +48,7 @@ void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right);
 /*
  * 比较两边的真实版本是否一致
  */
-void appPeerSigTxUpgradeCheckVersion(Task task, uint8* data, int len);
+void appPeerSigTxUpgradeCheckVersion(Task task, const uint8* data, int len);
 /*
  * 通知Peer，进入升级状态DFU
  */
