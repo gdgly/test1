@@ -24,13 +24,8 @@ enum {PEERTX_CMD_SYNCGAIA=0,         /* 主副耳机发送gaia状态   [payload[
       PEERTX_CMD_WAKEUP_SYS,         /* 副耳机发送系统唤醒命令 [playload[0]:  0:keywakeup, 1:voice wakeup */
       PEERTX_CMD_WAKEUP_APP,         /* 副耳机发送唤醒APP命令  [playload[0]:  0:keywakeup, 1:voice wakeup */
       PEERTX_CMD_SYNC_BLEPAIR,       /* 同步BLE配对码 */
-      PEERTX_CMD_SYNC_VERSION,     /* 同步左右耳机版本 */
       PEERTX_CMD_SYNC_DOUBLE_CLICK,  /* 同步双击 */
       PEERTX_CMD_SYNC_CASEST,        /* 一只耳机在盒中，另外一只不在，可以做同步 */
-      PEERTX_CMD_UPGRADE_CHECK_VERSION,  /* 升级之后，校验两边版本是否一致 */
-      PEERTX_CMD_UPGRADE_ENTER,   /* 通知Peer，app希望进入upgrade状态 */
-      PEERTX_CMD_UPGRADE_EXIT,    /* 通知Peer，app希望退出upgrade状态 */
-      PEERTX_CMD_CANCEL_NOTIFY_COMMIT_STATUS, /* 通知Peer，不需要发送升级状态给APP了 */
 };
 void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload);
 void appPeerSigTxDataCommandExt(Task task,uint8 command, uint16 size_payload, const uint8 *payload);
@@ -38,26 +33,9 @@ void appPeerSigTxDataCommandUi(uint8 command, uint8 payload);  // task为UI 仅�
 #define appPeerSigTxWakeupSys(apo)   appPeerSigTxDataCommandUi(PEERTX_CMD_WAKEUP_SYS, (apo))
 #define appPeerSigTxWakeupApp(apo)   appPeerSigTxDataCommandUi(PEERTX_CMD_WAKEUP_APP, (apo))
 /*
- * 同步耳机版本信息
- */
-void appPeerSigTxSyncVersion(Task task);
-/*
  * 同步耳机双击的配置
  */
 void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right);
-/*
- * 比较两边的真实版本是否一致
- */
-void appPeerSigTxUpgradeCheckVersion(Task task, const uint8* data, int len);
-/*
- * 通知Peer，进入升级状态DFU
- */
-void appPeerSigTxUpgradeEnter(Task task);
-void appPeerSigTxUpgradeExit(Task task);
-/*
- *  通知Peer，不需要发送升级状态给APP
- */
-void appPeerSigTxCancelNotifyCommitStatus(Task task);
 
 void appPeerSigTxSyncPair(Task task);          // 同步配对信息
 void appPeerSigTxDataRequest(PEER_SIG_INTERNAL_TXDATA_REQ_T *req);           // 发送方： 请求发送给对方
@@ -129,4 +107,97 @@ bool appPeerSigHandleDoubleClickWakeupSystemCommand(AV_AVRCP_VENDOR_PASSTHROUGH_
 void appPeerSigMsgDoubleClickWakeupConfirmation(Task task, peerSigStatus status);
 
 /////////////////////////////////////////////////////////////////////////////////////////
+
+// region 统一发送请求数据
+
+typedef struct AVRCP_PEER_CMD_INTERNAL_UNITY_REQ_T {
+    Task    client_task;           /*!< Task to receive any response */
+    uint16   command;
+    uint16   length;   /// data's length
+    uint8   data[2];
+};
+typedef struct AVRCP_PEER_CMD_INTERNAL_UNITY_REQ_T AVRCP_PEER_CMD_INTERNAL_UNITY_REQ;
+
+AVRCP_PEER_CMD_INTERNAL_UNITY_REQ* PeerMallocUnityReq(uint16 opid, int payloadSize);
+AVRCP_PEER_CMD_INTERNAL_UNITY_REQ* PeerMallocUnityReqWithData(uint16 opid, int payloadSize, uint8* data);
+#define PEER_MALLOC_UNITY_REQ(OPID, TYPE, DATA) PeerMallocUnityReqWithData(OPID, sizeof(TYPE),(uint8* )DATA)
+#define PEER_MALLOC_UNITY_REQ_NODATA(OPID) PeerMallocUnityReqWithData(OPID, 0, NULL)
+
+void appPeerSigSendUnityRequest(AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *message);
+bool appPeerSigParseUnityRequest(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind);
+void appPeerSigParseUnityConfirm(uint16 opid, Task task, peerSigStatus status);
+
+typedef bool (*PeerCmdParseFun)(uint8* payload);
+typedef void (*PeerCmdConfirmFun)(Task task, peerSigStatus status);
+
+typedef struct {
+    uint16 command;
+    uint16 payloadSize;
+    PeerCmdParseFun  peerCmdParseFun;
+    PeerCmdConfirmFun  peerCmdConfirmFun;
+} PeerUnityParseCenter;
+
+
+enum {
+    AVRCP_PEER_CMD_STAROT_START = 0X10,
+    AVRCP_PEER_CMD_UPGRADE_CHECK_VERSION  = AVRCP_PEER_CMD_STAROT_START,
+    AVRCP_PEER_CMD_UPGRADE_ENTER,
+    AVRCP_PEER_CMD_UPGRADE_EXIT,
+    AVRCP_PEER_CMD_UPGRADE_CANCEL_NOTIFY_COMMIT_STATUS,
+
+    AVRCP_PEER_CMD_SYNC_VERSION,
+    /// 在此次添加
+    AVRCP_PEER_CMD_STAROT_END = 0X20,
+};
+
+// endregion
+
+// region 校验对方真实版本，用于升级提交版本  AVRCP_PEER_CMD_UPGRADE_CHECK_VERSION
+
+typedef struct {
+    uint8 softwareVersion[DEV_SWVER_LEN];
+} CheckVersion;
+
+void appPeerSigTxUpgradeCheckVersionReq(Task task, CheckVersion* checkVersion);
+bool appPeerSigTxUpgradeCheckVersionParse(uint8* payload);
+void appPeerSigTxUpgradeCheckVersionConfirm(Task task, peerSigStatus status);
+
+// endregion
+
+// region 通知Peer，app希望进入upgrade状态 AVRCP_PEER_CMD_UPGRADE_ENTER
+
+void appPeerSigTxUpgradeEnterReq(Task task);
+bool appPeerSigTxUpgradeEnterParse(uint8* payload);
+void appPeerSigTxUpgradeEnterConfirm(Task task, peerSigStatus status);
+
+// endregion
+
+// region 通知Peer，app希望退出upgrade状态 AVRCP_PEER_CMD_UPGRADE_EXIT
+
+void appPeerSigTxUpgradeExitReq(Task task);
+bool appPeerSigTxUpgradeExitParse(uint8* payload);
+void appPeerSigTxUpgradeExitConfirm(Task task, peerSigStatus status);
+
+// endregion
+
+// region  通知Peer，不需要发送升级状态给APP了 AVRCP_PEER_CMD_UPGRADE_CANCEL_NOTIFY_COMMIT_STATUS
+
+void appPeerSigTxUpgradeCancelNotifyCommitStatusReq(Task task);
+bool appPeerSigTxUpgradeCancelNotifyCommitStatusParse(uint8* payload);
+void appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm(Task task, peerSigStatus status);
+
+// endregion
+
+// region 同步左右耳机版本  AVRCP_PEER_CMD_SYNC_VERSION
+
+typedef struct {
+    uint8 version[DEV_HWSWVER_LEN];
+} SyncVersionReq;
+
+void appPeerSigTxSyncVersionReq(Task task);
+bool appPeerSigTxSyncVersionParse(uint8* payload);
+void appPeerSigTxSyncVersionConfirm(Task task, peerSigStatus status);
+
+// endregion
+
 #endif //EARBUDS1_PEER_H

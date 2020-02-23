@@ -3,6 +3,61 @@
 #include "peer.h"
 #include "av_headset_gaia_starot.h"
 
+// region 统一注册处理响应
+
+static const PeerUnityParseCenter peerUnityParseCenter[] = {
+        {
+                AVRCP_PEER_CMD_UPGRADE_CHECK_VERSION, sizeof(CheckVersion),
+                &appPeerSigTxUpgradeCheckVersionParse, &appPeerSigTxUpgradeCheckVersionConfirm
+        },
+        {
+                AVRCP_PEER_CMD_UPGRADE_ENTER, 0,
+                &appPeerSigTxUpgradeEnterParse, &appPeerSigTxUpgradeEnterConfirm
+        },
+        {
+                AVRCP_PEER_CMD_UPGRADE_EXIT, 0,
+                &appPeerSigTxUpgradeExitParse, &appPeerSigTxUpgradeExitConfirm
+        },
+        {
+                AVRCP_PEER_CMD_UPGRADE_CANCEL_NOTIFY_COMMIT_STATUS, 0,
+                &appPeerSigTxUpgradeCancelNotifyCommitStatusParse, &appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm
+        },
+
+        {
+                AVRCP_PEER_CMD_SYNC_VERSION, sizeof(SyncVersionReq),
+                &appPeerSigTxSyncVersionParse, &appPeerSigTxSyncVersionConfirm
+        },
+
+        /// 在此之前添加新的数据
+        {0XFFFF, 0X00, NULL, NULL}
+};
+
+static bool PeerSendUnityReq(AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *message) {
+    bdaddr peer_addr;
+    if(FALSE == appDeviceGetPeerBdAddr(&peer_addr)) {
+        return FALSE;
+    }
+
+    peerSigTaskData *peer_sig = appGetPeerSig();
+    MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_TXDATA_REQ, message, appPeerSigStartup(&peer_addr));
+    return TRUE;
+}
+
+static const PeerUnityParseCenter* internalPeerUnityParseFind(uint16 opid) {
+    int pos = 0;
+    while (1) {
+        if (opid == peerUnityParseCenter[pos].command) {
+            return peerUnityParseCenter + pos;
+        }
+        if (0XFFFF == peerUnityParseCenter[pos].command) {
+            return NULL;
+        }
+        pos += 1;
+    }
+}
+
+// endregion
+
 #define STAROT_MAKE_SIZE(TYPE) (((sizeof(TYPE)) / 8 * 8) + ((sizeof(TYPE)) % 8 > 0 ? 8 : 0))
 #define STAROT_MAKE_MESSAGE(TYPE) TYPE *message = (TYPE *) PanicUnlessMalloc(STAROT_MAKE_SIZE(TYPE))
 #define STAROT_MAKE_MESSAGE_WITH_LEN(TYPE, LEN) TYPE *message = (TYPE *) PanicUnlessMalloc((((sizeof(TYPE) + LEN + 3) / 4) * 4))
@@ -46,44 +101,9 @@ void appPeerSigTxDataCommandUi(uint8 command, uint8 payload) {  // 仅一个字�
     appPeerSigTxDataCommandExt(appGetUiTask(), command, 1, &payload);
 }
 
-void appPeerSigTxSyncVersion(Task task) {
-    uint8 buffer[DEV_HWSWVER_LEN] = {0};
-    SystemGetCurrentVersion(buffer);
-    appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_VERSION, DEV_HWSWVER_LEN, buffer);
-}
-
 void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right) {
     uint8 buffer[2] = {left, right};
     appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_DOUBLE_CLICK, 2, buffer);
-}
-
-
-void appPeerSigTxUpgradeCheckVersion(Task task, const uint8* data, int len) {
-    appPeerSigTxDataCommandExt(task, PEERTX_CMD_UPGRADE_CHECK_VERSION, len, data);
-}
-
-void appPeerSigTxUpgradeEnter(Task task) {
-    if (ParamUsingSingle()) {
-        internalSendStarotAppNotifyPeerUpgradeEnterCfm(TRUE);
-    } else {
-        appPeerSigTxDataCommandExt(task, PEERTX_CMD_UPGRADE_ENTER, 0, NULL);
-    }
-}
-
-void appPeerSigTxUpgradeExit(Task task) {
-    if (ParamUsingSingle()) {
-        internalSendStarotAppNotifyPeerUpgradeExitCfm(TRUE);
-    } else {
-        appPeerSigTxDataCommandExt(task, PEERTX_CMD_UPGRADE_EXIT, 0, NULL);
-    }
-}
-
-void appPeerSigTxCancelNotifyCommitStatus(Task task) {
-    if (ParamUsingSingle()) {
-        return;
-    } else {
-        appPeerSigTxDataCommandExt(task, PEERTX_CMD_CANCEL_NOTIFY_COMMIT_STATUS, 0, NULL);
-    }
 }
 
 void appPeerSigTxSyncPair(Task task)          // 同步配对信息
@@ -110,46 +130,7 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
         ParamSyncBlePair(req->length-2, req->data);
         break;
 
-    case PEERTX_CMD_SYNC_VERSION:
-        appPeerVersionSet(req->data);
-        appPeerVersionSyncStatusSet(PeerVersionSyncStatusRecv);
-        if (!appPeerVersionSyncStatusIsComplete()) {
-            appPeerVersionSyncSent();
-        }
-        MessageSendLater(appGetUiTask(), APP_CHECK_VERSION, NULL, 500);
-//        SystemSetVersion(appConfigIsLeft() ? DEV_RIGHT : DEV_LEFT, req->data);
-        break;
 
-    case PEERTX_CMD_UPGRADE_CHECK_VERSION: {
-        const uint8* self = SystemGetCurrentSoftware();
-        if (0 == memcmp(self, req->data, DEV_SWVER_LEN)) {
-            ret = TRUE;
-        } else {
-            ret = FALSE;
-        }
-        DEBUG_LOG("PEERTX_CMD_UPGRADE_CHECK_VERSION self:%02X%02X%02X%02X, peer:%02X%02X%02X%02X, ret is :%d",
-                  self[0], self[1], self[2], self[3],
-                  req->data[0], req->data[1],req->data[2],req->data[3], ret);
-    }
-        break;
-
-    case PEERTX_CMD_UPGRADE_ENTER: {
-        DEBUG_LOG("parse PEERTX_CMD_UPGRADE_ENTER");
-        MessageSend(appGetUiTask(), APP_UPGRADE_ENTER_BY_PEER, NULL);
-    }
-        break;
-
-    case PEERTX_CMD_UPGRADE_EXIT: {
-        DEBUG_LOG("parse PEERTX_CMD_UPGRADE_EXIT");
-        MessageSend(appGetUiTask(), APP_UPGRADE_EXIT_BY_PEER, NULL);
-    }
-        break;
-
-    case PEERTX_CMD_CANCEL_NOTIFY_COMMIT_STATUS: {
-        DEBUG_LOG("parse PEERTX_CMD_UPGRADE_EXIT");
-        appUICancelAllUpgradeTime();
-    }
-        break;
 
     case PEERTX_CMD_SYNC_DOUBLE_CLICK:
         UserSetKeyFunc((req->data)[0], (req->data)[1]);
@@ -215,30 +196,7 @@ void appPeerSigTxDataConfirm(Task task, peerSigStatus status) {
             ParamSyncBlePairSucc();
         break;
 
-    case PEERTX_CMD_SYNC_VERSION:
-        if (peerSigStatusSuccess == status) {
-            MessageSend(appGetUiTask(), APP_CHECK_VERSION, NULL);
-        }
-        break;
 
-    case PEERTX_CMD_UPGRADE_CHECK_VERSION:
-        DEBUG_LOG("PEERTX_CMD_UPGRADE_CHECK_VERSION status is : %d", status);
-        if (peerSigStatusSuccess == status) {
-            MessageSend(appGetUiTask(), APP_UPGRADE_COMMIT, NULL);
-        } else {
-            MessageSendLater(appGetUiTask(), APP_CHECK_PEER_FOR_UPDATE, NULL, D_SEC(5));
-        }
-        break;
-
-    case PEERTX_CMD_UPGRADE_ENTER:
-        DEBUG_LOG("confirm PEERTX_CMD_UPGRADE_ENTER");
-        internalSendStarotAppNotifyPeerUpgradeEnterCfm(peerSigStatusSuccess == status ? TRUE : FALSE);
-        break;
-
-    case PEERTX_CMD_UPGRADE_EXIT:
-        DEBUG_LOG("confirm PEERTX_CMD_UPGRADE_EXIT");
-        internalSendStarotAppNotifyPeerUpgradeExitCfm(peerSigStatusSuccess == status ? TRUE : FALSE);
-        break;
     }
     g_last_tx_command = 0xFF;
 }
@@ -500,6 +458,8 @@ void appPeerSigMsgDoubleClickWakeupConfirmation(Task task, peerSigStatus status)
     UNUSED(task), UNUSED(status);
 }
 
+
+
 static void internalSendStarotAppNotifyPeerUpgradeEnterCfm(bool status) {
     GAIA_STAROT_IND_T *starot = PanicUnlessNew(GAIA_STAROT_IND_T);
     starot->command = STAROT_APP_NOTIFY_PEER_UPGRADE_ENTER_CFM;
@@ -515,3 +475,226 @@ static void internalSendStarotAppNotifyPeerUpgradeExitCfm(bool status) {
     starot->payload[0] = status;
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
 }
+
+
+// region 统一发送请求数据
+
+AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *PeerMallocUnityReq(uint16 command, int payloadSize) {
+    int s = sizeof(AVRCP_PEER_CMD_INTERNAL_UNITY_REQ) + payloadSize - (payloadSize > 2 ? payloadSize : 0);
+    AVRCP_PEER_CMD_INTERNAL_UNITY_REQ * req = (AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *)
+            PanicUnlessMalloc((s / 8 * 8) +((s % 8) > 0 ? 8 : 0));
+    req->command = command;
+    req->length = payloadSize;
+    return req;
+}
+
+AVRCP_PEER_CMD_INTERNAL_UNITY_REQ* PeerMallocUnityReqWithData(uint16 command, int payloadSize, uint8* data) {
+    AVRCP_PEER_CMD_INTERNAL_UNITY_REQ* req = PeerMallocUnityReq(command, payloadSize);
+    if (NULL != data && 0 < payloadSize) {
+        memcpy(req->data, data, payloadSize);
+    }
+    return req;
+}
+
+void appPeerSigSendUnityRequest(AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *message) {
+    DEBUG_LOG("appPeerSigSendUnityRequest, state %u command:%04X len:%d", appPeerSigGetState(), message->command, message->length);
+
+    switch (appPeerSigGetState()) {
+        case PEER_SIG_STATE_CONNECTED:
+            appPeerSigVendorPassthroughRequest(message->client_task, message->command, message->length, (const uint8*)&(message->data));
+            break;
+
+        default:
+            appPeerSigParseUnityConfirm(message->command, message->client_task, peerSigStatusLinkKeyTxFail);
+            break;
+    }
+}
+
+bool appPeerSigParseUnityRequest(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
+    const PeerUnityParseCenter* parseCenter = internalPeerUnityParseFind(ind->opid);
+    if (NULL == parseCenter) {
+        DEBUG_LOG("appPeerSigParseUnityRequest don't support this command %04X", ind->opid);
+        return FALSE;
+    }
+
+    peerSigTaskData* peer_sig = appGetPeerSig();
+    /* validate message */
+    if ((ind->size_payload != parseCenter->payloadSize) || !peer_sig->rx_handset_commands_task) {
+        DEBUG_LOG("appPeerSigParseUnityRequest payloadSize or rx_handset_commands_task is false");
+        return FALSE;
+    }
+
+    if (NULL == parseCenter->peerCmdParseFun) {
+        return FALSE;
+    }
+
+    return parseCenter->peerCmdParseFun(ind->payload);
+}
+
+void appPeerSigParseUnityConfirm(uint16 opid, Task task, peerSigStatus status) {
+    const PeerUnityParseCenter* parseCenter = internalPeerUnityParseFind(opid);
+    if (NULL == parseCenter) {
+        DEBUG_LOGF("appPeerSigParseUnityConfirm unknown opid:%04X", opid);
+        return;
+    }
+    if (NULL != parseCenter->peerCmdConfirmFun) {
+        parseCenter->peerCmdConfirmFun(task, status);
+    }
+}
+
+// endregion
+
+
+// region AVRCP_PEER_CMD_UPGRADE_CHECK_VERSION
+
+void appPeerSigTxUpgradeCheckVersionReq(Task task, CheckVersion *checkVersion) {
+    AVRCP_PEER_CMD_INTERNAL_UNITY_REQ* req =
+            PEER_MALLOC_UNITY_REQ(AVRCP_PEER_CMD_UPGRADE_CHECK_VERSION, CheckVersion, checkVersion);
+    req->client_task = task;
+    PeerSendUnityReq(req);
+}
+
+bool appPeerSigTxUpgradeCheckVersionParse(uint8* payload) {
+    CheckVersion * checkVersion = (CheckVersion*)payload;
+    const uint8* self = SystemGetCurrentSoftware();
+    bool ret = (0 == memcmp(self, checkVersion->softwareVersion, DEV_SWVER_LEN));
+
+    DEBUG_LOG("appPeerSigTxUpgradeCheckVersionParse self:%02X%02X%02X%02X, peer:%02X%02X%02X%02X, ret is :%d",
+              self[0], self[1], self[2], self[3], checkVersion->softwareVersion[0],
+              checkVersion->softwareVersion[1],checkVersion->softwareVersion[2],
+              checkVersion->softwareVersion[3], ret);
+
+    return ret;
+}
+
+void appPeerSigTxUpgradeCheckVersionConfirm(Task task, peerSigStatus status) {
+    DEBUG_LOG("appPeerSigTxUpgradeCheckVersionConfirm status is : %d", status);
+    if (peerSigStatusSuccess == status) {
+        MessageSend(task, APP_UPGRADE_COMMIT, NULL);
+    } else {
+        MessageSendLater(task, APP_CHECK_PEER_FOR_UPDATE, NULL, D_SEC(5));
+    }
+}
+
+// endregion
+
+
+// region AVRCP_PEER_CMD_UPGRADE_ENTER
+
+void appPeerSigTxUpgradeEnterReq(Task task) {
+    if (ParamUsingSingle()) {
+        internalSendStarotAppNotifyPeerUpgradeEnterCfm(TRUE);
+    } else {
+        AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *req =
+                PEER_MALLOC_UNITY_REQ_NODATA(AVRCP_PEER_CMD_UPGRADE_ENTER);
+        req->client_task = task;
+        PeerSendUnityReq(req);
+    }
+}
+
+bool appPeerSigTxUpgradeEnterParse(uint8* payload) {
+    UNUSED(payload);
+    DEBUG_LOG("parse appPeerSigTxUpgradeEnterParse");
+    MessageSend(appGetUiTask(), APP_UPGRADE_ENTER_BY_PEER, NULL);
+    return TRUE;
+}
+
+void appPeerSigTxUpgradeEnterConfirm(Task task, peerSigStatus status) {
+    UNUSED(task);
+    DEBUG_LOG("parse appPeerSigTxUpgradeEnterConfirm");
+    internalSendStarotAppNotifyPeerUpgradeEnterCfm(peerSigStatusSuccess == status ? TRUE : FALSE);
+}
+
+// endregion
+
+// region AVRCP_PEER_CMD_UPGRADE_EXIT
+
+void appPeerSigTxUpgradeExitReq(Task task) {
+    if (ParamUsingSingle()) {
+        internalSendStarotAppNotifyPeerUpgradeExitCfm(TRUE);
+    } else {
+        AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *req =
+                PEER_MALLOC_UNITY_REQ_NODATA(AVRCP_PEER_CMD_UPGRADE_EXIT);
+        req->client_task = task;
+        PeerSendUnityReq(req);
+    }
+}
+
+bool appPeerSigTxUpgradeExitParse(uint8* payload) {
+    UNUSED(payload);
+    DEBUG_LOG("parse appPeerSigTxUpgradeExitParse");
+    MessageSend(appGetUiTask(), APP_UPGRADE_EXIT_BY_PEER, NULL);
+    return TRUE;
+}
+
+void appPeerSigTxUpgradeExitConfirm(Task task, peerSigStatus status) {
+    UNUSED(task);
+    DEBUG_LOG("confirm appPeerSigTxUpgradeExitConfirm");
+    internalSendStarotAppNotifyPeerUpgradeExitCfm(peerSigStatusSuccess == status ? TRUE : FALSE);
+}
+
+// endregion
+
+// region AVRCP_PEER_CMD_UPGRADE_CANCEL_NOTIFY_COMMIT_STATUS
+
+void appPeerSigTxUpgradeCancelNotifyCommitStatusReq(Task task) {
+    DEBUG_LOG("appPeerSigTxUpgradeCancelNotifyCommitStatusReq");
+    if (ParamUsingSingle()) {
+        return;
+    } else {
+        AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *req =
+                PEER_MALLOC_UNITY_REQ_NODATA(AVRCP_PEER_CMD_UPGRADE_CANCEL_NOTIFY_COMMIT_STATUS);
+        req->client_task = task;
+        PeerSendUnityReq(req);
+    }
+}
+
+bool appPeerSigTxUpgradeCancelNotifyCommitStatusParse(uint8* payload) {
+    UNUSED(payload);
+    DEBUG_LOG("parse appPeerSigTxUpgradeCancelNotifyCommitStatusParse");
+    appUICancelAllUpgradeTime();
+    return TRUE;
+}
+
+void appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm(Task task, peerSigStatus status) {
+    UNUSED(task), UNUSED(status);
+    DEBUG_LOG("appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm, status:%d", status);
+}
+
+// endregion
+
+
+// region 同步左右耳机版本  AVRCP_PEER_CMD_SYNC_VERSION
+
+void appPeerSigTxSyncVersionReq(Task task) {
+    DEBUG_LOG("appPeerSigTxUpgradeCancelNotifyCommitStatusReq");
+    if (ParamUsingSingle()) {
+        return;
+    } else {
+        SyncVersionReq syncVersionReq;
+        SystemGetCurrentVersion(syncVersionReq.version);
+        AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *req =
+                PEER_MALLOC_UNITY_REQ(AVRCP_PEER_CMD_SYNC_VERSION, SyncVersionReq, (&syncVersionReq));
+        req->client_task = task;
+        PeerSendUnityReq(req);
+    }
+}
+
+bool appPeerSigTxSyncVersionParse(uint8* payload) {
+    SyncVersionReq* syncVersionReq = (SyncVersionReq*)payload;
+    appPeerVersionSet(syncVersionReq->version);
+    appPeerVersionSyncStatusSet(PeerVersionSyncStatusRecv);
+    if (!appPeerVersionSyncStatusIsComplete()) {
+        appPeerVersionSyncSent();
+    }
+    MessageSendLater(appGetUiTask(), APP_CHECK_VERSION, NULL, 500);
+    return TRUE;
+}
+
+void appPeerSigTxSyncVersionConfirm(Task task, peerSigStatus status) {
+    if (peerSigStatusSuccess == status) {
+        MessageSend(task, APP_CHECK_VERSION, NULL);
+    }
+}
+
+// endregion

@@ -1342,7 +1342,7 @@ void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message) {
     DEBUG_LOG("appGaiaHandlerEnterDfu");
     bool isCanEnterDfu = appGaiaIsCanEnterDfu();
     if (isCanEnterDfu) {
-        appPeerSigTxUpgradeEnter(appGetGaiaTask());
+        appPeerSigTxUpgradeEnterReq(appGetUiTask());
         memset(tempForUpgradeVersion, 0x00, sizeof(tempForUpgradeVersion));
 
         StarotAttr *pAttr = attrDecode(message->payload, message->payloadLen);
@@ -1380,7 +1380,7 @@ void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message) {
     DEBUG_LOG("appGaiaHandlerExitDfu");
     /// 强制停止升级流程，后续并断开连接
     if (appUICanContinueUpgrade()) {
-        appPeerSigTxUpgradeExit(appGetGaiaTask());
+        appPeerSigTxUpgradeExitReq(appGetGaiaTask());
     } else {
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
     }
@@ -1445,7 +1445,7 @@ static void appGaiaHandlerNotifyCommitStatus(GAIA_STAROT_IND_T *message) {
     attrFree(head, data);
 
     appUICancelAllUpgradeTime();
-    appPeerSigTxCancelNotifyCommitStatus(appGetUiTask());
+    appPeerSigTxUpgradeCancelNotifyCommitStatusReq(appGetUiTask());
 }
 
 

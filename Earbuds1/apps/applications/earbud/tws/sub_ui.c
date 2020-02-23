@@ -1859,7 +1859,7 @@ void appPeerVersionSyncSent(void) {
     if (ParamUsingSingle()) {
         appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent | PeerVersionSyncStatusRecv);
     } else {
-        appPeerSigTxSyncVersion(appGetUiTask());
+        appPeerSigTxSyncVersionReq(appGetUiTask());
         appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
     }
 }
@@ -1937,7 +1937,9 @@ static void appUICheckPeerVersionForUpdate(void) {
         if (count >= 0) {
             DEBUG_LOG("appUICheckPeerVersionForUpdate, resend appUICheckPeerVersionForUpdate, count is :%d", count);
             /// 重新发送同步version信息
-            appPeerSigTxUpgradeCheckVersion(appGetUiTask(), SystemGetCurrentSoftware(), DEV_SWVER_LEN);
+            CheckVersion checkVersion;
+            memcpy(checkVersion.softwareVersion, SystemGetCurrentSoftware(), DEV_SWVER_LEN);
+            appPeerSigTxUpgradeCheckVersionReq(appGetUiTask(), &checkVersion);
             count -= 1;
         } else {
             /// 回滚版本
