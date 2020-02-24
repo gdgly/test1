@@ -52,6 +52,8 @@ DESCRIPTION
 
 #ifdef GAIA_EXT
 static bool gaia_handle_starot_command(gaia_transport *transport, uint16 command_id, uint16 payload_length, uint8 *payload);
+static bool gaia_handle_starot_data(gaia_transport *transport, uint16 command_id, uint16 payload_length, uint8 *payload);
+
 #endif
 
 
@@ -3407,6 +3409,9 @@ void gaiaProcessCommand(gaia_transport *transport, uint16 vendor_id, uint16 comm
             case GAIA_COMMAND_TYPE_STAROT_TEST_PRODUCT:
                  handled = gaia_handle_starot_command(transport, command_id, size_payload, payload);
                  break;
+            case GAIA_COMMAND_TYPE_STAROT_UPDATA_FIRMWARE:
+                 handled = gaia_handle_starot_data(transport, command_id, size_payload, payload);
+                break;
 #endif
             default:
                 handled = FALSE;
@@ -4129,6 +4134,26 @@ bool gaia_handle_starot_command(gaia_transport *transport, uint16 command_id, ui
         memcpy(cfm->payload, payload, payload_length);
     }
     MessageSend(gaia->app_task, GAIA_STAROT_COMMAND_IND, cfm);
+
+    return TRUE;
+}
+/*
+ * 更新盒子固件，需要返回ack
+ */
+bool gaia_handle_starot_data(gaia_transport *transport, uint16 command_id, uint16 payload_length, uint8 *payload)
+{
+    UNUSED(transport);
+    UNUSED(payload);
+    /* 还需要返回ack */
+//    send_ack(transport, GAIA_VENDOR_STAROT, command_id, GAIA_STATUS_SUCCESS, 0, NULL);
+    GAIA_STAROT_DATA_T* updata_firmware =
+            (GAIA_STAROT_DATA_T*)PanicUnlessMalloc(
+                sizeof(GAIA_STAROT_DATA_T) + (payload_length > 1 ? (payload_length - 1) : 0)
+                );
+    /* 赋值数据结构 */
+    updata_firmware->command = command_id;
+
+    MessageSend(gaia->app_task, GAIA_STAROT_DATA, updata_firmware);
 
     return TRUE;
 }

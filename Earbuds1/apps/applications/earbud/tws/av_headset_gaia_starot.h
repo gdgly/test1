@@ -177,7 +177,7 @@ void starotGaiaReset(void);
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
-
+bool starotGaiaHandleData(GAIA_STAROT_DATA_T *message);
 void starotGaiaParseMessageMoreSpace(void);
 
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message);

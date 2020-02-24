@@ -8,10 +8,10 @@ extern void pfree(void *ptr);
  */
 typedef struct tagFILECTRL {
     char         fName[24];
-    FILE_INDEX   fIndex;        //文件的标记号码
+    FILE_INDEX   fIndex;         // 文件的标记号码
 
     Sink         sink;
-    uint8*       map_address;    //分配的文件地址
+    uint8*       map_address;    // 分配的文件地址
     uint32       offset;         // 读取位置/写入
     uint32       fsize;          // 总文件大小
     uint32       checksum;       // 写文件时记录CHECKSUM
@@ -24,7 +24,7 @@ int FileClose(FileCPtr fCtrl);
 int FileCancel(char *fname);            // 删除文件
 
 /*
- * 获取去文件大小
+ * 获取文件大小
  */
 static uint16 get_file_size(FILE_INDEX findex)
 {

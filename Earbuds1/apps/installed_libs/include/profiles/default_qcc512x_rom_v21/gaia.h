@@ -295,6 +295,7 @@ typedef enum
 
     GAIA_STAROT_COMMAND_IND,
     GAIA_STAROT_MORE_SPACE,
+    GAIA_STAROT_DATA,
 
     /* Library message limit */
     GAIA_MESSAGE_TOP
@@ -952,8 +953,8 @@ void GaiaRwcpSendNotification(uint8 *payload, uint16 payload_length);
 #define GAIA_COMMAND_TYPE_STAROT_CONTROL (0x5400)          /// 控制类
 #define GAIA_COMMAND_TYPE_STAROT_BASE_INFO (0x5500)        /// 基础信息
 #define GAIA_COMMAND_TYPE_STAROT_TEST_PRODUCT (0x5600)     /// 测试生成
+#define GAIA_COMMAND_TYPE_STAROT_UPDATA_FIRMWARE (0X5700)  /// 更新盒子固件信息
 #define GAIA_VENDOR_STAROT (0x000F)
-
 typedef struct
 {
     uint16 command;
@@ -961,6 +962,21 @@ typedef struct
     uint8 payload[4];
 } GAIA_STAROT_MESSAGE_T;
 typedef GAIA_STAROT_MESSAGE_T GAIA_STAROT_IND_T;
+
+/*
+ * 更新固件使用的数据结构
+ */
+typedef struct
+{
+    uint16 vendorld;
+    uint16 command;
+//    uint16 header;
+    uint8 flag:2;
+    uint8 type:2;
+    uint8 sessionid:4;
+    uint8 index:8;
+    uint8 data[4];
+} GAIA_STAROT_DATA_T;
 
 #endif
 

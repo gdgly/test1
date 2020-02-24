@@ -49,7 +49,7 @@ static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App
 static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type);//ui上报gaia助手唤醒消息
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
 static void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message);//接受设备传过来的停止信息
-static void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message);
+static void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message);//升级固件
 
 static void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess);
 
@@ -102,6 +102,22 @@ void starotGaiaReset(void) {
     appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
     appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
     appGetGaia()->needCycleSendAudio = 0;
+}
+
+/*
+ * 处理APP发来的固件升级数据
+ */
+bool starotGaiaHandleData(GAIA_STAROT_DATA_T *message)
+{
+    switch (message->command)
+    {
+    case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE:
+        gaiaDevUpdateFirmware(message);
+        break;
+    default:
+        break;
+    }
+    return TRUE;
 }
 
 static uint32 gaia_dbg_cnt = 0;
@@ -255,9 +271,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_CONNECT_STAROT_RECORD_STOP_REPORT:
             gaiaDevRecordStopInfo(message);
             break;
-        case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE:
-            gaiaDevUpdateFirmware(message);
-            break;
+
     }
 
     /// 测试与生产
@@ -280,6 +294,10 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 /// 主要处理设备内部的消息
 void starotGaiaDefaultParse(MessageId id, Message message) {
     switch (id) {
+        case GAIA_STAROT_DATA:
+            starotGaiaHandleData((GAIA_STAROT_DATA_T *) message);
+            break;
+
         case GAIA_STAROT_COMMAND_IND:
             starotGaiaHandleCommand((GAIA_STAROT_IND_T *) message);
             break;
@@ -943,9 +961,9 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
 /*
  * 接收APP设备发送过来的升级数据包
 */
-void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message)
+void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 {
-
+    UNUSED(message);
 }
 
 // APP中拨打电话
