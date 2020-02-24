@@ -77,3 +77,10 @@ Earbuds1/audio/kalimba/kymera/tools/KCSMaker/download_passthrough.settings
 doc/~*
 Earbuds1/apps/applications/earbud/qcc512x_rom_v21/CF376_CG814/depend_debug_qcc512x_rom_v21/
 Earbuds1/apps/applications/earbud/qcc512x_rom_v21/CF376_CG814/dfu/20*
+/Tools/ProductCaseTools/Release
+/Tools/ProductCaseTools/ipch
+/Tools/ProductCaseTools/Debug
+/Tools/ProductCaseTools/ProductCaseTools.sdf
+/Tools/ProductCaseTools/ProductCaseTools/Release
+/Tools/ProductCaseTools/ProductCaseTools/Debug
+/Tools/ProductCaseTools/ProductCaseTools.opensdf
