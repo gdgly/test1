@@ -968,19 +968,10 @@ void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess) {
         return;
     }
     if (0X01 == body->attr) {
-        uint16 length = 0;
-        /// 电话号码长度不会大于16
-        const int MaxPhoneNuberLen = 16;
-        if (body->len <= MaxPhoneNuberLen) {
-            length = body->len;
-        } else {
-            length = MaxPhoneNuberLen;
-        }
-
-        MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_IND, length);
+        MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_IND, body->len);
         message->command = GAIA_COMMAND_STAROT_CONTROL_CALL_DIALOG;
-        message->payloadLen = length;
-        memcpy(message->payload, body->payload, length);
+        message->payloadLen = body->len;
+        memcpy(message->payload, body->payload, body->len);
         MessageSend(appGetUiTask(), GAIA_STAROT_COMMAND_IND, message);
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, 0, NULL);
