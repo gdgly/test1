@@ -502,7 +502,8 @@ void appPhyStateOutOfCaseEvent(void)
 {
     DEBUG_LOG("call appPhyStateOutOfCaseEvent");
 #ifdef CONFIG_STAROT
-    if(appGetCaseIsOpen() == FALSE) {  // 充满电后，盒子会关闭电压，因此盒盖没打开时，不发送出盒信息
+    if(appInitCompleted() && (appGetCaseIsOpen() == FALSE)) {  // 充满电后，盒子会关闭电压，因此盒盖没打开时，不发送出盒信息
+        appPhyStateClearLockBit(PHY_STATE_LOCK_CASE);
         DEBUG_LOG("call appPhyStateOutOfCaseEvent CaseClose");
         return;
     }

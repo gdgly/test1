@@ -1,4 +1,10 @@
 
+20200224
+ appPhyStateInit初始化涵数中，以下几个步骤会执行对应的函数来清除以下LOCK状态
+ phy_state->lock = PHY_STATE_LOCK_EAR | PHY_STATE_LOCK_MOTION | PHY_STATE_LOCK_CASE;
+ appPhyStateInit -->appChargerClientRegister        ->CHARGER_MESSAGE_DETACHED
+                 -->appProximityClientRegister      ->PROXIMITY_MESSAGE_IN_PROXIMITY
+                 -->appAccelerometerClientRegister  ->ACCELEROMETER_MESSAGE_IN_MOTION
 20191212
 充电电流控制
  1、0度以下           10mA
