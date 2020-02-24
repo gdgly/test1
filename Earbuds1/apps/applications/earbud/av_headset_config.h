@@ -597,7 +597,11 @@
 
 /*! This timer is active in APP_STATE_OUT_OF_CASE_IDLE if set to a non-zero value.
     On timeout, the SM will allow sleep. */
+#ifdef CONFIG_STAROT
+#define appConfigIdleTimeoutMs()   D_SEC(0)
+#else
 #define appConfigIdleTimeoutMs()   D_SEC(300)
+#endif
 
 /*! Default DAC disconnection delay in milliseconds */
 #define appConfigDacDisconnectionDelayMs() (60000)
