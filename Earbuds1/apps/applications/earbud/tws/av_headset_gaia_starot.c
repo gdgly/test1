@@ -7,7 +7,6 @@
 #include "tws/attr.h"
 #include "tws/audio_forward.h"
 #include "tws/peer.h"
-//#include "public.h"
 #include "apollo.h"
 
 uint16 bufferSendUnit = 80;
@@ -50,6 +49,7 @@ static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App
 static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type);//ui上报gaia助手唤醒消息
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
 static void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message);//接受设备传过来的停止信息
+static void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message);
 
 static void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess);
 
@@ -76,6 +76,8 @@ static void starotSpeedSendIntervalParse(void);
 static void gaiaTestProductRest(GAIA_STAROT_IND_T *message);
 
 static void gaiaSendDialogActiveStatus(int command, uint8* phone, int len);
+
+
 
 struct GaiaStarotPrivateData_T {
     Source dialogSpeaker;
@@ -253,6 +255,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_CONNECT_STAROT_RECORD_STOP_REPORT:
             gaiaDevRecordStopInfo(message);
             break;
+        case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE:
+            gaiaDevUpdateFirmware(message);
+            break;
     }
 
     /// 测试与生产
@@ -262,13 +267,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS:
         {
-#ifdef ENABLE_APOLLO
             uint8_t state = get_apollo_state();
             DEBUG_LOG("get apollo state: %d", state);
             appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS,
                                 GAIA_STATUS_SUCCESS, 1, &state);
             break;
-#endif
         }
     }
     return TRUE;
@@ -449,11 +452,11 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
     StarotAttr *head = NULL;
     int k = 0;
     bool needSendEnd = FALSE;
-	uint8* phoneInfo = NULL;
+    uint8* phoneInfo = NULL;
     int phoneLen = 0;
 
     DEBUG_LOG("call gaiaParseDialogStatus: %02x", status);
-	char temp[128] = {0};
+    char temp[128] = {0};
     for (k = 0; k < message->payloadLen; ++k) {
         sprintf(temp + k * 2, "%02X", message->payload[k]);
     }
@@ -937,6 +940,14 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
     }
 }
 
+/*
+ * 接收APP设备发送过来的升级数据包
+*/
+void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message)
+{
+
+}
+
 // APP中拨打电话
 void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess) {
     StarotAttr *body = attrDecode(mess->payload, mess->payloadLen);
@@ -1005,7 +1016,7 @@ static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {
         uint8 *data = message->payload;
         uint16 advCode = (((uint16) data[0]) << 8) | data[1];
         uint32 bindCode = (((uint32) data[2]) << 24) | (((uint32) data[3]) << 16) | (((uint32) data[4]) << 8) | data[5];
-        appBleSetBond(advCode, bindCode, 100);   // 修改APP传入真正的时间值 
+        appBleSetBond(advCode, bindCode, 100);   // 修改APP传入真正的时间值
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
         gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
         GattManagerCancelWaitForRemoteClient();

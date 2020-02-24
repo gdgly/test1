@@ -120,6 +120,7 @@ enum {
     GAIA_COMMAND_STAROT_AI_BEGIN_RECORD = 0X5205,                             // 开始录音
     GAIA_COMMAND_STAROT_AI_END_RECORD = 0X5206,                               // 停止录音
     GAIA_CONNECT_STAROT_RECORD_STOP_REPORT = 0X5207,                          // 强制停止录音
+    GAIA_CONNECT_STAROT_UPDATE_FIRMWARE = 0X5208,                             // 升级盒子固件
 };
 
 /////////////////////////////测试与生产///////////////////////////////
