@@ -39,7 +39,7 @@ static bool PeerSendUnityReq(AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *message) {
     }
 
     peerSigTaskData *peer_sig = appGetPeerSig();
-    MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_TXDATA_REQ, message, appPeerSigStartup(&peer_addr));
+    MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_UNITY_REQ, message, appPeerSigStartup(&peer_addr));
     return TRUE;
 }
 
@@ -108,8 +108,14 @@ void appPeerSigTxSyncDoubleClick(Task task, uint8 left, uint8 right) {
 
 void appPeerSigTxSyncPair(Task task)          // 同步配对信息
 {
-    appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_BLEPAIR,
-        sizeof(BlePairInfo)*BLEPAIR_COUNT+4/*Timer*/, (uint8*)&gBtAddrParam.timeModfy);
+    if (ParamUsingSingle()) {
+        ParamSyncBlePairSucc();
+        return;
+    } else {
+        appPeerSigTxDataCommandExt(task, PEERTX_CMD_SYNC_BLEPAIR,
+                                   sizeof(BlePairInfo) * BLEPAIR_COUNT + 4/*Timer*/,
+                                   (uint8 * ) & gBtAddrParam.timeModfy);
+    }
 }
 
 bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              // 接收方： 返回给上层处理

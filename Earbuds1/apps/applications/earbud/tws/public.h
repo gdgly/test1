@@ -326,4 +326,8 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 // #define DOWNLOAD_PASSSTHROUGH                // PASSThrough 取数据
 #define DOWNLOAD_G722_ENCODER                // G722压缩将取数据
 
+#undef appConfigIdleTimeoutMs()
+#define appConfigIdleTimeoutMs()   D_SEC(0)
+
+
 #endif // PUBLIC_H

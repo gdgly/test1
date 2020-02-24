@@ -236,6 +236,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_ATTR_TIMEOUT);
             break;
 
+        case GAIA_COMMAND_STAROT_UPGRADE_NOTIFY_COMMIT_STATUS | GAIA_ACK_MASK:
+            appUICancelAllUpgradeTime();
+            appPeerSigTxUpgradeCancelNotifyCommitStatusReq(appGetUiTask());
+            break;
+
             /// APP希望接受耳机的音频
         case GAIA_COMMAND_STAROT_START_TRANS_AUDIO_IND:
             starotGaiaDialogStartTransport(message);
@@ -1443,9 +1448,6 @@ static void appGaiaHandlerNotifyCommitStatus(GAIA_STAROT_IND_T *message) {
     uint8 *data = attrEncode(head, &len);
     appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_UPGRADE_NOTIFY_COMMIT_STATUS, 0xfe, len, data);
     attrFree(head, data);
-
-    appUICancelAllUpgradeTime();
-    appPeerSigTxUpgradeCancelNotifyCommitStatusReq(appGetUiTask());
 }
 
 

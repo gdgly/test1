@@ -69,6 +69,10 @@ enum    av_headset_conn_rules_messages
 
     /*! Enter DFU mode as we have entered the case with DFU pending */
     CONN_RULES_ENTER_DFU,
+#ifdef CONFIG_STAROT
+    /* 退出DFU模式*/
+    CONN_RULES_EXIT_DFU,
+#endif
 
     /*! Update upgrade state */
     CONN_RULES_DFU_ALLOW,

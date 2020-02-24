@@ -147,6 +147,9 @@ DEFINE_RULE(ruleInEarLedsDisable);
 DEFINE_RULE(ruleInCaseDisconnectHandset);
 DEFINE_RULE(ruleInCaseDisconnectPeer);
 DEFINE_RULE(ruleInCaseEnterDfu);
+#ifdef CONFIG_STAROT
+DEFINE_RULE(ruleOutOfCaseExitDfu);
+#endif
 DEFINE_RULE(ruleOutOfCaseAllowHandsetConnect);
 DEFINE_RULE(ruleInCaseRejectHandsetConnect);
 
@@ -288,10 +291,15 @@ ruleEntry appConnRules[] =
         Rules that are run on physical state changes */
     RULE(RULE_EVENT_OUT_CASE,                   rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseAllowHandsetConnect,   CONN_RULES_ALLOW_HANDSET_CONNECT),
-//    RULE(RULE_EVENT_OUT_CASE,                   ruleAutoHandsetPair,                CONN_RULES_HANDSET_PAIR),
+#ifndef CONFIG_STAROT
+    RULE(RULE_EVENT_OUT_CASE,                   ruleAutoHandsetPair,                CONN_RULES_HANDSET_PAIR),
+#endif
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseConnectPeer,           CONN_RULES_CONNECT_PEER),
     RULE_WITH_FLAGS(RULE_EVENT_OUT_CASE,        ruleOutOfCaseConnectHandset,        CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseAncTuning,             CONN_RULES_ANC_TUNING_STOP),
+#ifdef CONFIG_STAROT
+    RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
+#endif
 
     RULE(RULE_EVENT_IN_CASE,                    rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectHandset,        CONN_RULES_DISCONNECT_HANDSET),
@@ -1976,6 +1984,22 @@ static ruleAction ruleInCaseEnterDfu(void)
 #endif
 }
 
+#ifdef CONFIG_STAROT
+static ruleAction ruleOutOfCaseExitDfu(void)
+{
+    if (appSmIsInDfuMode()) {
+        RULE_LOG("ruleOutOfCaseExitDfu, current is in dfu, so run");
+        return RULE_ACTION_RUN;
+    }
+
+    if (appPeerSyncPeerDfuInProgress()) {
+        RULE_LOG("ruleOutOfCaseExitDfu, peer is in dfu, so run");
+        return RULE_ACTION_RUN;
+    }
+
+    return RULE_ACTION_IGNORE;
+}
+#endif
 
 static ruleAction ruleDfuAllowHandsetConnect(void)
 {

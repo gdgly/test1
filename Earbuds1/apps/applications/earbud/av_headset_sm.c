@@ -1333,6 +1333,20 @@ static void appSmHandleConnRulesEnterDfu(void)
     appConnRulesSetRuleComplete(CONN_RULES_ENTER_DFU);
 }
 
+#ifdef CONFIG_STAROT
+extern void appPeerSigTxUpgradeExitReq(Task task);
+
+static void appSmHandleConnRulesExitDfu(void)
+{
+    DEBUG_LOG("appSmHandleConnRulesExitDfu");
+    if (!appSmIsInCase()) {
+        DEBUG_LOG("appSmHandleConnRulesExitDfu, rule exit DFU");
+        appPeerSigTxUpgradeExitReq(appGetGaiaTask());
+    }
+    appConnRulesSetRuleComplete(CONN_RULES_EXIT_DFU);
+}
+#endif
+
 static void appSmHandleConnRulesAllowHandsetConnect(void)
 {
     DEBUG_LOG("appSmHandleConnRulesAllowHandsetConnect");
@@ -2445,6 +2459,11 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case CONN_RULES_ENTER_DFU:
             appSmHandleConnRulesEnterDfu();
             break;
+#ifdef CONFIG_STAROT
+        case CONN_RULES_EXIT_DFU:
+            appSmHandleConnRulesExitDfu();
+            break;
+#endif
         case CONN_RULES_ALLOW_HANDSET_CONNECT:
             appSmHandleConnRulesAllowHandsetConnect();
             break;
