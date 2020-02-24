@@ -501,6 +501,12 @@ void appPhyStateInCaseEvent(void)
 void appPhyStateOutOfCaseEvent(void)
 {
     DEBUG_LOG("call appPhyStateOutOfCaseEvent");
+#ifdef CONFIG_STAROT
+    if(appGetCaseIsOpen() == FALSE) {  // 充满电后，盒子会关闭电压，因此盒盖没打开时，不发送出盒信息
+        DEBUG_LOG("call appPhyStateOutOfCaseEvent CaseClose");
+        return;
+    }
+#endif
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT);
     MessageSend(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT, NULL);
