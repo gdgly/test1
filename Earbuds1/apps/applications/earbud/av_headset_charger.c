@@ -110,7 +110,7 @@ enum av_headset_charger_internal_messages
     /*! Used to limit the time spent in some charge phases */
     CHARGER_INTERNAL_CHARGE_TIMEOUT,
     /*! 充电根据23040的连接，延时启动 */
-    CHARGER_INTERNAL_CHARGE_DELAY,
+    // CHARGER_INTERNAL_CHARGE_DELAY,
 };
 
 /**************************************************************************/
@@ -340,7 +340,7 @@ static void appChargerHandleChargerDetected(const MessageChargerDetected *msg)
     appChargerCheck();
 }
 
-#ifdef CONFIG_STAROT
+#ifndef CONFIG_STAROT   /* 删除修改 */
 // 通过20340检测来确定是否启动充电
 void appChargeFromUi(bool bEnable);
 enum {APPUI_CHARGE_NONE=0, APPUI_CHARGE_WAIT, APPUI_CHARGING};
@@ -383,7 +383,7 @@ static void appChargerHandleMessage(Task task, MessageId id, Message message)
         case CHARGER_INTERNAL_CHARGE_TIMEOUT:
             appChargerHandleChargeTimeout();
         break;
-#ifdef CONFIG_STAROT
+#ifndef CONFIG_STAROT  /* 删除修改 */
         case CHARGER_INTERNAL_CHARGE_DELAY:
             appChargerRestoreState();
             app_charge_ui = APPUI_CHARGING;
@@ -499,7 +499,7 @@ void appChargerInit(void)
     theCharger->is_charging = FALSE;
     theCharger->status = ENABLE_FAIL_UNKNOWN;
     theCharger->disable_reason = CHARGER_DISABLE_REASON_NONE;
-#ifdef CONFIG_STAROT
+#ifndef CONFIG_STAROT   /* 默认是必须是打开充电,否则耳机没电了就不能遭再次充电 删除修改 */
     theCharger->disable_reason = CHARGER_DISABLE_REASON_REQUEST;         // 默认关闭充电
 #endif
 
