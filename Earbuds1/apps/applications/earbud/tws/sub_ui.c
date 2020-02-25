@@ -49,7 +49,7 @@ static void appUICheckVersion(void);
 static void appUICheckPeerVersionForUpdate(void);
 static void appUIUpgradeCommit(void);
 static void appUIUpgradeEnter(void);
-static void appUIUpgradeExit(void);
+void appUIUpgradeExit(void);
 static void appUIUpgradeNotifyCommitStatusInit(UI_APP_UPGRADE_COMMIT_STATUS* message);
 static void appUIUpgradeNotifyCommitStatusDo(UI_APP_UPGRADE_COMMIT_STATUS* message);
 static void appUIUpgradeNotifyCommitStatusTimeOut(UI_APP_UPGRADE_COMMIT_STATUS* message);
@@ -1975,7 +1975,7 @@ static void appUIUpgradeEnter(void) {
     appSmEnterDfuMode();
 }
 
-static void appUIUpgradeExit(void) {
+void appUIUpgradeExit(void) {
     DEBUG_LOG("call appUIUpgradeExit");
     gProgRunInfo.canContinueUpgrade = FALSE;
     appSmExitDfuMode();

@@ -300,7 +300,6 @@ ruleEntry appConnRules[] =
 #ifdef CONFIG_STAROT
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
 #endif
-
     RULE(RULE_EVENT_IN_CASE,                    rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectHandset,        CONN_RULES_DISCONNECT_HANDSET),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectPeer,           CONN_RULES_DISCONNECT_PEER),
@@ -336,6 +335,12 @@ ruleEntry appConnRules[] =
     RULE_WITH_FLAGS(RULE_EVENT_PEER_IN_CASE,    ruleSyncConnectHandset,             CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseScoTransferToHandset,     CONN_RULES_SCO_TRANSFER_TO_HANDSET),
     RULE(RULE_EVENT_PEER_IN_CASE,               ruleAllRun,                         CONN_RULES_NOTIFY_APP_POSITION),
+#ifdef CONFIG_STAROT
+    // 考虑另一只耳机进出充电盒，对当前耳机dfu的影响
+    RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
+    RULE(RULE_EVENT_PEER_OUT_CASE,              ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
+#endif
+
     RULE_WITH_FLAGS(RULE_EVENT_PEER_HANDSET_DISCONNECTED,  ruleSyncConnectHandset,  CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_PEER_HANDSET_CONNECTED,     ruleBothConnectedDisconnect,        CONN_RULES_DISCONNECT_HANDSET),
 
@@ -3429,7 +3434,12 @@ static ruleAction ruleIdleHandsetPair(void) {
 static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
 {
     if (UpgradeInProgress()) {
-        RULE_LOG("ruleCheckGaiaIsNeedDisconnection, appSmIsDfuPending is true, ignore");
+        RULE_LOG("ruleCheckGaiaIsNeedDisconnection, UpgradeInProgress is true, ignore");
+        return RULE_ACTION_IGNORE;
+    }
+
+    if (appSmIsInDfuMode()) {
+        RULE_LOG("ruleCheckGaiaIsNeedDisconnection, appSmIsInDfuMode is true, ignore");
         return RULE_ACTION_IGNORE;
     }
 

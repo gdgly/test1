@@ -1334,14 +1334,15 @@ static void appSmHandleConnRulesEnterDfu(void)
 }
 
 #ifdef CONFIG_STAROT
-extern void appPeerSigTxUpgradeExitReq(Task task);
+extern void appUIUpgradeExit(void);
 
 static void appSmHandleConnRulesExitDfu(void)
 {
     DEBUG_LOG("appSmHandleConnRulesExitDfu");
-    if (!appSmIsInCase()) {
+    MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY);
+    if (appSmIsInDfuMode()) {
         DEBUG_LOG("appSmHandleConnRulesExitDfu, rule exit DFU");
-        appPeerSigTxUpgradeExitReq(appGetGaiaTask());
+        appUIUpgradeExit();
     }
     appConnRulesSetRuleComplete(CONN_RULES_EXIT_DFU);
 }

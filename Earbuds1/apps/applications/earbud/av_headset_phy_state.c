@@ -333,10 +333,22 @@ static void appPhyStateHandleMessage(Task task, MessageId id, Message message)
             break;
 
         case CHARGER_MESSAGE_ATTACHED:
+#ifdef CONFIG_STAROT
+            if (!appInitCompleted()) {
+                appPhyStateInCaseEvent();
+            }
+#else
             appPhyStateInCaseEvent();
+#endif
             break;
         case CHARGER_MESSAGE_DETACHED:
+#ifdef CONFIG_STAROT
+            if (!appInitCompleted()) {
+                appPhyStateOutOfCaseEvent();
+            }
+#else
             appPhyStateOutOfCaseEvent();
+#endif
             break;
 
         case ACCELEROMETER_MESSAGE_IN_MOTION:

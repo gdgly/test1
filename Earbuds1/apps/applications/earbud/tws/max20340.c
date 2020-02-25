@@ -900,6 +900,7 @@ void max20340_notify_current_status(void) {
 }
 
 void max20340_notify_plc_in(void) {
+    DEBUG_LOG("max20340_notify_plc_in");
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT);
     MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT, NULL, 50);
@@ -911,6 +912,7 @@ void max20340_notify_plc_in(void) {
 
 void max20340_notify_plc_out(void) {
 //    appChargeFromUi(FALSE);
+    DEBUG_LOG("max20340_notify_plc_out");
     if (FALSE == appGetCaseIsOpen()) {
         DEBUG_LOG("max20340_notify_plc_out, now case is close, so don't send message to application");
         return;
