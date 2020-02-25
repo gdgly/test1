@@ -1315,7 +1315,7 @@ static void appSmHandleConnRulesClearPeerVersionCache(void) {
 
 static void appSmHandleConnRulesEnterDfu(void)
 {
-    DEBUG_LOG("appSmHandleConnRulesEnterDfu");
+    DEBUG_LOG("appSmHandleConnRulesEnterDfu appGetState:%04X", appGetState());
 
     switch (appGetState())
     {
@@ -1962,6 +1962,13 @@ static void appSmHandleHfpDisconnectedInd(APP_HFP_DISCONNECTED_IND_T *ind)
                    links, record that we're not connected with HFP to handset */
                 if (ind->reason == APP_HFP_DISCONNECT_NORMAL && !appSmIsDisconnectingLinks())
                     appDeviceSetHfpWasConnected(&ind->bd_addr, FALSE);
+//#ifdef CONFIG_STAROT
+//                if (ind->reason == APP_HFP_CONNECT_FAILED && !appSmIsDisconnectingLinks()) {
+//                    /// reconnect to headset
+//                    appDeviceSetHfpWasConnected(&ind->bd_addr, FALSE);
+//                    appHfpConnectHandset();
+//                }
+//#endif
             }
         }
         break;
@@ -2265,6 +2272,7 @@ static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
     if (status->peer_sync_complete && !ParamUsingSingle() && !appPeerVersionSyncStatusHaveSent()) {
         DEBUG_LOG("call appPeerSigTxSyncVersion for send version to peer");
         appPeerSigTxSyncVersionReq(appGetUiTask());
+        appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
     }
 #endif
 
@@ -2598,8 +2606,16 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 
         case SM_INTERNAL_TIMEOUT_DFU_ENTRY:
             DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY");
-
+#ifdef CONFIG_STAROT
+            if(appGetCaseIsOpen()) {
+                MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY,
+                        NULL, appConfigDfuTimeoutAfterEnteringCaseMs());
+            } else {
+                appSmHandleDfuEnded(TRUE);
+            }
+#else
             appSmHandleDfuEnded(TRUE);
+#endif
             break;
 
         case SM_INTERNAL_TIMEOUT_DFU_MODE_START:

@@ -1855,6 +1855,10 @@ void appPeerVersionSyncStatusSet(uint8 status) {
     gProgRunInfo.peerVerSyncStatus |= status;
 }
 
+void appPeerVersionSyncStatusClean(uint8 status) {
+    gProgRunInfo.peerVerSyncStatus ^= status;
+}
+
 void appPeerVersionSyncSent(void) {
     if (ParamUsingSingle()) {
         appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent | PeerVersionSyncStatusRecv);

@@ -673,7 +673,7 @@ void appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm(Task task, peerSigStatus
 // region 同步左右耳机版本  AVRCP_PEER_CMD_SYNC_VERSION
 
 void appPeerSigTxSyncVersionReq(Task task) {
-    DEBUG_LOG("appPeerSigTxUpgradeCancelNotifyCommitStatusReq");
+    DEBUG_LOG("appPeerSigTxSyncVersionReq");
     if (ParamUsingSingle()) {
         return;
     } else {
@@ -687,6 +687,7 @@ void appPeerSigTxSyncVersionReq(Task task) {
 }
 
 bool appPeerSigTxSyncVersionParse(uint8* payload) {
+    DEBUG_LOG("appPeerSigTxSyncVersionParse");
     SyncVersionReq* syncVersionReq = (SyncVersionReq*)payload;
     appPeerVersionSet(syncVersionReq->version);
     appPeerVersionSyncStatusSet(PeerVersionSyncStatusRecv);
@@ -698,8 +699,12 @@ bool appPeerSigTxSyncVersionParse(uint8* payload) {
 }
 
 void appPeerSigTxSyncVersionConfirm(Task task, peerSigStatus status) {
+    DEBUG_LOG("appPeerSigTxSyncVersionConfirm status :%02X", status);
     if (peerSigStatusSuccess == status) {
         MessageSend(task, APP_CHECK_VERSION, NULL);
+        appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
+    } else {
+        appPeerVersionSyncStatusClean(PeerVersionSyncStatusSent);
     }
 }
 

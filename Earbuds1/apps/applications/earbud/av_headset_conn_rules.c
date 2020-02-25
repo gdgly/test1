@@ -1810,11 +1810,12 @@ static ruleAction rulePairingConnectTwsPlusHfp(void)
 }
 
 static ruleAction ruleRealInCaseDisconnect(void) {
-//    DEBUG_LOG("rule real in case disconnect check");
-//    bool realInCase = appUIDeviceRealInCase();
-//    if (TRUE == realInCase) {
-//        return RULE_ACTION_RUN;
-//    }
+    DEBUG_LOG("ruleRealInCaseDisconnect");
+    if (appSmIsInDfuMode()) {
+        DEBUG_LOG("ruleRealInCaseDisconnect in dfu mode, so need disconnect");
+        return RULE_ACTION_RUN;
+    }
+    DEBUG_LOG("ruleRealInCaseDisconnect ignore");
     return RULE_ACTION_IGNORE;
 }
 
@@ -1959,8 +1960,14 @@ static ruleAction ruleInCaseEnterDfu(void)
             return RULE_ACTION_DEFER;
         }
         if (appSmIsInCase() && appPeerSyncIsPeerInCase()) {
-            RULE_LOG("ruleInCaseEnterDfu, all in case, so enter dfu");
-            return RULE_ACTION_RUN;
+            if (APP_STATE_IN_CASE_IDLE == appGetState() || APP_STATE_IN_CASE_DFU == appGetState()) {
+                RULE_LOG("ruleInCaseEnterDfu, all in case, so enter dfu");
+                return RULE_ACTION_RUN;
+            } else {
+                DEBUG_LOG("ruleInCaseEnterDfu, but current state is : %04X", appGetState());
+                return RULE_ACTION_DEFER;
+            }
+
         } else {
             RULE_LOG("ruleInCaseEnterDfu, two earbuds not all in case, so ignore");
             return RULE_ACTION_IGNORE;
