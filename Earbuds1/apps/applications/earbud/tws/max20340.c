@@ -28,6 +28,7 @@ typedef struct {
   uint16 uCRCKEY;
 } CaseImageHead;
 
+static uint8 _ear_reseted = 0;       // 检测到系统复位后，不再接收盒子的其它命令了
 // 根据上面的结构体，升级固件的版本是在第四到第十二字节，共8字节
 static uint8 _case_image_ver[DEV_HWSWVER_LEN], _case_need_upgrade = 0;
 int imagecase_checkver(uint8 *recv_ver)      // return 1 is upgrade
@@ -325,6 +326,7 @@ static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
             keyDown  = 1;
         }else if(key_time >= 10){
             keyLong = 1;
+            _ear_reseted = 1;
         }
 
         if(left_ear_status == 0x1){//在盒中
@@ -460,6 +462,13 @@ static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
     uint8 send_buf[3];
     uint8 cmd;
     cmd = (buf[MX20340_REG_RX_DATA0] & 0x3c) >> 2;
+
+    if(_ear_reseted) {
+        _ear_reseted += 1;
+        if(_ear_reseted > 3)  // 系统复位后不再响应盒子消息,防止第一条盒子没有收到，可返回3条
+            return;
+    }
+
     switch(cmd){
     case 0://盒子发送测试指令
         box_send_test_cmd(&buf[MX20340_REG_RX_DATA0], send_buf);
@@ -500,11 +509,20 @@ static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
     }
 
 #ifdef MESSAGE_MAX30240_SEND_LATER
+  if(_ear_reseted) {         // 如果是复位命令，尽快返回给盒子
+    if(BITSERIAL_HANDLE_ERROR == handle) {
+        handle = max20340Enable();
+        max20340WriteRegister_withlen(handle, MX20340_REG_TX_DATA0, send_buf, 3);
+        max20340WriteRegister(handle, MX20340_REG_PLC_CTL, buf[MX20340_REG_PLC_CTL] | 3);
+        max20340Disable(handle);
+    }
+  }
+  else {
     (void)handle;
     memcpy(g_send_data, send_buf, 3);
     g_send_data[3] = (buf[MX20340_REG_PLC_CTL] | 3);
     max20340_timer_send(3);
-
+  }
 #else
     max20340WriteRegister_withlen(handle, MX20340_REG_TX_DATA0, send_buf, 3);
     max20340WriteRegister(handle, MX20340_REG_PLC_CTL, buf[MX20340_REG_PLC_CTL] | 3);
