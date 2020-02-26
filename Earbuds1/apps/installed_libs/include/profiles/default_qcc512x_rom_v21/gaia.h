@@ -953,7 +953,7 @@ void GaiaRwcpSendNotification(uint8 *payload, uint16 payload_length);
 #define GAIA_COMMAND_TYPE_STAROT_CONTROL (0x5400)          /// 控制类
 #define GAIA_COMMAND_TYPE_STAROT_BASE_INFO (0x5500)        /// 基础信息
 #define GAIA_COMMAND_TYPE_STAROT_TEST_PRODUCT (0x5600)     /// 测试生成
-#define GAIA_COMMAND_TYPE_STAROT_UPDATA_FIRMWARE (0X5700)  /// 更新盒子固件信息
+#define GAIA_COMMAND_TYPE_STAROT_UPDATA_FIRMWARE (0X5800)  /// 更新盒子固件信息
 #define GAIA_VENDOR_STAROT (0x000F)
 typedef struct
 {
@@ -977,7 +977,17 @@ typedef struct
     uint8 index:8;
     uint8 data[4];
 } GAIA_STAROT_DATA_T;
-
+/*
+ * ack消息
+ */
+typedef struct{
+//    uint16 vendorld;
+//    uint16 command;
+    uint8 session_id;
+    uint8 index;
+    uint8 length;
+    uint8 mask[5];
+}GAIA_STAROT_DATA_ACK_T;
 #endif
 
 #endif /* ifndef _GAIA_H_ */

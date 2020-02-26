@@ -109,6 +109,9 @@ void starotGaiaReset(void) {
  */
 bool starotGaiaHandleData(GAIA_STAROT_DATA_T *message)
 {
+    DEBUG_LOG("starotGaiaHandleData");
+
+    DEBUG_LOG("%x",message->command);
     switch (message->command)
     {
     case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE:
@@ -117,6 +120,44 @@ bool starotGaiaHandleData(GAIA_STAROT_DATA_T *message)
     default:
         break;
     }
+#if 0
+    GAIA_STAROT_DATA_ACK_T *ack = (GAIA_STAROT_DATA_ACK_T *)
+            PanicUnlessMalloc(sizeof (GAIA_STAROT_DATA_ACK_T));
+//    ack->vendorld   = message->vendorld;
+//    ack->command    = message->command;
+    ack->session_id = (message->sessionid)<<4;
+    ack->index      = message->index;
+    ack->length     = 1;
+    ack->mask[0]   |= ( 1 << 0 );
+    DEBUG_LOG("session_id = %x,",ack->session_id);
+    if (NULL != ack)
+    {
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 8, (uint8*)ack);
+        free(ack);
+    }
+#else
+    StarotAttr *head = NULL;
+    StarotAttr *attr = NULL;
+
+    attr = attrMalloc(&head, 12);
+    attr->attr = 0X02;
+    attr->payload[0]  = 0;
+    attr->payload[1]  = 0;
+    attr->payload[2]  = 0x58;
+    attr->payload[3]  = 0;
+    attr->payload[4]  = (message->sessionid)<<4;
+    attr->payload[5]  = message->index + 1;//index
+    attr->payload[6]  = 1;
+    attr->payload[7] |= ( 1 << 0 );
+
+    if (NULL != head)
+    {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
+        attrFree(head, data);
+    }
+#endif
     return TRUE;
 }
 
@@ -959,6 +1000,7 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
 void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 {
     UNUSED(message);
+    DEBUG_LOG("gaiaDevUpdateFirmware");
 }
 
 // APP中拨打电话

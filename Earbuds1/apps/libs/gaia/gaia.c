@@ -4143,15 +4143,18 @@ bool gaia_handle_starot_command(gaia_transport *transport, uint16 command_id, ui
 bool gaia_handle_starot_data(gaia_transport *transport, uint16 command_id, uint16 payload_length, uint8 *payload)
 {
     UNUSED(transport);
-    UNUSED(payload);
-    /* 还需要返回ack */
-//    send_ack(transport, GAIA_VENDOR_STAROT, command_id, GAIA_STATUS_SUCCESS, 0, NULL);
+
     GAIA_STAROT_DATA_T* updata_firmware =
             (GAIA_STAROT_DATA_T*)PanicUnlessMalloc(
                 sizeof(GAIA_STAROT_DATA_T) + (payload_length > 1 ? (payload_length - 1) : 0)
                 );
     /* 赋值数据结构 */
-    updata_firmware->command = command_id;
+    updata_firmware->vendorld  = command_id;
+    updata_firmware->command   = command_id;
+    updata_firmware->index     = payload[0];
+    updata_firmware->sessionid = (payload[1] >> 4) & 0X0F;
+    updata_firmware->type      = (payload[1] >> 2) & 0X0C;
+    updata_firmware->flag      = (payload[1]) & 0X03;
 
     MessageSend(gaia->app_task, GAIA_STAROT_DATA, updata_firmware);
 
