@@ -113,20 +113,16 @@ static int CummuCheckAllItem(CommuInfo *com, char *outbuf, int bufize)
                     (status == 0) ? "PASS" : "FAIL");
             break;
 #endif
-#ifdef ENABLE_APOLLO
         case TYPE_APOLLO:
             status = apolloGetStatus();
             outsize = sprintf(outbuf, "check APOLLO %s",
                     (status == 0) ? "PASS" : "FAIL");
             break;
-#endif
-#ifdef ENABLE_APOLLO
         case TYPE_APO_VER:
             comGetApolloVer((uint8*)ver);
             outsize = sprintf(outbuf, "check APOLLOVERSION %02X.%02X.%02X.%02X",
                     ver[0], ver[1], ver[2], ver[3]);
             break;
-#endif
     default:
             return 0;
     }

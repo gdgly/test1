@@ -11,7 +11,7 @@
 #include "av_headset.h"
 
 #include "apollo.h"
-
+#include "public.h"
 static void apollo_task_handler(Task appTask, MessageId id, Message msg);
 static int apollo_send_cmd(uint32 cmd, bitserial_handle handle);
 static void apollo_send_data(uint8* data, int length, bitserial_handle handle);
@@ -199,10 +199,14 @@ int apollo_evoke(void) {
     return 0;
 }
 
+#ifdef ENABLE_APOLLO
 /*Return 0 for Apollo startup success*/
 int apolloGetStatus(void) {
     return !((apollo_state > APOLLO_STATE_INIT_END) && (apollo_state != APOLLO_STATE_ERR));
 }
+#else
+int apolloGetStatus(void){return -1;}
+#endif
 
 /*get Apollo version*/
 void comGetApolloVer(uint8 *arr) {
