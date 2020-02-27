@@ -202,8 +202,14 @@ static const appInitTableEntry appInitTable[] =
     {appChargerInit,        0, NULL},
 #endif
     {appLedInit,            0, NULL},
+#ifdef CONFIG_HW_UART
+    {uartInit,              0, NULL},                     // 一 串口调试输出放前面
+#endif
 #ifdef ENABLE_APOLLO
-    {apollo_int_io_init,    APOLLO_INIT_CFM, NULL},
+    {apollo_int_io_init,    APOLLO_INIT_CFM, NULL},       // 二
+#endif
+#ifdef CONFIG_STAROT
+    {appSubUIInit,          0, NULL},                     // 三 必须在ParamConfigInit之前
 #endif
 #ifdef HAVE_MAX20340
     {max20340_init,             0, NULL},
@@ -225,7 +231,6 @@ static const appInitTableEntry appInitTable[] =
     {appConfigInit,         CL_DM_LOCAL_BD_ADDR_CFM, appInitHandleClDmLocalBdAddrCfm},
 #endif
 #ifdef CONFIG_STAROT
-    {appSubUIInit,          0, NULL},      // 必须在ParamConfigInit之前
     {ParamConfigInit,       CL_DM_LOCAL_BD_ADDR_CFM, ParamInitHandleClDmLocalBdAddrCfm},
 #endif
 #ifdef HAVE_EM20168//放到subui后面，因为要读flash

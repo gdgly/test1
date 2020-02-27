@@ -20,8 +20,8 @@
 #define CONFIG_BAUDRATE_115200          // 115200用来测试命令使用,不定义则使用3M波特率
 
 
-#define SEND_ONE_LEN     (500)      /* 单次最大发送长度 */
-#define MAX_DATA_LEN     (2000)     /* 最大缓冲数据长度 */
+#define SEND_ONE_LEN     (32)      /* 单次最大发送长度 */
+#define MAX_DATA_LEN     (192)     /* 最大缓冲数据长度 */
 #define UART_PIO_BANK    (0)
 #define UART_RX_TX_BIT   ((1<<UART_RX_PIO) | (1<<UART_TX_PIO))
 
@@ -245,14 +245,16 @@ void uartInit(void)
 
     /* Register uart source with task */
     VmalMessageSinkTask(StreamSinkFromSource(theTask->uart_source), &theTask->task);
+
+    UartPuts("\r\nUartInit ...");
 }
 
 void UartSetRecvHandle(UartRxProc func)
 {
-    if(GetUartTask()->task.handler == NULL)
-        uartInit();
+//    if(GetUartTask()->task.handler == NULL)
+//        uartInit();
     GetUartTask()->RxProc = func;
- }
+}
 
 #endif
 

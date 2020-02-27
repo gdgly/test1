@@ -87,6 +87,15 @@ void UartTxData(const uint8 *data, uint16 length);
 void UartSetRecvHandle(UartRxProc func);
 void ShellCmdInit(void);
 int appChangeCVCProcessMode(void);
+#ifdef CONFIG_HW_UART
+  #define UartPuts(s)            \
+    do{UartTxData((uint8*)(s), strlen((char*)(s))); UartTxData((uint8*)"\r\n", 2); }while(0)
+  #define UartPuts1(s,d)         \
+    do{char buf[16];sprintf(buf,"%d\r\n",(d));UartTxData((uint8*)(s), strlen((char*)(s))); UartTxData((uint8*)buf,strlen(buf)); }while(0)
+#else
+  #define UartPuts(...)
+  #define UartPuts1(...)
+#endif
 
 //==============================================================================================
 //              /* Lis25BA I2C AUDIO INIT */
@@ -195,7 +204,7 @@ int Lis2dw12Power(bool isOn);//1 打开，0关闭
 #undef CONFIG_LIS25BA
 #undef UART_RX_PIO
 #undef UART_TX_PIO
-#define UART_TX_PIO   (53)
+#define UART_TX_PIO   (52)
 
 
 // ================================================
