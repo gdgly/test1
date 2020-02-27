@@ -3520,7 +3520,9 @@ static ruleAction ruleAllRun(void) {
 }
 
 static ruleAction ruleDisconnectHfpA2dpAvrcp(void) {
+    DEBUG_LOG("ruleDisconnectHfpA2dpAvrcp");
     if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
+        DEBUG_LOG("ruleDisconnectHfpA2dpAvrcp appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected() is true");
         return RULE_ACTION_RUN;
     }
     return RULE_ACTION_COMPLETE;

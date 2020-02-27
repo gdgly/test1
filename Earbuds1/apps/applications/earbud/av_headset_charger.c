@@ -532,6 +532,10 @@ bool appChargerClientRegister(Task client_task)
     if (appTaskListAddTask(theCharger->client_tasks, client_task))
     {
         /* Send initial state if charger is attached */
+#ifdef CONFIG_STAROT
+        // 升级的时候，需要判断位置，如果在空中，目前ble条件是需要经典蓝牙连接才能使用BLE
+        MessageSend(client_task, CHARGER_MESSAGE_ATTACHED, NULL);
+#else
         if (appChargerIsConnected() == CHARGER_CONNECTED_NO_ERROR)
         {
             MessageSend(client_task, CHARGER_MESSAGE_ATTACHED, NULL);
@@ -541,6 +545,8 @@ bool appChargerClientRegister(Task client_task)
         {
             MessageSend(client_task, CHARGER_MESSAGE_DETACHED, NULL);
         }
+#endif
+
         return TRUE;
     }
 #else

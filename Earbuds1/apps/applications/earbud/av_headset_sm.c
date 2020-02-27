@@ -1124,6 +1124,9 @@ static void appSmHandlePhyStateInCaseEvent(void)
     /*! \todo Need to add other non-core states to this conditional from which we'll
      * permit a transition back to a core state, such as...peer pairing? sleeping? */
     if (appSmIsCoreState() ||
+#ifdef CONFIG_STAROT
+      appSmIsInDfuMode() ||
+#endif
         (appGetState() == APP_STATE_HANDSET_PAIRING))
     {
         appSmSetCoreState();
@@ -2265,12 +2268,11 @@ static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
     if (appGetState() == APP_STATE_STARTUP)
     {
         appSmSetInitialCoreState();
-
     }
 
 #ifdef CONFIG_STAROT
     /// 同步对方耳机版本
-    if (status->peer_sync_complete && !ParamUsingSingle() && !appPeerVersionSyncStatusHaveSent()) {
+    if (appInitCompleted() && status->peer_sync_complete && !ParamUsingSingle() && !appPeerVersionSyncStatusHaveSent()) {
         DEBUG_LOG("call appPeerSigTxSyncVersion for send version to peer");
         appPeerSigTxSyncVersionReq(appGetUiTask());
         appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
@@ -2560,7 +2562,9 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             break;
 
         case APP_UPGRADE_COMPLETED:
+#ifndef CONFIG_STAROT
             appSmHandleDfuEnded(FALSE);
+#endif
             break;
 #endif /* INCLUDE_DFU */
 
@@ -2743,7 +2747,7 @@ void appSmEnterDfuMode(void)
 }
 
 void appSmExitDfuMode(void) {
-    DEBUG_LOG("appSmExitDfuMode");
+    DEBUG_LOG("appSmExitDfuMode %04X", appGetState());
     if (appGetState() == APP_STATE_IN_CASE_DFU) {
         appSetState(APP_STATE_STARTUP);
         appGaiaDisconnect();
@@ -2777,6 +2781,12 @@ void appSmEnterDfuModeInCase(bool enable)
 */
 static void appSmEnterDfuOnStartup(bool upgrade_reboot)
 {
+#ifdef CONFIG_STAROT
+    /// 强制关闭音频
+    appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
+                                   appConfigLinkDisconnectionTimeoutTerminatingMs(),
+                                   POST_DISCONNECT_ACTION_NONE);
+#endif
     MessageSend(appGetSmTask(),
                 upgrade_reboot ? SM_INTERNAL_ENTER_DFU_UPGRADED
                                : SM_INTERNAL_ENTER_DFU_STARTUP,

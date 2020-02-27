@@ -10,8 +10,8 @@
 void max20340_timer_restart(int timeout);
 
 /// 应用层可以处理多次plcin消息，但是在关盖的情况下，不处理plc out消息
-static void max20340_notify_plc_in(void);
-static void max20340_notify_plc_out(void);
+void max20340_notify_plc_in(void);
+void max20340_notify_plc_out(void);
 
 #define MESSAGE_MAX30240_SEND_LATER    2000    // (延时反馈数据)
 static uint8 g_send_data[4];                   // 需要发送的数据
@@ -891,11 +891,19 @@ void max20340_init(void)
 }
 
 //extern void appChargeFromUi(bool bEnable);
+static int callPlcIn = 0;
+static int callPlcOut = 0;
+void printfDebugInitMax20340(void) {
+    DEBUG_LOG("debugInitMax20340 in:%d out:%d", callPlcIn, callPlcOut);
+}
+
 void max20340_notify_current_status(void) {
     if (TRUE == max20340_GetConnect()) {
         max20340_notify_plc_in();
+        callPlcIn += 1;
     } else {
         max20340_notify_plc_out();
+        callPlcOut += 1;
     }
 }
 

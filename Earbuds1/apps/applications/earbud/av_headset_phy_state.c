@@ -334,6 +334,7 @@ static void appPhyStateHandleMessage(Task task, MessageId id, Message message)
 
         case CHARGER_MESSAGE_ATTACHED:
 #ifdef CONFIG_STAROT
+            // 只有初始化的时候，才让你生效
             if (!appInitCompleted()) {
                 appPhyStateInCaseEvent();
             }
@@ -343,6 +344,7 @@ static void appPhyStateHandleMessage(Task task, MessageId id, Message message)
             break;
         case CHARGER_MESSAGE_DETACHED:
 #ifdef CONFIG_STAROT
+            // 只有初始化的时候，才让你生效
             if (!appInitCompleted()) {
                 appPhyStateOutOfCaseEvent();
             }

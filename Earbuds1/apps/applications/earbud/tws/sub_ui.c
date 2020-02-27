@@ -600,6 +600,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");    /* Get microphone sources */
 #ifdef HAVE_MAX20340
         appUiPowerSave((TRUE==max20340_GetConnect()) ? POWER_MODE_IN_CASE : POWER_MODE_OUT_CASE);
+        // 现在修改位置无效，处于dfu模式，不是core状态，会忽略，现在把dfu模式，添加到core中
         max20340_notify_current_status();
 #endif
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_UPGRADE);
@@ -691,6 +692,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 #endif
         break;
     case APP_CASE_CLOSE_LATER:
+        /// focus (plc in / in case)
         appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
         break;
@@ -1235,7 +1237,7 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
         return;
     }
 
-    if(lidOpen >= 0) {
+    if(lidOpen >= 0 && appInitCompleted()) {
         static uint8 beforeStatus = 0xFF;                   // 先设置为0xFF,这样第一次过来就能发送信息了
         if (beforeStatus != lidOpen) {
             beforeStatus = lidOpen;
@@ -1915,6 +1917,7 @@ static void appUIUpgradeApplyInd(void) {
 
 static void appUICheckVersion(void) {
     DEBUG_LOG("enter appUICheckVersion");
+    appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
     if (gProgRunInfo.upgradeNeedReboot) {
         const int versionSame = 2;
         if (versionSame == SystemCheckMemoryVersion()) {
