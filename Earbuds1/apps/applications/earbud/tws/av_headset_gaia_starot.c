@@ -50,7 +50,7 @@ static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App
 static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type);//ui上报gaia助手唤醒消息
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
 static void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message);//接受设备传过来的停止信息
-static void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message);//升级固件
+static void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message);//升级固件
 
 static void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess);
 
@@ -113,7 +113,17 @@ bool starotGaiaHandleData(GAIA_STAROT_IND_T *message)
     DEBUG_LOG("starotGaiaHandleData");
 
     /* 先把收到的数据包，保持起来，再通知ack */
-    gaiaDevUpdateFirmware(message);
+    GAIA_STAROT_DATA_T *message_data = (GAIA_STAROT_DATA_T *)
+            PanicUnlessMalloc(sizeof (GAIA_STAROT_DATA_T));
+
+    message_data->command   = message->command;
+    message_data->data_length = message->payloadLen -2;
+    message_data->index     = message->payload[0];
+    message_data->sessionid = (message->payload[1] >> 4) & 0X0F;
+    message_data->type      = (message->payload[1] >> 2) & 0X03;
+    message_data->flag      = (message->payload[1]) & 0X03;
+    memcpy(message_data->data, message->payload + 2, message_data->data_length);
+    gaiaDevUpdateFirmware(message_data);
 
 #if 0
     GAIA_STAROT_DATA_ACK_T *ack = (GAIA_STAROT_DATA_ACK_T *)
@@ -156,6 +166,7 @@ bool starotGaiaHandleData(GAIA_STAROT_IND_T *message)
         attrFree(head, data);
     }
 #endif
+    pfree(message_data);
     return TRUE;
 }
 
@@ -997,10 +1008,9 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
  * 接收APP设备发送过来的升级数据包，保持为文件即可，以备后用，
  * 校验或者发送给盒子
 */
-void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message)
+void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 {
-    UNUSED(message);
-#if 0
+#if 1
 //    MD5_CTX context;
 //    unsigned char digest[16];
 
@@ -1009,7 +1019,7 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message)
 //    MD5Final(digest, &context);
 
     DEBUG_LOG("gaiaDevUpdateFirmware");
-    uint16 length = 0;
+    int length;
     static FileCtrl *fc = NULL;
 
     if (message->flag == 0X00)/* 开始一次数据传输过程 */
@@ -1023,6 +1033,7 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message)
             fc->fsize += message->data_length;
             if (length == message->data_length)
             {
+
             }
         }
         else
@@ -1043,20 +1054,19 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message)
 //        fc = NULL;
 
         /* 文件写完后读取测试一下 */
-//        fc = FileOpen(FILE_NAME, 0);
-//        uint8 buff[80];
-//        DEBUG_LOG("%d",fc->fsize);
-//        fc->offset = 0;
-//        FileRead(fc,buff,10);
-//        for(int i = 0; i < 10; i++)
-//        {
-//            DEBUG_LOG("data%x ",buff[i]);
-//        }
-//        FileClose(fc);
-//        fc = NULL;
-
-        ReadFile_2(fc->fIndex);
+        fc = FileOpen(FILE_NAME, 0);
+        uint8 buff[80];
+        DEBUG_LOG("%d",fc->fsize);
+        FileRead(fc,buff,10);
+        for(int i = 0; i < 10; i++)
+        {
+            DEBUG_LOG("data%x ",buff[i]);
+        }
         FileClose(fc);
+
+//        ReadFile_2(fc->fIndex);
+//        FileClose(fc);
+        fc = NULL;
     }
     else /* flag 信息不支持 */
     {

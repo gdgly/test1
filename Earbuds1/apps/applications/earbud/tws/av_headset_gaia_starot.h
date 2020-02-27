@@ -263,14 +263,14 @@ bool appGaiaIsConnectBySpp(void);
  */
 typedef struct
 {
-    uint16 vendorld;
     uint16 command;
-//    uint16 header;
+    /* 头部信息 */
     uint16 data_length;/* 数据长度 */
     uint8 flag;
     uint8 type;
     uint8 sessionid;
     uint8 index;
+    /* 数据 */
     uint8 data[4];
 } GAIA_STAROT_DATA_T;
 /*
