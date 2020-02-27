@@ -188,6 +188,7 @@ DEFINE_RULE(ruleAllRun);
 DEFINE_RULE(ruleDisconnectHfpA2dpAvrcp);
 #endif
 DEFINE_RULE(ruleCheckGaiaIsNeedDisconnection);
+DEFINE_RULE(ruleDisconnectBTNeedEnterDfu);
 /*! \} */
 
 /*! \brief Set of rules to run on Earbud startup. */
@@ -255,6 +256,9 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_HANDSET_A2DP_DISCONNECTED,  ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
     RULE(RULE_EVENT_HANDSET_AVRCP_DISCONNECTED, ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
     RULE(RULE_EVENT_HANDSET_HFP_DISCONNECTED,   ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
+    RULE(RULE_EVENT_HANDSET_A2DP_DISCONNECTED,  ruleDisconnectBTNeedEnterDfu, CONN_RULES_ENTER_DFU),
+    RULE(RULE_EVENT_HANDSET_AVRCP_DISCONNECTED, ruleDisconnectBTNeedEnterDfu, CONN_RULES_ENTER_DFU),
+    RULE(RULE_EVENT_HANDSET_HFP_DISCONNECTED,   ruleDisconnectBTNeedEnterDfu, CONN_RULES_ENTER_DFU),
 #endif
 
     /*! \{
@@ -303,8 +307,8 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_IN_CASE,                    rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectHandset,        CONN_RULES_DISCONNECT_HANDSET),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectPeer,           CONN_RULES_DISCONNECT_PEER),
-    RULE(RULE_EVENT_IN_CASE,                    ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseRejectHandsetConnect,     CONN_RULES_REJECT_HANDSET_CONNECT),
+    RULE(RULE_EVENT_IN_CASE,                    ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseAncTuning,                CONN_RULES_ANC_TUNING_START),
 #ifdef TWS_DEBUG
     RULE(RULE_EVENT_IN_CASE,                    ruleDisconnectGaia,                 CONN_RULES_DISCONNECT_GAIA),
@@ -342,6 +346,9 @@ ruleEntry appConnRules[] =
 #endif
 
     RULE_WITH_FLAGS(RULE_EVENT_PEER_HANDSET_DISCONNECTED,  ruleSyncConnectHandset,  CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
+#ifdef CONFIG_STAROT
+    RULE(RULE_EVENT_PEER_HANDSET_DISCONNECTED,  ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
+#endif
     RULE(RULE_EVENT_PEER_HANDSET_CONNECTED,     ruleBothConnectedDisconnect,        CONN_RULES_DISCONNECT_HANDSET),
 
     RULE(RULE_EVENT_PEER_A2DP_SUPPORTED,        rulePairingConnectTwsPlusA2dp,      CONN_RULES_CONNECT_PEER_HANDSET),
@@ -1951,11 +1958,22 @@ static ruleAction ruleInCaseDisconnectPeer(void)
 static ruleAction ruleInCaseEnterDfu(void)
 {
 #ifdef CONFIG_STAROT
+    if (!appDeviceGetHandsetBdAddr(NULL)) {
+        RULE_LOG("ruleInCaseEnterDfu, appDeviceGetHandsetBdAddr is null, so ignore");
+        return RULE_STATUS_IGNORED;
+    }
+
     if (!appGetCaseIsOpen()) {
         /// 从dfu退出的时候，重新计算state，会发生重新incase规则
         RULE_LOG("ruleInCaseEnterDfu, case is close, so don't enter dfu");
         return RULE_ACTION_IGNORE;
     }
+
+    if (!appSmIsInCase()) {
+        RULE_LOG("ruleInCaseEnterDfu, appSmIsInCase is false, so don't enter dfu");
+        return RULE_ACTION_IGNORE;
+    }
+
     if (ParamUsingSingle()) {
         RULE_LOG("ruleInCaseEnterDfu, single mode, so auto enter dfu");
         return RULE_ACTION_RUN;
@@ -2711,6 +2729,16 @@ static ruleAction ruleBleConnectionUpdate(void)
         return RULE_ACTION_IGNORE;
     }
 
+    if (appPeerSyncIsPeerPairing()) {
+        RULE_LOG("ruleBleConnectionUpdate appPeerSyncIsPeerPairing is true, so need disable");
+        return bleDisable();
+    }
+
+    if (appSmIsPairing()) {
+        RULE_LOG("ruleBleConnectionUpdate appSmIsPairing is true, so need enable");
+        appBleSelectFeture();
+        return bleEnable();
+    }
 
 //    bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
 //    /// 没有和另一只耳机交换地址
@@ -3430,6 +3458,18 @@ static ruleAction ruleIdleHandsetPair(void) {
 }
 
 #endif
+
+
+static ruleAction ruleDisconnectBTNeedEnterDfu(void) {
+    bool hfp = appDeviceIsHandsetHfpConnected() ;
+    bool avrcp = appDeviceIsHandsetAvrcpConnected() ;
+    bool a2dp = appDeviceIsHandsetA2dpConnected();
+    if (hfp || avrcp || a2dp) {
+        DEBUG_LOG("ruleDisconnectBTNeedEnterDfu hfp:%d avrcp:%d a2dp:%d so don't enter dfu", hfp, avrcp, a2dp);
+        return RULE_ACTION_IGNORE;
+    }
+    return ruleInCaseEnterDfu();
+}
 
 static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
 {

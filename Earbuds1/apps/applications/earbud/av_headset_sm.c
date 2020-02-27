@@ -2121,7 +2121,6 @@ static void appSmHandleEnterDfuWithTimeout(uint32 timeoutMs)
     if (APP_STATE_IN_CASE_DFU != appGetState())
     {
         DEBUG_LOGF("appSmHandleEnterDfuWithTimeout. restarted SM_INTERNAL_TIMEOUT_DFU_ENTRY - %dms",timeoutMs);
-
         appSetState(APP_STATE_IN_CASE_DFU);
     }
     else
@@ -2626,10 +2625,16 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case SM_INTERNAL_TIMEOUT_DFU_ENTRY:
             DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY");
 #ifdef CONFIG_STAROT
-            if(appGetCaseIsOpen()) {
+            /// case 打开，并且与手机建立连接(hfp/a2dp/avrcp)则不用建立dfu模式
+            if (appGetCaseIsOpen() &&
+                !(appDeviceIsHandsetHfpConnected() ||
+                  appDeviceIsHandsetA2dpConnected() ||
+                  appDeviceIsHandsetAvrcpConnected())) {
+                DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY cancel dfu timer");
                 MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY,
-                        NULL, appConfigDfuTimeoutAfterEnteringCaseMs());
+                                 NULL, appConfigDfuTimeoutAfterEnteringCaseMs());
             } else {
+                DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY end dfu");
                 appSmHandleDfuEnded(TRUE);
             }
 #else
