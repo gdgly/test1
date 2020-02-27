@@ -1,27 +1,10 @@
-#include "av_headset.h"
-#include <pmalloc.h>
+/*
+ * 描述：文件的打开、读、写、关闭、删除
+ * 时间：2020年2月26日
+*/
+#include "rwfile.h"
 
 extern void pfree(void *ptr);
-
-/*
- * 定义文件结构类型
- */
-typedef struct tagFILECTRL {
-    char         fName[24];
-    FILE_INDEX   fIndex;         // 文件的标记号码
-
-    Sink         sink;
-    uint8*       map_address;    // 分配的文件地址
-    uint32       offset;         // 读取位置/写入
-    uint32       fsize;          // 总文件大小
-    uint32       checksum;       // 写文件时记录CHECKSUM
-}FileCtrl, *FileCPtr;
-
-FileCPtr FileOpen(char *fname, int rwflag);       //1 w, 0 r
-int FileWrite(FileCPtr fCtrl, char *buffer, int length);
-int FileRead(FileCPtr fCtrl, char *buffer, int length);
-int FileClose(FileCPtr fCtrl);
-int FileCancel(char *fname);            // 删除文件
 
 /*
  * 获取文件大小
@@ -38,7 +21,7 @@ static uint16 get_file_size(FILE_INDEX findex)
         SourceDrop(file_source,source_size);
     }
     SourceClose(file_source);
-    printf("%d\n",fileSize);
+    printf("fileSize = %d\n",fileSize);
     return fileSize;
 }
 
@@ -76,7 +59,9 @@ FileCPtr FileOpen(char *fname, int rwflag)
             FileDelete(fCtrl->fIndex);
 
         fCtrl->fIndex = FileCreate(fCtrl->fName, (uint16)strlen(fCtrl->fName));
+
     }
+    fCtrl->sink = StreamFileSink(fCtrl->fIndex);
 
     fCtrl->offset = 0;
 
@@ -85,14 +70,14 @@ FileCPtr FileOpen(char *fname, int rwflag)
 
 /*
  * 写文件
+ * 返回：写入文件的长度
  */
-int FileWrite(FileCPtr fCtrl, char *buffer, int length)
+int FileWrite(FileCPtr fCtrl, uint8 *buffer, int length)
 {
     uint16  offset;
     uint8* map_address;
     int lensink = SinkSlack(fCtrl->sink);
 
-    DEBUG_LOG("%d\n", lensink);
     if (length > lensink)
     {
         DEBUG_LOG("malloc falied\n");
@@ -122,7 +107,7 @@ int FileWrite(FileCPtr fCtrl, char *buffer, int length)
  *      -1  失败
  *
  */
-int FileRead(FileCPtr fCtrl, char *buffer, int length)
+int FileRead(FileCPtr fCtrl, uint8 *buffer, int length)
 {
     int less;
 
@@ -169,3 +154,38 @@ int FileClose(FileCPtr fCtrl)
     return FileSystemUnmount("/rwfs");
 }
 
+
+
+static void DebugData(uint8 *data,uint8 len)
+{
+    uint8 i;
+    printf(("----\r\n "));
+    for(i=0;i<len;i++)
+    {
+       printf("%x ",data[i]);
+    }
+    printf(("----\r\n "));
+}
+//把文件内数据读出来
+void ReadFile_2(FILE_INDEX findex)
+{
+    Source fsource;
+    uint8* map_address;
+    uint16 rLen;
+
+//    DEBUG_LOG(("FileFind-r ret=%x\n", file_index));
+
+    PanicNull((fsource = StreamFileSource(findex)));
+
+    map_address = (uint8 *)SourceMap(fsource);
+    rLen = SourceSize(fsource);
+//    DEBUG_LOG(("File has %d bytes\n", rLen));
+    if(rLen)
+    {
+     DebugData(map_address,rLen);
+     SourceDrop(fsource,rLen);
+    }
+
+    SourceClose(fsource);
+
+}

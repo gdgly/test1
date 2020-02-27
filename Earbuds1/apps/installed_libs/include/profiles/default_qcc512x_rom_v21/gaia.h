@@ -963,31 +963,7 @@ typedef struct
 } GAIA_STAROT_MESSAGE_T;
 typedef GAIA_STAROT_MESSAGE_T GAIA_STAROT_IND_T;
 
-/*
- * 更新固件使用的数据结构
- */
-typedef struct
-{
-    uint16 vendorld;
-    uint16 command;
-//    uint16 header;
-    uint8 flag:2;
-    uint8 type:2;
-    uint8 sessionid:4;
-    uint8 index:8;
-    uint8 data[4];
-} GAIA_STAROT_DATA_T;
-/*
- * ack消息
- */
-typedef struct{
-//    uint16 vendorld;
-//    uint16 command;
-    uint8 session_id;
-    uint8 index;
-    uint8 length;
-    uint8 mask[5];
-}GAIA_STAROT_DATA_ACK_T;
+
 #endif
 
 #endif /* ifndef _GAIA_H_ */

@@ -971,10 +971,11 @@ typedef struct
     uint16 vendorld;
     uint16 command;
 //    uint16 header;
-    uint8 flag:2;
-    uint8 type:2;
-    uint8 sessionid:4;
-    uint8 index:8;
+    uint16 data_length;/* 数据长度 */
+    uint8 flag;
+    uint8 type;
+    uint8 sessionid;
+    uint8 index;
     uint8 data[4];
 } GAIA_STAROT_DATA_T;
 /*

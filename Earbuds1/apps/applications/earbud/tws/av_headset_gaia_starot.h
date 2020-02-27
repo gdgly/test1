@@ -126,8 +126,7 @@ enum {
     GAIA_COMMAND_STAROT_AI_AUDIO_TO_DEVICE_ACK  = 0X5204,                     // 音频确认包
     GAIA_COMMAND_STAROT_AI_BEGIN_RECORD = 0X5205,                             // 开始录音
     GAIA_COMMAND_STAROT_AI_END_RECORD = 0X5206,                               // 停止录音
-    GAIA_CONNECT_STAROT_RECORD_STOP_REPORT = 0X5207,                          // 强制停止录音
-    GAIA_CONNECT_STAROT_UPDATE_FIRMWARE = 0X5208,                             // 升级盒子固件
+    GAIA_CONNECT_STAROT_RECORD_STOP_REPORT = 0X5207,                          // 强制停止录音                             // 升级盒子固件
 };
 
 /////////////////////////////测试与生产///////////////////////////////
@@ -136,6 +135,10 @@ enum {
     GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS = 0X5601                          // 读取apollo状态
 };
 
+/////////////////////////////固件升级使用///////////////////////////////
+enum {
+    GAIA_CONNECT_STAROT_UPDATE_FIRMWARE = 0X5800,                             //固件升级使用
+};
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))
 #define GAIA_OFFS_VENDOR_ID (4)
 #define GAIA_OFFS_COMMAND_ID (6)
@@ -184,7 +187,7 @@ void starotGaiaReset(void);
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
-bool starotGaiaHandleData(GAIA_STAROT_DATA_T *message);
+bool starotGaiaHandleData(GAIA_STAROT_IND_T *message);
 void starotGaiaParseMessageMoreSpace(void);
 
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message);
@@ -253,5 +256,34 @@ StarotResendCommand* starotResendCommandDo(StarotResendCommand* resendCommand, b
 void gaiaNotifyAudioAcceptStatus(Task task, int command);
 
 bool appGaiaIsConnectBySpp(void);
+
+
+/*
+ * 更新固件使用的数据结构
+ */
+typedef struct
+{
+    uint16 vendorld;
+    uint16 command;
+//    uint16 header;
+    uint16 data_length;/* 数据长度 */
+    uint8 flag;
+    uint8 type;
+    uint8 sessionid;
+    uint8 index;
+    uint8 data[4];
+} GAIA_STAROT_DATA_T;
+/*
+ * ack消息
+ */
+typedef struct{
+    uint16 vendorld;
+    uint16 command;
+    uint8 session_id;
+    uint8 index;
+    uint8 length;
+    uint8 mask[5];
+}GAIA_STAROT_DATA_ACK_T;
+
 
 #endif // AV_HEADSET_GAIA_STAROT_H

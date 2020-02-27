@@ -8,6 +8,7 @@
 #include "tws/audio_forward.h"
 #include "tws/peer.h"
 #include "apollo.h"
+#include "rwfile.h"
 
 uint16 bufferSendUnit = 80;
 
@@ -49,7 +50,7 @@ static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App
 static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type);//ui上报gaia助手唤醒消息
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
 static void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message);//接受设备传过来的停止信息
-static void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message);//升级固件
+static void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message);//升级固件
 
 static void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess);
 
@@ -107,19 +108,13 @@ void starotGaiaReset(void) {
 /*
  * 处理APP发来的固件升级数据
  */
-bool starotGaiaHandleData(GAIA_STAROT_DATA_T *message)
+bool starotGaiaHandleData(GAIA_STAROT_IND_T *message)
 {
     DEBUG_LOG("starotGaiaHandleData");
 
-    DEBUG_LOG("%x",message->command);
-    switch (message->command)
-    {
-    case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE:
-        gaiaDevUpdateFirmware(message);
-        break;
-    default:
-        break;
-    }
+    /* 先把收到的数据包，保持起来，再通知ack */
+    gaiaDevUpdateFirmware(message);
+
 #if 0
     GAIA_STAROT_DATA_ACK_T *ack = (GAIA_STAROT_DATA_ACK_T *)
             PanicUnlessMalloc(sizeof (GAIA_STAROT_DATA_ACK_T));
@@ -136,6 +131,7 @@ bool starotGaiaHandleData(GAIA_STAROT_DATA_T *message)
         free(ack);
     }
 #else
+
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
 
@@ -144,9 +140,11 @@ bool starotGaiaHandleData(GAIA_STAROT_DATA_T *message)
     attr->payload[0]  = 0;
     attr->payload[1]  = 0;
     attr->payload[2]  = 0x58;
-    attr->payload[3]  = 0;
-    attr->payload[4]  = (message->sessionid)<<4;
-    attr->payload[5]  = message->index + 1;//index
+    attr->payload[3]  = 0x00;
+    //session id
+    attr->payload[4]  = (message->payload[1])&0XF0;
+    //index
+    attr->payload[5]  = (message->payload[0] + 1);
     attr->payload[6]  = 1;
     attr->payload[7] |= ( 1 << 0 );
 
@@ -315,7 +313,12 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_CONNECT_STAROT_RECORD_STOP_REPORT:
             gaiaDevRecordStopInfo(message);
             break;
-
+    }
+    //固件升级
+    switch (message->command) {
+        case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE:
+            starotGaiaHandleData(message);
+        break;
     }
 
     /// 测试与生产
@@ -338,10 +341,6 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 /// 主要处理设备内部的消息
 void starotGaiaDefaultParse(MessageId id, Message message) {
     switch (id) {
-        case GAIA_STAROT_DATA:
-            starotGaiaHandleData((GAIA_STAROT_DATA_T *) message);
-            break;
-
         case GAIA_STAROT_COMMAND_IND:
             starotGaiaHandleCommand((GAIA_STAROT_IND_T *) message);
             break;
@@ -995,12 +994,79 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
 }
 
 /*
- * 接收APP设备发送过来的升级数据包
+ * 接收APP设备发送过来的升级数据包，保持为文件即可，以备后用，
+ * 校验或者发送给盒子
 */
-void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
+void gaiaDevUpdateFirmware(GAIA_STAROT_IND_T *message)
 {
     UNUSED(message);
+#if 0
+//    MD5_CTX context;
+//    unsigned char digest[16];
+
+//    MD5Init(&context);
+//    MD5Update(&context,(unsigned char *) input, len);
+//    MD5Final(digest, &context);
+
     DEBUG_LOG("gaiaDevUpdateFirmware");
+    uint16 length = 0;
+    static FileCtrl *fc = NULL;
+
+    if (message->flag == 0X00)/* 开始一次数据传输过程 */
+    {
+        /* 写文件 */
+        fc = FileOpen(FILE_NAME, 1);
+        fc->fsize = 0;
+        if (fc != NULL)
+        {
+            length = FileWrite(fc, message->data, message->data_length);
+            fc->fsize += message->data_length;
+            if (length == message->data_length)
+            {
+            }
+        }
+        else
+            return;
+
+    }
+    else if (message->flag == 0X03) /* 数据发送过程中 */
+    {
+        length = FileWrite(fc, message->data, message->data_length);
+        fc->fsize += message->data_length;
+    }
+    else if (message->flag == 0X02) /* 结束一次数据传输过程 */
+    {
+        length = FileWrite(fc, message->data, message->data_length);
+        fc->fsize += message->data_length;
+        DEBUG_LOG("fsize = %d",fc->fsize);/**/
+//        FileClose(fc);
+//        fc = NULL;
+
+        /* 文件写完后读取测试一下 */
+//        fc = FileOpen(FILE_NAME, 0);
+//        uint8 buff[80];
+//        DEBUG_LOG("%d",fc->fsize);
+//        fc->offset = 0;
+//        FileRead(fc,buff,10);
+//        for(int i = 0; i < 10; i++)
+//        {
+//            DEBUG_LOG("data%x ",buff[i]);
+//        }
+//        FileClose(fc);
+//        fc = NULL;
+
+        ReadFile_2(fc->fIndex);
+        FileClose(fc);
+    }
+    else /* flag 信息不支持 */
+    {
+        DEBUG_LOG("flag error = %d",message->flag);
+        return;
+    }
+
+#endif
+
+
 }
 
 // APP中拨打电话
