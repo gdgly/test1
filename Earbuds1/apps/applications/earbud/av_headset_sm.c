@@ -400,7 +400,15 @@ static void appEnterInCaseDfu(void)
 
     appGetSm()->enter_dfu_in_case = FALSE;
 
+#ifdef CONFIG_STAROT
+    appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
+#else
     appGattSetAdvertisingMode(APP_ADVERT_RATE_SLOW);
+#endif
+
+#ifdef CONFIG_STAROT
+    // 进入dfu模式，需要断开与经典蓝牙的连接
+#endif
 }
 
 /*! \brief Exit
@@ -2249,6 +2257,12 @@ static void appSmHandleInternalAllRequestedLinksDisconnected(SM_INTERNAL_LINK_DI
                     break;
                 case APP_SUBSTATE_DISCONNECTING:
                     appSmSetCoreState();
+#ifdef CONFIG_STAROT
+                    /// 耳机断开连接，自动进入dfu+超时模式
+                    if (appSmIsInCase()) {
+                        appSmEnterDfuMode();
+                    }
+#endif
                     break;
                 default:
                     break;
