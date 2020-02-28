@@ -9,6 +9,7 @@
 #include "tws/peer.h"
 #include "apollo.h"
 #include "rwfile.h"
+#include "online_dbg.h"
 
 uint16 bufferSendUnit = 80;
 
@@ -375,6 +376,10 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS,
                                 GAIA_STATUS_SUCCESS, 1, &state);
             break;
+        }
+        case GAIA_COMMAND_STAROT_TEST_ONLINE_DBG:
+        {
+            online_dbg_cmd_handler(message->payload[0]);
         }
     }
     return TRUE;

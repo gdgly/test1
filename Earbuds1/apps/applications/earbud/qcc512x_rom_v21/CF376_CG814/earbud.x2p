@@ -201,6 +201,8 @@
     <file path="../../tws/lis2dw12.h"/>
     <file path="../../tws/max20340.c"/>
     <file path="../../tws/max20340.h"/>
+    <file path="../../tws/online_dbg.c"/>
+    <file path="../../tws/online_dbg.h"/>
     <file path="../../tws/param.c"/>
     <file path="../../tws/param.h"/>
     <file path="../../tws/peer.c"/>
