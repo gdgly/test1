@@ -295,7 +295,6 @@ typedef enum
 
     GAIA_STAROT_COMMAND_IND,
     GAIA_STAROT_MORE_SPACE,
-    GAIA_STAROT_DATA,
 
     /* Library message limit */
     GAIA_MESSAGE_TOP
@@ -962,8 +961,6 @@ typedef struct
     uint8 payload[4];
 } GAIA_STAROT_MESSAGE_T;
 typedef GAIA_STAROT_MESSAGE_T GAIA_STAROT_IND_T;
-
-
 #endif
 
 #endif /* ifndef _GAIA_H_ */

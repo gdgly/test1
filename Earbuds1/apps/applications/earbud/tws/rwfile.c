@@ -4,7 +4,7 @@
 */
 #include "rwfile.h"
 
-extern void pfree(void *ptr);
+//extern void pfree(void *ptr);
 
 /*
  * 获取文件大小
@@ -32,15 +32,43 @@ static uint16 get_file_size(FILE_INDEX findex)
  */
 FileCPtr FileOpen(char *fname, int rwflag)
 {
+
     FileCPtr fCtrl = (FileCPtr)PanicUnlessMalloc(sizeof(FileCtrl));
+    if ( !fCtrl )return NULL;
 
-    if ( !fCtrl )
-        return NULL;
-
-    memcpy(fCtrl->fName, fname, strlen(fname));
+    memcpy(fCtrl->fName, fname, strlen(fname) + 1);
+    printf("name %s,%d\n",fCtrl->fName,strlen(fCtrl->fName));
     fCtrl->fIndex = FileFind(FILE_ROOT, fCtrl->fName, strlen(fCtrl->fName));
-    DEBUG_LOG("FileFind-w ret=%x\n", fCtrl->fIndex);
+#if 1
+    fCtrl->sink = StreamFileSink(fCtrl->fIndex);
+    fCtrl->sou_map_address = (uint8 *)SourceMap(StreamFileSource(fCtrl->fIndex));
+    fCtrl->sou_len = SourceSize(StreamFileSource(fCtrl->fIndex));
 
+    if (rwflag == 0)
+    {
+        if (FILE_NONE == fCtrl->fIndex) /* 没有找到文件 */
+        {
+            pfree(fCtrl);
+            return NULL;
+        }
+        /* 总文件大小 */
+        fCtrl->fsize = get_file_size(fCtrl->fIndex);
+        DEBUG_LOG("FileFind-r fIndex = %d\n", fCtrl->fIndex);
+    }
+    else if (rwflag == 1)
+    {
+        if(fCtrl->fIndex == FILE_NONE)
+        {
+           FileDelete(fCtrl->fIndex);
+           fCtrl->fIndex=FileCreate(fCtrl->fName, (uint16)strlen(fCtrl->fName));
+        }
+        fCtrl->fsize = 0;
+        DEBUG_LOG("FileFind-w fIndex = %d\n", fCtrl->fIndex);
+    }
+
+#endif
+
+#if 0
     if (0 == rwflag) /* readonly */
     {
         if (FILE_NONE == fCtrl->fIndex) /* 没有找到文件 */
@@ -48,23 +76,24 @@ FileCPtr FileOpen(char *fname, int rwflag)
             pfree(fCtrl);
             return NULL;
         }
-
-        fCtrl->map_address = (uint8*)FileMap(fCtrl->fIndex, 0, FILE_MAP_SIZE_ALL);
+        fCtrl->map_address = (uint8 *)FileMap(fCtrl->fIndex, 0, FILE_MAP_SIZE_ALL);
         /* 总文件大小 */
-        fCtrl->fsize       = get_file_size(fCtrl->fIndex);
+        fCtrl->fsize = get_file_size(fCtrl->fIndex);
+        DEBUG_LOG("FileFind-r index=%d\n", fCtrl->fIndex);
     }
     else /* write */
     {
-        if(fCtrl->fIndex != FILE_NONE)
+        if (fCtrl->fIndex != FILE_NONE)
             FileDelete(fCtrl->fIndex);
 
-        fCtrl->fIndex = FileCreate(fCtrl->fName, (uint16)strlen(fCtrl->fName));
-
+        fCtrl->fIndex = (uint16)FileCreate(fCtrl->fName, (uint16)strlen(fCtrl->fName));
+        fCtrl->fsize = 0;
+        DEBUG_LOG("FileFind-w index=%d\n", fCtrl->fIndex);
     }
     fCtrl->sink = StreamFileSink(fCtrl->fIndex);
-
+#endif
     fCtrl->offset = 0;
-
+    DEBUG_LOG("sink = %d, index = %d",fCtrl->sink, fCtrl->fIndex);
     return fCtrl;
 }
 
@@ -74,29 +103,32 @@ FileCPtr FileOpen(char *fname, int rwflag)
  */
 int FileWrite(FileCPtr fCtrl, uint8 *buffer, int length)
 {
+    Sink fsink;
+    fsink = StreamFileSink(fCtrl->fIndex);
     uint16  offset;
     uint8* map_address;
-    int lensink = SinkSlack(fCtrl->sink);
+    int lensink = SinkSlack(fsink);
 
-    if (length > lensink)
+    if(length > lensink)
     {
         DEBUG_LOG("malloc falied\n");
         return 0;
     }
-    map_address = SinkMap(fCtrl->sink);
+    map_address = SinkMap(fsink);
     do
     {
         /* Claim space in the sink, getting the offset to it */
-        offset = SinkClaim(fCtrl->sink, length);
+        offset = SinkClaim(fsink, length);
     }while(offset == 0xFFFF);
 
     /* Copy the string into the claimed space */
-    memcpy(map_address + offset, buffer, length);
+    memcpy(map_address+offset, buffer, length);
 
-    /* Flush the data out to the file */
-    if (!(SinkFlush(fCtrl->sink, length)))
+    /* Flush the data out to the uart */
+    if(!(SinkFlush(fsink, length)))
         return -1;
 
+    SinkClose(fsink);
     return length;
 }
 
@@ -154,8 +186,6 @@ int FileClose(FileCPtr fCtrl)
     return FileSystemUnmount("/rwfs");
 }
 
-
-
 static void DebugData(uint8 *data,uint8 len)
 {
     uint8 i;
@@ -173,17 +203,13 @@ void ReadFile_2(FILE_INDEX findex)
     uint8* map_address;
     uint16 rLen;
 
-//    DEBUG_LOG(("FileFind-r ret=%x\n", file_index));
-
     PanicNull((fsource = StreamFileSource(findex)));
-
     map_address = (uint8 *)SourceMap(fsource);
     rLen = SourceSize(fsource);
-//    DEBUG_LOG(("File has %d bytes\n", rLen));
     if(rLen)
     {
-     DebugData(map_address,rLen);
-     SourceDrop(fsource,rLen);
+        DebugData(map_address,rLen);
+        SourceDrop(fsource,rLen);
     }
 
     SourceClose(fsource);

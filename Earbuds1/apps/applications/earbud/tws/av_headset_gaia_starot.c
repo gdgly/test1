@@ -105,16 +105,41 @@ void starotGaiaReset(void) {
     appGetGaia()->needCycleSendAudio = 0;
 }
 
+/* 返回升级固件的MD5 */
+bool starotGaiaHandleDataMD5(GAIA_STAROT_IND_T *message)
+{
+    DEBUG_LOG("starotGaiaHandleDataMD5");
+    StarotAttr *head = NULL;
+    StarotAttr *attr = NULL;
+
+    attr = attrMalloc(&head, 6);
+    attr->attr = 0X02;
+    attr->payload[0]  = 0;
+    attr->payload[1]  = 0;
+    attr->payload[2]  = 0x58;
+    attr->payload[3]  = 0x01;
+    attr->payload[4]  = (message->payload[1])&0XF0;/* session id */
+    attr->payload[5]  = 0X00;/* index */
+
+
+    DEBUG_LOG("%x %x %d",attr->payload[4],attr->payload[5],message->payload[1]);
+    if (NULL != head)
+    {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
+        attrFree(head, data);
+    }
+    return TRUE;
+}
 /*
  * 处理APP发来的固件升级数据
  */
 bool starotGaiaHandleData(GAIA_STAROT_IND_T *message)
 {
-    DEBUG_LOG("starotGaiaHandleData");
-
     /* 先把收到的数据包，保持起来，再通知ack */
     GAIA_STAROT_DATA_T *message_data = (GAIA_STAROT_DATA_T *)
-            PanicUnlessMalloc(sizeof (GAIA_STAROT_DATA_T));
+            PanicUnlessMalloc(sizeof(GAIA_STAROT_DATA_T) + (message->payloadLen > 1 ? (message->payloadLen - 1) : 0));
 
     message_data->command   = message->command;
     message_data->data_length = message->payloadLen -2;
@@ -122,25 +147,9 @@ bool starotGaiaHandleData(GAIA_STAROT_IND_T *message)
     message_data->sessionid = (message->payload[1] >> 4) & 0X0F;
     message_data->type      = (message->payload[1] >> 2) & 0X03;
     message_data->flag      = (message->payload[1]) & 0X03;
-    memcpy(message_data->data, message->payload + 2, message_data->data_length);
-    gaiaDevUpdateFirmware(message_data);
+    memcpy(message_data->data, &message->payload[2], message_data->data_length);
 
-#if 0
-    GAIA_STAROT_DATA_ACK_T *ack = (GAIA_STAROT_DATA_ACK_T *)
-            PanicUnlessMalloc(sizeof (GAIA_STAROT_DATA_ACK_T));
-//    ack->vendorld   = message->vendorld;
-//    ack->command    = message->command;
-    ack->session_id = (message->sessionid)<<4;
-    ack->index      = message->index;
-    ack->length     = 1;
-    ack->mask[0]   |= ( 1 << 0 );
-    DEBUG_LOG("session_id = %x,",ack->session_id);
-    if (NULL != ack)
-    {
-        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 8, (uint8*)ack);
-        free(ack);
-    }
-#else
+    if (1)gaiaDevUpdateFirmware(message_data);
 
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
@@ -151,13 +160,12 @@ bool starotGaiaHandleData(GAIA_STAROT_IND_T *message)
     attr->payload[1]  = 0;
     attr->payload[2]  = 0x58;
     attr->payload[3]  = 0x00;
-    //session id
-    attr->payload[4]  = (message->payload[1])&0XF0;
-    //index
-    attr->payload[5]  = (message->payload[0] + 1);
+    attr->payload[4]  = (message->payload[1]) & 0XF0;/* session id */
+    attr->payload[5]  = (message->payload[0] + 1);/* index */
     attr->payload[6]  = 1;
     attr->payload[7] |= ( 1 << 0 );
 
+//    DEBUG_LOG("%x %x",attr->payload[4],attr->payload[5]);
     if (NULL != head)
     {
         uint16 len = 0;
@@ -165,7 +173,6 @@ bool starotGaiaHandleData(GAIA_STAROT_IND_T *message)
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
         attrFree(head, data);
     }
-#endif
     pfree(message_data);
     return TRUE;
 }
@@ -329,6 +336,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
     switch (message->command) {
         case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE:
             starotGaiaHandleData(message);
+        break;
+        case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE_MD5:
+            starotGaiaHandleDataMD5(message);
         break;
     }
 
@@ -1010,27 +1020,24 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
 */
 void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 {
-#if 1
+
 //    MD5_CTX context;
 //    unsigned char digest[16];
-
 //    MD5Init(&context);
 //    MD5Update(&context,(unsigned char *) input, len);
 //    MD5Final(digest, &context);
 
-    DEBUG_LOG("gaiaDevUpdateFirmware");
-    int length;
+    int length = 0;
     static FileCtrl *fc = NULL;
 
-    if (message->flag == 0X00)/* 开始一次数据传输过程 */
+    if (message->flag == 0X00) /* 开始一次数据传输过程 */
     {
         /* 写文件 */
         fc = FileOpen(FILE_NAME, 1);
-        fc->fsize = 0;
         if (fc != NULL)
         {
-            length = FileWrite(fc, message->data, message->data_length);
-            fc->fsize += message->data_length;
+//            length = FileWrite(fc, message->data, message->data_length);
+            fc->fsize = length;
             if (length == message->data_length)
             {
 
@@ -1038,34 +1045,33 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
         }
         else
             return;
-
+        FileClose(fc);
+        fc = NULL;
     }
+#if 0
     else if (message->flag == 0X03) /* 数据发送过程中 */
     {
         length = FileWrite(fc, message->data, message->data_length);
-        fc->fsize += message->data_length;
+        fc->fsize += length;
     }
     else if (message->flag == 0X02) /* 结束一次数据传输过程 */
     {
         length = FileWrite(fc, message->data, message->data_length);
-        fc->fsize += message->data_length;
-        DEBUG_LOG("fsize = %d",fc->fsize);/**/
-//        FileClose(fc);
-//        fc = NULL;
+        fc->fsize += length;
+        DEBUG_LOG("fsize = %u",fc->fsize);/**/
+        DEBUG_LOG("findex = %d",fc->fIndex);
 
         /* 文件写完后读取测试一下 */
-        fc = FileOpen(FILE_NAME, 0);
-        uint8 buff[80];
-        DEBUG_LOG("%d",fc->fsize);
-        FileRead(fc,buff,10);
-        for(int i = 0; i < 10; i++)
-        {
-            DEBUG_LOG("data%x ",buff[i]);
-        }
-        FileClose(fc);
-
+//        fc = FileOpen(FILE_NAME, 0);
+//        uint8 buff[80];
+//        DEBUG_LOG("%d",fc->fsize);
+//        FileRead(fc,buff,10);
+//        for(int i = 0; i < 10; i++)
+//        {
+//            DEBUG_LOG("data = %x ",buff[i]);
+//        }
 //        ReadFile_2(fc->fIndex);
-//        FileClose(fc);
+        FileClose(fc);
         fc = NULL;
     }
     else /* flag 信息不支持 */

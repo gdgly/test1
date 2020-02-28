@@ -17,6 +17,8 @@ typedef struct tagFILECTRL {
     uint8*       map_address;    // 分配的文件地址
     uint32       offset;         // 读取位置/写入
     uint32       fsize;          // 总文件大小
+    uint8*       sou_map_address;
+    uint16       sou_len;
     uint32       checksum;       // 写文件时记录CHECKSUM
 }FileCtrl, *FileCPtr;
 

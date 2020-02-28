@@ -137,7 +137,8 @@ enum {
 
 /////////////////////////////固件升级使用///////////////////////////////
 enum {
-    GAIA_CONNECT_STAROT_UPDATE_FIRMWARE = 0X5800,                             //固件升级使用
+    GAIA_CONNECT_STAROT_UPDATE_FIRMWARE     = 0X5800,                             //固件升级使用
+    GAIA_CONNECT_STAROT_UPDATE_FIRMWARE_MD5 = 0X5801,                             //回复固件的校验码
 };
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))
 #define GAIA_OFFS_VENDOR_ID (4)
@@ -188,6 +189,7 @@ void starotGaiaReset(void);
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
 bool starotGaiaHandleData(GAIA_STAROT_IND_T *message);
+bool starotGaiaHandleDataMD5(GAIA_STAROT_IND_T *message);
 void starotGaiaParseMessageMoreSpace(void);
 
 bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message);
@@ -273,17 +275,7 @@ typedef struct
     /* 数据 */
     uint8 data[4];
 } GAIA_STAROT_DATA_T;
-/*
- * ack消息
- */
-typedef struct{
-    uint16 vendorld;
-    uint16 command;
-    uint8 session_id;
-    uint8 index;
-    uint8 length;
-    uint8 mask[5];
-}GAIA_STAROT_DATA_ACK_T;
+
 
 
 #endif // AV_HEADSET_GAIA_STAROT_H
