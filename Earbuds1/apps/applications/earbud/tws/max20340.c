@@ -417,6 +417,7 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
 {
     appState state = appGetState();
     uint8 status = 0;             // 使用3BIT表示当前状态 0:未知 1:左右耳机配对中 2:广播（与手机配对中）3:与手机配对成功 4 与手机连接
+                                  // 5：左右耳机连接成功
                                   // 6：双耳机间配对出错 7:与手机配对失败
     deviceTaskData *theDevice = appGetDevice();
     uint8 power =0;
@@ -433,6 +434,9 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
             status = 4;
         }else if (TRUE == theDevice->handset_paired) {
             status = 3;
+        }
+        else if(TRUE == theDevice->peer_connected) {
+            status = 5;
         }
         break;
     }

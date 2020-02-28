@@ -272,6 +272,10 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 
 #undef appConfigAacEnabled()
 #define appConfigAacEnabled()               FALSE    /* AAC 功能禁止 */
+#undef  appConfigAutoHandsetPairingTimeout()
+#define appConfigAutoHandsetPairingTimeout()    (60)     /* 等待手机配对时间 */
+#undef  appConfigDacDisconnectionDelayMs()
+#define appConfigDacDisconnectionDelayMs()      (2000)   /* 音频结束后停止ADC时间 */
 
 
 // 充电电流及电压使用
