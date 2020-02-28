@@ -306,6 +306,15 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             send_buf[1] = 0x15;//需要返回值的话，给send_buf赋值
             send_buf[2] = EM20168_statcheck();
             break;
+
+        case 0x60:         // 当前 耳机的 STATE 发给盒子，调试使用
+            tmpval = (uint16)appGetState();
+            send_buf[2] = (tmpval >> 8) & 0xFF;
+            break;
+        case 0x61:
+            tmpval = (uint16)appGetState();
+            send_buf[2] = (tmpval >> 0) & 0xFF;
+            break;
         default:
             break;
     }
