@@ -4,7 +4,7 @@
 */
 #include "rwfile.h"
 
-//extern void pfree(void *ptr);
+extern void pfree(void *ptr);
 
 /*
  * 获取文件大小
@@ -33,6 +33,37 @@ static uint16 get_file_size(FILE_INDEX findex)
  */
 FileCPtr FileOpen(char *fname, int rwflag)
 {
+#if 1
+    FileCPtr fCtrl = (FileCPtr)PanicUnlessMalloc(sizeof(FileCtrl));
+    memcpy(fCtrl->fName, fname, strlen(fname) + 1);
+    printf("name %s,%d",fCtrl->fName,strlen(fCtrl->fName));
+
+    fCtrl->fIndex = FileFind(FILE_ROOT, fCtrl->fName, strlen(fCtrl->fName));
+    if (0 == rwflag) /* readonly */
+    {
+        if (FILE_NONE == fCtrl->fIndex) /* 没有找到文件 */
+        {
+            pfree(fCtrl);
+            return NULL;
+        }
+        fCtrl->map_address = (uint8 *)FileMap(fCtrl->fIndex, 0, FILE_MAP_SIZE_ALL);
+        /* 总文件大小 */
+        fCtrl->fsize = get_file_size(fCtrl->fIndex);
+        DEBUG_LOG("FileFind-r index=%d\n", fCtrl->fIndex);
+    }
+    else /* write */
+    {
+        if (fCtrl->fIndex != FILE_NONE)
+            FileDelete(fCtrl->fIndex);
+
+        fCtrl->fIndex = (uint16)FileCreate(fCtrl->fName, (uint16)strlen(fCtrl->fName));
+        fCtrl->fsize = 0;
+        DEBUG_LOG("FileFind-w index=%d\n", fCtrl->fIndex);
+    }
+    DEBUG_LOG("sink = %d, index = %d",fCtrl->sink, fCtrl->fIndex);
+
+#else
+
     FileCPtr fCtrl = (FileCPtr)PanicUnlessMalloc(sizeof(FileCtrl));
     memcpy(fCtrl->fName, fname, strlen(fname) + 1);
     printf("name %s,%d",fCtrl->fName,strlen(fCtrl->fName));
@@ -58,6 +89,7 @@ FileCPtr FileOpen(char *fname, int rwflag)
         DEBUG_LOG("Filecreate ret=%d", fCtrl->fIndex);
         fCtrl->fsize = 0;
     }
+#endif
     fCtrl->sink = StreamFileSink(fCtrl->fIndex);
     fCtrl->offset = 0;
     return fCtrl;

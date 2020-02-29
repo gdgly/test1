@@ -1044,7 +1044,7 @@ TestReadFile_test();
         fc = FileOpen(FILE_NAME, 1);
         if (fc != NULL)
         {
-            length = FileWrite(fc, message->data, message->data_length);
+//            length = FileWrite(fc, message->data, message->data_length);
             fc->fsize = length;
             if (length == message->data_length)
             {
@@ -1052,8 +1052,10 @@ TestReadFile_test();
         }
         else
             return;
+//        FileClose(fc);
+//        fc = NULL;
     }
-#if 1
+#if 0
     else if (message->flag == 0X03) /* 数据发送过程中 */
     {
         length = FileWrite(fc, message->data, message->data_length);
