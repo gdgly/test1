@@ -866,7 +866,7 @@ void appSubUIInit(void)
 
     // 运行到这个地方时外设都为正常打开状态
 #ifdef ENABLE_APOLLO
-    apollo_sleep();
+    //apollo_sleep();
 #endif
 
 #ifdef TWS_DEBUG
