@@ -687,6 +687,7 @@ static void appHandleClSdpRegisterCfm(pairingTaskData *thePairing,
         case PAIRING_STATE_PEER_DISCOVERABLE:
         case PAIRING_STATE_PEER_SDP_SEARCH_AUTHENTICATED:
         {
+            DEBUG_LOGF("appHandleClSdpRegisterCfm, last step status %d", cfm->status);
             if (cfm->status == sds_status_success)
             {
                 /* Registration of updated service record was successful, so update

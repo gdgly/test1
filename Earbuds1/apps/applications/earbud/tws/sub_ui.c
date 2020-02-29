@@ -56,6 +56,7 @@ static void appUIUpgradeNotifyCommitStatusTimeOut(UI_APP_UPGRADE_COMMIT_STATUS* 
 static void appUIUpgradeNotifyCommitStatusTimeOutGrade(void);
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg);
+extern bool UpgradeSMAbort(void);
 
 
 /*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
@@ -666,6 +667,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
    case APP_RESET_FACTORY:
        DEBUG_LOG("plc call reset headset");
 #ifdef TWS_DEBUG
+       UpgradeSMAbort();
        appSmHandleResetStatusToNormal();
        appSmFactoryReset();
 #endif

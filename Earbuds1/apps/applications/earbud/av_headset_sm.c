@@ -2258,9 +2258,7 @@ static void appSmHandleInternalAllRequestedLinksDisconnected(SM_INTERNAL_LINK_DI
                     appSmSetCoreState();
 #ifdef CONFIG_STAROT
                     /// 耳机断开连接，自动进入dfu+超时模式
-                    if (appSmIsInCase()) {
-                        appSmEnterDfuMode();
-                    }
+                    appSmHandleConnRulesEnterDfu();
 #endif
                     break;
                 default:
