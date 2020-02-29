@@ -109,6 +109,10 @@ void starotGaiaReset(void) {
 bool starotGaiaHandleDataMD5(GAIA_STAROT_IND_T *message)
 {
     DEBUG_LOG("starotGaiaHandleDataMD5");
+//    FileCtrl *fc;
+//    fc = FileOpen(FILE_NAME, 0);
+//    FileClose(fc);
+
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
 
@@ -1026,9 +1030,13 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 //    MD5Init(&context);
 //    MD5Update(&context,(unsigned char *) input, len);
 //    MD5Final(digest, &context);
-
+if(0)
+{
+TestWriteFile_test();
+TestReadFile_test();
+}
     int length = 0;
-    static FileCtrl *fc = NULL;
+    static FileCPtr fc = NULL;
 
     if (message->flag == 0X00) /* 开始一次数据传输过程 */
     {
@@ -1036,19 +1044,16 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
         fc = FileOpen(FILE_NAME, 1);
         if (fc != NULL)
         {
-//            length = FileWrite(fc, message->data, message->data_length);
+            length = FileWrite(fc, message->data, message->data_length);
             fc->fsize = length;
             if (length == message->data_length)
             {
-
             }
         }
         else
             return;
-        FileClose(fc);
-        fc = NULL;
     }
-#if 0
+#if 1
     else if (message->flag == 0X03) /* 数据发送过程中 */
     {
         length = FileWrite(fc, message->data, message->data_length);
@@ -1060,29 +1065,16 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
         fc->fsize += length;
         DEBUG_LOG("fsize = %u",fc->fsize);/**/
         DEBUG_LOG("findex = %d",fc->fIndex);
-
-        /* 文件写完后读取测试一下 */
-//        fc = FileOpen(FILE_NAME, 0);
-//        uint8 buff[80];
-//        DEBUG_LOG("%d",fc->fsize);
-//        FileRead(fc,buff,10);
-//        for(int i = 0; i < 10; i++)
-//        {
-//            DEBUG_LOG("data = %x ",buff[i]);
-//        }
-//        ReadFile_2(fc->fIndex);
         FileClose(fc);
         fc = NULL;
+
     }
     else /* flag 信息不支持 */
     {
         DEBUG_LOG("flag error = %d",message->flag);
         return;
     }
-
 #endif
-
-
 }
 
 // APP中拨打电话
