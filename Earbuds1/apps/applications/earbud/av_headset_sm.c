@@ -1661,6 +1661,20 @@ static void appSmHandleConnRulesHandsetDisconnect(CONN_RULES_DISCONNECT_HANDSET_
 }
 
 
+#ifdef CONFIG_STAROT
+static void appSmHandleConnRulesConnectInDfu(void)
+{
+    DEBUG_LOG("appSmHandleConnRulesConnectInDfu");
+    smPostDisconnectAction post_disconnect_action = POST_DISCONNECT_ACTION_NONE;
+    appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
+                                   appConfigLinkDisconnectionTimeoutTerminatingMs(),
+                                   post_disconnect_action);
+    appSetState(appSetSubState(APP_SUBSTATE_DISCONNECTING));
+    appConnRulesSetRuleComplete(CONN_RULES_CONNECT_IN_DFU);
+}
+#endif
+
+
 /*! \brief Earbud put in case disconnect link to peer */
 static void appSmHandleConnRulesPeerDisconnect(void)
 {
@@ -2455,6 +2469,11 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case CONN_RULES_DISCONNECT_HANDSET:
             appSmHandleConnRulesHandsetDisconnect((CONN_RULES_DISCONNECT_HANDSET_T*)message);
             break;
+#ifdef CONFIG_STAROT
+        case CONN_RULES_CONNECT_IN_DFU:
+            appSmHandleConnRulesConnectInDfu();
+            break;
+#endif
         case CONN_RULES_DISCONNECT_PEER:
             appSmHandleConnRulesPeerDisconnect();
             break;

@@ -123,6 +123,7 @@ enum    av_headset_conn_rules_messages
     CONN_RULES_CLEAR_PEER_VERSION_CACHE, // 清理Peer耳机版本的缓存数据
     /* 当充电盒关闭时，需要让设备断开hfp/a2dp/avrcp的连接，配对的时候，是连接的 */
     CONN_RULES_DISCONNECT_HFP_AD2P_AVRCP,
+    CONN_RULES_CONNECT_IN_DFU,
     /*! Any rules with RULE_FLAG_PROGRESS_MATTERS are no longer in progress. */
     CONN_RULES_NOP,
 };
