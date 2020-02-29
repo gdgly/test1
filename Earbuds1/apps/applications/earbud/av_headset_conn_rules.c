@@ -164,6 +164,7 @@ DEFINE_RULE(ruleScoForwardingControl);
 
 DEFINE_RULE(ruleBothConnectedDisconnect);
 DEFINE_RULE(ruleRealInCaseDisconnect);
+DEFINE_RULE(ruleConnectBTHappenInDfu);
 
 DEFINE_RULE(rulePairingConnectTwsPlusA2dp);
 DEFINE_RULE(rulePairingConnectTwsPlusHfp);
@@ -234,9 +235,9 @@ ruleEntry appConnRules[] =
 #ifdef TWS_DEBUG
     /// 如果真实的在盒子中，连上了，也要马上断开; todo 考虑影响范围
     // 如果auth完了，但是没有连接上，此时的异常的处理
-    RULE(RULE_EVENT_HANDSET_A2DP_CONNECTED,     ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
-    RULE(RULE_EVENT_HANDSET_AVRCP_CONNECTED,    ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
-    RULE(RULE_EVENT_HANDSET_HFP_CONNECTED,      ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
+    RULE(RULE_EVENT_HANDSET_A2DP_CONNECTED,     ruleConnectBTHappenInDfu,    CONN_RULES_DISCONNECT_HANDSET),
+    RULE(RULE_EVENT_HANDSET_AVRCP_CONNECTED,    ruleConnectBTHappenInDfu,    CONN_RULES_DISCONNECT_HANDSET),
+    RULE(RULE_EVENT_HANDSET_HFP_CONNECTED,      ruleConnectBTHappenInDfu,    CONN_RULES_DISCONNECT_HANDSET),
 
 //    RULE(RULE_EVENT_CHECK_NEED_DISCONNECT,    ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
 #endif
@@ -1821,10 +1822,22 @@ static ruleAction rulePairingConnectTwsPlusHfp(void)
     return RULE_ACTION_RUN_PARAM(profiles);
 }
 
+static ruleAction ruleConnectBTHappenInDfu(void) {
+    DEBUG_LOG("ruleRealInCaseDisconnect");
+    if (appSmIsInDfuMode()) {
+        DEBUG_LOG("ruleRealInCaseDisconnect in dfu mode, so need disconnect");
+        appConnRulesResetEvent(CONN_RULES_DISCONNECT_HANDSET);
+        return RULE_ACTION_RUN;
+    }
+    DEBUG_LOG("ruleRealInCaseDisconnect ignore");
+    return RULE_ACTION_IGNORE;
+}
+
 static ruleAction ruleRealInCaseDisconnect(void) {
     DEBUG_LOG("ruleRealInCaseDisconnect");
     if (appSmIsInDfuMode()) {
         DEBUG_LOG("ruleRealInCaseDisconnect in dfu mode, so need disconnect");
+        appConnRulesResetEvent(CONN_RULES_DISCONNECT_HANDSET);
         return RULE_ACTION_RUN;
     }
     DEBUG_LOG("ruleRealInCaseDisconnect ignore");

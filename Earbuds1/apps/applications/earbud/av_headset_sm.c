@@ -2543,7 +2543,11 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             break;
 
         case APP_GAIA_DISCONNECTED:
+#ifdef CONFIG_STAROT
+            DEBUG_LOG("APP_GAIA_DISCONNECTED, ignore enter dfu, auto parse this operation");
+#else
             appSmHandleDfuEnded(FALSE);
+#endif
             break;
 
         case APP_GAIA_UPGRADE_CONNECTED:
