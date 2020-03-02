@@ -28,7 +28,7 @@ int FileCancel(char *fname);            // 删除文件
 
 void TestWriteFile_test(void);
 void TestReadFile_test(void);
-
+void TestDeleteFile_test(void);
 void ReadFile_2(FILE_INDEX findex);
 #endif //RWFILE_H
 

@@ -33,43 +33,12 @@ static uint16 get_file_size(FILE_INDEX findex)
  */
 FileCPtr FileOpen(char *fname, int rwflag)
 {
-#if 1
     FileCPtr fCtrl = (FileCPtr)PanicUnlessMalloc(sizeof(FileCtrl));
     memcpy(fCtrl->fName, fname, strlen(fname) + 1);
     printf("name %s,%d",fCtrl->fName,strlen(fCtrl->fName));
 
     fCtrl->fIndex = FileFind(FILE_ROOT, fCtrl->fName, strlen(fCtrl->fName));
-    if (0 == rwflag) /* readonly */
-    {
-        if (FILE_NONE == fCtrl->fIndex) /* 没有找到文件 */
-        {
-            pfree(fCtrl);
-            return NULL;
-        }
-        fCtrl->map_address = (uint8 *)FileMap(fCtrl->fIndex, 0, FILE_MAP_SIZE_ALL);
-        /* 总文件大小 */
-        fCtrl->fsize = get_file_size(fCtrl->fIndex);
-        DEBUG_LOG("FileFind-r index=%d\n", fCtrl->fIndex);
-    }
-    else /* write */
-    {
-        if (fCtrl->fIndex != FILE_NONE)
-            FileDelete(fCtrl->fIndex);
-
-        fCtrl->fIndex = (uint16)FileCreate(fCtrl->fName, (uint16)strlen(fCtrl->fName));
-        fCtrl->fsize = 0;
-        DEBUG_LOG("FileFind-w index=%d\n", fCtrl->fIndex);
-    }
-    DEBUG_LOG("sink = %d, index = %d",fCtrl->sink, fCtrl->fIndex);
-
-#else
-
-    FileCPtr fCtrl = (FileCPtr)PanicUnlessMalloc(sizeof(FileCtrl));
-    memcpy(fCtrl->fName, fname, strlen(fname) + 1);
-    printf("name %s,%d",fCtrl->fName,strlen(fCtrl->fName));
-
-    fCtrl->fIndex = FileFind(FILE_ROOT, fCtrl->fName, strlen(fCtrl->fName));
-
+    DEBUG_LOG("FileFind ret=%d", fCtrl->fIndex);
     if (rwflag == 0)
     {
         if (FILE_NONE == fCtrl->fIndex) /* 没有找到文件 */
@@ -84,12 +53,13 @@ FileCPtr FileOpen(char *fname, int rwflag)
         if (fCtrl->fIndex != FILE_NONE)
         {
             FileDelete(fCtrl->fIndex);
+            DEBUG_LOG("FileDelete ret=%d", fCtrl->fIndex);
         }
         fCtrl->fIndex=FileCreate(fCtrl->fName, (uint16)strlen(fCtrl->fName));
         DEBUG_LOG("Filecreate ret=%d", fCtrl->fIndex);
         fCtrl->fsize = 0;
     }
-#endif
+
     fCtrl->sink = StreamFileSink(fCtrl->fIndex);
     fCtrl->offset = 0;
     return fCtrl;
@@ -192,7 +162,7 @@ static void DebugData(uint8 *data,uint8 len)
     uint8 i;
     UNUSED(len);
     printf(("----\r\n "));
-    for(i=0;i<50;i++)
+    for(i=0;i<len;i++)
     {
        printf("%x ",data[i]);
     }
@@ -207,7 +177,8 @@ void ReadFile_2(FILE_INDEX findex)
     uint8* map_address;
     uint16 rLen;
 
-    PanicNull(fsource = StreamFileSource(findex));
+    DEBUG_LOG("read FILE_INDEX ret=%d", findex);
+    fsource = StreamFileSource(findex);
     map_address = (uint8 *)SourceMap(fsource);
     rLen = SourceSize(fsource);
     DEBUG_LOG("index = %d,map_addres = %x ,len =%d",findex,map_address,rLen);
@@ -278,7 +249,7 @@ const uint8 testdata[]={
     0x00,0x01,0x02,0x03,0x04,0x05,0x00,0x01,0x02,0x03,0x04,0x05,
     0x00,0x01,0x02,0x03,0x04,0x05,0x00,0x01,0x02,0x03,0x04,0x05,
  #endif
-                       };
+};
 
 static int writeFileSink(FILE_INDEX index, void *buf, int len)
 {
@@ -309,24 +280,37 @@ static int writeFileSink(FILE_INDEX index, void *buf, int len)
 void TestWriteFile_test(void)
 {
     FILE_INDEX file_index;
-    Sink fsink;
+    Sink fsink = 0;
     file_index=FileFind(FILE_ROOT, tfilename, (uint16)strlen(tfilename));
 
-    DEBUG_LOG("FileFind-w ret=%x\n", file_index);
+    DEBUG_LOG("FileFind-w ret=%d\n", file_index);
     if(file_index != FILE_NONE)
     {
         FileDelete(file_index);
-        DEBUG_LOG("Filecreate ret=%x\n", file_index);
+        DEBUG_LOG("FileDelete ret=%d\n", file_index);
     }
     file_index=FileCreate(tfilename, (uint16)strlen(tfilename));
+    DEBUG_LOG("Filecreate ret=%d\n", file_index);
     fsink = StreamFileSink(file_index);
     writeFileSink(file_index,(void *)testdata,sizeof(testdata));
     SinkClose(fsink);
 
-    fsink = StreamFileSink(file_index);
-    writeFileSink(file_index,(void *)testdata,sizeof(testdata));
-    SinkClose(fsink);
+//    fsink = StreamFileSink(file_index);
+//    writeFileSink(file_index,(void *)testdata,sizeof(testdata));
+//    SinkClose(fsink);
 
+}
+void TestDeleteFile_test(void)
+{
+    FILE_INDEX file_index;
+    file_index=FileFind(FILE_ROOT, tfilename, (uint16)strlen(tfilename));
+
+    DEBUG_LOG("FileFind-w ret=%d\n", file_index);
+    if(file_index != FILE_NONE)
+    {
+        FileDelete(file_index);
+        DEBUG_LOG("FileDelete ret=%d\n", file_index);
+    }
 }
 
 void TestReadFile_test(void)
@@ -338,7 +322,7 @@ void TestReadFile_test(void)
 
     file_index=FileFind(FILE_ROOT, tfilename, (uint16)strlen(tfilename));
 
-    DEBUG_LOG("FileFind-r ret=%x\n", file_index);
+    DEBUG_LOG("FileFind-r ret=%d\n", file_index);
     if(file_index == FILE_NONE)
      return;
 
@@ -350,7 +334,7 @@ void TestReadFile_test(void)
     if(rLen)
     {
      DebugData(map_address,rLen);
-//     SourceDrop(fsource,rLen);
+     SourceDrop(fsource,rLen);
     }
 
     SourceClose(fsource);

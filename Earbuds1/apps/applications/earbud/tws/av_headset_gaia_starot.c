@@ -1034,6 +1034,7 @@ if(0)
 {
 TestWriteFile_test();
 TestReadFile_test();
+TestDeleteFile_test();
 }
     int length = 0;
     static FileCPtr fc = NULL;
@@ -1044,7 +1045,7 @@ TestReadFile_test();
         fc = FileOpen(FILE_NAME, 1);
         if (fc != NULL)
         {
-//            length = FileWrite(fc, message->data, message->data_length);
+            length = FileWrite(fc, message->data, message->data_length);
             fc->fsize = length;
             if (length == message->data_length)
             {
@@ -1052,8 +1053,9 @@ TestReadFile_test();
         }
         else
             return;
-//        FileClose(fc);
-//        fc = NULL;
+//        ReadFile_2(fc->fIndex);
+        FileClose(fc);
+        fc = NULL;
     }
 #if 0
     else if (message->flag == 0X03) /* 数据发送过程中 */
