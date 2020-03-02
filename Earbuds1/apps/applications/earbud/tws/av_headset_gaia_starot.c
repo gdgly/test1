@@ -1053,11 +1053,8 @@ TestDeleteFile_test();
         }
         else
             return;
-//        ReadFile_2(fc->fIndex);
-        FileClose(fc);
-        fc = NULL;
     }
-#if 0
+#if 1
     else if (message->flag == 0X03) /* 数据发送过程中 */
     {
         length = FileWrite(fc, message->data, message->data_length);
@@ -1069,6 +1066,7 @@ TestDeleteFile_test();
         fc->fsize += length;
         DEBUG_LOG("fsize = %u",fc->fsize);/**/
         DEBUG_LOG("findex = %d",fc->fIndex);
+        ReadFile_2(fc->fIndex);
         FileClose(fc);
         fc = NULL;
 
