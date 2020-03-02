@@ -31,6 +31,6 @@ void TestReadFile_test(void);
 void TestDeleteFile_test(void);
 void ReadFile_2(FILE_INDEX findex);
 FILE_INDEX OpenFile_1(void);
-void delay(int i);
+
 #endif //RWFILE_H
 

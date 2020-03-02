@@ -6,13 +6,9 @@
 
 extern void pfree(void *ptr);
 
-void delay(int i)
-{
-    while(i-- < 0);
-}
 
 /*
- * 写入sink里的数据
+ * 将sink里的数据写入文件了
  */
 static int writeFileSink(Sink sink, void *buf, int len)
 {
@@ -20,7 +16,6 @@ static int writeFileSink(Sink sink, void *buf, int len)
     uint8* map_address;
     int lensink = SinkSlack(sink);
 
-    DEBUG_LOG("%d\n", lensink);
     if(len > lensink){
         DEBUG_LOG("malloc falied\n");
         return 0;
@@ -115,7 +110,6 @@ FILE_INDEX OpenFile_1(void)
 {
     FILE_INDEX file_index;
     file_index=FileFind(FILE_ROOT, FILE_NAME, (uint16)strlen(FILE_NAME));
-    DEBUG_LOG("FileFind-w ret=%x\n", file_index);
     if(file_index == FILE_NONE)
     {
         file_index=FileCreate(FILE_NAME, (uint16)strlen(FILE_NAME));

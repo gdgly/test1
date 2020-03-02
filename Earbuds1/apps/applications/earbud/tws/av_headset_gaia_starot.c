@@ -371,7 +371,7 @@ void starotGaiaDefaultParse(MessageId id, Message message) {
             break;
 
         case GAIA_STAROT_MORE_SPACE: {
-            DEBUG_LOG("Call GAIA_STAROT_MORE_SPACE");
+//            DEBUG_LOG("Call GAIA_STAROT_MORE_SPACE");
             starotGaiaParseMessageMoreSpace();
         }
             break;
@@ -1034,7 +1034,6 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
     int length = 0;
     static FileCPtr fc = NULL;
 
-    delay(10000);
     if (message->flag == 0X00) /* 开始一次数据传输过程 */
     {
         /* 写文件 */
@@ -1059,10 +1058,10 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
     {
         length = FileWrite(OpenFile_1(), message->data, message->data_length);
         fc->fsize += length;
-        DEBUG_LOG("fsize = %u",fc->fsize);/**/
-        DEBUG_LOG("findex = %d",fc->fIndex);
-//        FileClose(fc);
-//        fc = NULL;
+//        DEBUG_LOG("fsize = %u",fc->fsize);/**/
+//        DEBUG_LOG("findex = %d",fc->fIndex);
+        FileClose(fc);
+        fc = NULL;
 
     }
     else /* flag 信息不支持 */
