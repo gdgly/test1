@@ -408,44 +408,15 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
         return -1;
 
     (void)id;
-
     uint16 battery_level, peer_battery_level;
     appPeerSyncGetPeerBatteryLevel(&battery_level, &peer_battery_level);
     progRun->peerElectrity = appBatteryConvertLevelToPercentage(peer_battery_level);
 
-//    phyState state = appPhyStateGetState();
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 5);
-
     message->command = STAROT_NOTIFY_STATUS;
     appUIGetPowerInfo(progRun, message->payload);
     message->payload[3] = appUIGetPositionInfo();//位置信息
     message->payload[4] = appUIGetConnectStatusInfo();//连接信息
-//    if(appConfigIsLeft()){
-//        if((uint8)progRun->gaiaStat)
-//            message->payload[4] |= 0X80;
-//        if(appDeviceIsHandsetAnyProfileConnected())
-//            message->payload[4] |= 0X40;
-//        if(appDeviceIsPeerConnected()) {
-//            message->payload[4] |= 0X20;
-//            message->payload[4] |= 0X04;
-//        }
-//        if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()
-//                || appPeerSyncIsPeerHandsetHfpConnected())
-//            message->payload[4] |= 0X08;
-//    }
-//    else {
-//        if((uint8)progRun->gaiaStat)
-//            message->payload[4] |= 0X10;
-//        if(appDeviceIsHandsetAnyProfileConnected())
-//            message->payload[4] |= 0X08;
-//        if(appDeviceIsPeerConnected()) {
-//            message->payload[4] |= 0X20;
-//            message->payload[4] |= 0X04;
-//        }
-//        if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()
-//                || appPeerSyncIsPeerHandsetHfpConnected())
-//            message->payload[4] |= 0X40;
-//    }
     message->payloadLen = 5;
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
@@ -502,9 +473,7 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_DIALOG_USER_REJECT_RECORD:
         disable_audio_forward(TRUE);
         break;
-    case STAROT_RECORD_RETURN_THREE_POWER:
-        subUiStat2Gaia(ind->command, progRun);
-        break;
+
     case STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB: {  ///App设置语言唤醒是否使能
         APP_STAROT_WAKEUP_CONFIG_IND_T* m = (APP_STAROT_WAKEUP_CONFIG_IND_T*)message;
         gUserParam.apolloEnable = m->apollo_enable;
@@ -648,6 +617,10 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         subUiGaiaMessage(progRun, message);
         break;
 
+    case APP_NOTIFY_DEVICE_CON_POS:         // 向GAIA发送消息，通知当前电量、位置信息
+        subUiStat2Gaia(0, progRun);
+        break;
+
     // 盒子发送相关的命令操作
     case APP_CASE_REPORT_VERSION:           // 盒子硬件版本信息等
         subUiCasever2Gaia(id, progRun);
@@ -702,9 +675,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
-    case APP_THREE_POWER:         // 电量变化
-        subUiStat2Gaia(id, progRun);
-        break;
+
     case APP_CHARGE_STATUS:                 // 充电状态变化
         RETURN_APP_NOT_INIT();
 
@@ -1156,7 +1127,7 @@ void appUiAvConnected(unsigned cad)
     progRun->bredrconnect = 1;
 
     appAdvParamInit();
-    MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
+    MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
 
 /*EDR disconnect state*/
@@ -1167,7 +1138,7 @@ void appUiAvDisconnected(void)
     progRun->bredrconnect = 0;
     apolloWakeupPower(0);               // 经典蓝牙断开，关闭APO
 
-    MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
+    MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
 
 /* EDR 配对成功与否 */
@@ -1197,16 +1168,17 @@ void appUiPairingFailed(void)
 void appUiCaseStatus2(int16 stat, int16 power)           // 当前USB状态
 {
     ProgRIPtr  progRun = appSubGetProgRun();
-
     if(progRun->caseUsb != stat) {
         uint8 buff[4];
-
         // 获取到状态变化，同步给对方
         buff[0] = stat;
         buff[1] = (uint8)power;
         appPeerSigTxDataCommandExt(appGetUiTask(), PEERTX_CMD_SYNC_CASEST, 2, buff);
         // MessageSend
-        progRun->caseUsb = stat;
+        if (progRun->caseUsb != stat) {
+            progRun->caseUsb = stat;
+            MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
+        }
     }
 }
 
@@ -1214,9 +1186,11 @@ void appUiCaseStatus2(int16 stat, int16 power)           // 当前USB状态
 void appUiCaseStatus2FromPeer(uint8 *buff)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
-
-    progRun->caseUsb       = buff[0];
-    progRun->caseElectrity = buff[1];
+    if ((progRun->caseUsb != buff[0]) || (progRun->caseElectrity != buff[1])) {
+        progRun->caseUsb       = buff[0];
+        progRun->caseElectrity = buff[1];
+        MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
+    }
 }
 
 
@@ -1410,8 +1384,10 @@ void appUiBatteryStat(int16 lbatt, int16 rbatt, int16 cbatt)
         iChange = 1;
     }
 
-    if(iChange > 0)
-        MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
+    if(iChange > 0) {
+        DEBUG_LOG("appUiBatteryStat, notify APP_NOTIFY_DEVICE_CON_POS to ui");
+        MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, 0);
+    }
 }
 
 // 临时停止BLE广播，以便开始新的广播内容
@@ -1681,8 +1657,12 @@ void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
             arr[1] |= 0X80;
         }
     }
-    ///现在使用假的电量数据
-    arr[2] = (uint8)progRun->caseElectrity;//盒子电量
+
+    if (appPeerSyncIsPeerInCase() || appSmIsInCase()) {
+        arr[2] = (uint8)progRun->caseElectrity | (progRun->caseUsb ? 0X80 : 0X00); //盒子电量 充电，最高位为1
+    } else {
+        arr[2] = 0XFF; /// 任何一只耳机再充电盒中，都可以读取充电盒状态数据
+    }
 }
 
 uint8 appUIGetConnectStatusInfo(void) {

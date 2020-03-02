@@ -802,7 +802,7 @@ void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message) {
 
 // App主动获取电量-位置-连接状态信息
 void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message) {
-    gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+    MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 
@@ -1167,7 +1167,7 @@ static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {
         uint32 bindCode = (((uint32) data[2]) << 24) | (((uint32) data[3]) << 16) | (((uint32) data[4]) << 8) | data[5];
         appBleSetBond(advCode, bindCode, 100);   // 修改APP传入真正的时间值
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
-        gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+        MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
         GattManagerCancelWaitForRemoteClient();
 
         /// 同步给对方耳机
@@ -1184,7 +1184,7 @@ static void gaiaCheckBondCode(GAIA_STAROT_IND_T *message) {
             uint32 bindCode = (((uint32) data[0]) << 24) | (((uint32) data[1]) << 16) | (((uint32) data[2]) << 8) | data[3];
             if (bindCode == appBleGetBondCode()) {
                 appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
-                gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+                MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
                 /// 取消超时如果没有发送bondCode断开连接的定时器
                 break;
             }

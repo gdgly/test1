@@ -186,6 +186,7 @@ DEFINE_RULE(ruleCaseOpenEnterDfu);
 DEFINE_RULE(ruleCaseCloseNotAllowGaiaConnect);
 DEFINE_RULE(ruleAllowGaiaConnect);
 DEFINE_RULE(ruleAllRun);
+DEFINE_RULE(ruleNotifyStatus);
 DEFINE_RULE(ruleDisconnectHfpA2dpAvrcp);
 #endif
 DEFINE_RULE(ruleCheckGaiaIsNeedDisconnection);
@@ -214,8 +215,10 @@ ruleEntry appConnRules[] =
     /*! \{
         Rules that are run when peer link-loss happens */
     RULE(RULE_EVENT_PEER_LINK_LOSS,             rulePeerSync,               CONN_RULES_SEND_PEER_SYNC),
-    RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                 CONN_RULES_NOTIFY_APP_POSITION),
+#ifdef CONFIG_STAROT
+    RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleNotifyStatus,           CONN_RULES_NOTIFY_APP_POSITION),
     RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                 CONN_RULES_CLEAR_PEER_VERSION_CACHE),
+#endif
     /*! \} */
 
     /*! \{
@@ -274,8 +277,10 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleUpdateMruHandset,       CONN_RULES_UPDATE_MRU_PEER_HANDSET),
     RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleSyncDisconnectPeer,     CONN_RULES_DISCONNECT_PEER),
     RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleSyncDisconnectHandset,  CONN_RULES_DISCONNECT_HANDSET),
+#ifdef CONFIG_STAROT
     /// todo 同步完成，通知app，设备状态，可能发生变化
-//    RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleAllRun,                 CONN_RULES_NOTIFY_APP_POSITION),
+    RULE(RULE_EVENT_PEER_SYNC_VALID,            ruleNotifyStatus,           CONN_RULES_NOTIFY_APP_POSITION),
+#endif
     /*! \} */
 
     /*! \{
@@ -305,6 +310,7 @@ ruleEntry appConnRules[] =
 #ifdef CONFIG_STAROT
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
 #endif
+
     RULE(RULE_EVENT_IN_CASE,                    rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectHandset,        CONN_RULES_DISCONNECT_HANDSET),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectPeer,           CONN_RULES_DISCONNECT_PEER),
@@ -333,13 +339,13 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleScoForwardingControl,           CONN_RULES_SCO_FORWARDING_CONTROL),
-    RULE(RULE_EVENT_PEER_IN_EAR,                ruleAllRun,                         CONN_RULES_NOTIFY_APP_POSITION),
+
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleOutOfEarScoActive,              CONN_RULES_SCO_TIMEOUT),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleScoForwardingControl,           CONN_RULES_SCO_FORWARDING_CONTROL),
+
     RULE_WITH_FLAGS(RULE_EVENT_PEER_IN_CASE,    ruleSyncConnectHandset,             CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseScoTransferToHandset,     CONN_RULES_SCO_TRANSFER_TO_HANDSET),
-    RULE(RULE_EVENT_PEER_IN_CASE,               ruleAllRun,                         CONN_RULES_NOTIFY_APP_POSITION),
 #ifdef CONFIG_STAROT
     // 考虑另一只耳机进出充电盒，对当前耳机dfu的影响
     RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
@@ -3570,6 +3576,15 @@ static ruleAction ruleAllowGaiaConnect(void)
 
 static ruleAction ruleAllRun(void) {
     return RULE_ACTION_RUN;
+}
+
+static ruleAction ruleNotifyStatus(void) {
+    if (appGaiaIsConnect()) {
+        RULE_LOG("ruleNotifyStatus, gaia is connect, so run");
+        return RULE_ACTION_RUN;
+    }
+    RULE_LOG("ruleNotifyStatus, gaia is not connect, so ignore");
+    return RULE_ACTION_IGNORE;
 }
 
 static ruleAction ruleDisconnectHfpA2dpAvrcp(void) {

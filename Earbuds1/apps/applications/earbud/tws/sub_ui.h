@@ -34,8 +34,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 
 #define APP_INTERNAL_HANDSET_PAIR  (2090)           // 内部消息，启动广播连接手机
 #define APP_INTERNAL_POWERSAVECHG  (2091)           // 当前模式变化
+#define APP_NOTIFY_DEVICE_CON_POS   2092            // rule/gaia -> ui 让ui主动上报位置、状态数据
 
-#define APP_THREE_POWER            (2099)           // ui -> ui 电量状态
+#define APP_THREE_POWER            (2099)           // 废弃 ui -> ui 电量状态
 
 #define APP_ATTACH_PLC_IN           (2100)           // 20340 -> ui 报告plc  in 放入充电盒
 #define APP_ATTACH_PLC_OUT          (2101)           // 20340 -> ui 报告plc  out 取出充电盒

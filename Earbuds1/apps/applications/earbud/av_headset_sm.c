@@ -1315,7 +1315,7 @@ static void appSmHandleConnRulesDisconnectHfpA2dpAvrcp(void) {
 }
 
 static void appSmHandleConnRulesNotifyAppPosition(void) {
-    gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+    MessageSendLater(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL, 200);
     appConnRulesSetRuleComplete(CONN_RULES_NOTIFY_APP_POSITION);
 }
 
