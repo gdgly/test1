@@ -6,7 +6,14 @@
 
 extern void pfree(void *ptr);
 
+void delay(int i)
+{
+    while(i-- < 0);
+}
 
+/*
+ * 写入sink里的数据
+ */
 static int writeFileSink(Sink sink, void *buf, int len)
 {
     uint16  offset;
@@ -297,6 +304,7 @@ void TestWriteFile_test(void)
     SinkClose(fsink);
 
 }
+void TestDeleteFile_test(void);
 void TestDeleteFile_test(void)
 {
     FILE_INDEX file_index;
@@ -317,7 +325,7 @@ void TestReadFile_test(void)
     uint8* map_address;
     uint16 rLen;
 
-    file_index=FileFind(FILE_ROOT, tfilename, (uint16)strlen(tfilename));
+    file_index=FileFind(FILE_ROOT, FILE_NAME, (uint16)strlen(FILE_NAME));
 
     DEBUG_LOG("FileFind-r ret=%d\n", file_index);
     if(file_index == FILE_NONE)

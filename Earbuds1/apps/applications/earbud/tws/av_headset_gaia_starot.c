@@ -153,7 +153,7 @@ bool starotGaiaHandleData(GAIA_STAROT_IND_T *message)
     message_data->flag      = (message->payload[1]) & 0X03;
     memcpy(message_data->data, &message->payload[2], message_data->data_length);
 
-    if (1)gaiaDevUpdateFirmware(message_data);
+    gaiaDevUpdateFirmware(message_data);
 
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
@@ -1030,15 +1030,11 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 //    MD5Init(&context);
 //    MD5Update(&context,(unsigned char *) input, len);
 //    MD5Final(digest, &context);
-if(0)
-{
-TestWriteFile_test();
-TestReadFile_test();
-TestDeleteFile_test();
-}
+
     int length = 0;
     static FileCPtr fc = NULL;
 
+    delay(10000);
     if (message->flag == 0X00) /* 开始一次数据传输过程 */
     {
         /* 写文件 */
@@ -1054,7 +1050,6 @@ TestDeleteFile_test();
         else
             return;
     }
-#if 1
     else if (message->flag == 0X03) /* 数据发送过程中 */
     {
         length = FileWrite(OpenFile_1(), message->data, message->data_length);
@@ -1075,7 +1070,6 @@ TestDeleteFile_test();
         DEBUG_LOG("flag error = %d",message->flag);
         return;
     }
-#endif
 }
 
 // APP中拨打电话
