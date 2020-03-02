@@ -6,6 +6,35 @@
 
 extern void pfree(void *ptr);
 
+
+static int writeFileSink(Sink sink, void *buf, int len)
+{
+    uint16  offset;
+    uint8* map_address;
+    int lensink = SinkSlack(sink);
+
+    DEBUG_LOG("%d\n", lensink);
+    if(len > lensink){
+        DEBUG_LOG("malloc falied\n");
+        return 0;
+    }
+    map_address = SinkMap(sink);
+    do
+    {
+        /* Claim space in the sink, getting the offset to it */
+        offset = SinkClaim(sink, len);
+    }while(offset == 0xFFFF);
+
+    /* Copy the string into the claimed space */
+    memcpy(map_address+offset, buf, len);
+
+    /* Flush the data out to the uart */
+    if(!(SinkFlush(sink, len)))
+        return 1;
+
+    return 0;
+}
+
 /*
  * 获取文件大小
  */
@@ -26,6 +55,15 @@ static uint16 get_file_size(FILE_INDEX findex)
     return fileSize;
 }
 
+//写数据到文件
+void WriteFile(FILE_INDEX findex, void *buf, int len);
+void WriteFile(FILE_INDEX findex, void *buf, int len)
+{
+    Sink fsink;
+    fsink = StreamFileSink(findex);
+    writeFileSink(fsink, buf, len);
+    SinkClose(fsink);
+}
 /*
  * 打开文件
  * rwflag: 1(写文件)
@@ -65,38 +103,29 @@ FileCPtr FileOpen(char *fname, int rwflag)
     return fCtrl;
 }
 
+
+FILE_INDEX OpenFile_1(void)
+{
+    FILE_INDEX file_index;
+    file_index=FileFind(FILE_ROOT, FILE_NAME, (uint16)strlen(FILE_NAME));
+    DEBUG_LOG("FileFind-w ret=%x\n", file_index);
+    if(file_index == FILE_NONE)
+    {
+        file_index=FileCreate(FILE_NAME, (uint16)strlen(FILE_NAME));
+        DEBUG_LOG("Filecreate ret=%x\n", file_index);
+    }
+    return file_index;
+}
 /*
  * 写文件
  * 返回：写入文件的长度
  */
-int FileWrite(FileCPtr fCtrl, uint8 *buffer, int length)
+int FileWrite(FILE_INDEX findex, uint8 *buffer, int length)
 {
-    uint16  offset = 0;
-    uint8* map_address = 0;
-    int lensink;
-
-    lensink = SinkSlack(fCtrl->sink);
-
-    DEBUG_LOG("%d,%x\n", lensink,fCtrl);
-    if(length > lensink)
-    {
-        DEBUG_LOG("malloc falied\n");
-        return 0;
-    }
-    map_address = SinkMap(fCtrl->sink);
-    do
-    {
-        /* Claim space in the sink, getting the offset to it */
-        offset = SinkClaim(fCtrl->sink, length);
-    }while(offset == 0xFFFF);
-
-    /* Copy the string into the claimed space */
-    memcpy(map_address+offset, buffer, length);
-
-    /* Flush the data out to the uart */
-    if(!(SinkFlush(fCtrl->sink, length)))
-        return -1;
-
+    Sink fsink;
+    fsink = StreamFileSink(findex);
+    writeFileSink(fsink, buffer, length);
+    SinkClose(fsink);
     return length;
 }
 
@@ -159,7 +188,7 @@ static void DebugData(uint8 *data,uint8 len)
     uint8 i;
     UNUSED(len);
     printf(("----\r\n "));
-    for(i=0;i<len;i++)
+    for(i=0;i<50;i++)
     {
        printf("%x ",data[i]);
     }
@@ -182,7 +211,7 @@ void ReadFile_2(FILE_INDEX findex)
     if(rLen)
     {
         DebugData(map_address,rLen);
-        SourceDrop(fsource,rLen);
+        SourceDrop(fsource,rLen);/* 文件不能太大，不然也会panic */
     }
 
     SourceClose(fsource);
@@ -248,31 +277,6 @@ const uint8 testdata[]={
  #endif
 };
 
-static int writeFileSink(FILE_INDEX index, void *buf, int len)
-{
-    uint16 offset;
-    uint8* map_address;
-    Sink sink;
-
-    sink = StreamFileSink(index);
-    map_address = SinkMap(sink);
-    do
-    {
-        /* Claim space in the sink, getting the offset to it */
-        offset = SinkClaim(sink, len);
-    }while(offset == 0xFFFF);
-
-    /* Copy the string into the claimed space */
-    memcpy(map_address+offset, buf, len);
-
-    /* Flush the data out to the uart */
-    if(!(SinkFlush(sink, len)))
-        return 1;
-
-    SinkClose(sink);
-    return 0;
-}
-
 
 void TestWriteFile_test(void)
 {
@@ -289,12 +293,8 @@ void TestWriteFile_test(void)
     file_index=FileCreate(tfilename, (uint16)strlen(tfilename));
     DEBUG_LOG("Filecreate ret=%d\n", file_index);
     fsink = StreamFileSink(file_index);
-    writeFileSink(file_index,(void *)testdata,sizeof(testdata));
+    writeFileSink(fsink,(void *)testdata,sizeof(testdata));
     SinkClose(fsink);
-
-//    fsink = StreamFileSink(file_index);
-//    writeFileSink(file_index,(void *)testdata,sizeof(testdata));
-//    SinkClose(fsink);
 
 }
 void TestDeleteFile_test(void)
@@ -317,7 +317,7 @@ void TestReadFile_test(void)
     uint8* map_address;
     uint16 rLen;
 
-    file_index=FileFind(FILE_ROOT, FILE_NAME, (uint16)strlen(FILE_NAME));
+    file_index=FileFind(FILE_ROOT, tfilename, (uint16)strlen(tfilename));
 
     DEBUG_LOG("FileFind-r ret=%d\n", file_index);
     if(file_index == FILE_NONE)
@@ -331,10 +331,44 @@ void TestReadFile_test(void)
     if(rLen)
     {
      DebugData(map_address,rLen);
-     SourceDrop(fsource,rLen);
+//     SourceDrop(fsource,rLen);
     }
 
     SourceClose(fsource);
 
 }
 
+
+//查找并创建文件,返回该文件索引号
+FILE_INDEX OpenFile(void);
+FILE_INDEX OpenFile(void)
+{
+    FILE_INDEX file_index;
+    file_index=FileFind(FILE_ROOT, tfilename, (uint16)strlen(tfilename));
+    DEBUG_LOG("FileFind-w ret=%x\n", file_index);
+    if(file_index == FILE_NONE)
+    {
+        file_index=FileCreate(tfilename, (uint16)strlen(tfilename));
+        DEBUG_LOG("Filecreate ret=%x\n", file_index);
+    }
+    return file_index;
+}
+void testw(void);
+void testw(void)
+{
+    WriteFile(OpenFile(), (void *)testdata, sizeof(testdata));
+}
+//查找文件,返回该文件索引号
+FILE_INDEX FindFileIndex(void);
+FILE_INDEX FindFileIndex(void)
+{
+    FILE_INDEX file_index;
+    file_index=FileFind(FILE_ROOT, tfilename, (uint16)strlen(tfilename));
+    DEBUG_LOG("FileFind-w ret=%x\n", file_index);
+    return file_index;
+}
+//获取文件大小
+void FileSize(void);
+void FileSize(void){
+    get_file_size(FindFileIndex());
+}

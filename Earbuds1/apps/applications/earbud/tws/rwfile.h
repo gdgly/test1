@@ -21,7 +21,7 @@ typedef struct tagFILECTRL {
 }FileCtrl, *FileCPtr;
 
 FileCPtr FileOpen(char *fname, int rwflag);       //1 w, 0 r
-int FileWrite(FileCPtr fCtrl, uint8 *buffer, int length);
+int FileWrite(FILE_INDEX findex, uint8 *buffer, int length);
 int FileRead(FileCPtr fCtrl, uint8 *buffer, int length);
 int FileClose(FileCPtr fCtrl);
 int FileCancel(char *fname);            // 删除文件
@@ -30,5 +30,6 @@ void TestWriteFile_test(void);
 void TestReadFile_test(void);
 void TestDeleteFile_test(void);
 void ReadFile_2(FILE_INDEX findex);
+FILE_INDEX OpenFile_1(void);
 #endif //RWFILE_H
 

@@ -1045,7 +1045,7 @@ TestDeleteFile_test();
         fc = FileOpen(FILE_NAME, 1);
         if (fc != NULL)
         {
-            length = FileWrite(fc, message->data, message->data_length);
+            length = FileWrite(OpenFile_1(), message->data, message->data_length);
             fc->fsize = length;
             if (length == message->data_length)
             {
@@ -1057,18 +1057,17 @@ TestDeleteFile_test();
 #if 1
     else if (message->flag == 0X03) /* 数据发送过程中 */
     {
-        length = FileWrite(fc, message->data, message->data_length);
+        length = FileWrite(OpenFile_1(), message->data, message->data_length);
         fc->fsize += length;
     }
     else if (message->flag == 0X02) /* 结束一次数据传输过程 */
     {
-        length = FileWrite(fc, message->data, message->data_length);
+        length = FileWrite(OpenFile_1(), message->data, message->data_length);
         fc->fsize += length;
         DEBUG_LOG("fsize = %u",fc->fsize);/**/
         DEBUG_LOG("findex = %d",fc->fIndex);
-        ReadFile_2(fc->fIndex);
-        FileClose(fc);
-        fc = NULL;
+//        FileClose(fc);
+//        fc = NULL;
 
     }
     else /* flag 信息不支持 */
