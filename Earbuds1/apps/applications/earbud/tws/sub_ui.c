@@ -208,7 +208,7 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
 #endif
 
         appSmConnectHandset();
-        appUiAvConnect();
+//        appUiAvConnect();
 
         DBCLINK_LOG("DBClink Two earbuds not connect phone");
         goto key_done;
@@ -381,6 +381,7 @@ static void subUiStarttAssistantSystem(bool isTap)
 {
     (void)isTap;
     HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
+    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
 }
 
 static int16 subUiStartAssistant2Gaia(MessageId id, ProgRIPtr  progRun)
@@ -388,6 +389,7 @@ static int16 subUiStartAssistant2Gaia(MessageId id, ProgRIPtr  progRun)
     if(1 != progRun->gaiaStat)
         return -1;
 
+    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
     /* 唤醒系统助手，需要告诉APP是 APO还是TAP */
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
     if(id == APP_ASSISTANT_AWAKEN){
@@ -524,6 +526,22 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         if(progRun->iElectrity == ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent)
             break;
         progRun->iElectrity = ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent;
+        //---------------------------------------------------------------
+        if(progRun->powerflag15 == TRUE && progRun->iElectrity < 15 && (1 == progRun->bredrconnect) &&
+                (appSubGetProgRun()->chargeStat == CHARGE_ST_NONE))
+        {
+            if(progRun->iElectrity == 1){
+                appUiPlayPrompt(PROMPT_POWER_OFF);
+            }
+            appUiPlayPrompt(PROMPT_LOW_BATTERY);
+            progRun->powerflag15 = FALSE;
+        }
+
+        if((appSubGetProgRun()->chargeStat == CHARGE_ST_CONNECT) && (0 == progRun->bredrconnect))
+        {
+            progRun->powerflag15 = TRUE;
+        }
+        //---------------------------------------------------------------
         if (appPeerSyncIsComplete())
             appPeerSyncSend(FALSE);
         subUiStat2Gaia(id, progRun);
@@ -752,6 +770,20 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_PSENSOR_INEAR:
 //        appUiPowerSave(POWER_MODE_IN_EAR);
         subUiEarInOutHandle(progRun, TRUE);
+        //-------------------------------------------------------
+
+        DEBUG_LOG("progRun->bredrconnect =%d",progRun->bredrconnect);
+
+        if(appDeviceIsHandsetConnected() && (appDeviceIsPeerConnected()))
+        {
+            if((!appPeerSyncIsPeerInCase() && !appPeerSyncIsPeerInEar()) || appPeerSyncIsPeerInCase())
+            {
+                MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
+                MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
+            }
+        }
+        //-------------------------------------------------------
+//        appUiPowerSave(POWER_MODE_IN_EAR);
         break;
     case APP_PSENSOR_OUTEAR:
         subUiEarInOutHandle(progRun, FALSE);
@@ -816,6 +848,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appUIUpgradeNotifyCommitStatusTimeOutGrade();
         break;
 
+    case APP_CONNECTED_HOST:
+        if(!appDeviceIsHandsetA2dpStreaming() &&
+                ((progRun->dial_stat & (DIAL_IN_ACTIVE|DIAL_OUT_ACTIVE|DIAL_ACTIVE)) == 0) && appDeviceIsHandsetConnected())
+            appUiPlayPrompt(PROMPT_CONNECTED);
+            break;
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
@@ -842,6 +879,7 @@ void appSubUIInit(void)
 
 #ifdef TWS_DEBUG
     progRun->realInCase = TRUE;
+    progRun->powerflag15 = TRUE;
 #endif
     /* 获取底层的电量信息 */
     battery_from.task            = &appGetUi()->task;
@@ -1125,7 +1163,10 @@ void appUiAvConnected(unsigned cad)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->bredrconnect = 1;
-
+    if(appSmIsInEar()){
+        MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
+        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
+    }
     appAdvParamInit();
     MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
@@ -1526,7 +1567,6 @@ int apolloWakeupCallback(void)
             subUiVoiceTapWakeup(progRun, FALSE);
         }
     }
-    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
     return 0;
 }
 

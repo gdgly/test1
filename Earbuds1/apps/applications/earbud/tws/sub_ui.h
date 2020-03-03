@@ -20,6 +20,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_BTN_DOUBLE_TAP         (2011)           // 双击敲击
 #define APP_PSENSOR_INEAR          (2012)           // 入耳
 #define APP_PSENSOR_OUTEAR         (2013)           // 出耳机
+#define APP_CONNECTED_HOST         (2014)           // App延时连接主耳机
 
 #define APP_CALLIN_ACT             (2020)           // 拨号相关信息 拨入
 #define APP_CALLIN_INACT           (2021)           // 拨号相关信息 拨入断开
@@ -130,6 +131,7 @@ typedef struct tagPROGRUNINFO {
     uint8          peerElectrity;           // 对方耳机电量 0...100    
     uint8          iElectrity;              // 自己耳机电量 0...100
 
+    bool           powerflag15;             // 15电量标记
     uint8          iWakeupTimes;            // 短时间记录 APO 唤醒次数
 
     PowerSaveMode  iPowerSaveMode;          // 当前模式
