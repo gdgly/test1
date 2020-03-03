@@ -615,7 +615,6 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case HFP_CALLER_ID_IND:
     case HFP_CURRENT_CALLS_IND:
         subUiCallNumber2Gaia(progRun, message);
-        subUiCallNumber2Gaia(progRun, message);
         break;
     case APP_CALL_ACTIVE:          // 拨号相关信息 接听
     {
@@ -1011,14 +1010,15 @@ int16 appUiHfpDialId(uint8 *number, uint16 size_number)
     if(0 == size_number)
         appSubGetProgRun()->dial_type = 0;
     else {
-            appSubGetProgRun()->dial_type = 1;
-            appUiHfpSaveId(number, size_number, NULL, 0, 0);
-        }
+        appSubGetProgRun()->dial_type = 1;
+        appUiHfpSaveId(number, size_number, NULL, 0, 0);
+    }
 
     MAKE_CALL_2_GAIA_MESSAGE(CALL_NUMBER);
+    message->length = size_number;
     memcpy(message->number, number, size_number);
-
     MessageSend(&appGetUi()->task, HFP_CURRENT_CALLS_IND, message);
+
     return 0;
 }
 
