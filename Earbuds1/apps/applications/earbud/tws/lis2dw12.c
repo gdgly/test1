@@ -1,4 +1,5 @@
 #include "lis2dw12.h"
+#include "online_dbg.h"
 #ifdef HAVE_LIS2DW12
 
 uint8  lis2dw12Runing = 0;              // poweroff后，设置为 0, 启动运行为1
@@ -160,6 +161,7 @@ void lis2dw12_init(void)
     value = 0;
     handle = lis2dw12Enable();
     if(BITSERIAL_HANDLE_ERROR == handle) {
+        online_dbg_record(ONLINE_DBG_TAP_INIT_FAIL);
         return;
     }
 
@@ -177,6 +179,7 @@ void lis2dw12_init(void)
     if(value != 0x44){
         lis2dw12Disable(handle);
         DEBUG_LOG("can not get lis2dw12 id!\n");
+        online_dbg_record(ONLINE_DBG_TAP_INIT_FAIL);
         return;
     }
 
@@ -198,6 +201,9 @@ void lis2dw12_init(void)
     lis2dw12Runing  = 1;
 
     lis2dw12Disable(handle);
+
+    online_dbg_record(ONLINE_DBG_TAP_INIT_SUCC);
+
     return;
 }
 

@@ -27,15 +27,105 @@
  *
  *******************************************************************/
 
+/*
+ * "data": [
+ *      {
+ *          "type":"0x01",
+ *          "function":"apollo init success"
+ *      },
+ *      {
+ *          "type":"0x02",
+ *          "function":"apollo init fail"
+ *      },
+ *      {
+ *          "type":"0x03",
+ *          "function":"plc init success"
+ *      },
+ *      {
+ *          "type":"0x04",
+ *          "function":"plc init fail"
+ *      },
+ *      {
+ *          "type":"0x05",
+ *          "function":"proximity init success"
+ *      },
+ *      {
+ *          "type":"0x06",
+ *          "function":"proximity init fail"
+ *      },
+ *      {
+ *          "type":"0x07",
+ *          "function":"lisdw12 init success"
+ *      },
+ *      {
+ *          "type":"0x08",
+ *          "function":"lisdw12 init fail"
+ *      },
+ *      {
+ *          "type":"0x09",
+ *          "function":"in case"
+ *      },
+ *      {
+ *          "type":"0x0A",
+ *          "function":"out of case"
+ *      },
+ *      {
+ *          "type":"0x0B",
+ *          "function":"in ear"
+ *      },
+ *      {
+ *          "type":"0x0C",
+ *          "function":"out of ear"
+ *      },
+ *      {
+ *          "type":"0x0D",
+ *          "function":"double tap"
+ *      },
+ *      {
+ *          "type":"0x0E",
+ *          "function":"invalid double tap"
+ *      },
+ *      {
+ *          "type":"0x0F",
+ *          "function":"case open"
+ *      },
+ *      {
+ *          "type":"0x10",
+ *          "function":"case close"
+ *      },
+ *  ],
+ *  "version":"0.01.01"
+ * }
+ */
+
+#define ONLINE_DBG_APO_INIT_SUCC    (0x01)    /* apollo init success */
+#define ONLINE_DBG_APO_INIT_FAIL    (0x02)    /* apollo init fail */
+#define ONLINE_DBG_PLC_INIT_SUCC    (0x03)    /* plc init success */
+#define ONLINE_DBG_PLC_INIT_FAIL    (0x04)    /* plc init fail */
+#define ONLINE_DBG_PROX_INIT_SUCC   (0x05)    /* proximity init success */
+#define ONLINE_DBG_PROX_INIT_FAIL   (0x06)    /* proximity init fail */
+#define ONLINE_DBG_TAP_INIT_SUCC    (0x07)    /* lisdw12 init success */
+#define ONLINE_DBG_TAP_INIT_FAIL    (0x08)    /* lisdw12 init fail */
+#define ONLINE_DBG_IN_CASE          (0x09)    /* in case */
+#define ONLINE_DBG_OUT_CASE         (0x0A)    /* out of case */
+#define ONLINE_DBG_IN_EAR           (0x0B)    /* in ear */
+#define ONLINE_DBG_OUT_EAR          (0x0C)    /* out of ear */
+#define ONLINE_DBG_DOUBLE_TAP       (0x0D)    /* double tap */
+#define ONLINE_DBG_DOUBLE_TAP_INV   (0x0E)    /* invalid double tap */
+#define ONLINE_DBG_CASE_OPEN        (0x0F)    /* case open */
+#define ONLINE_DBG_CASE_CLOSE       (0x10)    /* case close */
+
+
+
 typedef enum {
     ONLINE_DBG_APP_REQ_RT_ONLINE_DBG_START   = 0x01,    /* app request packet format */
     ONLINE_DBG_DEV_RSP_RT_ONLINE_DBG_START   = 0x01,    /* dev response packet format */
     ONLINE_DBG_APP_REQ_RT_ONLINE_DBG_STOP    = 0x02,    /* app request packet format */
     ONLINE_DBG_DEV_RSP_RT_ONLINE_DBG_STOP    = 0x02,    /* dev response packet format */
-    ONLINE_DBG_APP_REQ_SYSTEM_STATUS       = 0x03,    /* app request packet format */
-    ONLINE_DBG_DEV_RSP_SYSTEM_STATUS       = 0x03,    /* dev response packet format */
+    ONLINE_DBG_APP_REQ_SYSTEM_STATUS         = 0x03,    /* app request packet format */
+    ONLINE_DBG_DEV_RSP_SYSTEM_STATUS         = 0x03,    /* dev response packet format */
     ONLINE_DBG_DEV_UPLOAD_RT_ONLINE_DBG      = 0x04,    /* dev send packet format */
-    ONLINE_DBG_DEV_UPLOAD_SYSTEM_STATUS    = 0x05,    /* dev send packet format */
+    ONLINE_DBG_DEV_UPLOAD_SYSTEM_STATUS      = 0x05,    /* dev send packet format */
 } online_dbg_cmd;
 
 typedef uint8 online_dbg_t;
@@ -48,6 +138,7 @@ typedef uint8 online_dbg_t;
 #define ONLINE_DBG_STATE_IDLE                 (0x01)
 #define ONLINE_DBG_STATE_RT_PACKET            (0x02)
 #define ONLINE_DBG_STATE_SYS_STATUS           (0x03)
+
 
 typedef struct {
     TaskData data;

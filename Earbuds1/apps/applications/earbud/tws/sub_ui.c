@@ -17,6 +17,7 @@
 #include "apollo.h"
 #include "peer.h"
 #include "param.h"
+#include "online_dbg.h"
 
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
@@ -664,6 +665,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
        break;
     case APP_CASE_OPEN:
         DEBUG_LOG("plc call case open");
+        online_dbg_record(ONLINE_DBG_CASE_OPEN);
 #ifdef TWS_DEBUG
         appConnRulesResetEvent(RULE_EVENT_CASE_OPEN);
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_OPEN);
@@ -671,6 +673,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
     case APP_CASE_CLOSE:
         DEBUG_LOG("plc call case close");
+        online_dbg_record(ONLINE_DBG_CASE_CLOSE);
 #ifdef TWS_DEBUG
         if (appGaiaIsConnect() && !(appSmIsInDfuMode() && UpgradeInProgress())) {
             DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
@@ -729,6 +732,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case APP_ATTACH_PLC_IN: {
         DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
+        online_dbg_record(ONLINE_DBG_IN_CASE);
 #ifdef TWS_DEBUG
        // if (appSmIsOutOfEar()) {
 //        phyStateTaskData* phy_state = appGetPhyState();
@@ -747,6 +751,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case APP_ATTACH_PLC_OUT:  {
         DEBUG_LOG("parse APP_ATTACH_PLC_OUT event");
+        online_dbg_record(ONLINE_DBG_OUT_CASE);
 #ifdef TWS_DEBUG
        // if (appSmIsInCase()) {
 //        phyStateTaskData* phy_state = appGetPhyState();
@@ -768,6 +773,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         // 入耳 出耳
     case APP_PSENSOR_INEAR:
 //        appUiPowerSave(POWER_MODE_IN_EAR);
+        online_dbg_record(ONLINE_DBG_IN_EAR);
         subUiEarInOutHandle(progRun, TRUE);
         //-------------------------------------------------------
 
@@ -785,6 +791,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 //        appUiPowerSave(POWER_MODE_IN_EAR);
         break;
     case APP_PSENSOR_OUTEAR:
+        online_dbg_record(ONLINE_DBG_OUT_EAR);
         subUiEarInOutHandle(progRun, FALSE);
 //        appUiPowerSave(POWER_MODE_OUT_CASE);
         break;

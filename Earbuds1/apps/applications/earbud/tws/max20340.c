@@ -2,6 +2,7 @@
 #ifdef HAVE_MAX20340
 
 #include "AP.h"
+#include "online_dbg.h"
 
 #define TIME_READ_MAX20340_REG
 // max20340 正常为低电平中断，部分时间出现IO为常低，而不能拉回到常高而不能再次产生中断
@@ -825,11 +826,13 @@ void max20340_init(void)
     uint8 value;uint8 value_a[13];
     uint8 i;
     if( max20340_get_left_or_right()==0 ){
+        online_dbg_record(ONLINE_DBG_PLC_INIT_FAIL);
         return;
     }
     value = 0;
     handle = max20340Enable();
     if(BITSERIAL_HANDLE_ERROR == handle) {
+        online_dbg_record(ONLINE_DBG_PLC_INIT_FAIL);
         return;
     }
 
@@ -891,6 +894,9 @@ void max20340_init(void)
 #endif
 
     max20340Disable(handle);
+
+    online_dbg_record(ONLINE_DBG_PLC_INIT_SUCC);
+
     return;
 }
 
