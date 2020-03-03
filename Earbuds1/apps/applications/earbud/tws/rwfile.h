@@ -20,17 +20,17 @@ typedef struct tagFILECTRL {
     uint32       checksum;       // 写文件时记录CHECKSUM
 }FileCtrl, *FileCPtr;
 
-FileCPtr FileOpen(char *fname, int rwflag);       //1 w, 0 r
+FILE_INDEX FileOpen(char * file_name);
+FILE_INDEX FindFileIndex(char * file_name);
+
 int FileWrite(FILE_INDEX findex, uint8 *buffer, int length);
-int FileRead(FileCPtr fCtrl, uint8 *buffer, int length);
-int FileClose(FileCPtr fCtrl);
+int FileClose(void);
 int FileCancel(char *fname);            // 删除文件
 
 void TestWriteFile_test(void);
 void TestReadFile_test(void);
 void TestDeleteFile_test(void);
 void ReadFile_2(FILE_INDEX findex);
-FILE_INDEX OpenFile_1(void);
 
 #endif //RWFILE_H
 

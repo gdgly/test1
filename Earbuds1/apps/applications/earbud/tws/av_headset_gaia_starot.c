@@ -9,6 +9,7 @@
 #include "tws/peer.h"
 #include "apollo.h"
 #include "rwfile.h"
+#include "md5.h"
 
 uint16 bufferSendUnit = 80;
 
@@ -109,10 +110,31 @@ void starotGaiaReset(void) {
 bool starotGaiaHandleDataMD5(GAIA_STAROT_IND_T *message)
 {
     DEBUG_LOG("starotGaiaHandleDataMD5");
-//    FileCtrl *fc;
-//    fc = FileOpen(FILE_NAME, 0);
-//    FileClose(fc);
 
+    uint16 source_size,fileSize = 0;
+    uint8 *map_address;
+    Source file_source;
+    uint32 check_sum = 0;
+
+    PanicNull((file_source = StreamFileSource(FindFileIndex(FILE_NAME))));
+    while((source_size = SourceSize(file_source)) != 0)
+    {
+        map_address = (uint8 *)SourceMap(file_source);
+        fileSize += source_size;
+        SourceDrop(file_source,source_size);
+        for (int i = 0; i< source_size;i++)
+        {
+            check_sum += map_address[i];
+        }
+        source_size*=100;
+        while(source_size--)
+        {
+            printf("");
+        }
+    }
+    SourceClose(file_source);
+    DEBUG_LOG("%u",check_sum);
+    /* 返回ack */
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
 
@@ -1024,45 +1046,27 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
 */
 void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 {
-
-//    MD5_CTX context;
-//    unsigned char digest[16];
-//    MD5Init(&context);
-//    MD5Update(&context,(unsigned char *) input, len);
-//    MD5Final(digest, &context);
-
-    int length = 0;
-    static FileCPtr fc = NULL;
+    static int length = 0;
 
     if (message->flag == 0X00) /* 开始一次数据传输过程 */
     {
-        /* 写文件 */
-        fc = FileOpen(FILE_NAME, 1);
-        if (fc != NULL)
+        /* 打开文件 */
+        if (FileOpen(FILE_NAME) != 0)
         {
-            length = FileWrite(OpenFile_1(), message->data, message->data_length);
-            fc->fsize = length;
-            if (length == message->data_length)
-            {
-            }
+            length = FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length);
         }
         else
             return;
     }
     else if (message->flag == 0X03) /* 数据发送过程中 */
     {
-        length = FileWrite(OpenFile_1(), message->data, message->data_length);
-        fc->fsize += length;
+        length += FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length);
     }
     else if (message->flag == 0X02) /* 结束一次数据传输过程 */
     {
-        length = FileWrite(OpenFile_1(), message->data, message->data_length);
-        fc->fsize += length;
-//        DEBUG_LOG("fsize = %u",fc->fsize);/**/
-//        DEBUG_LOG("findex = %d",fc->fIndex);
-        FileClose(fc);
-        fc = NULL;
-
+        length += FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length);
+        DEBUG_LOG("fsize = %u",length);
+        FileClose();
     }
     else /* flag 信息不支持 */
     {

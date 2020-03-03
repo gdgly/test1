@@ -4,7 +4,57 @@
 */
 #include "rwfile.h"
 
-extern void pfree(void *ptr);
+
+/*
+ * 获取文件大小
+ */
+static uint16 get_file_size(FILE_INDEX findex)
+{
+    Source file_source;
+    uint16 source_size,fileSize = 0;
+
+    PanicNull((file_source = StreamFileSource(findex)));
+    while((source_size = SourceSize(file_source)) != 0)
+    {
+
+        fileSize += source_size;
+        SourceDrop(file_source,source_size);
+    }
+    SourceClose(file_source);
+    printf("fileSize = %d\n",fileSize);
+
+    return fileSize;
+}
+
+
+//查找文件,返回该文件索引号
+FILE_INDEX FindFileIndex(char * file_name)
+{
+    FILE_INDEX file_index;
+
+    file_index = FileFind(FILE_ROOT, file_name, (uint16)strlen(file_name));
+//    DEBUG_LOG("FileFind ret=%x\n", file_index);
+    return file_index;
+}
+/*
+ * 打开文件
+ * file_name:文件名字，必须是/rwfs/目录下的
+ */
+FILE_INDEX FileOpen(char * file_name)
+{
+    FILE_INDEX file_index = 0;
+
+    file_index = FindFileIndex(file_name);
+    if (file_index != FILE_NONE)
+    {
+        FileDelete(file_index);
+        DEBUG_LOG("FileDelete ret=%x\n", file_index);
+    }
+    file_index = FileCreate(FILE_NAME, (uint16)strlen(FILE_NAME));
+    DEBUG_LOG("FileCreate ret=%x\n", file_index);
+
+    return file_index;
+}
 
 
 /*
@@ -36,87 +86,6 @@ static int writeFileSink(Sink sink, void *buf, int len)
 
     return 0;
 }
-
-/*
- * 获取文件大小
- */
-static uint16 get_file_size(FILE_INDEX findex)
-{
-    Source file_source;
-    uint16 source_size,fileSize = 0;
-
-    PanicNull((file_source = StreamFileSource(findex)));
-
-   while((source_size = SourceSize(file_source)) != 0)
-   {
-        fileSize += source_size;
-        SourceDrop(file_source,source_size);
-    }
-    SourceClose(file_source);
-    printf("fileSize = %d\n",fileSize);
-    return fileSize;
-}
-
-//写数据到文件
-void WriteFile(FILE_INDEX findex, void *buf, int len);
-void WriteFile(FILE_INDEX findex, void *buf, int len)
-{
-    Sink fsink;
-    fsink = StreamFileSink(findex);
-    writeFileSink(fsink, buf, len);
-    SinkClose(fsink);
-}
-/*
- * 打开文件
- * rwflag: 1(写文件)
- *         0(读文件)
- */
-FileCPtr FileOpen(char *fname, int rwflag)
-{
-    FileCPtr fCtrl = (FileCPtr)PanicUnlessMalloc(sizeof(FileCtrl));
-    memcpy(fCtrl->fName, fname, strlen(fname) + 1);
-    printf("name %s,%d",fCtrl->fName,strlen(fCtrl->fName));
-
-    fCtrl->fIndex = FileFind(FILE_ROOT, fCtrl->fName, strlen(fCtrl->fName));
-    DEBUG_LOG("FileFind ret=%d", fCtrl->fIndex);
-    if (rwflag == 0)
-    {
-        if (FILE_NONE == fCtrl->fIndex) /* 没有找到文件 */
-        {
-            pfree(fCtrl);
-            return NULL;
-        }
-        fCtrl->fsize = get_file_size(fCtrl->fIndex);
-    }
-    else if (rwflag == 1)
-    {
-        if (fCtrl->fIndex != FILE_NONE)
-        {
-            FileDelete(fCtrl->fIndex);
-            DEBUG_LOG("FileDelete ret=%d", fCtrl->fIndex);
-        }
-        fCtrl->fIndex=FileCreate(fCtrl->fName, (uint16)strlen(fCtrl->fName));
-        DEBUG_LOG("Filecreate ret=%d", fCtrl->fIndex);
-        fCtrl->fsize = 0;
-    }
-
-    fCtrl->sink = StreamFileSink(fCtrl->fIndex);
-    fCtrl->offset = 0;
-    return fCtrl;
-}
-
-
-FILE_INDEX OpenFile_1(void)
-{
-    FILE_INDEX file_index;
-    file_index=FileFind(FILE_ROOT, FILE_NAME, (uint16)strlen(FILE_NAME));
-    if(file_index == FILE_NONE)
-    {
-        file_index=FileCreate(FILE_NAME, (uint16)strlen(FILE_NAME));
-        DEBUG_LOG("Filecreate ret=%x\n", file_index);
-    }
-    return file_index;
-}
 /*
  * 写文件
  * 返回：写入文件的长度
@@ -130,36 +99,17 @@ int FileWrite(FILE_INDEX findex, uint8 *buffer, int length)
     return length;
 }
 
-
-/*
- * 读文件
- * RET：> 0 返回读取到的字节数
- *      -1  失败
- *
- */
-int FileRead(FileCPtr fCtrl, uint8 *buffer, int length)
-{
-    int less;
-
-    if (!fCtrl) return -1;
-
-    less = fCtrl->fsize - fCtrl->offset;
-    if (less >= length) less = length;
-
-    memcpy(buffer, fCtrl->map_address+fCtrl->offset, less);
-    fCtrl->offset += less;
-
-    return less;
-}
-
 /*
  * 删除文件
+ *  0:删除成功
+ * -1:没有该文件，删除失败
  */
 int FileCancel(char *fname)
 {
     FILE_INDEX   fIndex = FileFind(FILE_ROOT, fname, strlen(fname));;
 
-    if (FILE_NONE != fIndex) {
+    if (FILE_NONE != fIndex)
+    {
         FileDelete(fIndex);
         return 0;
     }
@@ -170,56 +120,25 @@ int FileCancel(char *fname)
 /*
  * 关闭文件
  */
-int FileClose(FileCPtr fCtrl)
+int FileClose(void)
 {
-    if ( !fCtrl )
-        return 0;
-
-    if ( fCtrl->map_address )
-        FileUnmap(fCtrl->map_address), fCtrl->map_address = NULL;
-
-    if ( fCtrl->sink )
-        SinkClose(fCtrl->sink);
-
     return FileSystemUnmount("/rwfs");
 }
 
+/* 测试使用 */
 static void DebugData(uint8 *data,uint8 len)
 {
     uint8 i;
     UNUSED(len);
     printf(("----\r\n "));
-    for(i=0;i<50;i++)
+    for(i=0;i<10;i++)
     {
        printf("%x ",data[i]);
     }
     printf(("----\r\n "));
 }
-/*
- * 把文件内数据读出来
- */
-void ReadFile_2(FILE_INDEX findex)
-{
-    Source fsource;
-    uint8* map_address;
-    uint16 rLen;
 
-    DEBUG_LOG("read FILE_INDEX ret=%d", findex);
-    fsource = StreamFileSource(findex);
-    map_address = (uint8 *)SourceMap(fsource);
-    rLen = SourceSize(fsource);
-    DEBUG_LOG("index = %d,map_addres = %x ,len =%d",findex,map_address,rLen);
-    if(rLen)
-    {
-        DebugData(map_address,rLen);
-        SourceDrop(fsource,rLen);/* 文件不能太大，不然也会panic */
-    }
 
-    SourceClose(fsource);
-
-}
-
-/* 测试使用 */
 const char tfilename[]="/rwfs/Test1.bin";
 const uint8 testdata[]={
     0x00,0x01,0x02,0x03,0x04,0x05,0x00,0x01,0x02,0x03,0x04,0x05,
@@ -346,11 +265,11 @@ FILE_INDEX OpenFile(void);
 FILE_INDEX OpenFile(void)
 {
     FILE_INDEX file_index;
-    file_index=FileFind(FILE_ROOT, tfilename, (uint16)strlen(tfilename));
+    file_index=FileFind(FILE_ROOT, FILE_NAME, (uint16)strlen(FILE_NAME));
     DEBUG_LOG("FileFind-w ret=%x\n", file_index);
     if(file_index == FILE_NONE)
     {
-        file_index=FileCreate(tfilename, (uint16)strlen(tfilename));
+        file_index=FileCreate(FILE_NAME, (uint16)strlen(FILE_NAME));
         DEBUG_LOG("Filecreate ret=%x\n", file_index);
     }
     return file_index;
@@ -358,19 +277,49 @@ FILE_INDEX OpenFile(void)
 void testw(void);
 void testw(void)
 {
-    WriteFile(OpenFile(), (void *)testdata, sizeof(testdata));
+//    WriteFile(OpenFile(), (void *)testdata, sizeof(testdata));
+    uint8* map_address;
+    map_address = (uint8*)FileMap(OpenFile(), 0, FILE_MAP_SIZE_ALL);
+    DEBUG_LOG("%x",map_address);
 }
-//查找文件,返回该文件索引号
-FILE_INDEX FindFileIndex(void);
-FILE_INDEX FindFileIndex(void)
-{
-    FILE_INDEX file_index;
-    file_index=FileFind(FILE_ROOT, tfilename, (uint16)strlen(tfilename));
-    DEBUG_LOG("FileFind-w ret=%x\n", file_index);
-    return file_index;
-}
+
 //获取文件大小
 void FileSize(void);
-void FileSize(void){
-    get_file_size(FindFileIndex());
+void FileSize(void)
+{
+    get_file_size(FindFileIndex(FILE_NAME));
+}
+/*
+ * 循环读取文件例子
+ */
+
+void test_read(void);
+void test_read(void)
+{
+    /* 下面代码可以循环读取,SourceDrop可能会panic */
+    uint16 source_size,fileSize = 0;
+    uint8 *map_address;
+    Source file_source;
+    uint32 check_sum = 0;
+DEBUG_LOG("%u",check_sum);
+    PanicNull((file_source = StreamFileSource(FindFileIndex(FILE_NAME))));
+    while((source_size = SourceSize(file_source)) != 0)
+    {
+        map_address = (uint8 *)SourceMap(file_source);
+//        DebugData(map_address,10);
+        for (int i = 0; i< source_size;i++)
+        {
+            check_sum += map_address[i];
+        }
+        fileSize += source_size;
+        SourceDrop(file_source,source_size);
+        source_size *= 100;
+        while(source_size--)
+        {
+            printf("");
+        }
+    }
+    DEBUG_LOG("%u",check_sum);
+    SourceClose(file_source);
+    printf("fileSize = %d\n",fileSize);
 }
