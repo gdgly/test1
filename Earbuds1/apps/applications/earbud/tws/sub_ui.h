@@ -85,7 +85,7 @@ typedef struct {
 } CALL_INDICATOR_T;
 
 typedef struct {
-	uint8_t number[20];
+        uint8_t number[25];
 	uint8_t length;
 } CALL_NUMBER_T;
 
