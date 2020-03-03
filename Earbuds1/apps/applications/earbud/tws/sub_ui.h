@@ -125,6 +125,7 @@ typedef struct tagPROGRUNINFO {
 #endif
     uint8          peerVer[DEV_HWSWVER_LEN];        // 对方耳机版本信息
     uint8          peerVerSyncStatus;               // 对方耳机版本信息同步状态
+    uint32         check_sum;                //盒子固件的校验吗
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;
 void appSubUIInit(void);

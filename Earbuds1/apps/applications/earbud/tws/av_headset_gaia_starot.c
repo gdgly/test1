@@ -111,29 +111,7 @@ bool starotGaiaHandleDataMD5(GAIA_STAROT_IND_T *message)
 {
     DEBUG_LOG("starotGaiaHandleDataMD5");
 
-    uint16 source_size,fileSize = 0;
-    uint8 *map_address;
-    Source file_source;
-    uint32 check_sum = 0;
-
-    PanicNull((file_source = StreamFileSource(FindFileIndex(FILE_NAME))));
-    while((source_size = SourceSize(file_source)) != 0)
-    {
-        map_address = (uint8 *)SourceMap(file_source);
-        fileSize += source_size;
-        SourceDrop(file_source,source_size);
-        for (int i = 0; i< source_size;i++)
-        {
-            check_sum += map_address[i];
-        }
-        source_size*=100;
-        while(source_size--)
-        {
-            printf("");
-        }
-    }
-    SourceClose(file_source);
-    DEBUG_LOG("%u",check_sum);
+    DEBUG_LOG("%u",gProgRunInfo.check_sum);
     /* 返回ack */
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
@@ -1050,10 +1028,15 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 
     if (message->flag == 0X00) /* 开始一次数据传输过程 */
     {
+        gProgRunInfo.check_sum = 0;
         /* 打开文件 */
         if (FileOpen(FILE_NAME) != 0)
         {
             length = FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length);
+            for(uint16 i = 0; i < message->data_length; i++)
+            {
+                gProgRunInfo.check_sum += message->data[i];
+            }
         }
         else
             return;
@@ -1061,11 +1044,19 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
     else if (message->flag == 0X03) /* 数据发送过程中 */
     {
         length += FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length);
+        for (uint16 i = 0; i < message->data_length; i++)
+        {
+            gProgRunInfo.check_sum += message->data[i];
+        }
     }
     else if (message->flag == 0X02) /* 结束一次数据传输过程 */
     {
         length += FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length);
-        DEBUG_LOG("fsize = %u",length);
+        for (uint16 i = 0; i < message->data_length; i++)
+        {
+            gProgRunInfo.check_sum += message->data[i];
+        }
+        DEBUG_LOG("fsize = %u ,check_sum = %u",length,gProgRunInfo.check_sum);
         FileClose();
     }
     else /* flag 信息不支持 */
