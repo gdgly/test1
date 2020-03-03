@@ -93,6 +93,58 @@
  *          "type":"0x10",
  *          "function":"case close"
  *      },
+ *      {
+ *          "type":"0x20",
+ *          "function":"avdtp discover"
+ *      },
+ *      {
+ *          "type":"0x21",
+ *          "function":"avdtp get capabilities"
+ *      },
+ *      {
+ *          "type":"0x22",
+ *          "function":"avdtp set configuration"
+ *      },
+ *      {
+ *          "type":"0x23",
+ *          "function":"avdtp get configuration"
+ *      },
+ *      {
+ *         "type":"0x24",
+ *         "function":"avdtp re-configure"
+ *      },
+ *      {
+ *         "type":"0x25",
+ *         "function":"avdtp open"
+ *      },
+ *      {
+ *         "type":"0x26",
+ *         "function":"avdtp start"
+ *      },
+ *      {
+ *         "type":"0x27",
+ *         "function":"avdtp close"
+ *      },
+ *      {
+ *         "type":"0x28",
+ *         "function":"avdtp suspend"
+ *      },
+ *      {
+ *         "type":"0x29",
+ *         "function":"avdtp abort"
+ *      },
+ *      {
+ *         "type":"0x2A",
+ *         "function":"avdtp security control"
+ *      },
+ *      {
+ *         "type":"0x2B",
+ *         "function":"avdtp get all capabilities"
+ *      },
+ *      {
+ *         "type":"0x2C",
+ *         "function":"avdtp delay report"
+ *      }
  *  ],
  *  "version":"0.01.01"
  * }
@@ -115,6 +167,19 @@
 #define ONLINE_DBG_CASE_OPEN        (0x0F)    /* case open */
 #define ONLINE_DBG_CASE_CLOSE       (0x10)    /* case close */
 
+#define ONLINE_DBG_AVDTP_DISCOVER   (0x20)    /* avdtp discover */
+#define ONLINE_DBG_AVDTP_GET_CAPS   (0x21)    /* avdtp get capabilities */
+#define ONLINE_DBG_AVDTP_SET_CONFIG (0x22)    /* avdtp set configuration */
+#define ONLINE_DBG_AVDTP_GET_CONFIG (0x23)    /* avdtp get configuration */
+#define ONLINE_DBG_AVDTP_RE_CONFIG  (0x24)    /* avdtp re-configure */
+#define ONLINE_DBG_AVDTP_OPEN       (0x25)    /* avdtp open */
+#define ONLINE_DBG_AVDTP_START      (0x26)    /* avdtp start */
+#define ONLINE_DBG_AVDTP_CLOSE      (0x27)    /* avdtp close */
+#define ONLINE_DBG_AVDTP_SUSPEND    (0x28)    /* avdtp suspend */
+#define ONLINE_DBG_AVDTP_ABORT      (0x29)    /* avdtp abort */
+#define ONLINE_DBG_AVDTP_SEC_CTRL   (0x2A)    /* avdtp security control */
+#define ONLINE_DBG_AVDTP_GET_ALLCAP (0x2B)    /* avdtp get all capabilities */
+#define ONLINE_DBG_AVDTP_DEL_REP    (0x2C)    /* avdtp delay report */
 
 
 typedef enum {

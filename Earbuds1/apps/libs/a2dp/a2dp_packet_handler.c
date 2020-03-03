@@ -31,6 +31,7 @@ NOTES
 #include <stdlib.h>
 #include <print.h>
 
+extern void online_dbg_record(uint8 code);
 
 /****************************************************************************
 NAME
@@ -389,36 +390,43 @@ static bool handleReceiveCommand(remote_device *device)
 
         case avdtp_discover:
             PRINT(("avdtp_discover\n"));
+            online_dbg_record(0x20);
             a2dpHandleDiscoverCommand(device);
             break;
 
         case avdtp_get_capabilities:
             PRINT(("avdtp_get_capabilities\n"));
+            online_dbg_record(0x21);
             a2dpHandleGetCapabilitiesCommand(device);
             break;
 
         case avdtp_set_configuration:
             PRINT(("avdtp_set_configuration\n"));
+            online_dbg_record(0x22);
             a2dpHandleSetConfigurationCommand(device);
             break;
 
         case avdtp_get_configuration:
             PRINT(("avdtp_get_configuration\n"));
+            online_dbg_record(0x23);
             a2dpHandleGetConfigurationCommand(device);
             break;
 
         case avdtp_reconfigure:
             PRINT(("avdtp_reconfigure\n"));
+            online_dbg_record(0x24);
             a2dpHandleReconfigureCommand(device);
             break;
 
         case avdtp_open:
             PRINT(("avdtp_open\n"));
+            online_dbg_record(0x25);
             a2dpHandleOpenCommand(device);
             break;
 
         case avdtp_start:
             PRINT(("avdtp_start\n"));
+            online_dbg_record(0x26);
             if (!a2dpHandleStartCommand(device))
             {
                 device->signal_conn.status.pending_received_transaction = FALSE;
@@ -428,6 +436,7 @@ static bool handleReceiveCommand(remote_device *device)
 
         case avdtp_close:
             PRINT(("avdtp_close\n"));
+            online_dbg_record(0x27);
             if (!a2dpHandleCloseCommand(device))
             {
                 device->signal_conn.status.pending_received_transaction = FALSE;
@@ -437,26 +446,31 @@ static bool handleReceiveCommand(remote_device *device)
 
         case avdtp_suspend:
             PRINT(("avdtp_suspend\n"));
+            online_dbg_record(0x28);
             a2dpHandleSuspendCommand(device);
             break;
 
         case avdtp_abort:
             PRINT(("avdtp_abort\n"));
+            online_dbg_record(0x29);
             a2dpHandleAbortCommand(device);
             break;
 
         case avdtp_security_control:
             PRINT(("avdtp_security_control\n"));
+            online_dbg_record(0x2A);
             a2dpSendGeneralReject(device);  /* TODO: is this correct? */
             break;
             
         case avdtp_get_all_capabilities:
             PRINT(("avdtp_get_all_capabilities\n"));
+            online_dbg_record(0x2B);
             a2dpHandleGetAllCapabilitiesCommand(device);
             break;
             
         case avdtp_delayreport:
             PRINT(("avdtp_delayreport\n"));
+            online_dbg_record(0x2C);
             a2dpHandleDelayReportCommand(device);
             break;
             
