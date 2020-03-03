@@ -628,7 +628,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CALLOUT_ACT:          // 拨号相关信息 拨出
     case APP_CALLOUT_INACT:        // 拨号相关信息 拨出断开
     case APP_CALL_INACTIVE:        // 拨号相关信息 断开
-        subUiCallIndicator2Gaia(progRun, message);		
+        //subUiCallIndicator2Gaia(progRun, message);
+        break;
+
+    case APP_UI_HFP_STATUS_CHANGE:
+        DEBUG_LOG("Call APP_UI_HFP_STATUS_CHANGE");
+        subUiCallIndicator2Gaia(progRun, message);
         break;
 
     case GAIA_STAROT_COMMAND_IND:           // GAIA 返回过来的消息
@@ -1208,6 +1213,17 @@ void appUiPairingFailed(void)
     appUiPlayPrompt(PROMPT_PAIRING_FAILED);
 }
 
+
+void appUiNotifyHtpStateChange(void) {
+    DEBUG_LOG("appUiNotifyHtpStateChange %d", appHfpGetState());
+    if (appGaiaIsConnect()) {
+        MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
+        message->command = appHfpGetState();
+        MessageSend(appGetUiTask(), APP_UI_HFP_STATUS_CHANGE, message);
+    } else {
+        DEBUG_LOG("appUiNotifyHtpStateChange but gaia is not connect");
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///  盒子状态变化
@@ -2106,3 +2122,5 @@ void appUIClearPeerSnStatus(void) {
 }
 
 // endregion
+
+

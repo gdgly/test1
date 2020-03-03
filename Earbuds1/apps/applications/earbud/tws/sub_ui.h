@@ -21,6 +21,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_PSENSOR_INEAR          (2012)           // 入耳
 #define APP_PSENSOR_OUTEAR         (2013)           // 出耳机
 #define APP_CONNECTED_HOST         (2014)           // App延时连接主耳机
+#define APP_UI_HFP_STATUS_CHANGE    2015            // hfp -> ui 通知hfp状态发生变化
 
 #define APP_CALLIN_ACT             (2020)           // 拨号相关信息 拨入
 #define APP_CALLIN_INACT           (2021)           // 拨号相关信息 拨入断开
@@ -180,6 +181,8 @@ void appUiAvDisconnected(void);
 void appUiPairingComplete(void);
 /* Play pairing failed prompt */
 void appUiPairingFailed(void);
+/* hfp 通知ui，通话状态发生变化 */
+void appUiNotifyHtpStateChange(void);
 ///////////////////////////////////////////////////////////////////////////////
 ///  APOLLO
 ///////////////////////////////////////////////////////////////////////////////

@@ -552,49 +552,63 @@ uint8 starotGaiaTransGetAudioType(void) {
 
 void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
     if (NULL == message) return;
+    hfpState hstate = message->payload[0];
 
-    StarotAttr *head = NULL;
-    uint8 status = message->payload[0];
-
-    if ((CALL_IN_ACTIVE|CALL_OUT_ACTIVE) & status) {
-        if (CALL_IN_ACTIVE == status)
-            DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, Appending Attr: CALL IN");
-        else
+    if(HFP_STATE_CONNECTED_OUTGOING == hstate || HFP_STATE_CONNECTED_INCOMING == hstate) {
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, 0xfe, 0, NULL);
+        if (HFP_STATE_CONNECTED_OUTGOING == hstate)
             DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, Appending Attr: CALL OUT");
+        else
+            DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, Appending Attr: CALL IN");
 
-        StarotAttr *attr = PanicNull(attrMalloc(&head, 1));
-        attr->attr = 0X02;
-        attr->payload[0] = (CALL_IN_ACTIVE == status) ? 0X01 : 0x02;
-
+        StarotAttr *head = NULL;
+        { /// 拨入/拨出
+            const uint8 directAttr = 0X02;
+            StarotAttr *attr = PanicNull(attrMalloc(&head, 1));
+            attr->attr = directAttr;
+            attr->payload[0] = (HFP_STATE_CONNECTED_INCOMING == hstate) ? 0X01 : 0x02;
+        }
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, 0xfe, len, data);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
         attrFree(head, data);
 
         appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
-    }
-    else if (CALL_ACTIVE == status) {
-        DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_ACTIVE");
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ACTIVE, 0xfe, 0, NULL);
-    }
-    else if (CALL_INACTIVE == status) {
-        DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_INACTIVE");
-
-        int num = gaiaGetDropAudioSize();
-        StarotAttr *attr = PanicNull(attrMalloc(&head, 4));
-        attr->attr = 0X06;
-        attr->payload[0] = (uint8)((num >> 0) & 0X00FF);
-        attr->payload[1] = (uint8)((num >> 8) & 0X00FF);
-        attr->payload[2] = (uint8)((num >> 16) & 0X00FF);
-        attr->payload[3] = (uint8)((num >> 24) & 0X00FF);
-
+    } else if (HFP_STATE_CONNECTED_ACTIVE == hstate) {
+        DEBUG_LOG("HFP_STATE_CONNECTED_ACTIVE");
+        StarotAttr *head = NULL;
+        uint16 numberLen = 0;
+        const uint8* numberInfo = subGaiaGetCaller(&numberLen);
+        if (numberLen > 0){ /// 电话号码
+            const uint8 callerAttr = 0X01;
+            StarotAttr *attr = PanicNull(attrMalloc(&head, numberLen));
+            attr->attr = callerAttr;
+            memcpy(attr->payload, numberInfo, numberLen);
+        }
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_INACTIVE, 0xfe, len, data);
-
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ACTIVE, 0xfe, len, data);
         attrFree(head, data);
+    } else if (HFP_STATE_CONNECTED_IDLE == hstate) {
+        DEBUG_LOG("HFP_STATE_CONNECTED_IDLE");
+
+        StarotAttr *head = NULL;
+        { /// 丢失的字节数
+            const uint8 dismissAudioSize = 0X06;
+            int num = gaiaGetDropAudioSize();
+            StarotAttr *attr = PanicNull(attrMalloc(&head, 4));
+            attr->attr = dismissAudioSize;
+            attr->payload[0] = (uint8)((num >> 0) & 0X00FF);
+            attr->payload[1] = (uint8)((num >> 8) & 0X00FF);
+            attr->payload[2] = (uint8)((num >> 16) & 0X00FF);
+            attr->payload[3] = (uint8)((num >> 24) & 0X00FF);
+        }
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_INACTIVE, 0xfe, len, data);
+        attrFree(head, data);
+
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_END, 0xfe, len, data);
 
         appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
 
@@ -603,14 +617,7 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
             DEBUG_LOG("disable audio forward");
             disable_audio_forward(TRUE);
         }
-    }
-    else if ((CALL_IN_INACTIVE|CALL_OUT_INACTIVE) & status) {
-        if (CALL_IN_INACTIVE == status)
-            DEBUG_LOG("Call In GAIA_COMMAND_STAROT_CALL_SETUP_END");
-        else
-            DEBUG_LOG("Call Out GAIA_COMMAND_STAROT_CALL_SETUP_END");
-
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_END, 0xfe, 0, NULL);
+        subGaiaClearCaller();
     }
 }
 
@@ -626,6 +633,9 @@ static void gaiaSendCallNumber(GAIA_STAROT_IND_T* message) {
     StarotAttr *attr = PanicNull(attrMalloc(&head, message->payloadLen));
     attr->attr = 0X01;
     memcpy(attr->payload, message->payload, message->payloadLen);
+
+    /// 缓存电话号码
+    subGaiaSetCaller(message->payload, message->payloadLen);
 
     // send call number attribute
     uint8 *data = attrEncode(head, &len);
@@ -1501,4 +1511,42 @@ static void appGaiaHandlerNotifyCommitStatus(GAIA_STAROT_IND_T *message) {
 
 
 #endif
+
+
+// region task数据
+
+subGaiaTaskData  gSubGaiaTaskData;
+void subGaiaTaskInit(void) {
+    memset(&gSubGaiaTaskData, 0X00, sizeof(gSubGaiaTaskData));
+    starotGaiaInit();
+}
+
+subGaiaTaskData* subGaiaGetTaskData(void) {
+    return &gSubGaiaTaskData;
+}
+
+// endregion
+
+// region 联系人信息
+
+const uint8* subGaiaGetCaller(uint16* len) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    *len = task->callerLen;
+    return task->callerNumber;
+}
+
+void subGaiaClearCaller(void) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    task->callerLen = 0;
+    memset(task->callerNumber, 0X00, sizeof(task->callerNumber));
+}
+
+void subGaiaSetCaller(uint8* data, uint16 len) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    uint16 s = (len > sizeof(task->callerNumber) ? sizeof(task->callerNumber) : len);
+    task->callerLen = s;
+    memcpy(task->callerNumber, data, s);
+}
+
+// endregion
 

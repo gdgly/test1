@@ -334,7 +334,11 @@ static void appHfpEnterConnectedIdle(void)
 #ifdef INCLUDE_AV
     /* Resume AV streaming */
     appAvStreamingResume(AV_SUSPEND_REASON_HFP);
-#endif    
+#endif
+
+#ifdef CONFIG_STAROT
+    appUiNotifyHtpStateChange();
+#endif
 }
     
 /*! \brief Exit 'connected idle' state
@@ -364,6 +368,9 @@ static void appHfpEnterConnectedOutgoing(void)
 #ifdef CONFIG_STAROT
     appUiHfpCallOutcomingActive();
 #endif
+#ifdef CONFIG_STAROT
+    appUiNotifyHtpStateChange();
+#endif
 }
 
 /*! \brief Exit 'connected outgoing' state
@@ -392,6 +399,9 @@ static void appHfpEnterConnectedIncoming(void)
 
     /* Start incoming call indication */
     appUiHfpCallIncomingActive();
+#ifdef CONFIG_STAROT
+    appUiNotifyHtpStateChange();
+#endif
 }
 
 /*! \brief Exit 'connected incoming' state
@@ -438,6 +448,10 @@ static void appHfpEnterConnectedActive(void)
 
     /* Show SCO status on LEDs */
     appUiHfpCallActive();
+
+#ifdef CONFIG_STAROT
+    appUiNotifyHtpStateChange();
+#endif
 }
 
 /*! \brief Exit 'connected active' state

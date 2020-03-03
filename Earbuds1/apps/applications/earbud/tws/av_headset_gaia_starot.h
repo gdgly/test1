@@ -5,6 +5,26 @@
 #include <gaia.h>
 #include <../av_headset.h>
 
+// region task数据
+
+typedef struct {
+    uint8 callerNumber[32];
+    uint16 callerLen;
+} subGaiaTaskData;
+
+void subGaiaTaskInit(void);
+subGaiaTaskData* subGaiaGetTaskData(void);
+// endregion
+
+// region 联系人信息
+
+const uint8* subGaiaGetCaller(uint16* len);
+void subGaiaClearCaller(void);
+void subGaiaSetCaller(uint8* data, uint16 len);
+
+// endregion
+
+
 #define CALL_IN_ACTIVE          (1 << 0)
 #define CALL_OUT_ACTIVE         (1 << 1)
 #define CALL_ACTIVE             (1 << 2)

@@ -67,7 +67,7 @@ void appGaiaInit(void) {
     appGaiaClientRegister(appGetSmTask());
 
     GaiaInit(appGetGaiaTask(), 1);
-    starotGaiaInit();
+    subGaiaTaskInit();
 }
 
 

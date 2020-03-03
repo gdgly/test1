@@ -68,17 +68,17 @@ struct appDeviceAttributes;
 /*! \brief Application HFP state machine states */
 typedef enum
 {
-    HFP_STATE_NULL,                         /*!< Initial state */
-    HFP_STATE_INITIALISING_HFP,             /*!< Initialising HFP instance */
-    HFP_STATE_DISCONNECTED,                 /*!< No HFP connection */
-    HFP_STATE_CONNECTING_LOCAL,             /*!< Locally initiated connection in progress */
-    HFP_STATE_CONNECTING_REMOTE,            /*!< Remotely initiated connection is progress */
+    HFP_STATE_NULL,                         /*!< 0 Initial state */
+    HFP_STATE_INITIALISING_HFP,             /*!< 1 Initialising HFP instance */
+    HFP_STATE_DISCONNECTED,                 /*!< 2 No HFP connection */
+    HFP_STATE_CONNECTING_LOCAL,             /*!< 3 Locally initiated connection in progress */
+    HFP_STATE_CONNECTING_REMOTE,            /*!< 4 Remotely initiated connection is progress */
     /* HFP_STATE_CONNECTD (Parent state) */
-        HFP_STATE_CONNECTED_IDLE,           /*!< HFP connected, no call in progress */
-        HFP_STATE_CONNECTED_OUTGOING,       /*!< HFP connected, outgoing call in progress */
-        HFP_STATE_CONNECTED_INCOMING,       /*!< HFP connected, incoming call in progress */
-        HFP_STATE_CONNECTED_ACTIVE,         /*!< HFP connected, active call in progress */
-    HFP_STATE_DISCONNECTING					/*!< HFP disconnecting in progress */
+        HFP_STATE_CONNECTED_IDLE,           /*!< 5 HFP connected, no call in progress */
+        HFP_STATE_CONNECTED_OUTGOING,       /*!< 6 HFP connected, outgoing call in progress */
+        HFP_STATE_CONNECTED_INCOMING,       /*!< 7 HFP connected, incoming call in progress */
+        HFP_STATE_CONNECTED_ACTIVE,         /*!< 8 HFP connected, active call in progress */
+    HFP_STATE_DISCONNECTING					/*!< 9 HFP disconnecting in progress */
 } hfpState;
 
 #define HFP_CONNECT_NO_ERROR_UI (1 << 0)    /*!< Don't indicate connection error */
