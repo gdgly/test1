@@ -116,6 +116,7 @@ enum {
     GAIA_COMMAND_STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB = 0X5508,               // App设置佩戴检测是否使能
     GAIA_COMMAND_STAROT_BASE_INFO_GET_ADORN_CHEAK_ENB = 0X5509,               // App获取佩戴检测是否使能
     GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT = 0X550A,                 // 设备主动断开连接
+    GAIA_COMMAND_STAROT_BASE_INFO_GET_SN = 0X550B,                            // 获取SN信息
 };
 /////////////////////////////助手控制////////////////////////////////
 enum {

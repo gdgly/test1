@@ -22,12 +22,14 @@ static const PeerUnityParseCenter peerUnityParseCenter[] = {
                 AVRCP_PEER_CMD_UPGRADE_CANCEL_NOTIFY_COMMIT_STATUS, 0,
                 &appPeerSigTxUpgradeCancelNotifyCommitStatusParse, &appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm
         },
-
         {
                 AVRCP_PEER_CMD_SYNC_VERSION, sizeof(SyncVersionReq),
                 &appPeerSigTxSyncVersionParse, &appPeerSigTxSyncVersionConfirm
         },
-
+        {
+                AVRCP_PEER_CMD_SYNC_SN, sizeof(SyncSnReq),
+                &appPeerSigTxSyncSNParse, &appPeerSigTxSyncSNConfirm
+        },
         /// 在此之前添加新的数据
         {0XFFFF, 0X00, NULL, NULL}
 };
@@ -707,5 +709,42 @@ void appPeerSigTxSyncVersionConfirm(Task task, peerSigStatus status) {
         appPeerVersionSyncStatusClean(PeerVersionSyncStatusSent);
     }
 }
+
+// endregion
+
+// region 同步SN到对端耳机
+
+void appPeerSigTxSyncSNReq(Task task) {
+    DEBUG_LOG("appPeerSigTxSyncSNReq");
+    if (ParamUsingSingle()) {
+        return;
+    } else {
+        SyncSnReq syncSnReq;
+        memcpy(syncSnReq.earbudsSN, gFixParam.sn, DEV_SN_LEN);
+        AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *req =
+                PEER_MALLOC_UNITY_REQ(AVRCP_PEER_CMD_SYNC_SN, SyncSnReq, (&syncSnReq));
+        req->client_task = task;
+        PeerSendUnityReq(req);
+    }
+}
+
+bool appPeerSigTxSyncSNParse(uint8* payload) {
+    DEBUG_LOG("appPeerSigTxSyncSNParse");
+    SyncSnReq* syncSnReq = (SyncSnReq*)payload;
+    appUISetPeerSnDetail(syncSnReq->earbudsSN, DEV_SN_LEN);
+    appUISetPeerSnStatus(PEER_SN_SYNC_RECV);
+    return TRUE;
+}
+
+void appPeerSigTxSyncSNConfirm(Task task, peerSigStatus status) {
+    UNUSED(task);
+    DEBUG_LOG("appPeerSigTxSyncSNConfirm status is :%d", status);
+    if (peerSigStatusSuccess == status) {
+        appUISetPeerSnStatus(PEER_SN_SYNC_SENT);
+    } else {
+        appUIUnSetPeerSnStatus(PEER_SN_SYNC_SENT);
+    }
+}
+
 
 // endregion

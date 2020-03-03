@@ -35,6 +35,10 @@ static void appSmNotifyUpgradeStarted(void);
 static void appSmStartDfuTimer(void);
 #endif /* INCLUDE_DFU */
 
+#ifdef CONFIG_STAROT
+#include "tws/peer.h"
+#endif
+
 /*****************************************************************************
  * SM utility functions
  *****************************************************************************/
@@ -1319,9 +1323,10 @@ static void appSmHandleConnRulesNotifyAppPosition(void) {
     appConnRulesSetRuleComplete(CONN_RULES_NOTIFY_APP_POSITION);
 }
 
-static void appSmHandleConnRulesClearPeerVersionCache(void) {
+static void appSmHandleConnRulesClearPeerMemoryCache(void) {
     appPeerVersionClearCache();
-    appConnRulesSetRuleComplete(CONN_RULES_CLEAR_PEER_VERSION_CACHE);
+    appUIClearPeerSnStatus();
+    appConnRulesSetRuleComplete(CONN_RULES_CLEAR_PEER_MEMORY_CACHE);
 }
 
 static void appSmHandleConnRulesEnterDfu(void)
@@ -2302,9 +2307,13 @@ static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
         appPeerSigTxSyncVersionReq(appGetUiTask());
         appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
     }
-#endif
 
-#ifdef CONFIG_STAROT
+    if (appInitCompleted() && status->peer_sync_complete && !ParamUsingSingle() && !appUIGetPeerSnStatusIsHaveSent()) {
+        DEBUG_LOG("call appPeerSigTxSyncSNReq for send sn to peer");
+        appPeerSigTxSyncSNReq(appGetUiTask());
+        appUISetPeerSnStatus(PEER_SN_SYNC_SENT);
+    }
+
     if(gBtAddrParam.ble_pair_sync) {
         DEBUG_LOG("Sync pair from StARTUP");
         appPeerSigTxSyncPair(appGetUiTask());
@@ -2494,8 +2503,8 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case CONN_RULES_NOTIFY_APP_POSITION:
             appSmHandleConnRulesNotifyAppPosition();
             break;
-        case CONN_RULES_CLEAR_PEER_VERSION_CACHE:
-            appSmHandleConnRulesClearPeerVersionCache();
+        case CONN_RULES_CLEAR_PEER_MEMORY_CACHE:
+            appSmHandleConnRulesClearPeerMemoryCache();
             break;
         case CONN_RULES_ENTER_DFU:
             appSmHandleConnRulesEnterDfu();

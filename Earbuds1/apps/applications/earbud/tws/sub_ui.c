@@ -2015,6 +2015,8 @@ void appUICancelAllUpgradeTime(void) {
     MessageCancelAll(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE);
 }
 
+
+
 static void appUIUpgradeNotifyCommitStatusInit(UI_APP_UPGRADE_COMMIT_STATUS* message) {
     MessageSendLater(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE, NULL, D_SEC(5 * 60));
     appUIUpgradeNotifyCommitStatusDo(message);
@@ -2059,3 +2061,41 @@ void testSiri(void) {
 }
 
 #endif
+
+// region SN同步
+
+void appUISetPeerSnDetail(uint8* peerSn, uint8 len) {
+    DEBUG_LOG("appUISetPeerSnDetail");
+    memcpy(gProgRunInfo.peerSn, peerSn, len > DEV_SN_LEN ? DEV_SN_LEN : len);
+}
+
+void appUISetPeerSnStatus(uint8 status) {
+    DEBUG_LOG("appUISetPeerSnStatus before %d, status : %d", gProgRunInfo.peerSnSyncStatus, status);
+    gProgRunInfo.peerSnSyncStatus |= status;
+    DEBUG_LOG("appUISetPeerSnStatus after %d, status : %d", gProgRunInfo.peerSnSyncStatus, status);
+}
+
+bool appUIGetPeerSnStatusIsComplete(void) {
+    return gProgRunInfo.peerSnSyncStatus == PEER_SN_SYNC_COMPLETE;
+}
+
+void appUIUnSetPeerSnStatus(uint8 status) {
+    DEBUG_LOG("appUIUnSetPeerSnStatus before is :%02X", gProgRunInfo.peerSnSyncStatus);
+    gProgRunInfo.peerSnSyncStatus ^= status;
+    DEBUG_LOG("appUIUnSetPeerSnStatus after is :%02X", gProgRunInfo.peerSnSyncStatus);
+}
+
+bool appUIGetPeerSnStatusIsHaveSent(void) {
+    return (gProgRunInfo.peerSnSyncStatus & PEER_SN_SYNC_SENT) > 0;
+}
+
+const uint8 *appUIGetPeerSnDetail(void) {
+    return gProgRunInfo.peerSn;
+}
+
+void appUIClearPeerSnStatus(void) {
+    DEBUG_LOG("appUIClearPeerSnStatus");
+    gProgRunInfo.peerSnSyncStatus = 0;
+}
+
+// endregion

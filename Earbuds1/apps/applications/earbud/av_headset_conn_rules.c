@@ -217,7 +217,7 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_PEER_LINK_LOSS,             rulePeerSync,               CONN_RULES_SEND_PEER_SYNC),
 #ifdef CONFIG_STAROT
     RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleNotifyStatus,           CONN_RULES_NOTIFY_APP_POSITION),
-    RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                 CONN_RULES_CLEAR_PEER_VERSION_CACHE),
+    RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                 CONN_RULES_CLEAR_PEER_MEMORY_CACHE),
 #endif
     /*! \} */
 

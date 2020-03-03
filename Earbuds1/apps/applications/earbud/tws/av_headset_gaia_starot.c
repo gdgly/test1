@@ -45,6 +45,7 @@ static void gaiaAppSetWearParameter(GAIA_STAROT_IND_T *mess);
 static void gaiaAppGetWearParameter(GAIA_STAROT_IND_T *message);
 static void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message);//上报电量-位置-连接状态信息
 static void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message);//App主动获取电量-位置-连接状态信息
+static void gaiaAppGetDeviceSN(GAIA_STAROT_IND_T *message);//获取设备的SN信息
 
 static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App请求录音
 static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type);//ui上报gaia助手唤醒消息
@@ -285,6 +286,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_ADORN_CHEAK_ENB:
             gaiaAppGetWearParameter(message);
+            break;
+        case GAIA_COMMAND_STAROT_BASE_INFO_GET_SN:
+            gaiaAppGetDeviceSN(message);
             break;
     }
     /// app控制耳机，发送相应蓝牙指令
@@ -804,6 +808,46 @@ void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message) {
 void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message) {
     MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+//获取设备的SN信息
+void gaiaAppGetDeviceSN(GAIA_STAROT_IND_T *message) {
+    DEBUG_LOG("gaiaAppGetDeviceSN");
+    StarotAttr *head = NULL;
+    { /// left
+        const uint8 leftSNAttr = 0X01;
+        StarotAttr *attr = attrMalloc(&head, DEV_SN_LEN);
+        attr->attr = leftSNAttr;
+        if (appConfigIsLeft()) {
+            memcpy(attr->payload, gFixParam.sn, DEV_SN_LEN);
+        } else {
+            memcpy(attr->payload, appUIGetPeerSnDetail(), DEV_SN_LEN);
+        }
+    }
+    { /// right
+        const uint8 rightSNAttr = 0X02;
+        StarotAttr *attr = attrMalloc(&head, DEV_SN_LEN);
+        attr->attr = rightSNAttr;
+        if (appConfigIsLeft()) {
+            memcpy(attr->payload, appUIGetPeerSnDetail(), DEV_SN_LEN);
+        } else {
+            memcpy(attr->payload, gFixParam.sn, DEV_SN_LEN);
+        }
+    }
+    { /// case
+        const uint8 caseSNAttr = 0X03;
+        StarotAttr *attr = attrMalloc(&head, DEV_SN_LEN);
+        attr->attr = caseSNAttr;
+        memcpy(attr->payload, gUserParam.caseSn, DEV_SN_LEN);
+    }
+    if (NULL != head) {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
+        attrFree(head, data);
+    } else {
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_INVALID_PARAMETER, 0, NULL);
+    }
 }
 
 // App获取设备的耳机的双击配置信息

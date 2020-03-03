@@ -146,6 +146,7 @@ enum {
     AVRCP_PEER_CMD_UPGRADE_CANCEL_NOTIFY_COMMIT_STATUS,
 
     AVRCP_PEER_CMD_SYNC_VERSION,
+    AVRCP_PEER_CMD_SYNC_SN,
     /// 在此次添加
     AVRCP_PEER_CMD_STAROT_END = 0X20,
 };
@@ -197,6 +198,25 @@ typedef struct {
 void appPeerSigTxSyncVersionReq(Task task);
 bool appPeerSigTxSyncVersionParse(uint8* payload);
 void appPeerSigTxSyncVersionConfirm(Task task, peerSigStatus status);
+
+// endregion
+
+// region 同步SN到对端耳机
+
+enum {
+    PEER_SN_SYNC_SENT = 1 << 0,
+    PEER_SN_SYNC_RECV = 1 << 1,
+    PEER_SN_SYNC_COMPLETE = PEER_SN_SYNC_SENT | PEER_SN_SYNC_RECV,
+};
+
+typedef struct {
+    uint8 earbudsSN[DEV_SN_LEN];
+} SyncSnReq;
+
+void appPeerSigTxSyncSNReq(Task task);
+bool appPeerSigTxSyncSNParse(uint8* payload);
+void appPeerSigTxSyncSNConfirm(Task task, peerSigStatus status);
+
 
 // endregion
 

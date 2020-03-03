@@ -150,6 +150,8 @@ typedef struct tagPROGRUNINFO {
     uint8          peerVerSyncStatus;               // 对方耳机版本信息同步状态
     bool           upgradeNeedReboot;               // 升级需要重启
     bool           canContinueUpgrade;              // 是否持续进入升级状态
+    uint8          peerSnSyncStatus;                // SN同步状态
+    uint8          peerSn[DEV_SN_LEN];              // 另一只耳机SN信息
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;
 void appSubUIInit(void);
@@ -257,5 +259,17 @@ void appUIConvertTempVersionToMemory(void);
 bool appUICanContinueUpgrade(void);
 /// 取消发送升级状态的定时器
 void appUICancelAllUpgradeTime(void);
+
+// region SN同步
+
+void appUISetPeerSnDetail(uint8* peerSn, uint8 len);
+void appUIClearPeerSnStatus(void);
+void appUISetPeerSnStatus(uint8 status);
+void appUIUnSetPeerSnStatus(uint8 status);
+bool appUIGetPeerSnStatusIsComplete(void);
+bool appUIGetPeerSnStatusIsHaveSent(void);
+const uint8* appUIGetPeerSnDetail(void);
+
+// endregion
 
 #endif // SUB_UI_H
