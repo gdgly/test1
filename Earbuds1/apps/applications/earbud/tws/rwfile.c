@@ -40,7 +40,6 @@ FILE_INDEX FindFileIndex(char * file_name)
     FILE_INDEX file_index;
 
     file_index = FileFind(FILE_ROOT, file_name, (uint16)strlen(file_name));
-//    DEBUG_LOG("FileFind ret=%x\n", file_index);
     return file_index;
 }
 
@@ -71,7 +70,8 @@ FILE_INDEX FileOpen(char * file_name)
 static int writeFileSink(Sink sink, void *buf, int len)
 {
     uint16 offset;
-    uint8* map_address;
+    uint8* map_address = NULL;
+
     int lensink = SinkSlack(sink);
 
     if(len > lensink){
@@ -137,6 +137,47 @@ int FileClose(void)
     return FileSystemUnmount("/rwfs");
 }
 
+/*
+ *  写入文件是否下发成功的标记的文件
+ */
+
+uint8 FileWriteOk(uint8 value)
+{
+    FILE_INDEX index;
+    uint8 buffer[1];
+    uint8 ret;
+
+    buffer[0] = value;
+    index = FileOpen(FILE_NAME_OK);
+    ret = FileWrite(index, buffer, 1);
+
+    return ret;
+}
+/*
+ * 读取文件是否下发成功的标记的文件
+ */
+uint8 FileReadOk(void)
+{
+    FILE_INDEX file_index;
+    Source fsource;
+    uint8* map_address;
+    uint16 rLen;
+    uint8 ret;
+
+    file_index=FileFind(FILE_ROOT, FILE_NAME_OK, (uint16)strlen(FILE_NAME_OK));
+    DEBUG_LOG("FileFind-r ret=%d\n", file_index);
+    if(file_index == FILE_NONE)
+        return 0;
+    fsource = StreamFileSource(file_index);
+    map_address = (uint8 *)SourceMap(fsource);
+    ret = map_address[0];
+    rLen = SourceSize(fsource);
+    DEBUG_LOG("File has %d bytes\n", rLen);
+    SourceDrop(fsource,rLen);
+    SourceClose(fsource);
+
+    return ret;
+}
 /* 测试使用 */
 static void DebugData(uint8 *data,uint8 len)
 {
