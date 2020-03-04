@@ -336,5 +336,8 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 #define MAKE_OBJECT(TYPE) TYPE *message = (TYPE*) PanicUnlessMalloc(sizeof(TYPE));
 #define MAKE_OBJECT_LEN(TYPE, LEN) TYPE *message = (TYPE*) PanicUnlessMalloc(sizeof(TYPE) + LEN);
 
+/// FFFF 大约40s (300 / 40 = 7.5) + 自身超时 10s左右
+#define staortConfigDefaultPageTimeout() ((uint32)(((uint32)0XFFFF) * 7))
+
 
 #endif // PUBLIC_H
