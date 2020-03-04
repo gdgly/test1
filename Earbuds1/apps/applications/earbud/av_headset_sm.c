@@ -637,7 +637,6 @@ static void appEnterInEar(void)
 void appSetState(appState new_state)
 {
     appState previous_state = appGetSm()->state;
-
     DEBUG_LOGF("appSetState, state 0x%02x to 0x%02x", previous_state, new_state);
 
     /* Handle state exit functions */

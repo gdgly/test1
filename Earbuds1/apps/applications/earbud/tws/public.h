@@ -333,5 +333,8 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 #undef appConfigIdleTimeoutMs()
 #define appConfigIdleTimeoutMs()   D_SEC(0)
 
+#define MAKE_OBJECT(TYPE) TYPE *message = (TYPE*) PanicUnlessMalloc(sizeof(TYPE));
+#define MAKE_OBJECT_LEN(TYPE, LEN) TYPE *message = (TYPE*) PanicUnlessMalloc(sizeof(TYPE) + LEN);
+
 
 #endif // PUBLIC_H

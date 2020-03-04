@@ -10,6 +10,7 @@
 typedef struct {
     uint8 callerNumber[32];
     uint16 callerLen;
+    uint16 connectLock; // 0:无锁 1:加锁
 } subGaiaTaskData;
 
 void subGaiaTaskInit(void);
@@ -21,6 +22,21 @@ subGaiaTaskData* subGaiaGetTaskData(void);
 const uint8* subGaiaGetCaller(uint16* len);
 void subGaiaClearCaller(void);
 void subGaiaSetCaller(uint8* data, uint16 len);
+
+// endregion
+
+// region 使用conditionally发送消息
+
+///成功发送校验码之后，设置为unlock状态。
+enum {
+    SUB_GAIA_CONNECT_UNLOCK = 0,
+    SUB_GAIA_CONNECT_LOCK = 1
+};
+
+void subGaiaSetConnectUnlock(void);
+void subGaiaClearConnectUnlock(void);
+uint16* subGaiaGetConnectLock(void);
+bool subGaiaIsConnectLock(void);
 
 // endregion
 
@@ -318,5 +334,13 @@ typedef struct{
     uint8 mask[5];
 }GAIA_STAROT_DATA_ACK_T;
 
+typedef struct {
+    uint16 status;
+} STAROT_DIALOG_STATUS_T ;
+
+typedef struct {
+    uint16 len;
+    uint8 number[2];
+} STAROT_DIALOG_CALL_NUMBER_T;
 
 #endif // AV_HEADSET_GAIA_STAROT_H

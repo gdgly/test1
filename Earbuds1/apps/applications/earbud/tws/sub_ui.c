@@ -286,15 +286,13 @@ void appSubUISetMicbias(int set)
 /////////////////////////////////////////////////////////////////////////
 static int16 subUiCallNumber2Gaia(ProgRIPtr progRun, const CALL_NUMBER_T* msg)
 {
-    if ((!progRun->gaiaStat) || (!msg)) return -1;
-
-    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
-
-    message->command = STAROT_DIALOG_CALL_NUMBER;
-    memcpy(message->payload, msg->number, msg->length);
-    message->payloadLen = msg->length;
-
-    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+    UNUSED(progRun);
+    MAKE_OBJECT_LEN(STAROT_DIALOG_CALL_NUMBER_T, msg->length);
+    message->len = msg->length;
+    memcpy(message->number, msg->number, msg->length);
+    MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER);
+    DEBUG_LOG("call subUiCallNumber2Gaia STAROT_DIALOG_CALL_NUMBER send conditionally");
+    MessageSendConditionally(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER, message, subGaiaGetConnectLock());
 
     DEBUG_LOG("subUiCallNumber2Gaia Call Number: ");
     int i = 0;
@@ -306,15 +304,22 @@ static int16 subUiCallNumber2Gaia(ProgRIPtr progRun, const CALL_NUMBER_T* msg)
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg)
 {
-    if ((!progRun->gaiaStat) || (!msg)) return -1;
-
-    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
-
-    message->command    = STAROT_DIALOG_STATUS;
-    message->payload[0] = msg->command;
-    message->payloadLen = 1;
-
-    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+    /// 1.如果电话接通时，没有和APP成功建立连接，缓存电话抵达、拨号等属性消息
+    /// 2.如果电话挂断，清理缓存的通话相关属性消息
+    if (HFP_STATE_CONNECTED_IDLE != msg->command) {
+        MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
+        message->status = msg->command;
+        DEBUG_LOG("call subUiCallIndicator2Gaia STAROT_DIALOG_STATUS send conditionally");
+        MessageSendConditionally(appGetGaiaTask(), STAROT_DIALOG_STATUS, message, subGaiaGetConnectLock());
+    } else {
+        MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER);
+        MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_STATUS);
+        if (!subGaiaIsConnectLock()) {
+            MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
+            message->status = msg->command;
+            MessageSend(appGetGaiaTask(), STAROT_DIALOG_STATUS, message);
+        }
+    }
 
     DEBUG_LOG("subUiCallIndicator2Gaia Status=0x%x, call indicator: 0x%02x",
               progRun->dial_stat, msg->command);
@@ -885,7 +890,7 @@ void appSubUIInit(void)
 
     // 运行到这个地方时外设都为正常打开状态
 #ifdef ENABLE_APOLLO
-    //apollo_sleep();
+//    apollo_sleep();
 #endif
 
 #ifdef TWS_DEBUG
@@ -1216,13 +1221,9 @@ void appUiPairingFailed(void)
 
 void appUiNotifyHtpStateChange(void) {
     DEBUG_LOG("appUiNotifyHtpStateChange %d", appHfpGetState());
-    if (appGaiaIsConnect()) {
-        MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
-        message->command = appHfpGetState();
-        MessageSend(appGetUiTask(), APP_UI_HFP_STATUS_CHANGE, message);
-    } else {
-        DEBUG_LOG("appUiNotifyHtpStateChange but gaia is not connect");
-    }
+    MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
+    message->command = appHfpGetState();
+    MessageSend(appGetUiTask(), APP_UI_HFP_STATUS_CHANGE, message);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
