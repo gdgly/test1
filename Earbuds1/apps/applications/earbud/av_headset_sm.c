@@ -2611,9 +2611,7 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             break;
 
         case APP_UPGRADE_COMPLETED:
-#ifndef CONFIG_STAROT
             appSmHandleDfuEnded(FALSE);
-#endif
             break;
 #endif /* INCLUDE_DFU */
 
