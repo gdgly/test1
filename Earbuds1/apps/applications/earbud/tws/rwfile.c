@@ -89,8 +89,8 @@ static int writeFileSink(Sink sink, void *buf, int len)
     memcpy(map_address+offset, buf, len);
 
     /* Flush the data out to the uart */
-    if(!(SinkFlush(sink, len)))
-        return 1;
+    while(!(SinkFlush(sink, len)));
+//        return 1;
 
     return 0;
 }
@@ -103,9 +103,7 @@ int FileWrite(FILE_INDEX findex, uint8 *buffer, int length)
     Sink fsink;
 
     fsink = StreamFileSink(findex);
-    while(writeFileSink(fsink, buffer, length))
-    {
-    }
+    writeFileSink(fsink, buffer, length);
     SinkClose(fsink);
 
     return length;
