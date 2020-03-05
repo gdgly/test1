@@ -71,10 +71,10 @@ static int writeFileSink(Sink sink, void *buf, int len)
 {
     uint16 offset;
     uint8* map_address = NULL;
-
     int lensink = SinkSlack(sink);
 
-    if(len > lensink){
+    if (len > lensink)
+    {
         DEBUG_LOG("malloc falied\n");
         return 0;
     }
@@ -89,8 +89,12 @@ static int writeFileSink(Sink sink, void *buf, int len)
     memcpy(map_address+offset, buf, len);
 
     /* Flush the data out to the uart */
-    while(!(SinkFlush(sink, len)));
-//        return 1;
+    SinkFlushBlocking(sink, len);
+    if (0)
+    {
+        if (!(SinkFlush(sink, len)))
+            return 1;
+    }
 
     return 0;
 }
