@@ -13,6 +13,18 @@
    2、如何去掉手机的第一次同步音量
 
 
+20200227
+ 板卡生产功耗问题,以下为刚生产的析卡
+ 1、单耳模式， 解决左右耳机相互查找问题
+ 2、耳机在出盒状态(并会打开接近光),没有连接过手机会（appConfigAutoHandsetPairingTimeout）连接失败
+    我们可以在手机配对
+
+
+20200225
+ appConfigAutoPeerPairingTimeout 设定耳机配对时间。 默认为0会一直查找直到成功，设置100后会在
+ 100秒后停止，但会再次启动查找，因此没有停下来。
+   1、如果需要停止需要修改appSmHandlePairingPeerPairConfirm -> appSetState(APP_STATE_STARTUP); 去掉
+   2、问题如果去掉了这个配对，那么什么时候再启动配对呢？
 
 
 20200224

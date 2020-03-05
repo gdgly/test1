@@ -91,10 +91,15 @@ int appChangeCVCProcessMode(void);
   #define UartPuts(s)            \
     do{UartTxData((uint8*)(s), strlen((char*)(s))); UartTxData((uint8*)"\r\n", 2); }while(0)
   #define UartPuts1(s,d)         \
-    do{char buf[16];sprintf(buf,"%d\r\n",(d));UartTxData((uint8*)(s), strlen((char*)(s))); UartTxData((uint8*)buf,strlen(buf)); }while(0)
+    do{char buf[16];sprintf(buf,"%d\r\n",(d));UartTxData((uint8*)(s), strlen((char*)(s))); \
+    UartTxData((uint8*)buf,strlen(buf)); }while(0)
+  #define UartPuts2(s,d,d2)         \
+    do{char buf[24];sprintf(buf,"%d  %d\r\n",(d),(d2));UartTxData((uint8*)(s), strlen((char*)(s))); \
+    UartTxData((uint8*)buf,strlen(buf)); }while(0)
 #else
   #define UartPuts(...)
   #define UartPuts1(...)
+  #define UartPuts2(...)
 #endif
 
 //==============================================================================================
