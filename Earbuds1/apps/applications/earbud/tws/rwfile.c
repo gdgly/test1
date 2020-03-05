@@ -1,6 +1,9 @@
 /*
  * 描述：文件的打开、读、写、关闭、删除
  * 时间：2020年2月26日
+ * 修改记录:
+ * 2020年3月5日10:37:14
+ *  修改 SinkFlush为SinkFlushBlocking
 */
 #include "rwfile.h"
 
@@ -46,6 +49,7 @@ FILE_INDEX FindFileIndex(char * file_name)
 /*
  * 打开文件
  * file_name:文件名字，必须是/rwfs/目录下的
+ * 如果文件存在就先删除再创建。
  */
 FILE_INDEX FileOpen(char * file_name)
 {
@@ -89,14 +93,10 @@ static int writeFileSink(Sink sink, void *buf, int len)
     memcpy(map_address+offset, buf, len);
 
     /* Flush the data out to the uart */
-    SinkFlushBlocking(sink, len);
-    if (0)
-    {
-        if (!(SinkFlush(sink, len)))
-            return 1;
-    }
+    if (!SinkFlushBlocking(sink, len))
+        return 0;
 
-    return 0;
+    return len;
 }
 /*
  * 写文件
@@ -105,12 +105,13 @@ static int writeFileSink(Sink sink, void *buf, int len)
 int FileWrite(FILE_INDEX findex, uint8 *buffer, int length)
 {
     Sink fsink;
+    int ret = 0;
 
     fsink = StreamFileSink(findex);
-    writeFileSink(fsink, buffer, length);
+    ret = writeFileSink(fsink, buffer, length);
     SinkClose(fsink);
 
-    return length;
+    return ret;
 }
 
 /*

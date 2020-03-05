@@ -51,7 +51,7 @@ static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App
 static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type);//ui上报gaia助手唤醒消息
 static void gaiaAssistantAudioAppDev(GAIA_STAROT_IND_T *message);//App播放录音
 static void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message);//接受设备传过来的停止信息
-static void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message);//升级固件
+static int gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message);//升级固件
 
 static void gaiaControlCallDialog(GAIA_STAROT_IND_T *mess);
 
@@ -153,7 +153,12 @@ bool starotGaiaHandleData(GAIA_STAROT_IND_T *message)
     message_data->flag      = (message->payload[1]) & 0X03;
     memcpy(message_data->data, &message->payload[2], message_data->data_length);
 
-    gaiaDevUpdateFirmware(message_data);
+    if (gaiaDevUpdateFirmware(message_data) < 0)
+    {
+        DEBUG_LOG("error");
+        return FALSE;
+    }
+
 
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
@@ -1021,29 +1026,30 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
 /*
  * 接收APP设备发送过来的升级数据包，保持为文件即可，以备后用，
  * 校验或者发送给盒子
+ * 失败：返回负值
 */
-void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
+int gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 {
-    static int length = 0;
-
     if (message->flag == 0X00) /* 开始一次数据传输过程 */
     {
         gProgRunInfo.check_sum = 0;
         /* 打开文件 */
         if (FileOpen(FILE_NAME) != 0)
         {
-            length = FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length);
+            if (FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length) == 0)
+                return -1;
             for(uint16 i = 0; i < message->data_length; i++)
             {
                 gProgRunInfo.check_sum += message->data[i];
             }
         }
         else
-            return;
+            return -1;
     }
     else if (message->flag == 0X03) /* 数据发送过程中 */
     {
-        length += FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length);
+        if (FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length) == 0)
+            return -1;
         for (uint16 i = 0; i < message->data_length; i++)
         {
             gProgRunInfo.check_sum += message->data[i];
@@ -1051,19 +1057,21 @@ void gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
     }
     else if (message->flag == 0X02) /* 结束一次数据传输过程 */
     {
-        length += FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length);
+        if (FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length) == 0)
+            return -1;
         for (uint16 i = 0; i < message->data_length; i++)
         {
             gProgRunInfo.check_sum += message->data[i];
         }
-        DEBUG_LOG("fsize = %u ,check_sum = %u",length,gProgRunInfo.check_sum);
+        DEBUG_LOG("check_sum = %u",gProgRunInfo.check_sum);
         FileClose();
     }
     else /* flag 信息不支持 */
     {
         DEBUG_LOG("flag error = %d",message->flag);
-        return;
+        return -1;
     }
+    return 0;
 }
 
 // APP中拨打电话
