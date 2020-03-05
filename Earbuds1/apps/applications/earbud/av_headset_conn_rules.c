@@ -3395,9 +3395,20 @@ ruleAction ruleClearHandsetPair(void) {
 
 static ruleAction ruleDisconnectGaia(void)
 {
+    if (appSmIsInCase()) {
+        RULE_LOG("ruleDisconnectGaia, state is appSmIsInCase == true, so ignore");
+        return RULE_ACTION_IGNORE;
+    }
+
+    if (APP_STATE_STARTUP == appGetState()) {
+        RULE_LOG("ruleDisconnectGaia, state is APP_STATE_STARTUP, ignore");
+        return RULE_ACTION_IGNORE;
+    }
     if (appGaiaIsConnect() && handsetDisconnectAllowed()) {
+        RULE_LOG("ruleDisconnectGaia appGaiaIsConnect() && handsetDisconnectAllowed() is true, so run");
         return RULE_ACTION_RUN;
     } else {
+        RULE_LOG("ruleDisconnectGaia default ignore");
         return RULE_ACTION_IGNORE;
     }
 }

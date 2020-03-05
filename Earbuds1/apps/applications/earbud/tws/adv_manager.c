@@ -170,7 +170,8 @@ void appBleSelectFeture(void) {
 
     if (nowAdvFeture >= 0) {
         appBleAdvFeture(nowAdvFeture);
-        DEBUG_LOG("appBleSelectFeture before feture is : %d, now feture is : %d", beforeAdvFeture, nowAdvFeture);
+        DEBUG_LOG("appBleSelectFeture before feture is : %d, now feture is : %d, state is %04X",
+                beforeAdvFeture, nowAdvFeture, appGetState());
         if (beforeAdvFeture != nowAdvFeture) {
             /// 停止ble
             DEBUG_LOG("appBleSelectFeture update ble feture : %d", nowAdvFeture);

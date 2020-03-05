@@ -485,6 +485,10 @@ static void appPeerSyncSendStatus(void)
  */
 void appPeerSyncSend(bool response)
 {
+    if (APP_STATE_FACTORY_RESET == appGetState()) {
+        DEBUG_LOG("appPeerSyncSend, ignore this operation, we are in reset factory");
+        return;
+    }
     bdaddr peer_addr;
     bdaddr active_handset_addr;
     bdaddr paired_handset_addr;
