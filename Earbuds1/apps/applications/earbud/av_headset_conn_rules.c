@@ -3415,6 +3415,11 @@ static ruleAction ruleDisconnectGaia(void)
 
 
 static ruleAction ruleIdleHandsetPair(void) {
+    if (APP_STATE_PEER_PAIRING == appGetState()) {
+        RULE_LOG("ruleIdleHandsetPair, now is APP_STATE_PEER_PAIRING");
+        return RULE_ACTION_IGNORE;
+    }
+
     if (appDeviceGetHandsetBdAddr(NULL)) {
         RULE_LOG("ruleIdleHandsetPair, complete, already paired with handset");
         return RULE_ACTION_COMPLETE;
@@ -3529,6 +3534,11 @@ static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
 
 static ruleAction ruleCaseOpenEnterDfu(void)
 {
+    if (APP_STATE_PEER_PAIRING == appGetState()) {
+        RULE_LOG("ruleCaseOpenEnterDfu, but now is APP_STATE_PEER_PAIRING");
+        return RULE_ACTION_IGNORE;
+    }
+
     if (ParamUsingSingle()) {
         if (appUICaseIsOpen()) {
             RULE_LOG("ruleCaseOpenEnterDfu, appUICaseIsOpen is true, run");
