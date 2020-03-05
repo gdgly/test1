@@ -50,7 +50,7 @@ static void appUICheckVersion(void);
 static void appUICheckPeerVersionForUpdate(void);
 static void appUIUpgradeCommit(void);
 static void appUIUpgradeEnter(void);
-void appUIUpgradeExit(void);
+static void appUIUpgradeExit(void);
 static void appUIUpgradeNotifyCommitStatusInit(UI_APP_UPGRADE_COMMIT_STATUS* message);
 static void appUIUpgradeNotifyCommitStatusDo(UI_APP_UPGRADE_COMMIT_STATUS* message);
 static void appUIUpgradeNotifyCommitStatusTimeOut(UI_APP_UPGRADE_COMMIT_STATUS* message);
@@ -1951,7 +1951,7 @@ static void appUIUpgradeApplyInd(void) {
         const int versionSame = 2;
         if (versionSame != SystemCheckMemoryVersion()) {
             DEBUG_LOG("SystemCheckVersionWithPeer is not same, so need exit dfu mode");
-            appSmExitDfuMode();
+            appSmHandleDfuEnded(TRUE);
         } else {
             DEBUG_LOG("SystemCheckVersionWithPeer is same, now need think how reboot");
             /// 可以执行重启，添加定时器，在版本同步确认的时候，去重新启动
@@ -2027,7 +2027,7 @@ static void appUIUpgradeEnter(void) {
 void appUIUpgradeExit(void) {
     DEBUG_LOG("call appUIUpgradeExit");
     gProgRunInfo.canContinueUpgrade = FALSE;
-    appSmExitDfuMode();
+    appSmHandleDfuEnded(TRUE);
 }
 
 bool appUICanContinueUpgrade(void) {

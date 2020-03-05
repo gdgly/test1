@@ -645,15 +645,18 @@ void appPeerSigTxUpgradeExitConfirm(Task task, peerSigStatus status) {
 
 // region AVRCP_PEER_CMD_UPGRADE_CANCEL_NOTIFY_COMMIT_STATUS
 
+static int canSendUpgradeCancelNotifyCommitStatusNum = 3;
+
 void appPeerSigTxUpgradeCancelNotifyCommitStatusReq(Task task) {
     DEBUG_LOG("appPeerSigTxUpgradeCancelNotifyCommitStatusReq");
     if (ParamUsingSingle()) {
         return;
-    } else {
+    } else if (canSendUpgradeCancelNotifyCommitStatusNum > 0) {
         AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *req =
                 PEER_MALLOC_UNITY_REQ_NODATA(AVRCP_PEER_CMD_UPGRADE_CANCEL_NOTIFY_COMMIT_STATUS);
         req->client_task = task;
         PeerSendUnityReq(req);
+        canSendUpgradeCancelNotifyCommitStatusNum -= 1;
     }
 }
 
@@ -665,8 +668,11 @@ bool appPeerSigTxUpgradeCancelNotifyCommitStatusParse(uint8* payload) {
 }
 
 void appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm(Task task, peerSigStatus status) {
-    UNUSED(task), UNUSED(status);
     DEBUG_LOG("appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm, status:%d", status);
+    if (peerSigStatusSuccess != status) {
+        /// 重新发送，尝试几次
+        appPeerSigTxUpgradeCancelNotifyCommitStatusReq(task);
+    }
 }
 
 // endregion

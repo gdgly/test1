@@ -1161,7 +1161,7 @@ static void appSmHandlePhyStateChangedInd(smTaskData* sm, PHY_STATE_CHANGED_IND_
 #ifdef CONFIG_STAROT
     if (appSmIsInDfuMode() && (ind->new_state != PHY_STATE_IN_CASE))
     {
-        appSmExitDfuMode();
+        appSmHandleDfuEnded(TRUE);
     }
 #endif
 
@@ -1356,16 +1356,17 @@ static void appSmHandleConnRulesEnterDfu(void)
 }
 
 #ifdef CONFIG_STAROT
-extern void appUIUpgradeExit(void);
+//extern void appUIUpgradeExit(bool needChangeStatus);
 
 static void appSmHandleConnRulesExitDfu(void)
 {
     DEBUG_LOG("appSmHandleConnRulesExitDfu");
-    MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY);
-    if (appSmIsInDfuMode()) {
-        DEBUG_LOG("appSmHandleConnRulesExitDfu, rule exit DFU");
-        appUIUpgradeExit();
-    }
+    appSmHandleDfuEnded(TRUE);
+//    MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY);
+//    appUIUpgradeExit(FALSE);
+//    if (APP_STATE_STARTUP != appGetState()) {
+//        appGaiaDisconnect();
+//    }
     appConnRulesSetRuleComplete(CONN_RULES_EXIT_DFU);
 }
 #endif
@@ -2157,7 +2158,7 @@ static void appSmHandleEnterDfuWithTimeout(uint32 timeoutMs)
 }
 
 
-static void appSmHandleDfuEnded(bool error)
+void appSmHandleDfuEnded(bool error)
 {
     DEBUG_LOGF("appSmHandleDfuEnded(%d)",error);
 
@@ -2659,11 +2660,12 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case SM_INTERNAL_TIMEOUT_DFU_ENTRY:
             DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY");
 #ifdef CONFIG_STAROT
-            /// case 打开，并且与手机建立连接(hfp/a2dp/avrcp)则不用建立dfu模式
-            if (appGetCaseIsOpen() &&
+            /// app_state_startup, 如果还有dfu，说明之前升级过，需要与app保持连接
+            /// case打开，并且与手机建立连接(hfp/a2dp/avrcp)则不用建立dfu模式
+            if (APP_STATE_STARTUP == appGetState() || (appGetCaseIsOpen() &&
                 !(appDeviceIsHandsetHfpConnected() ||
                   appDeviceIsHandsetA2dpConnected() ||
-                  appDeviceIsHandsetAvrcpConnected())) {
+                  appDeviceIsHandsetAvrcpConnected()))) {
                 DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY cancel dfu timer");
                 MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY,
                                  NULL, appConfigDfuTimeoutAfterEnteringCaseMs());
@@ -2797,14 +2799,6 @@ void appSmDeleteHandsets(void)
 void appSmEnterDfuMode(void)
 {
     MessageSend(appGetSmTask(),SM_INTERNAL_ENTER_DFU_UI, NULL);
-}
-
-void appSmExitDfuMode(void) {
-    DEBUG_LOG("appSmExitDfuMode %04X", appGetState());
-    if (appGetState() == APP_STATE_IN_CASE_DFU) {
-        appSetState(APP_STATE_STARTUP);
-        appGaiaDisconnect();
-    }
 }
 
 static void appSmStartDfuTimer(void)

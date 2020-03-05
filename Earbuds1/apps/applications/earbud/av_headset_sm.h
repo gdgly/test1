@@ -365,10 +365,7 @@ extern void appSmEnterDfuModeInCase(bool enable);
  */
 void appSmHandleResetStatusToNormal(void);
 
-/*!
- *  如果在升级模式，从升级模式中退出
- */
-extern void appSmExitDfuMode(void);
+void appSmHandleDfuEnded(bool error);
 
 #endif
 

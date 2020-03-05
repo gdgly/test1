@@ -299,6 +299,9 @@ ruleEntry appConnRules[] =
 
     /*! \{
         Rules that are run on physical state changes */
+#ifdef CONFIG_STAROT
+    RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
+#endif
     RULE(RULE_EVENT_OUT_CASE,                   rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseAllowHandsetConnect,   CONN_RULES_ALLOW_HANDSET_CONNECT),
 #ifndef CONFIG_STAROT
@@ -307,9 +310,6 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseConnectPeer,           CONN_RULES_CONNECT_PEER),
     RULE_WITH_FLAGS(RULE_EVENT_OUT_CASE,        ruleOutOfCaseConnectHandset,        CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseAncTuning,             CONN_RULES_ANC_TUNING_STOP),
-#ifdef CONFIG_STAROT
-    RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
-#endif
 
     RULE(RULE_EVENT_IN_CASE,                    rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectHandset,        CONN_RULES_DISCONNECT_HANDSET),
@@ -1997,10 +1997,6 @@ static ruleAction ruleInCaseEnterDfu(void)
         RULE_LOG("ruleInCaseEnterDfu, single mode, so auto enter dfu");
         return RULE_ACTION_RUN;
     } else {
-        if (!appPeerSyncIsComplete()) {
-            RULE_LOG("ruleInCaseEnterDfu, but peer sync is not complete, so defer");
-            return RULE_ACTION_DEFER;
-        }
         if (appSmIsInCase() && appPeerSyncIsPeerInCase()) {
             if (APP_STATE_IN_CASE_IDLE == appGetState() || APP_STATE_IN_CASE_DFU == appGetState()) {
                 RULE_LOG("ruleInCaseEnterDfu, all in case, so enter dfu");
@@ -2011,7 +2007,7 @@ static ruleAction ruleInCaseEnterDfu(void)
             }
 
         } else {
-            RULE_LOG("ruleInCaseEnterDfu, two earbuds not all in case, so ignore");
+            RULE_LOG("ruleInCaseEnterDfu, r + l earbuds not all in case, so ignore");
             return RULE_ACTION_IGNORE;
         }
     }
