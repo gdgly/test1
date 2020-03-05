@@ -374,7 +374,7 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_CASE_OPEN,                  ruleIdleHandsetPair,                CONN_RULES_HANDSET_PAIR),
     RULE(RULE_EVENT_CASE_OPEN,                  ruleCaseOpenEnterDfu,               CONN_RULES_ENTER_DFU),
     /// 关闭充电盒时，触发的规则
-    RULE(RULE_EVENT_CASE_CLOSE,                 ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
+//    RULE(RULE_EVENT_CASE_CLOSE,                 ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
 //    RULE(RULE_EVENT_CASE_CLOSE,                 ruleCaseCloseNotAllowGaiaConnect,   CONN_RULES_REJECT_HANDSET_CONNECT), //盒盖关闭，不可连接
     RULE(RULE_EVENT_CASE_CLOSE,                 ruleDisconnectHfpA2dpAvrcp,         CONN_RULES_DISCONNECT_HANDSET),
 
