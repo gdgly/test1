@@ -137,7 +137,7 @@ int FileCancel(char *fname)
  */
 int FileClose(void)
 {
-    return FileSystemUnmount("/rwfs");
+    return FileSystemUnmount("/rwfs/");
 }
 
 /*
@@ -354,8 +354,14 @@ void test_read(void)
     uint8 *map_address;
     Source file_source;
     uint32 check_sum = 0;
+    FILE_INDEX findex = FindFileIndex(FILE_NAME);
 
-    PanicNull((file_source = StreamFileSource(FindFileIndex(FILE_NAME))));
+    if (findex == FILE_NONE)
+    {
+        DEBUG_LOG("can't find file %s",FILE_NAME);
+        return;
+    }
+    PanicNull((file_source = StreamFileSource(findex)));
     while((source_size = SourceSize(file_source)) != 0)
     {
         map_address = (uint8 *)SourceMap(file_source);
@@ -372,7 +378,7 @@ void test_read(void)
             printf("");
         }
     }
-    DEBUG_LOG("%u",check_sum);
+    DEBUG_LOG("check_sum %u",check_sum);
     SourceClose(file_source);
     printf("fileSize = %d\n",fileSize);
 }

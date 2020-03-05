@@ -155,7 +155,7 @@ bool starotGaiaHandleData(GAIA_STAROT_IND_T *message)
 
     if (gaiaDevUpdateFirmware(message_data) < 0)
     {
-        DEBUG_LOG("error");
+        DEBUG_LOG("gaiaDevUpdateFirmware error");
         return FALSE;
     }
 
@@ -1030,13 +1030,15 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
 */
 int gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 {
+    static FILE_INDEX index;
+
     if (message->flag == 0X00) /* 开始一次数据传输过程 */
     {
         gProgRunInfo.check_sum = 0;
         /* 打开文件 */
-        if (FileOpen(FILE_NAME) != 0)
+        if ((index = FileOpen(FILE_NAME)) != 0)
         {
-            if (FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length) == 0)
+            if (FileWrite(index, message->data, message->data_length) == 0)
                 return -1;
             for(uint16 i = 0; i < message->data_length; i++)
             {
@@ -1048,7 +1050,7 @@ int gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
     }
     else if (message->flag == 0X03) /* 数据发送过程中 */
     {
-        if (FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length) == 0)
+        if (FileWrite(index, message->data, message->data_length) == 0)
             return -1;
         for (uint16 i = 0; i < message->data_length; i++)
         {
@@ -1057,7 +1059,7 @@ int gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
     }
     else if (message->flag == 0X02) /* 结束一次数据传输过程 */
     {
-        if (FileWrite(FindFileIndex(FILE_NAME), message->data, message->data_length) == 0)
+        if (FileWrite(index, message->data, message->data_length) == 0)
             return -1;
         for (uint16 i = 0; i < message->data_length; i++)
         {
