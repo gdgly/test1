@@ -1,4 +1,20 @@
 
+
+20200305
+ 先拿出左耳机后拿出右耳机，手机设置音量， 先拿出右耳机后拿出左耳机，手机设置音量。导致不同的音量效果的问题。
+ apple 手机与耳机连接成功后，调用 appAvrcpHandleSetAbsoluteVolumeInd -->appAvInstanceHandleAvAvrcpSetVolumeInd->appAvVolumeSet
+ 来设置音量。因为两只耳机的蓝牙地址不一至，手机上分别保存了不同的音量，因此会设置不同的音量值。
+ 调试：
+   1、无论哪只耳机先出来，手机改写音量时都会自动同步到两只耳机中去。
+   2、耳机与手机连接成功，会先主动读取自己保存的音量值，但这时AVRCP还没有成功连接，因此不能同步到手机上去。
+   3、AVRCP连接成功之后，就会同步手机的音量过来。
+ 需要解决问题：
+   1、如何将耳机音量同步到手机中去。appAvAvrcpVolumeNotification。
+   2、如何去掉手机的第一次同步音量
+
+
+
+
 20200224
  appPhyStateInit初始化涵数中，以下几个步骤会执行对应的函数来清除以下LOCK状态
  phy_state->lock = PHY_STATE_LOCK_EAR | PHY_STATE_LOCK_MOTION | PHY_STATE_LOCK_CASE;
