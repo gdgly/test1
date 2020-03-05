@@ -166,9 +166,9 @@ BOOL CProductDevToolsDlg::OnInitDialog()
 
 
 	m_edHWver.SetWindowText(m_Param.hwVer);
-	m_edAddr.SetWindowTextA("{0x00ff0F, 0x5b, 0x02}");
+	m_edAddr.SetWindowTextA("{0x4d3000, 0xd5, 0x70B3}");
 	if (m_Param.btName.IsEmpty())
-		m_Param.btName.Format("iFlyBuds");
+		m_Param.btName.Format("iFLYBUDS");
 	sText.Format("\"%s\"", m_Param.btName);
 	m_edName.SetWindowTextA(sText);
 	m_edSend.SetWindowTextA("abcdefg≤‚ ‘ ˝æ›1234567");
