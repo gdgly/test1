@@ -237,6 +237,9 @@ static const appInitTableEntry appInitTable[] =
 #ifdef HAVE_EM20168//放到subui后面，因为要读flash
     {EM20168_init,             0, NULL},
 #endif
+#ifdef HAVE_UCS146E0//放到subui后面，因为要读flash
+    {Ucs146e0_init,             0, NULL},
+#endif
     {appLinkPolicyInit,     0, NULL},
     {appConManagerInit,     0, NULL},
     {appConnRulesInit,      0, NULL},

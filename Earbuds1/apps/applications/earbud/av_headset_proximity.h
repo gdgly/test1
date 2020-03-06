@@ -9,7 +9,7 @@
 
 #ifndef AV_HEADSET_PROXIMITY_H
 #define AV_HEADSET_PROXIMITY_H
-#ifdef  HAVE_EM20168
+#if defined(HAVE_EM20168) || defined(HAVE_UCS146E0)
 #define INCLUDE_PROXIMITY
 #endif
 #include "av_headset_tasklist.h"

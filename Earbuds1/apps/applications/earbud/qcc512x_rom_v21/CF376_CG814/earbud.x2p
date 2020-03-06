@@ -214,4 +214,6 @@
     <file path="../../tws/sw_watchdog.c"/>
     <file path="../../tws/sw_watchdog.h"/>
     <file path="../../tws/tap_func.c"/>
+    <file path="../../tws/ucs146e0.c"/>
+    <file path="../../tws/ucs146e0.h"/>
 </project>
