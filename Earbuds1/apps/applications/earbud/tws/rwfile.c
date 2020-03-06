@@ -9,34 +9,10 @@
 
 
 /*
- * 获取文件大小
- */
-static uint16 get_file_size(FILE_INDEX findex)
-{
-    Source file_source;
-    uint16 source_size,fileSize = 0;
-
-    PanicNull((file_source = StreamFileSource(findex)));
-    while((source_size = SourceSize(file_source)) != 0)
-    {
-
-        fileSize += source_size;
-        SourceDrop(file_source,source_size);
-        source_size *= 100;
-        while(source_size--)
-        {
-            printf("");
-        }
-    }
-    SourceClose(file_source);
-    printf("fileSize = %d\n",fileSize);
-
-    return fileSize;
-}
-
-
-/*
- * 查找文件,返回该文件索引号
+ * 查找文件
+ * @file_name:文件名字,必须是/rwfs/目录下的
+ *
+ * return:该文件索引号
  */
 FILE_INDEX FindFileIndex(char * file_name)
 {
@@ -48,8 +24,10 @@ FILE_INDEX FindFileIndex(char * file_name)
 
 /*
  * 打开文件
- * file_name:文件名字，必须是/rwfs/目录下的
+ * @file_name:文件名字，必须是/rwfs/目录下的
  * 如果文件存在就先删除再创建。
+ *
+ * return:该文件索引号
  */
 FILE_INDEX FileOpen(char * file_name)
 {
@@ -59,10 +37,10 @@ FILE_INDEX FileOpen(char * file_name)
     if (file_index != FILE_NONE)
     {
         FileDelete(file_index);
-        DEBUG_LOG("FileDelete ret=%x\n", file_index);
+        DEBUG_LOG("FileDelete ret=%u\n", file_index);
     }
-    file_index = FileCreate(FILE_NAME, (uint16)strlen(FILE_NAME));
-    DEBUG_LOG("FileCreate ret=%x\n", file_index);
+    file_index = FileCreate(file_name, (uint16)strlen(file_name));
+    DEBUG_LOG("FileCreate ret=%u\n", file_index);
 
     return file_index;
 }
@@ -70,6 +48,11 @@ FILE_INDEX FileOpen(char * file_name)
 
 /*
  * 将sink里的数据写入文件里
+ * @sink:缓存
+ * @buf:需要写入的内容
+ * @len:需要写入内容的长度
+ *
+ * return:成功写入内容的长度
  */
 static int writeFileSink(Sink sink, void *buf, int len)
 {
@@ -168,13 +151,12 @@ uint8 FileReadOk(void)
     uint8 ret;
 
     file_index=FileFind(FILE_ROOT, FILE_NAME_OK, (uint16)strlen(FILE_NAME_OK));
-    DEBUG_LOG("FileFind-r ret=%d\n", file_index);
     if(file_index == FILE_NONE)
         return 0;
     fsource = StreamFileSource(file_index);
+    rLen = SourceSize(fsource);
     map_address = (uint8 *)SourceMap(fsource);
     ret = map_address[0];
-    rLen = SourceSize(fsource);
     DEBUG_LOG("File has %d bytes\n", rLen);
     SourceDrop(fsource,rLen);
     SourceClose(fsource);
@@ -182,6 +164,14 @@ uint8 FileReadOk(void)
     return ret;
 }
 /* 测试使用 */
+void test_ok(void);
+void test_ok(void)
+{
+    FileWriteOk(0);
+    DEBUG_LOG("%u",FileReadOk());
+    FileWriteOk(1);
+    DEBUG_LOG("%u",FileReadOk());
+}
 static void DebugData(uint8 *data,uint8 len)
 {
     uint8 i;
@@ -336,12 +326,6 @@ void testw(void)
     FileWrite(OpenFile(), (void *)testdata, sizeof(testdata));
 }
 
-//获取文件大小
-void FileSize(void);
-void FileSize(void)
-{
-    get_file_size(FindFileIndex((void *)testdata));
-}
 /*
  * 循环读取文件例子
  */
@@ -371,6 +355,7 @@ void test_read(void)
             check_sum += map_address[i];
         }
         fileSize += source_size;
+
         SourceDrop(file_source,source_size);
         source_size *= 100;
         while(source_size--)
@@ -381,4 +366,12 @@ void test_read(void)
     DEBUG_LOG("check_sum %u",check_sum);
     SourceClose(file_source);
     printf("fileSize = %d\n",fileSize);
+}
+#include "file_list.h"
+void test_filelist(void);
+void test_filelist(void)
+{
+    int number = FileListGetNumberOfFiles(5);
+    DEBUG_LOG("number = %d",number);
+
 }

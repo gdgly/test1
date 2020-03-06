@@ -8,6 +8,8 @@
 #define FILE_NAME "/rwfs/firmware.bin"
 /* 标记升级文件是否下载成功 */
 #define FILE_NAME_OK "/rwfs/firmware_ok.bin"
+
+
 FILE_INDEX FileOpen(char * file_name);
 FILE_INDEX FindFileIndex(char * file_name);
 int FileWrite(FILE_INDEX findex, uint8 *buffer, int length);

@@ -110,8 +110,26 @@ void starotGaiaReset(void) {
 bool starotGaiaHandleDataMD5(GAIA_STAROT_IND_T *message)
 {
     DEBUG_LOG("starotGaiaHandleDataMD5");
+    uint32 check;
+    uint8 ack;
 
-    DEBUG_LOG("%u",gProgRunInfo.check_sum);
+    if (message->payloadLen < 6)
+    {
+        DEBUG_LOG("message data error");
+        return FALSE;
+    }
+    check = message->payload[2]&0XFF;
+    check += (message->payload[3]&0XFF) << 8;
+    check += (message->payload[4]&0XFF) << 16;
+    check += (message->payload[5]&0XFF) << 24;
+    DEBUG_LOG("check = %u",check);
+    if (check == gProgRunInfo.check_sum)
+    {
+        FileWriteOk(1);/* 更新标志位 */
+        ack = 0;
+    }
+    else
+        ack = 1;
     /* 返回ack */
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
@@ -123,10 +141,9 @@ bool starotGaiaHandleDataMD5(GAIA_STAROT_IND_T *message)
     attr->payload[2]  = 0x58;
     attr->payload[3]  = 0x01;
     attr->payload[4]  = (message->payload[1])&0XF0;/* session id */
-    attr->payload[5]  = 0X00;/* index */
+    attr->payload[5]  = ack & 0X01;/* 确定文件是否发送成功 0:成功 1失败 */
 
-
-    DEBUG_LOG("%x %x %d",attr->payload[4],attr->payload[5],message->payload[1]);
+    DEBUG_LOG("%x %x",attr->payload[4],attr->payload[5]);
     if (NULL != head)
     {
         uint16 len = 0;
@@ -1026,7 +1043,8 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
 /*
  * 接收APP设备发送过来的升级数据包，保持为文件即可，以备后用，
  * 校验或者发送给盒子
- * 失败：返回负值
+ * 失败：返回-1
+ * 成功：返回 0
 */
 int gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 {
@@ -1034,16 +1052,13 @@ int gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 
     if (message->flag == 0X00) /* 开始一次数据传输过程 */
     {
+        FileWriteOk(0);
         gProgRunInfo.check_sum = 0;
         /* 打开文件 */
         if ((index = FileOpen(FILE_NAME)) != 0)
         {
             if (FileWrite(index, message->data, message->data_length) == 0)
                 return -1;
-            for(uint16 i = 0; i < message->data_length; i++)
-            {
-                gProgRunInfo.check_sum += message->data[i];
-            }
         }
         else
             return -1;
@@ -1052,26 +1067,27 @@ int gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
     {
         if (FileWrite(index, message->data, message->data_length) == 0)
             return -1;
-        for (uint16 i = 0; i < message->data_length; i++)
-        {
-            gProgRunInfo.check_sum += message->data[i];
-        }
     }
     else if (message->flag == 0X02) /* 结束一次数据传输过程 */
     {
         if (FileWrite(index, message->data, message->data_length) == 0)
             return -1;
-        for (uint16 i = 0; i < message->data_length; i++)
-        {
-            gProgRunInfo.check_sum += message->data[i];
-        }
-        DEBUG_LOG("check_sum = %u",gProgRunInfo.check_sum);
         FileClose();
     }
     else /* flag 信息不支持 */
     {
         DEBUG_LOG("flag error = %d",message->flag);
         return -1;
+    }
+
+    for(uint16 i = 0; i < message->data_length; i++)
+    {
+        gProgRunInfo.check_sum += message->data[i];
+    }
+    if (message->flag == 0X02)
+    {
+
+        DEBUG_LOG("check_sum = %u",gProgRunInfo.check_sum);
     }
     return 0;
 }
