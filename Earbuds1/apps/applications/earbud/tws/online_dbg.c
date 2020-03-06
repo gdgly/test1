@@ -97,7 +97,7 @@ void online_dbg_handler(Task appTask, MessageId id, Message msg) {
         case ONLINE_DBG_MSG_TRANS_RT_ONLINE_DBG:
             if (ONLINE_DBG_STATE_RT_PACKET == online_dbg_state) {
                 uint8 remain = record_idx - trans_idx;
-                uint8 length = min(ONLINE_DBG_BUF_LEN - trans_idx, remain);
+                uint8 length = min(SEND_PKT_LENGTH - trans_idx, remain);
 
                 if (length > 0) {
                     online_dbg_send_pkt(ONLINE_DBG_DEV_UPLOAD_RT_ONLINE_DBG, online_dbg_buf + trans_idx, length);
