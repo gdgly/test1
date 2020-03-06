@@ -57,7 +57,7 @@ static void appUIUpgradeNotifyCommitStatusTimeOut(UI_APP_UPGRADE_COMMIT_STATUS* 
 static void appUIUpgradeNotifyCommitStatusTimeOutGrade(void);
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg);
-extern bool UpgradeSMAbort(void);
+//extern bool UpgradeSMAbort(void);
 
 
 /*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
@@ -665,21 +665,26 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appSmPairHandset();
 #endif
         break;
-   case APP_RESET_FACTORY:
-       DEBUG_LOG("plc call reset headset");
-#ifdef TWS_DEBUG
-       UpgradeSMAbort();
-       appSmHandleResetStatusToNormal();
-       appSmFactoryReset();
-#endif
+
+   case APP_RESET_FACTORY: {
+       //       UpgradeSMAbort();
+       gProgRunInfo.needReset = TRUE;
+       static int i = 0;
+       i += 1;
+       DEBUG_LOG("plc call reset headset : %d", i);
+       if (appSmStateIsIdle(appGetState()) && APP_STATE_FACTORY_RESET != appGetState()) {
+           appSmFactoryReset();
+       } else {
+           MessageSendLater(appGetUiTask(), APP_RESET_FACTORY, NULL, 100);
+           appSmHandleResetStatusToNormal();
+       }
+   }
        break;
     case APP_CASE_OPEN:
         DEBUG_LOG("plc call case open");
         online_dbg_record(ONLINE_DBG_CASE_OPEN);
-#ifdef TWS_DEBUG
         appConnRulesResetEvent(RULE_EVENT_CASE_OPEN);
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_OPEN);
-#endif
         break;
     case APP_CASE_CLOSE:
         DEBUG_LOG("plc call case close");

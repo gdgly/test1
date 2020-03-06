@@ -488,7 +488,7 @@ static void internalSendStarotAppNotifyPeerUpgradeExitCfm(bool status) {
 // region 统一发送请求数据
 
 AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *PeerMallocUnityReq(uint16 command, int payloadSize) {
-    int s = sizeof(AVRCP_PEER_CMD_INTERNAL_UNITY_REQ) + payloadSize - (payloadSize > 2 ? payloadSize : 0);
+    int s = sizeof(AVRCP_PEER_CMD_INTERNAL_UNITY_REQ) + payloadSize;
     AVRCP_PEER_CMD_INTERNAL_UNITY_REQ * req = (AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *)
             PanicUnlessMalloc((s / 8 * 8) +((s % 8) > 0 ? 8 : 0));
     req->command = command;

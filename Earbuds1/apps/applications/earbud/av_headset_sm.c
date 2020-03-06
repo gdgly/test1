@@ -1338,6 +1338,11 @@ static void appSmHandleConnRulesClearPeerMemoryCache(void) {
 static void appSmHandleConnRulesEnterDfu(void)
 {
     DEBUG_LOG("appSmHandleConnRulesEnterDfu appGetState:%04X", appGetState());
+    if (gProgRunInfo.needReset) {
+        DEBUG_LOG("appSmHandleConnRulesEnterDfu now need reset");
+        appConnRulesSetRuleComplete(CONN_RULES_ENTER_DFU);
+        return;
+    }
 
     switch (appGetState())
     {
@@ -2599,7 +2604,11 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             break;
 
         case APP_UPGRADE_REQUESTED_IN_PROGRESS:
+#ifndef CONFIG_STAROT
+        /// 关闭理由：除了升级确认，其他情况下，重启进入正常升级状态，不能打断正常流程
+        /// 如果用户还需要升级，继续正常升级。在升级的时候，如有发现之前有残留，使用Abort之前版本
             appSmEnterDfuOnStartup(TRUE);
+#endif
             break;
 
         case APP_UPGRADE_ACTIVITY:

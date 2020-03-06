@@ -154,6 +154,7 @@ typedef struct tagPROGRUNINFO {
     bool           canContinueUpgrade;              // 是否持续进入升级状态
     uint8          peerSnSyncStatus;                // SN同步状态
     uint8          peerSn[DEV_SN_LEN];              // 另一只耳机SN信息
+    bool           needReset;                       // 是否需要重启
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;
 void appSubUIInit(void);
