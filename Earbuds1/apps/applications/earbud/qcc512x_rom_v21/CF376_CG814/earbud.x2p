@@ -5,7 +5,7 @@
             <deployProject>deploy</deployProject>
             <devkitConfiguration>application</devkitConfiguration>
             <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
-            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
+            <devkitPath>d:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
             <devkitRevision>1565343019</devkitRevision>
             <property name="BUILD_ID">sdk://tools/ubuild/maker/buildid/examples/timestamp.py</property>
             <property name="BUILD_TYPE">DEBUG</property>
@@ -209,6 +209,8 @@
     <file path="../../tws/peer.h"/>
     <file path="../../tws/productcmd.c"/>
     <file path="../../tws/public.h"/>
+    <file path="../../tws/rwfile.c"/>
+    <file path="../../tws/rwfile.h"/>
     <file path="../../tws/sub_ui.c"/>
     <file path="../../tws/sub_ui.h"/>
     <file path="../../tws/sw_watchdog.c"/>
