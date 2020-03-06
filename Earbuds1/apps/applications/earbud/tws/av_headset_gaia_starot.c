@@ -106,7 +106,13 @@ void starotGaiaReset(void) {
     appGetGaia()->needCycleSendAudio = 0;
 }
 
-/* 返回升级固件的MD5 */
+/*
+ * 返回升级固件的MD5
+ * @message: APP传输的数据类型
+ * @return:
+ *      FALSE: 失败
+ *      TRUE: 成功
+ */
 bool starotGaiaHandleDataMD5(GAIA_STAROT_IND_T *message)
 {
     DEBUG_LOG("starotGaiaHandleDataMD5");
@@ -1041,10 +1047,11 @@ void gaiaDevRecordStopInfo(GAIA_STAROT_IND_T *message) {
 }
 
 /*
- * 接收APP设备发送过来的升级数据包，保持为文件即可，以备后用，
- * 校验或者发送给盒子
- * 失败：返回-1
- * 成功：返回 0
+ * 接收APP设备发送过来的升级数据包，保存为文件即可，以后用于更新盒子固件
+ * @message: app传输的数据类型
+ * @return:
+ *      -1: 失败
+ *       0: 成功
 */
 int gaiaDevUpdateFirmware(GAIA_STAROT_DATA_T *message)
 {

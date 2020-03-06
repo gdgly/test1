@@ -14,10 +14,10 @@ FILE_INDEX FileOpen(char * file_name);
 FILE_INDEX FindFileIndex(char * file_name);
 int FileWrite(FILE_INDEX findex, uint8 *buffer, int length);
 int FileClose(void);
-int FileCancel(char *fname);            // 删除文件
-
+int FileCancel(char *fname);
 
 uint8 FileWriteOk(uint8 value);
 uint8 FileReadOk(void);
+
 #endif //RWFILE_H
 
