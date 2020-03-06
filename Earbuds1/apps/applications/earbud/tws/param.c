@@ -24,7 +24,7 @@
 
 
 /* SW版本共4字节： xx.01.01.23   xx为测试使用*/
-const uint8 SYSTEM_SW_VERSION[DEV_SWVER_LEN] = {0x00,0x01,0x02,0x2E};   // 每次发布版本修改这儿的值
+const uint8 SYSTEM_SW_VERSION[DEV_SWVER_LEN] = {0x00,0x01,0x02,0x32};   // 每次发布版本修改这儿的值
 
 // 保存参数，如果length=0,表示擦除当前PSK中的参数
 static int16 ParamSave(uint16 pskey, void *buffer, int length)
@@ -119,12 +119,7 @@ void BtAddrParamDefault(void)
     BtAddrPrmPtr prm = &gBtAddrParam;
 
     memset(prm, 0, sizeof(BtAddrParam));
-#ifdef CONFIG_STAROT_SINGLE
-    prm->single_era      = TRUE;
-#else
-    //// todo hjs 使用tws模式
     prm->single_era      = FALSE;
-#endif
 
     // 默认ble配对码和双击配置，已经同步至另一只耳机
     // todo 后期如果有要同步的消息标识位，需要在这里添加
@@ -406,22 +401,16 @@ int16 SystemGetVersion(DevType type, uint8 *buffer)
         break;
     case DEV_LEFT:
         if(appConfigIsLeft()) {
-            memcpy(ptr, gFixParam.hw_ver, DEV_HWVER_LEN);
-            ptr[DEV_HWVER_LEN] = ' ';
-            memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
-        }
-        else {
+            memcpy(ptr, appCurrVersionGet(), DEV_HWSWVER_LEN);
+        } else {
             memcpy(ptr, appPeerVersionGet(), DEV_HWSWVER_LEN);
         }
         break;
     case DEV_RIGHT:
-        if(appConfigIsRight() ) {
-            memcpy(ptr, gFixParam.hw_ver, DEV_HWVER_LEN);
-            ptr[DEV_HWVER_LEN] = ' ';
-            memcpy(&ptr[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
-        }
-        else {
+        if(appConfigIsLeft()) {
             memcpy(ptr, appPeerVersionGet(), DEV_HWSWVER_LEN);
+        } else {
+            memcpy(ptr, appCurrVersionGet(), DEV_HWSWVER_LEN);
         }
         break;
     }
@@ -435,21 +424,18 @@ int16 SystemGetCurrentVersion(uint8 *buffer)             // Get Current Earbuds 
 }
 
 /// 比较当前耳机版本，与另一只耳机版本，当前耳机版本是否更低
-int SystemCheckVersionWithPeer(void) {
-    int unkonw = 0, peerLast = 1, sameLast = 2, currentLast = 3;
+
+int SystemCheckMemoryVersion(void) {
+    int unkonw = 0;
 
     if (appPeerVersionIsEmpty()) {
         ///没有对方地址信息，情况不明，认为对方版本更低(保守策略)
         return unkonw;
     }
 
-    uint8 current[DEV_HWVER_LEN];
-    memcpy(current, gFixParam.hw_ver, DEV_HWVER_LEN);
-    current[DEV_HWVER_LEN] = ' ';
-    memcpy(&current[DEV_HWVER_LEN+1], SYSTEM_SW_VERSION, DEV_SWVER_LEN);
-
-    uint8* peer = appPeerVersionGet();
-
+    int peerLast = 1, sameLast = 2, currentLast = 3;
+    uint8* current = gProgRunInfo.currVer;
+    uint8* peer = gProgRunInfo.peerVer;
     for (int i = 5; i < 8; ++i) {
         if (current[i] < peer[i]) {
             return  peerLast;
@@ -459,7 +445,6 @@ int SystemCheckVersionWithPeer(void) {
     }
     return sameLast;
 }
-
 
 int16 SystemSetVersion(DevType type, uint8 *buffer)
 {
@@ -566,4 +551,9 @@ void ParamInitHandleClDmLocalBdAddrCfm(Message message)
 void UserParamResetFactory(void) {
     UserParamDefault();
     ParamSaveUserPrm(NULL);
+}
+
+
+const uint8 *SystemGetCurrentSoftware(void) {
+    return SYSTEM_SW_VERSION;
 }

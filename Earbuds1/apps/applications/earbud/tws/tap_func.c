@@ -5,6 +5,7 @@
 #include <pio.h>
 #include <hydra_macros.h>
 #include <input_event_manager.h>
+#include "online_dbg.h"
 
 //#define TIME_READ_LIS2DW12_REG
 
@@ -71,13 +72,16 @@ void tap_itr_handle_lis2dw12(void)
 
     if(value_arr[0] & 0x10){
         DEBUG_LOG("double tap\n");
+        online_dbg_record(ONLINE_DBG_DOUBLE_TAP_INV);
         if(4 == g_commuType){
             char* buff = "check TAP SUSS";
             CommpcMessage((uint8*)buff, 15);
             return;       // 不发送消息给主UI
         }
-        if(0 == g_commuType && appInitCompleted())
+        if(0 == g_commuType && appInitCompleted()) {
             MessageSend(appGetUiTask(), APP_BTN_DOUBLE_TAP, NULL);
+            online_dbg_record(ONLINE_DBG_DOUBLE_TAP);
+        }
     }
     lis2dw12Disable(handle);
     return;

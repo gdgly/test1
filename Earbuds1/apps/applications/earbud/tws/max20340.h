@@ -50,4 +50,6 @@ void singlebus_itr_process(void);
 
 int imagecase_checkver(uint8 *recv_ver);      // return 1 is upgrade
 void max20340_notify_current_status(void);
+
+void printfDebugInitMax20340(void);
 #endif // MAX20340_H

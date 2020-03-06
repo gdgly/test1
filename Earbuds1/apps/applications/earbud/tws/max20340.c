@@ -2,6 +2,7 @@
 #ifdef HAVE_MAX20340
 
 #include "AP.h"
+#include "online_dbg.h"
 
 #define TIME_READ_MAX20340_REG
 // max20340 正常为低电平中断，部分时间出现IO为常低，而不能拉回到常高而不能再次产生中断
@@ -10,8 +11,8 @@
 void max20340_timer_restart(int timeout);
 
 /// 应用层可以处理多次plcin消息，但是在关盖的情况下，不处理plc out消息
-static void max20340_notify_plc_in(void);
-static void max20340_notify_plc_out(void);
+void max20340_notify_plc_in(void);
+void max20340_notify_plc_out(void);
 
 #define MESSAGE_MAX30240_SEND_LATER    2000    // (延时反馈数据)
 static uint8 g_send_data[4];                   // 需要发送的数据
@@ -294,7 +295,10 @@ static void box_get_earpower(uint8 *get_buf, uint8 *send_buf)
     send_buf[0] = get_buf[0];
     send_buf[1] = appUiGetPower();
     send_buf[2] = 0;
-    DEBUG_LOG("Case GetPower=%d", send_buf[1]);
+    static int c  = 0;
+    if (c++ % 100 == 0) {
+        DEBUG_LOG("Case GetPower=%d", send_buf[1]);
+    }
 }
 
 static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
@@ -414,6 +418,7 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
 {
     appState state = appGetState();
     uint8 status = 0;             // 使用3BIT表示当前状态 0:未知 1:左右耳机配对中 2:广播（与手机配对中）3:与手机配对成功 4 与手机连接
+                                  // 5：左右耳机连接成功
                                   // 6：双耳机间配对出错 7:与手机配对失败
     deviceTaskData *theDevice = appGetDevice();
     uint8 power =0;
@@ -430,6 +435,9 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
             status = 4;
         }else if (TRUE == theDevice->handset_paired) {
             status = 3;
+        }
+        else if(TRUE == theDevice->peer_connected) {
+            status = 5;
         }
         break;
     }
@@ -818,11 +826,13 @@ void max20340_init(void)
     uint8 value;uint8 value_a[13];
     uint8 i;
     if( max20340_get_left_or_right()==0 ){
+        online_dbg_record(ONLINE_DBG_PLC_INIT_FAIL);
         return;
     }
     value = 0;
     handle = max20340Enable();
     if(BITSERIAL_HANDLE_ERROR == handle) {
+        online_dbg_record(ONLINE_DBG_PLC_INIT_FAIL);
         return;
     }
 
@@ -884,19 +894,31 @@ void max20340_init(void)
 #endif
 
     max20340Disable(handle);
+
+    online_dbg_record(ONLINE_DBG_PLC_INIT_SUCC);
+
     return;
 }
 
 //extern void appChargeFromUi(bool bEnable);
+static int callPlcIn = 0;
+static int callPlcOut = 0;
+void printfDebugInitMax20340(void) {
+    DEBUG_LOG("debugInitMax20340 in:%d out:%d", callPlcIn, callPlcOut);
+}
+
 void max20340_notify_current_status(void) {
     if (TRUE == max20340_GetConnect()) {
         max20340_notify_plc_in();
+        callPlcIn += 1;
     } else {
         max20340_notify_plc_out();
+        callPlcOut += 1;
     }
 }
 
 void max20340_notify_plc_in(void) {
+    DEBUG_LOG("max20340_notify_plc_in");
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT);
     MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT, NULL, 50);
@@ -908,6 +930,7 @@ void max20340_notify_plc_in(void) {
 
 void max20340_notify_plc_out(void) {
 //    appChargeFromUi(FALSE);
+    DEBUG_LOG("max20340_notify_plc_out");
     if (FALSE == appGetCaseIsOpen()) {
         DEBUG_LOG("max20340_notify_plc_out, now case is close, so don't send message to application");
         return;

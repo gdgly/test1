@@ -63,6 +63,9 @@ typedef struct
     bool ble:1;
     /*! The current link policy for this connection */
     lpPerConnectionState lpState;
+#ifdef CONFIG_STAROT
+    int32 residual_page_timeout;
+#endif
 } conManagerDevice;
 
 /*! Connection Manager module task data. */

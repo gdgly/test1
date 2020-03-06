@@ -47,6 +47,7 @@ DESCRIPTION
 */
 static void IsValidatedToTrySwap(bool reset)
 {
+    PRINT(("call IsValidatedToTrySwap %d\n", reset));
     static uint8 is_validated = 0;
 
     if(reset)
@@ -116,11 +117,12 @@ bool UpgradeSMHandleValidated(MessageId id, Message message)
                 /*Can consider disconnecting streams here*/
 
                 /* if we have permission, go ahead and call loader/reboot */
-                if (UpgradeSMHavePermissionToProceed(UPGRADE_APPLY_IND))
-                {
-                    PRINT(("IsValidatedToTrySwap() in UPGRADE_HOST_TRANSFER_COMPLETE_RES\n"));
-                    IsValidatedToTrySwap(FALSE);
-                }
+                MessageSend(UpgradeCtxGet()->mainTask, UPGRADE_APPLY_IND, NULL);
+//                if (UpgradeSMHavePermissionToProceed(UPGRADE_APPLY_IND))
+//                {
+//                    PRINT(("IsValidatedToTrySwap() in UPGRADE_HOST_TRANSFER_COMPLETE_RES\n"));
+//                    IsValidatedToTrySwap(FALSE);
+//                }
             }
             else
             {

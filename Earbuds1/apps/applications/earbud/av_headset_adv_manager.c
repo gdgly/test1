@@ -19,6 +19,8 @@
 #ifdef CONFIG_STAROT
 #include "tws/adv_manager.h"
 #endif
+#include <ctype.h>
+
 static struct _advManagerAdvert  advertData[1];
 
 
@@ -101,31 +103,28 @@ static bool appAdvManagerSetAdvertisingData(uint8 size_ad_data, const uint8 *ad_
 //#endif
 
 #ifdef CONFIG_STAROT
-static void writeLocalname_right_or_left(CL_DM_LOCAL_NAME_COMPLETE_T *name)
+static void alterLocalname(CL_DM_LOCAL_NAME_COMPLETE_T *name)
 {
     if(name->size_local_name+2 <= MAX_NAME_LENGTH)
     {
-        name->local_name[name->size_local_name] = '-';
-        if(appGetInit()->appInitIsLeft==1)
-        {
-             name->local_name[name->size_local_name+1] = 'L';
+        for (uint8 idx = 1; idx < name->size_local_name; idx++)
+            name->local_name[idx] = toupper(name->local_name[idx]);
 
-        }else if(appGetInit()->appInitIsLeft==0)
-        {
-             name->local_name[name->size_local_name+1] = 'R';
-        }else
-        {
-             name->local_name[name->size_local_name+1] = 'E';
-        }
+        name->local_name[name->size_local_name] = '-';
+
+        if(appGetInit()->appInitIsLeft==1)
+            name->local_name[name->size_local_name+1] = 'L';
+        else if(appGetInit()->appInitIsLeft==0)
+            name->local_name[name->size_local_name+1] = 'R';
+        else
+            name->local_name[name->size_local_name+1] = 'E';
 
         name->size_local_name += 2;
 
         ConnectionChangeLocalName(name->size_local_name,name->local_name);
-    }else
-    {
-        DEBUG_LOG("ERROR Exceed MAX_NAME_LENGTH");
     }
-
+    else
+        DEBUG_LOG("ERROR Exceed MAX_NAME_LENGTH");
 }
 #endif
 
@@ -379,7 +378,7 @@ static void appAdvManagerHandleMessage(Task task, MessageId id, Message message)
             /* Connection library message sent directly */
         case CL_DM_LOCAL_NAME_COMPLETE:
 #ifdef CONFIG_STAROT
-            writeLocalname_right_or_left((CL_DM_LOCAL_NAME_COMPLETE_T*)message);
+            alterLocalname((CL_DM_LOCAL_NAME_COMPLETE_T*)message);
 #endif
             saveLocalName((const CL_DM_LOCAL_NAME_COMPLETE_T*)message);
             return;

@@ -485,6 +485,10 @@ static void appPeerSyncSendStatus(void)
  */
 void appPeerSyncSend(bool response)
 {
+    if (APP_STATE_FACTORY_RESET == appGetState()) {
+        DEBUG_LOG("appPeerSyncSend, ignore this operation, we are in reset factory");
+        return;
+    }
     bdaddr peer_addr;
     bdaddr active_handset_addr;
     bdaddr paired_handset_addr;
@@ -549,7 +553,7 @@ void appPeerSyncSend(bool response)
         const uint8 state2 = (PEER_SYNC_STATE_SET_IS_HANDSET_PAIRED(!BdaddrIsZero(&paired_handset_addr))) +
                              (PEER_SYNC_STATE_SET_IS_HANDSET_PAIRING(appGetState() == APP_STATE_HANDSET_PAIRING)) +
                              (PEER_SYNC_STATE_SET_SCO_ACTIVE(appHfpIsScoActive())) +
-                             (PEER_SYNC_STATE_SET_DFU_IN_PROGRESS(appSmIsInDfuMode())) + 
+                             (PEER_SYNC_STATE_SET_DFU_IN_PROGRESS(appSmIsInDfuMode() && (2 <= UpgradeGetState() && UpgradeGetState() < 12))) +
                              (PEER_SYNC_STATE_SET_IS_ADVERTISING(appSmIsBleAdvertising())) +
                              (PEER_SYNC_STATE_SET_IS_BLE_CONNECTED(appSmHasBleConnection())) +
                              (PEER_SYNC_STATE_SET_IS_ANC_ENABLED(ps->peer_anc_enabled));

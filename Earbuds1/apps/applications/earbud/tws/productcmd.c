@@ -157,6 +157,7 @@ extern void appSubUISetMicbias(int set);
 
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 {
+    static uint8 Sn[16];
     uint8 buf_get;
     uint16 tmpval;
     (void)buf_get;
@@ -168,24 +169,24 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 
     DEBUG_LOG("get_buf = %x:%x:%x",get_buf[0], get_buf[1], get_buf[2]);
 
-    buf_get = get_buf[1];
+
+    buf_get = get_buf[1];               //写耳机SN号
     if((buf_get>=0x20)&&(buf_get<= 0x2f))
     {
-       prm->sn[buf_get - 0x20] = get_buf[2];
+       Sn[buf_get - 0x20] = get_buf[2];
 
        if(buf_get == 0x2f)
         {
-            ParamSaveSN(prm->sn);
+            SystemParamSn(0,Sn,TRUE);
         }
     }
 
-    if((buf_get>=0x30)&&(buf_get<= 0x3f))
+    if((buf_get>=0x30)&&(buf_get<= 0x3f))   //读耳机SN号
     {
-        ParamLoadSN(prm->sn);
-        send_buf[2] = prm->sn[buf_get - 0x30];
+        SystemParamSn(0,Sn,FALSE);
+        send_buf[2] = Sn[buf_get - 0x30];
 
     }
-
     if(get_buf[1] >= 0x48 && get_buf[1] <= 0x4F) {
         uint8 version[8];
         DevType type = appConfigIsLeft() ? DEV_LEFT : DEV_RIGHT;
@@ -305,6 +306,15 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         case 0x15:   //接近光验证状态
             send_buf[1] = 0x15;//需要返回值的话，给send_buf赋值
             send_buf[2] = EM20168_statcheck();
+            break;
+
+        case 0x60:         // 当前 耳机的 STATE 发给盒子，调试使用
+            tmpval = (uint16)appGetState();
+            send_buf[2] = (tmpval >> 8) & 0xFF;
+            break;
+        case 0x61:
+            tmpval = (uint16)appGetState();
+            send_buf[2] = (tmpval >> 0) & 0xFF;
             break;
         default:
             break;

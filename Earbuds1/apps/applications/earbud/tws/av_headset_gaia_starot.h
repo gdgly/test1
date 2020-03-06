@@ -5,6 +5,42 @@
 #include <gaia.h>
 #include <../av_headset.h>
 
+// region task数据
+
+typedef struct {
+    uint8 callerNumber[32];
+    uint16 callerLen;
+    uint16 connectLock; // 0:无锁 1:加锁
+} subGaiaTaskData;
+
+void subGaiaTaskInit(void);
+subGaiaTaskData* subGaiaGetTaskData(void);
+// endregion
+
+// region 联系人信息
+
+const uint8* subGaiaGetCaller(uint16* len);
+void subGaiaClearCaller(void);
+void subGaiaSetCaller(uint8* data, uint16 len);
+
+// endregion
+
+// region 使用conditionally发送消息
+
+///成功发送校验码之后，设置为unlock状态。
+enum {
+    SUB_GAIA_CONNECT_UNLOCK = 0,
+    SUB_GAIA_CONNECT_LOCK = 1
+};
+
+void subGaiaSetConnectUnlock(void);
+void subGaiaClearConnectUnlock(void);
+uint16* subGaiaGetConnectLock(void);
+bool subGaiaIsConnectLock(void);
+
+// endregion
+
+
 #define CALL_IN_ACTIVE          (1 << 0)
 #define CALL_OUT_ACTIVE         (1 << 1)
 #define CALL_ACTIVE             (1 << 2)
@@ -116,6 +152,7 @@ enum {
     GAIA_COMMAND_STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB = 0X5508,               // App设置佩戴检测是否使能
     GAIA_COMMAND_STAROT_BASE_INFO_GET_ADORN_CHEAK_ENB = 0X5509,               // App获取佩戴检测是否使能
     GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT = 0X550A,                 // 设备主动断开连接
+    GAIA_COMMAND_STAROT_BASE_INFO_GET_SN = 0X550B,                            // 获取SN信息
 };
 /////////////////////////////助手控制////////////////////////////////
 enum {
@@ -132,7 +169,8 @@ enum {
 /////////////////////////////测试与生产///////////////////////////////
 enum {
     GAIA_COMMAND_STAROT_TEST_PRODUCT_REST = 0X5600,                           // 恢复出厂设置
-    GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS = 0X5601                          // 读取apollo状态
+    GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS = 0X5601,                          // 读取apollo状态
+    GAIA_COMMAND_STAROT_TEST_ONLINE_DBG = 0X5602
 };
 
 /////////////////////////////固件升级使用///////////////////////////////
@@ -140,6 +178,14 @@ enum {
     GAIA_CONNECT_STAROT_UPDATE_FIRMWARE     = 0X5800,                             //固件升级使用
     GAIA_CONNECT_STAROT_UPDATE_FIRMWARE_MD5 = 0X5801,                             //回复固件的校验码
 };
+/////////////////////////////升级///////////////////////////////
+enum {
+    GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU = 0X5700,                           // 进入升级模式
+    GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU = 0X5701,                            // 退出升级模式
+    GAIA_COMMAND_STAROT_UPGRADE_GET_CURRENT_VERSION_DETAIL = 0X5702,          // 获取升级的详细信息
+    GAIA_COMMAND_STAROT_UPGRADE_NOTIFY_COMMIT_STATUS = 0X5703,                // 通知升级提交的信息
+};
+
 #define W16(x) (((*(x)) << 8) | (*((x) + 1)))
 #define GAIA_OFFS_VENDOR_ID (4)
 #define GAIA_OFFS_COMMAND_ID (6)
@@ -236,6 +282,9 @@ enum {
     STAROT_BASE_INFO_SET_ADORN_CHEAK_ENB,                 // gaia -> ui App设置是否佩戴使能
     STAROT_APP_CONTROL_PREVIOUS_TRACK,                    // gaia -> ui App控制上一首
     STAROT_APP_CONTROL_NEXT_TRACK,                        // gaia -> ui App控制下一首
+    STAROT_APP_NOTIFY_PEER_UPGRADE_ENTER_CFM,             // sync -> gaia 通知进入升级状态结果
+    STAROT_APP_NOTIFY_PEER_UPGRADE_EXIT_CFM,              // sync -> gaia 通知进入升级状态结果
+    STAROT_UI_NOTIFY_COMMIT_STATUS,                       // ui -> gaia 升级提交的状态
 };
 
 #define STAROT_COMMAND_TIMEOUT 1000 // 命令超时时间
@@ -277,5 +326,13 @@ typedef struct
 } GAIA_STAROT_DATA_T;
 
 
+typedef struct {
+    uint16 status;
+} STAROT_DIALOG_STATUS_T ;
+
+typedef struct {
+    uint16 len;
+    uint8 number[2];
+} STAROT_DIALOG_CALL_NUMBER_T;
 
 #endif // AV_HEADSET_GAIA_STAROT_H

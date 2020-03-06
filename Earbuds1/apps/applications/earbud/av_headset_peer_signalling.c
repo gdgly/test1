@@ -368,6 +368,9 @@ static void appPeerSigCancelInProgressOperation(void)
             break;
 #endif
         default:
+#ifdef CONFIG_STAROT
+            appPeerSigParseUnityConfirm(peer_sig->current_op, peer_sig->client_task, peerSigStatusPairHandsetTxFail);
+#endif
             break;
     }
 
@@ -894,9 +897,12 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughInd(AV_AVRCP_VENDOR_PASSTHRO
             rc = appPeerSigHandleDoubleClickWakeupSystemCommand(ind);
             break;
 #endif
-
         default:
+#ifdef CONFIG_STAROT
+            rc = appPeerSigParseUnityRequest(ind);
+#endif
         break;
+
     }
 
     /* Restart in-activity timer */
@@ -965,7 +971,12 @@ static void appPeerSigHandleAvAvrcpVendorPassthroughConfirm(AV_AVRCP_VENDOR_PASS
 #endif
 
         default:
+#ifdef CONFIG_STAROT
+            appPeerSigParseUnityConfirm(cfm->opid, peer_sig->client_task,
+                    cfm->status == avrcp_success ? peerSigStatusSuccess : peerSigStatusPairHandsetTxFail);
+#else
             DEBUG_LOGF("appPeerSigHandleAvAvrcpVendorPassthroughConfirm unknown opid:%x", cfm->opid);
+#endif
             break;
     }
 
@@ -1239,6 +1250,10 @@ static void appPeerSigHandleMessage(Task task, MessageId id, Message message)
 #ifdef CONFIG_STAROT
         case PEER_SIG_INTERNAL_TXDATA_REQ:
             appPeerSigTxDataRequest((PEER_SIG_INTERNAL_TXDATA_REQ_T *)message);
+            break;
+
+        case PEER_SIG_INTERNAL_UNITY_REQ:
+            appPeerSigSendUnityRequest((AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *)message);
             break;
   #ifdef CONFIG_SINGLE_SYNC_BLE_PAIR
         case PEER_SIG_INTERNAL_BLE_CONFIG_REQ:

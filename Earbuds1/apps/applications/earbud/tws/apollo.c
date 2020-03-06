@@ -12,6 +12,8 @@
 
 #include "apollo.h"
 #include "public.h"
+#include "online_dbg.h"
+
 static void apollo_task_handler(Task appTask, MessageId id, Message msg);
 static int apollo_send_cmd(uint32 cmd, bitserial_handle handle);
 static void apollo_send_data(uint8* data, int length, bitserial_handle handle);
@@ -226,12 +228,11 @@ static void apollo_init_handler(MessageId id, Message msg)
         case MESSAGE_PIO_CHANGED:
         {
             if (INT_IS_LOW) {
-                if(APOLLO_STATE_START_UP == apollo_state)
-                {
+                if(APOLLO_STATE_START_UP == apollo_state) {
                     apollo_state = APOLLO_STATE_INIT_IO;
-                }else
-                /* reading apollo fw version during start up. */
-                if (APOLLO_STATE_INIT_RD_FW_VER == apollo_state) {
+                }
+                else if (APOLLO_STATE_INIT_RD_FW_VER == apollo_state) {
+                    /* reading apollo fw version during start up. */
                     uint32 feedback[2];
                     int ret = apollo_fb((uint8*)feedback, 8);
 
@@ -249,6 +250,7 @@ static void apollo_init_handler(MessageId id, Message msg)
                             apollo_state = APOLLO_STATE_ERR;
                             IO_LOW(APOLLO_OVERRIDE_IO);
                             apollo_init_finish();
+                            online_dbg_record(ONLINE_DBG_APO_INIT_FAIL);
                         }
                         break;
                     }
@@ -260,6 +262,7 @@ static void apollo_init_handler(MessageId id, Message msg)
                         APOLLO_DBG_LOG("init ok, fw ver: 0x%x.", apollo_fw_ver);
                         apollo_state = APOLLO_STATE_IDLE;
                         apollo_init_finish();
+                        online_dbg_record(ONLINE_DBG_APO_INIT_SUCC);
                         if (apollo_init_end_cb) apollo_init_end_cb();
                     }
                     else if (APOLLO_ACK_WAKEUP == feedback[0]) {
@@ -278,6 +281,7 @@ static void apollo_init_handler(MessageId id, Message msg)
                             apollo_state = APOLLO_STATE_ERR;
                             IO_LOW(APOLLO_OVERRIDE_IO);
                             apollo_init_finish();
+                            online_dbg_record(ONLINE_DBG_APO_INIT_FAIL);
                         }
                     }
                 }
@@ -299,6 +303,7 @@ static void apollo_init_handler(MessageId id, Message msg)
                             apollo_state = APOLLO_STATE_ERR;
                             IO_LOW(APOLLO_OVERRIDE_IO);
                             apollo_init_finish();
+                            online_dbg_record(ONLINE_DBG_APO_INIT_FAIL);
                         }
                     }
                     else if (io_init_wait_int_low_to < 5) {
@@ -312,6 +317,7 @@ static void apollo_init_handler(MessageId id, Message msg)
                         apollo_state = APOLLO_STATE_ERR;
                         IO_LOW(APOLLO_OVERRIDE_IO);
                         apollo_init_finish();
+                        online_dbg_record(ONLINE_DBG_APO_INIT_FAIL);
                     }
                 }
                 else if(APOLLO_STATE_START_UP == apollo_state)
@@ -327,6 +333,7 @@ static void apollo_init_handler(MessageId id, Message msg)
                         apollo_state = APOLLO_STATE_ERR;
                         IO_LOW(APOLLO_OVERRIDE_IO);
                         apollo_init_finish();
+                        online_dbg_record(ONLINE_DBG_APO_INIT_FAIL);
                     }
                 }
             }
@@ -499,15 +506,9 @@ static void apollo_common_handler(MessageId id, Message msg)
                     }
                     case APOLLO_STATE_ENTERING_SLEEP: {
                         uint32 feedback[2];
-                        int ret = apollo_fb((uint8*)feedback, 8);
+                        PanicNotZero(apollo_fb((uint8*)feedback, 8));
 
-                        if (ret) {
-                            APOLLO_DBG_LOG("init fail");
-                            apollo_state = APOLLO_STATE_ERR;
-                            IO_LOW(APOLLO_OVERRIDE_IO);
-                            apollo_init_finish();
-                        }
-                        else if (feedback[0] != APOLLO_SLEEP) {
+                        if (feedback[0] != APOLLO_SLEEP) {
                             APOLLO_DBG_LOG("get other int, try enter sleep again.");
                             if (sleep_times < 3)
                             {

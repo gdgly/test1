@@ -164,14 +164,17 @@ void appBleSelectFeture(void) {
         nowAdvFeture = ADV_FETURE_PAIR;
     } else if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
         nowAdvFeture = ADV_FETURE_GAIA;
-    } else if (appSmIsInCase()) {
+    } else if (appSmIsInDfuMode()) {
         nowAdvFeture = ADV_FETURE_UPGRADE;
     }
 
     if (nowAdvFeture >= 0) {
         appBleAdvFeture(nowAdvFeture);
+        DEBUG_LOG("appBleSelectFeture before feture is : %d, now feture is : %d, state is %04X",
+                beforeAdvFeture, nowAdvFeture, appGetState());
         if (beforeAdvFeture != nowAdvFeture) {
             /// 停止ble
+            DEBUG_LOG("appBleSelectFeture update ble feture : %d", nowAdvFeture);
             GattManagerCancelWaitForRemoteClient();
             beforeAdvFeture = nowAdvFeture;
         }

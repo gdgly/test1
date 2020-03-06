@@ -35,6 +35,10 @@ static void appSmNotifyUpgradeStarted(void);
 static void appSmStartDfuTimer(void);
 #endif /* INCLUDE_DFU */
 
+#ifdef CONFIG_STAROT
+#include "tws/peer.h"
+#endif
+
 /*****************************************************************************
  * SM utility functions
  *****************************************************************************/
@@ -400,7 +404,15 @@ static void appEnterInCaseDfu(void)
 
     appGetSm()->enter_dfu_in_case = FALSE;
 
+#ifdef CONFIG_STAROT
+    appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
+#else
     appGattSetAdvertisingMode(APP_ADVERT_RATE_SLOW);
+#endif
+
+#ifdef CONFIG_STAROT
+    // 进入dfu模式，需要断开与经典蓝牙的连接
+#endif
 }
 
 /*! \brief Exit
@@ -625,8 +637,14 @@ static void appEnterInEar(void)
 void appSetState(appState new_state)
 {
     appState previous_state = appGetSm()->state;
-
     DEBUG_LOGF("appSetState, state 0x%02x to 0x%02x", previous_state, new_state);
+#ifdef CONFIG_STAROT
+    if (APP_STATE_FACTORY_RESET == previous_state) {
+        /// reset factory耗时，在这个时间里，出入充电盒、接近光都没有禁用
+        DEBUG_LOG("appSetState, previous_state is APP_STATE_FACTORY_RESET, so direct return");
+        return;
+    }
+#endif
 
     /* Handle state exit functions */
     switch (previous_state)
@@ -1124,6 +1142,9 @@ static void appSmHandlePhyStateInCaseEvent(void)
     /*! \todo Need to add other non-core states to this conditional from which we'll
      * permit a transition back to a core state, such as...peer pairing? sleeping? */
     if (appSmIsCoreState() ||
+#ifdef CONFIG_STAROT
+      appSmIsInDfuMode() ||
+#endif
         (appGetState() == APP_STATE_HANDSET_PAIRING))
     {
         appSmSetCoreState();
@@ -1136,6 +1157,13 @@ static void appSmHandlePhyStateChangedInd(smTaskData* sm, PHY_STATE_CHANGED_IND_
     UNUSED(sm);
 
     DEBUG_LOGF("appSmHandlePhyStateChangedInd new phy state %d", ind->new_state);
+
+#ifdef CONFIG_STAROT
+    if (appSmIsInDfuMode() && (ind->new_state != PHY_STATE_IN_CASE))
+    {
+        appSmHandleDfuEnded(TRUE);
+    }
+#endif
 
     sm->phy_state = ind->new_state;
 
@@ -1297,18 +1325,19 @@ static void appSmHandleConnRulesDisconnectHfpA2dpAvrcp(void) {
 }
 
 static void appSmHandleConnRulesNotifyAppPosition(void) {
-    gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+    MessageSendLater(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL, 200);
     appConnRulesSetRuleComplete(CONN_RULES_NOTIFY_APP_POSITION);
 }
 
-static void appSmHandleConnRulesClearPeerVersionCache(void) {
+static void appSmHandleConnRulesClearPeerMemoryCache(void) {
     appPeerVersionClearCache();
-    appConnRulesSetRuleComplete(CONN_RULES_CLEAR_PEER_VERSION_CACHE);
+    appUIClearPeerSnStatus();
+    appConnRulesSetRuleComplete(CONN_RULES_CLEAR_PEER_MEMORY_CACHE);
 }
 
 static void appSmHandleConnRulesEnterDfu(void)
 {
-    DEBUG_LOG("appSmHandleConnRulesEnterDfu");
+    DEBUG_LOG("appSmHandleConnRulesEnterDfu appGetState:%04X", appGetState());
 
     switch (appGetState())
     {
@@ -1325,6 +1354,22 @@ static void appSmHandleConnRulesEnterDfu(void)
     }
     appConnRulesSetRuleComplete(CONN_RULES_ENTER_DFU);
 }
+
+#ifdef CONFIG_STAROT
+//extern void appUIUpgradeExit(bool needChangeStatus);
+
+static void appSmHandleConnRulesExitDfu(void)
+{
+    DEBUG_LOG("appSmHandleConnRulesExitDfu");
+    appSmHandleDfuEnded(TRUE);
+//    MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY);
+//    appUIUpgradeExit(FALSE);
+//    if (APP_STATE_STARTUP != appGetState()) {
+//        appGaiaDisconnect();
+//    }
+    appConnRulesSetRuleComplete(CONN_RULES_EXIT_DFU);
+}
+#endif
 
 static void appSmHandleConnRulesAllowHandsetConnect(void)
 {
@@ -1626,6 +1671,20 @@ static void appSmHandleConnRulesHandsetDisconnect(CONN_RULES_DISCONNECT_HANDSET_
     appSetState(appSetSubState(APP_SUBSTATE_DISCONNECTING));
     appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_HANDSET);
 }
+
+
+#ifdef CONFIG_STAROT
+static void appSmHandleConnRulesConnectInDfu(void)
+{
+    DEBUG_LOG("appSmHandleConnRulesConnectInDfu");
+    smPostDisconnectAction post_disconnect_action = POST_DISCONNECT_ACTION_NONE;
+    appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
+                                   appConfigLinkDisconnectionTimeoutTerminatingMs(),
+                                   post_disconnect_action);
+    appSetState(appSetSubState(APP_SUBSTATE_DISCONNECTING));
+    appConnRulesSetRuleComplete(CONN_RULES_CONNECT_IN_DFU);
+}
+#endif
 
 
 /*! \brief Earbud put in case disconnect link to peer */
@@ -1941,6 +2000,13 @@ static void appSmHandleHfpDisconnectedInd(APP_HFP_DISCONNECTED_IND_T *ind)
                    links, record that we're not connected with HFP to handset */
                 if (ind->reason == APP_HFP_DISCONNECT_NORMAL && !appSmIsDisconnectingLinks())
                     appDeviceSetHfpWasConnected(&ind->bd_addr, FALSE);
+//#ifdef CONFIG_STAROT
+//                if (ind->reason == APP_HFP_CONNECT_FAILED && !appSmIsDisconnectingLinks()) {
+//                    /// reconnect to headset
+//                    appDeviceSetHfpWasConnected(&ind->bd_addr, FALSE);
+//                    appHfpConnectHandset();
+//                }
+//#endif
             }
         }
         break;
@@ -1967,18 +2033,22 @@ static void appSmHandleHfpScoDisconnectedInd(void)
         appSmSetCoreState();
 }
 
-extern void appEnterSingleForTest(void);
+//extern void appEnterSingleForTest(void);
 static void appSmHandleInternalPairHandset(void)
 {
+#ifdef CONFIG_STAROT
+    if (appSmStateIsIdle(appGetState()) || (appSmIsInDfuMode() && !UpgradeInProgress()))
+#else
     if (appSmStateIsIdle(appGetState()))
+#endif
     {
         appSmSetUserPairing();
         appSetState(APP_STATE_HANDSET_PAIRING);
     }
-    else if (ParamUsingSingle()) {
-        DEBUG_LOG("appSmHandleInternalPairHandset: single ear pair");
-        appEnterSingleForTest();
-    }
+//    else if (ParamUsingSingle()) {
+//        DEBUG_LOG("appSmHandleInternalPairHandset: single ear pair");
+//        appEnterSingleForTest();
+//    }
     else
         DEBUG_LOG("appSmHandleInternalPairHandset can only pair in IDLE state, cur state: %d", appGetState());
 }
@@ -2077,7 +2147,6 @@ static void appSmHandleEnterDfuWithTimeout(uint32 timeoutMs)
     if (APP_STATE_IN_CASE_DFU != appGetState())
     {
         DEBUG_LOGF("appSmHandleEnterDfuWithTimeout. restarted SM_INTERNAL_TIMEOUT_DFU_ENTRY - %dms",timeoutMs);
-
         appSetState(APP_STATE_IN_CASE_DFU);
     }
     else
@@ -2089,7 +2158,7 @@ static void appSmHandleEnterDfuWithTimeout(uint32 timeoutMs)
 }
 
 
-static void appSmHandleDfuEnded(bool error)
+void appSmHandleDfuEnded(bool error)
 {
     DEBUG_LOGF("appSmHandleDfuEnded(%d)",error);
 
@@ -2213,6 +2282,10 @@ static void appSmHandleInternalAllRequestedLinksDisconnected(SM_INTERNAL_LINK_DI
                     break;
                 case APP_SUBSTATE_DISCONNECTING:
                     appSmSetCoreState();
+#ifdef CONFIG_STAROT
+                    /// 耳机断开连接，自动进入dfu+超时模式
+                    appSmHandleConnRulesEnterDfu();
+#endif
                     break;
                 default:
                     break;
@@ -2222,7 +2295,7 @@ static void appSmHandleInternalAllRequestedLinksDisconnected(SM_INTERNAL_LINK_DI
 }
 
 extern void appPeerSigTxSyncPair(Task task);          // 同步配对信息
-extern void appPeerSigTxSyncVersion(Task task);          // 同步配对信息
+extern void appPeerSigTxSyncVersionReq(Task task);          // 同步配对信息
 
 static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
 {
@@ -2232,18 +2305,22 @@ static void appSmHandlePeerSyncStatus(const PEER_SYNC_STATUS_T* status)
     if (appGetState() == APP_STATE_STARTUP)
     {
         appSmSetInitialCoreState();
-
     }
 
 #ifdef CONFIG_STAROT
     /// 同步对方耳机版本
-    if (status->peer_sync_complete && !ParamUsingSingle() && !appPeerVersionSyncStatusHaveSent()) {
+    if (appInitCompleted() && status->peer_sync_complete && !ParamUsingSingle() && !appPeerVersionSyncStatusHaveSent()) {
         DEBUG_LOG("call appPeerSigTxSyncVersion for send version to peer");
-        appPeerSigTxSyncVersion(appGetUiTask());
+        appPeerSigTxSyncVersionReq(appGetUiTask());
+        appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
     }
-#endif
 
-#ifdef CONFIG_STAROT
+    if (appInitCompleted() && status->peer_sync_complete && !ParamUsingSingle() && !appUIGetPeerSnStatusIsHaveSent()) {
+        DEBUG_LOG("call appPeerSigTxSyncSNReq for send sn to peer");
+        appPeerSigTxSyncSNReq(appGetUiTask());
+        appUISetPeerSnStatus(PEER_SN_SYNC_SENT);
+    }
+
     if(gBtAddrParam.ble_pair_sync) {
         DEBUG_LOG("Sync pair from StARTUP");
         appPeerSigTxSyncPair(appGetUiTask());
@@ -2408,6 +2485,11 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case CONN_RULES_DISCONNECT_HANDSET:
             appSmHandleConnRulesHandsetDisconnect((CONN_RULES_DISCONNECT_HANDSET_T*)message);
             break;
+#ifdef CONFIG_STAROT
+        case CONN_RULES_CONNECT_IN_DFU:
+            appSmHandleConnRulesConnectInDfu();
+            break;
+#endif
         case CONN_RULES_DISCONNECT_PEER:
             appSmHandleConnRulesPeerDisconnect();
             break;
@@ -2428,12 +2510,17 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case CONN_RULES_NOTIFY_APP_POSITION:
             appSmHandleConnRulesNotifyAppPosition();
             break;
-        case CONN_RULES_CLEAR_PEER_VERSION_CACHE:
-            appSmHandleConnRulesClearPeerVersionCache();
+        case CONN_RULES_CLEAR_PEER_MEMORY_CACHE:
+            appSmHandleConnRulesClearPeerMemoryCache();
             break;
         case CONN_RULES_ENTER_DFU:
             appSmHandleConnRulesEnterDfu();
             break;
+#ifdef CONFIG_STAROT
+        case CONN_RULES_EXIT_DFU:
+            appSmHandleConnRulesExitDfu();
+            break;
+#endif
         case CONN_RULES_ALLOW_HANDSET_CONNECT:
             appSmHandleConnRulesAllowHandsetConnect();
             break;
@@ -2491,7 +2578,11 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             break;
 
         case APP_GAIA_DISCONNECTED:
+#ifdef CONFIG_STAROT
+            DEBUG_LOG("APP_GAIA_DISCONNECTED, ignore enter dfu, auto parse this operation");
+#else
             appSmHandleDfuEnded(FALSE);
+#endif
             break;
 
         case APP_GAIA_UPGRADE_CONNECTED:
@@ -2551,7 +2642,11 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 
 #ifdef INCLUDE_DFU
         case SM_INTERNAL_ENTER_DFU_UI:
+#ifdef CONFIG_STAROT
+            appSmHandleEnterDfuWithTimeout(appUICanContinueUpgrade() ? 0 : appConfigDfuTimeoutAfterEnteringCaseMs());
+#else
             appSmHandleEnterDfuWithTimeout(appConfigDfuTimeoutAfterEnteringCaseMs());
+#endif
             break;
 
         case SM_INTERNAL_ENTER_DFU_UPGRADED:
@@ -2564,8 +2659,23 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 
         case SM_INTERNAL_TIMEOUT_DFU_ENTRY:
             DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY");
-
+#ifdef CONFIG_STAROT
+            /// app_state_startup, 如果还有dfu，说明之前升级过，需要与app保持连接
+            /// case打开，并且与手机建立连接(hfp/a2dp/avrcp)则不用建立dfu模式
+            if (APP_STATE_STARTUP == appGetState() || (appGetCaseIsOpen() &&
+                !(appDeviceIsHandsetHfpConnected() ||
+                  appDeviceIsHandsetA2dpConnected() ||
+                  appDeviceIsHandsetAvrcpConnected()))) {
+                DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY cancel dfu timer");
+                MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY,
+                                 NULL, appConfigDfuTimeoutAfterEnteringCaseMs());
+            } else {
+                DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY end dfu");
+                appSmHandleDfuEnded(TRUE);
+            }
+#else
             appSmHandleDfuEnded(TRUE);
+#endif
             break;
 
         case SM_INTERNAL_TIMEOUT_DFU_MODE_START:
@@ -2718,6 +2828,12 @@ void appSmEnterDfuModeInCase(bool enable)
 */
 static void appSmEnterDfuOnStartup(bool upgrade_reboot)
 {
+#ifdef CONFIG_STAROT
+    /// 强制关闭音频
+    appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
+                                   appConfigLinkDisconnectionTimeoutTerminatingMs(),
+                                   POST_DISCONNECT_ACTION_NONE);
+#endif
     MessageSend(appGetSmTask(),
                 upgrade_reboot ? SM_INTERNAL_ENTER_DFU_UPGRADED
                                : SM_INTERNAL_ENTER_DFU_STARTUP,
@@ -2730,6 +2846,7 @@ static void appSmNotifyUpgradeStarted(void)
 {
     appSmCancelDfuTimers();
 }
+
 #endif /* INCLUDE_DFU */
 
 

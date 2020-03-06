@@ -9,7 +9,7 @@
 #include "tws/peer.h"
 #include "apollo.h"
 #include "rwfile.h"
-#include "md5.h"
+#include "online_dbg.h"
 
 uint16 bufferSendUnit = 80;
 
@@ -28,7 +28,7 @@ extern void appGaiaSendResponse(uint16 vendor_id, uint16 command_id, uint16 stat
 extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                               uint16 payload_length, uint8 *payload);
 
-static void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message);
+static void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T* message);
 
 static void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T *message);
 
@@ -46,6 +46,7 @@ static void gaiaAppSetWearParameter(GAIA_STAROT_IND_T *mess);
 static void gaiaAppGetWearParameter(GAIA_STAROT_IND_T *message);
 static void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message);//上报电量-位置-连接状态信息
 static void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message);//App主动获取电量-位置-连接状态信息
+static void gaiaAppGetDeviceSN(GAIA_STAROT_IND_T *message);//获取设备的SN信息
 
 static void gaiaSetRequestRecord(GAIA_STAROT_IND_T *message, bool isBegin);//App请求录音
 static void gaiaAssistantAwake(GAIA_STAROT_IND_T *message, uint8 type);//ui上报gaia助手唤醒消息
@@ -77,9 +78,16 @@ static void starotSpeedSendIntervalParse(void);
 
 static void gaiaTestProductRest(GAIA_STAROT_IND_T *message);
 
-static void gaiaSendCallNumber(GAIA_STAROT_IND_T* message);
+static void gaiaSendCallNumber(STAROT_DIALOG_CALL_NUMBER_T* message);
 
 
+
+static void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerPeerExitCfm(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerGetVersionDetail(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerNotifyCommitStatus(GAIA_STAROT_IND_T *message);
 
 struct GaiaStarotPrivateData_T {
     Source dialogSpeaker;
@@ -220,12 +228,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case STAROT_DIALOG_TYPE:
             DEBUG_LOG("STAROT_DIALOG_TYPE");
             break;
-        case STAROT_DIALOG_STATUS:
-            gaiaParseDialogStatus(message);
-            break;
-        case STAROT_DIALOG_CALL_NUMBER:
-            gaiaSendCallNumber(message);
-            break;
+
         case STAROT_DIALOG_AUDIO_DATA:
             if (gaia_dbg_cnt++ % 100 == 0) {
                 DEBUG_LOG("call STAROT_DIALOG_AUDIO_DATA EVENT ");
@@ -279,6 +282,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_ATTR_TIMEOUT);
             break;
 
+        case GAIA_COMMAND_STAROT_UPGRADE_NOTIFY_COMMIT_STATUS | GAIA_ACK_MASK:
+            appUICancelAllUpgradeTime();
+            appPeerSigTxUpgradeCancelNotifyCommitStatusReq(appGetUiTask());
+            break;
+
             /// APP希望接受耳机的音频
         case GAIA_COMMAND_STAROT_START_TRANS_AUDIO_IND:
             starotGaiaDialogStartTransport(message);
@@ -323,6 +331,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_BASE_INFO_GET_ADORN_CHEAK_ENB:
             gaiaAppGetWearParameter(message);
+            break;
+        case GAIA_COMMAND_STAROT_BASE_INFO_GET_SN:
+            gaiaAppGetDeviceSN(message);
             break;
     }
     /// app控制耳机，发送相应蓝牙指令
@@ -374,6 +385,32 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         break;
     }
 
+    /// 升级
+    switch (message->command) {
+        case GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU:
+            appGaiaHandlerEnterDfu(message);
+            break;
+        case GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU:
+            /// 强制停止升级流程，后续并断开连接
+            appGaiaHandlerExitDfu(message);
+            break;
+        case GAIA_COMMAND_STAROT_UPGRADE_GET_CURRENT_VERSION_DETAIL:
+            appGaiaHandlerGetVersionDetail(message);
+            break;
+
+        case STAROT_APP_NOTIFY_PEER_UPGRADE_ENTER_CFM:
+            appGaiaHandlerPeerEnterCfm(message);
+            break;
+
+        case STAROT_APP_NOTIFY_PEER_UPGRADE_EXIT_CFM:
+            appGaiaHandlerPeerExitCfm(message);
+            break;
+
+        case STAROT_UI_NOTIFY_COMMIT_STATUS:
+            appGaiaHandlerNotifyCommitStatus(message);
+            break;
+    }
+
     /// 测试与生产
     switch (message->command) {
         case GAIA_COMMAND_STAROT_TEST_PRODUCT_REST:
@@ -387,6 +424,10 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
                                 GAIA_STATUS_SUCCESS, 1, &state);
             break;
         }
+        case GAIA_COMMAND_STAROT_TEST_ONLINE_DBG:
+        {
+            online_dbg_cmd_handler(message->payload[0]);
+        }
     }
     return TRUE;
 }
@@ -397,9 +438,20 @@ void starotGaiaDefaultParse(MessageId id, Message message) {
         case GAIA_STAROT_COMMAND_IND:
             starotGaiaHandleCommand((GAIA_STAROT_IND_T *) message);
             break;
+// region 通话速记
+        case STAROT_DIALOG_STATUS:
+            gaiaParseDialogStatus((STAROT_DIALOG_STATUS_T *)message);
+            break;
+        case STAROT_DIALOG_CALL_NUMBER:
+            gaiaSendCallNumber((STAROT_DIALOG_CALL_NUMBER_T*)message);
+            break;
+// endregion
 
         case GAIA_STAROT_MORE_SPACE: {
+<<<<<<< HEAD
 //            DEBUG_LOG("Call GAIA_STAROT_MORE_SPACE");
+=======
+>>>>>>> origin/master
             starotGaiaParseMessageMoreSpace();
         }
             break;
@@ -557,51 +609,65 @@ uint8 starotGaiaTransGetAudioType(void) {
     return gaiaStarotPrivateData.audioTransType;
 }
 
-void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
+void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
     if (NULL == message) return;
+    hfpState hstate = message->status;
 
-    StarotAttr *head = NULL;
-    uint8 status = message->payload[0];
-
-    if ((CALL_IN_ACTIVE|CALL_OUT_ACTIVE) & status) {
-        if (CALL_IN_ACTIVE == status)
-            DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, Appending Attr: CALL IN");
-        else
+    if(HFP_STATE_CONNECTED_OUTGOING == hstate || HFP_STATE_CONNECTED_INCOMING == hstate) {
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, 0xfe, 0, NULL);
+        if (HFP_STATE_CONNECTED_OUTGOING == hstate)
             DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, Appending Attr: CALL OUT");
+        else
+            DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, Appending Attr: CALL IN");
 
-        StarotAttr *attr = PanicNull(attrMalloc(&head, 1));
-        attr->attr = 0X02;
-        attr->payload[0] = (CALL_IN_ACTIVE == status) ? 0X01 : 0x02;
-
+        StarotAttr *head = NULL;
+        { /// 拨入/拨出
+            const uint8 directAttr = 0X02;
+            StarotAttr *attr = PanicNull(attrMalloc(&head, 1));
+            attr->attr = directAttr;
+            attr->payload[0] = (HFP_STATE_CONNECTED_INCOMING == hstate) ? 0X01 : 0x02;
+        }
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, 0xfe, len, data);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
         attrFree(head, data);
 
         appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
-    }
-    else if (CALL_ACTIVE == status) {
-        DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_ACTIVE");
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ACTIVE, 0xfe, 0, NULL);
-    }
-    else if (CALL_INACTIVE == status) {
-        DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_INACTIVE");
-
-        int num = gaiaGetDropAudioSize();
-        StarotAttr *attr = PanicNull(attrMalloc(&head, 4));
-        attr->attr = 0X06;
-        attr->payload[0] = (uint8)((num >> 0) & 0X00FF);
-        attr->payload[1] = (uint8)((num >> 8) & 0X00FF);
-        attr->payload[2] = (uint8)((num >> 16) & 0X00FF);
-        attr->payload[3] = (uint8)((num >> 24) & 0X00FF);
-
+    } else if (HFP_STATE_CONNECTED_ACTIVE == hstate) {
+        DEBUG_LOG("HFP_STATE_CONNECTED_ACTIVE");
+        StarotAttr *head = NULL;
+        uint16 numberLen = 0;
+        const uint8* numberInfo = subGaiaGetCaller(&numberLen);
+        if (numberLen > 0){ /// 电话号码
+            const uint8 callerAttr = 0X01;
+            StarotAttr *attr = PanicNull(attrMalloc(&head, numberLen));
+            attr->attr = callerAttr;
+            memcpy(attr->payload, numberInfo, numberLen);
+        }
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_INACTIVE, 0xfe, len, data);
-
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ACTIVE, 0xfe, len, data);
         attrFree(head, data);
+    } else if (HFP_STATE_CONNECTED_IDLE == hstate) {
+        DEBUG_LOG("HFP_STATE_CONNECTED_IDLE");
+
+        StarotAttr *head = NULL;
+        { /// 丢失的字节数
+            const uint8 dismissAudioSize = 0X06;
+            int num = gaiaGetDropAudioSize();
+            StarotAttr *attr = PanicNull(attrMalloc(&head, 4));
+            attr->attr = dismissAudioSize;
+            attr->payload[0] = (uint8)((num >> 0) & 0X00FF);
+            attr->payload[1] = (uint8)((num >> 8) & 0X00FF);
+            attr->payload[2] = (uint8)((num >> 16) & 0X00FF);
+            attr->payload[3] = (uint8)((num >> 24) & 0X00FF);
+        }
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_INACTIVE, 0xfe, len, data);
+        attrFree(head, data);
+
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_END, 0xfe, len, data);
 
         appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
 
@@ -610,29 +676,24 @@ void gaiaParseDialogStatus(GAIA_STAROT_IND_T *message) {
             DEBUG_LOG("disable audio forward");
             disable_audio_forward(TRUE);
         }
-    }
-    else if ((CALL_IN_INACTIVE|CALL_OUT_INACTIVE) & status) {
-        if (CALL_IN_INACTIVE == status)
-            DEBUG_LOG("Call In GAIA_COMMAND_STAROT_CALL_SETUP_END");
-        else
-            DEBUG_LOG("Call Out GAIA_COMMAND_STAROT_CALL_SETUP_END");
-
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_END, 0xfe, 0, NULL);
+        subGaiaClearCaller();
     }
 }
 
-static void gaiaSendCallNumber(GAIA_STAROT_IND_T* message) {
+static void gaiaSendCallNumber(STAROT_DIALOG_CALL_NUMBER_T* message) {
     StarotAttr *head = NULL;
     uint16 len = 0;
-
-    if (NULL == message || NULL == message->payload || 0 == message->payloadLen) return;
 
     DEBUG_LOG("send call number");
 
     // make call number attribute
-    StarotAttr *attr = PanicNull(attrMalloc(&head, message->payloadLen));
+    StarotAttr *attr = PanicNull(attrMalloc(&head, message->len));
     attr->attr = 0X01;
-    memcpy(attr->payload, message->payload, message->payloadLen);
+    if (message->len > 0) {
+        memcpy(attr->payload, message->number, message->len);
+        /// 缓存电话号码
+        subGaiaSetCaller(message->number, message->len);
+    }
 
     // send call number attribute
     uint8 *data = attrEncode(head, &len);
@@ -818,8 +879,48 @@ void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message) {
 
 // App主动获取电量-位置-连接状态信息
 void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message) {
-    gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+    MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+//获取设备的SN信息
+void gaiaAppGetDeviceSN(GAIA_STAROT_IND_T *message) {
+    DEBUG_LOG("gaiaAppGetDeviceSN");
+    StarotAttr *head = NULL;
+    { /// left
+        const uint8 leftSNAttr = 0X01;
+        StarotAttr *attr = attrMalloc(&head, DEV_SN_LEN);
+        attr->attr = leftSNAttr;
+        if (appConfigIsLeft()) {
+            memcpy(attr->payload, gFixParam.sn, DEV_SN_LEN);
+        } else {
+            memcpy(attr->payload, appUIGetPeerSnDetail(), DEV_SN_LEN);
+        }
+    }
+    { /// right
+        const uint8 rightSNAttr = 0X02;
+        StarotAttr *attr = attrMalloc(&head, DEV_SN_LEN);
+        attr->attr = rightSNAttr;
+        if (appConfigIsLeft()) {
+            memcpy(attr->payload, appUIGetPeerSnDetail(), DEV_SN_LEN);
+        } else {
+            memcpy(attr->payload, gFixParam.sn, DEV_SN_LEN);
+        }
+    }
+    { /// case
+        const uint8 caseSNAttr = 0X03;
+        StarotAttr *attr = attrMalloc(&head, DEV_SN_LEN);
+        attr->attr = caseSNAttr;
+        memcpy(attr->payload, gUserParam.caseSn, DEV_SN_LEN);
+    }
+    if (NULL != head) {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
+        attrFree(head, data);
+    } else {
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_INVALID_PARAMETER, 0, NULL);
+    }
 }
 
 // App获取设备的耳机的双击配置信息
@@ -1160,9 +1261,9 @@ static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {
         uint32 bindCode = (((uint32) data[2]) << 24) | (((uint32) data[3]) << 16) | (((uint32) data[4]) << 8) | data[5];
         appBleSetBond(advCode, bindCode, 100);   // 修改APP传入真正的时间值
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
-        gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+        MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
         GattManagerCancelWaitForRemoteClient();
-
+        subGaiaSetConnectUnlock();
         /// 同步给对方耳机
         appPeerSigTxSyncPair(appGetGaiaTask());
     } else {
@@ -1176,8 +1277,9 @@ static void gaiaCheckBondCode(GAIA_STAROT_IND_T *message) {
             uint8 *data = message->payload;
             uint32 bindCode = (((uint32) data[0]) << 24) | (((uint32) data[1]) << 16) | (((uint32) data[2]) << 8) | data[3];
             if (bindCode == appBleGetBondCode()) {
+                subGaiaSetConnectUnlock();
                 appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
-                gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_RECORD_RETURN_THREE_POWER);
+                MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
                 /// 取消超时如果没有发送bondCode断开连接的定时器
                 break;
             }
@@ -1316,5 +1418,196 @@ bool appGaiaIsConnectBySpp(void)
 }
 
 
+static bool appGaiaIsCanEnterDfu(void) {
+    /// todo 加多点规则
+
+    ///  任何一只耳机在空中，不允许升级
+    if (ParamUsingSingle()) {
+        if (!appSmIsInCase()) {
+            return FALSE;
+        }
+    } else {
+        if (!(appSmIsInCase() && appPeerSyncIsPeerInCase())) {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+/// 用户临时记录准备升级的版本，如果左右耳机都同意升级，则使用
+static uint8 tempForUpgradeVersion[DEV_SWVER_LEN];
+
+void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message) {
+    DEBUG_LOG("appGaiaHandlerEnterDfu");
+    bool isCanEnterDfu = appGaiaIsCanEnterDfu();
+    if (isCanEnterDfu) {
+        appPeerSigTxUpgradeEnterReq(appGetUiTask());
+        memset(tempForUpgradeVersion, 0x00, sizeof(tempForUpgradeVersion));
+
+        StarotAttr *pAttr = attrDecode(message->payload, message->payloadLen);
+        if (NULL == pAttr) {
+            return;
+        }
+
+        StarotAttr * head = pAttr;
+        const uint8 VERSION_CMD = 0X01;
+        if(VERSION_CMD == pAttr->attr) {
+            memcpy(tempForUpgradeVersion, pAttr->payload, DEV_SWVER_LEN);
+            DEBUG_LOG("appGaiaHandlerEnterDfu want upgrade software version is :%02X%02X%02X", tempForUpgradeVersion[1],
+                      tempForUpgradeVersion[2], tempForUpgradeVersion[3]);
+        }
+        attrFree(head, NULL);
+    } else {
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_INCORRECT_STATE, 0, NULL);
+    }
+}
+
+static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message) {
+    bool st = message->payload[0];
+    if (TRUE == st) {
+        memcpy(gProgRunInfo.tempCurrentVer, tempForUpgradeVersion, DEV_SWVER_LEN);
+        DEBUG_LOG("appGaiaHandlerPeerEnterCfm want upgrade software version is :%02X%02X%02X", gProgRunInfo.tempCurrentVer[1],
+                  gProgRunInfo.tempCurrentVer[2], gProgRunInfo.tempCurrentVer[3]);
+        memset(tempForUpgradeVersion, 0x00, sizeof(tempForUpgradeVersion));
+        MessageSend(appGetUiTask(), APP_UPGRADE_ENTER_BY_GAIA, NULL);
+    }
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU,
+            (TRUE == st) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE, 0, NULL);
+}
+
+void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message) {
+    DEBUG_LOG("appGaiaHandlerExitDfu");
+    /// 强制停止升级流程，后续并断开连接
+    if (appUICanContinueUpgrade()) {
+        appPeerSigTxUpgradeExitReq(appGetGaiaTask());
+    } else {
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+    }
+}
+
+static void appGaiaHandlerPeerExitCfm(GAIA_STAROT_IND_T *message) {
+    bool st = message->payload[0];
+    if (TRUE == st) {
+        MessageSend(appGetUiTask(), APP_UPGRADE_EXIT_BY_GAIA, NULL);
+        memset(tempForUpgradeVersion, 0x00, sizeof(tempForUpgradeVersion));
+    }
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_UPGRADE_EXIT_DFU,
+                        (TRUE == st) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE, 0, NULL);
+}
+
+static void appGaiaHandlerGetVersionDetail(GAIA_STAROT_IND_T *message) {
+    StarotAttr *head = NULL;
+    {
+        const uint8 RUN_SF_VERSION_ATTR = 1;
+        StarotAttr *attr = attrMalloc(&head, DEV_SWVER_LEN);
+        attr->attr = RUN_SF_VERSION_ATTR;
+        memcpy(attr->payload, SystemGetCurrentSoftware(), DEV_SWVER_LEN);
+    }
+    {
+        const uint8 UPGRADE_SF_VERSION_ATTR = 2;
+        StarotAttr *attr = attrMalloc(&head, DEV_SWVER_LEN);
+        attr->attr = UPGRADE_SF_VERSION_ATTR;
+        if (0 != memcmp(SystemGetCurrentSoftware(), appCurrVersionGet() + DEV_HWVER_LEN + 1, DEV_SWVER_LEN)) {
+            memcpy(attr->payload, appCurrVersionGet() + DEV_HWVER_LEN + 1, DEV_SWVER_LEN);
+        }
+    }
+    {
+        const uint8 UPGRADE_STATUS_ATTR = 3;
+        StarotAttr *attr = attrMalloc(&head, 1);
+        attr->attr = UPGRADE_STATUS_ATTR;
+        attr->payload[0] = UpgradeGetState();
+    }
+
+    uint16 len = 0;
+    uint8 *data = attrEncode(head, &len);
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
+    attrFree(head, data);
+}
+
+
+static void appGaiaHandlerNotifyCommitStatus(GAIA_STAROT_IND_T *message) {
+    DEBUG_LOG("call appGaiaHandlerNotifyCommitStatus, gaia connect status : %d", appGaiaIsConnect());
+    if (!(appGaiaIsConnect())) {
+        return;
+    }
+
+    StarotAttr *head = NULL;
+    {
+        const uint8 COMMIT_STATUS_ATTR = 1;
+        StarotAttr *attr = attrMalloc(&head, 1);
+        attr->attr = COMMIT_STATUS_ATTR;
+        attr->payload[0] = message->payload[0]; // 1:commit 0 revert
+    }
+    uint16 len = 0;
+    uint8 *data = attrEncode(head, &len);
+    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_UPGRADE_NOTIFY_COMMIT_STATUS, 0xfe, len, data);
+    attrFree(head, data);
+}
+
+
 #endif
+
+
+// region task数据
+
+subGaiaTaskData  gSubGaiaTaskData;
+void subGaiaTaskInit(void) {
+    memset(&gSubGaiaTaskData, 0X00, sizeof(gSubGaiaTaskData));
+    starotGaiaInit();
+    gSubGaiaTaskData.connectLock = SUB_GAIA_CONNECT_LOCK;
+}
+
+subGaiaTaskData* subGaiaGetTaskData(void) {
+    return &gSubGaiaTaskData;
+}
+
+// endregion
+
+// region 联系人信息
+
+const uint8* subGaiaGetCaller(uint16* len) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    *len = task->callerLen;
+    return task->callerNumber;
+}
+
+void subGaiaClearCaller(void) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    task->callerLen = 0;
+    memset(task->callerNumber, 0X00, sizeof(task->callerNumber));
+}
+
+void subGaiaSetCaller(uint8* data, uint16 len) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    uint16 s = (len > sizeof(task->callerNumber) ? sizeof(task->callerNumber) : len);
+    task->callerLen = s;
+    memcpy(task->callerNumber, data, s);
+}
+
+// endregion
+
+// region 使用conditionally发送消息
+
+void subGaiaSetConnectUnlock(void) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    task->connectLock = SUB_GAIA_CONNECT_UNLOCK;
+}
+
+void subGaiaClearConnectUnlock(void) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    task->connectLock = SUB_GAIA_CONNECT_LOCK;
+}
+
+uint16* subGaiaGetConnectLock(void) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    return &(task->connectLock);
+}
+
+bool subGaiaIsConnectLock(void) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    return task->connectLock > 0;
+}
+
+// endregion
 

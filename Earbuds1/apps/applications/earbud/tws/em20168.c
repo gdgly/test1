@@ -1,4 +1,5 @@
 #include "em20168.h"
+#include "online_dbg.h"
 #ifdef HAVE_EM20168
 
 
@@ -376,6 +377,7 @@ void EM20168_init(void)
     else{
         EM20168Disable(handle);
         DEBUG_LOG("em20168 read id error!value = %d\n", value);
+        online_dbg_record(ONLINE_DBG_PROX_INIT_FAIL);
         return;
     }
 
@@ -454,10 +456,11 @@ void EM20168_init(void)
     time_funcTask = PanicUnlessNew(EM20168InfoTask);
     memset(time_funcTask, 0, sizeof(time_funcTask));
     time_funcTask->task.handler = EM20168_time_itr_handler;
-    InputEventManagerRegisterTask(&time_funcTask->task, EM20168_ITR_PIN);
 #endif
 
     EM20168Disable(handle);
+
+    online_dbg_record(ONLINE_DBG_PROX_INIT_SUCC);
 }
 
 int EM20168_statcheck(void)

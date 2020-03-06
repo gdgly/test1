@@ -69,6 +69,10 @@ enum    av_headset_conn_rules_messages
 
     /*! Enter DFU mode as we have entered the case with DFU pending */
     CONN_RULES_ENTER_DFU,
+#ifdef CONFIG_STAROT
+    /* 退出DFU模式*/
+    CONN_RULES_EXIT_DFU,
+#endif
 
     /*! Update upgrade state */
     CONN_RULES_DFU_ALLOW,
@@ -116,9 +120,10 @@ enum    av_headset_conn_rules_messages
 #endif
     CONN_RULES_DISCONNECT_GAIA,
     CONN_RULES_NOTIFY_APP_POSITION, /// 通知ui，更新app的状态信息
-    CONN_RULES_CLEAR_PEER_VERSION_CACHE, // 清理Peer耳机版本的缓存数据
+    CONN_RULES_CLEAR_PEER_MEMORY_CACHE, // 清理Peer耳机版本的缓存数据
     /* 当充电盒关闭时，需要让设备断开hfp/a2dp/avrcp的连接，配对的时候，是连接的 */
     CONN_RULES_DISCONNECT_HFP_AD2P_AVRCP,
+    CONN_RULES_CONNECT_IN_DFU,
     /*! Any rules with RULE_FLAG_PROGRESS_MATTERS are no longer in progress. */
     CONN_RULES_NOP,
 };
@@ -288,7 +293,7 @@ typedef enum
 #define RULE_EVENT_CHECK_DFU                     (1ULL << 52)    /*!< Check whether upgrades should be allowed */
 #ifdef TWS_DEBUG
 #define RULE_EVENT_CLEAR_PAIR_HEADSET            (1ULL << 53)    /*!< 同步时，取消不必要的PairHeadset*/
-#define RULE_EVENT_CHECK_NEED_DISCONNECT         (1ULL << 54)    /*!< 检测是否需要断开连接 */
+//#define RULE_EVENT_CHECK_NEED_DISCONNECT         (1ULL << 54)    /*!< 检测是否需要断开连接 */
 #define RULE_EVENT_CASE_OPEN                     (1ULL << 55)    /*!< 充电盒打开  */
 #define RULE_EVENT_CASE_CLOSE                    (1ULL << 56)    /*!< 充电盒关闭  */
 #endif

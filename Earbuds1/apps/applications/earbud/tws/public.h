@@ -91,10 +91,15 @@ int appChangeCVCProcessMode(void);
   #define UartPuts(s)            \
     do{UartTxData((uint8*)(s), strlen((char*)(s))); UartTxData((uint8*)"\r\n", 2); }while(0)
   #define UartPuts1(s,d)         \
-    do{char buf[16];sprintf(buf,"%d\r\n",(d));UartTxData((uint8*)(s), strlen((char*)(s))); UartTxData((uint8*)buf,strlen(buf)); }while(0)
+    do{char buf[16];sprintf(buf,"%d\r\n",(d));UartTxData((uint8*)(s), strlen((char*)(s))); \
+    UartTxData((uint8*)buf,strlen(buf)); }while(0)
+  #define UartPuts2(s,d,d2)         \
+    do{char buf[24];sprintf(buf,"%d  %d\r\n",(d),(d2));UartTxData((uint8*)(s), strlen((char*)(s))); \
+    UartTxData((uint8*)buf,strlen(buf)); }while(0)
 #else
   #define UartPuts(...)
   #define UartPuts1(...)
+  #define UartPuts2(...)
 #endif
 
 //==============================================================================================
@@ -272,6 +277,10 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 
 #undef appConfigAacEnabled()
 #define appConfigAacEnabled()               FALSE    /* AAC 功能禁止 */
+#undef  appConfigAutoHandsetPairingTimeout()
+#define appConfigAutoHandsetPairingTimeout()    (60)     /* 等待手机配对时间 */
+#undef  appConfigDacDisconnectionDelayMs()
+#define appConfigDacDisconnectionDelayMs()      (2000)   /* 音频结束后停止ADC时间 */
 
 
 // 充电电流及电压使用
@@ -325,5 +334,15 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 //==============================================================================================
 // #define DOWNLOAD_PASSSTHROUGH                // PASSThrough 取数据
 #define DOWNLOAD_G722_ENCODER                // G722压缩将取数据
+
+#undef appConfigIdleTimeoutMs()
+#define appConfigIdleTimeoutMs()   D_SEC(0)
+
+#define MAKE_OBJECT(TYPE) TYPE *message = (TYPE*) PanicUnlessMalloc(sizeof(TYPE));
+#define MAKE_OBJECT_LEN(TYPE, LEN) TYPE *message = (TYPE*) PanicUnlessMalloc(sizeof(TYPE) + LEN);
+
+/// FFFF 大约40s (300 / 40 = 7.5) + 自身超时 10s左右
+#define staortConfigDefaultPageTimeout() ((uint32)(((uint32)0XFFFF) * 7))
+
 
 #endif // PUBLIC_H

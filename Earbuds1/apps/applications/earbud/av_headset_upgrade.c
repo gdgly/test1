@@ -183,7 +183,6 @@ void appUpgradeInit(void)
             upgrade_perm_always_ask,
             &earbud_upgrade_init_version,
             earbud_upgrade_init_config_version);
-
 }
 
 
@@ -268,6 +267,33 @@ static void appUpgradeHandleUpgradeStatusInd(const UPGRADE_STATUS_IND_T *sts)
     }
 }
 
+#ifdef CONFIG_STAROT
+static void appUpgradeHandleUpgradeSmStateInd(const UPGRADE_SM_STATE_IND_T*sts) {
+    DEBUG_LOG("appUpgradeHandleUpgradeSmStateInd recv state:%d", sts->state);
+    appPeerSyncSend(FALSE);
+    //const int UPGRADE_SM_STATE_COMMIT_HOST_CONTINUE = 14;
+    switch (sts->state) {
+        case 14: // UPGRADE_STATE_COMMIT_HOST_CONTINUE
+            // 使用定时器，检测版本是否一致，如果一致，可以提交;upgrade的定时不在处理，统一在这里提交，防止冲突
+            DEBUG_LOG("send later APP_CHECK_PEER_FOR_UPDATE for debug");
+            MessageSend(appGetUiTask(), APP_CHECK_PEER_FOR_UPDATE, NULL);
+            break;
+
+        case 17:  // UPGRADE_STATE_COMMIT
+        {
+            /// note:如果失败了，就重启了，没有消息到这边来
+            UI_APP_UPGRADE_COMMIT_STATUS* msg = PanicUnlessMalloc(sizeof(UI_APP_UPGRADE_COMMIT_STATUS));
+            msg->status = TRUE;
+            MessageSend(appGetUiTask(), APP_UPGRADE_COMMIT_STATUS, msg);
+        }
+            break;
+        default:
+            DEBUG_LOG("appUpgradeHandleUpgradeSmStateInd don't parse state:%d", sts->state);
+            break;
+    }
+}
+#endif
+
 static void appUpgradeSwapImage(void)
 {
     UpgradeImageSwap();
@@ -321,7 +347,10 @@ static void appUpgradeMessageHandler(Task task, MessageId id, Message message)
         case UPGRADE_APPLY_IND:
             DEBUG_LOG("appUpgradeMessageHandler. UPGRADE_APPLY_IND saying now !");
             appUpgradeNotifyActivity();
-            UpgradeApplyResponse(0);
+//            UpgradeApplyResponse(0);
+#ifdef CONFIG_STAROT
+            MessageSend(appGetUiTask(), APP_UPGRADE_APPLY_IND, NULL);
+#endif
             break;
                 
             /* Message sent to application to request blocking the system for an extended
@@ -341,16 +370,25 @@ static void appUpgradeMessageHandler(Task task, MessageId id, Message message)
                 
             /* Message sent to application to inform of the current status of an upgrade. */
         case UPGRADE_STATUS_IND:
+            DEBUG_LOG("appUpgradeMessageHandler. UPGRADE_STATUS_IND");
             appUpgradeHandleUpgradeStatusInd((const UPGRADE_STATUS_IND_T *)message);
             break;
+#ifdef CONFIG_STAROT
+        case UPGRADE_SM_STATE_IND:
+            DEBUG_LOG("appUpgradeMessageHandler. UPGRADE_SM_STATE_IND");
+            appUpgradeHandleUpgradeSmStateInd((const UPGRADE_SM_STATE_IND_T* )message);
+            break;
+#endif
 
             /* Message sent to application to request any audio to get shut */
         case UPGRADE_SHUT_AUDIO:
+            DEBUG_LOG("appUpgradeMessageHandler. UPGRADE_SHUT_AUDIO");
             appUpgradeHandleUpgradeShutAudio();
             break;
 
             /* Message sent to application set the audio busy flag and copy audio image */
         case UPRGADE_COPY_AUDIO_IMAGE_OR_SWAP:
+            DEBUG_LOG("appUpgradeMessageHandler. UPRGADE_COPY_AUDIO_IMAGE_OR_SWAP");
             appUpgradeHandleUpgradeCopyAudioImageOrSwap();
             break;
 
@@ -378,11 +416,15 @@ static void appUpgradeMessageHandler(Task task, MessageId id, Message message)
             UpgradeEraseStatus(message);
             break;
 
-        case MESSAGE_IMAGE_UPGRADE_COPY_STATUS:
+        case MESSAGE_IMAGE_UPGRADE_COPY_STATUS: {
             DEBUG_LOG("appUpgradeMessageHandler. MESSAGE_IMAGE_UPGRADE_COPY_STATUS");
-
+            bool* t = (bool*) message;
+            if (TRUE == (bool)(t[0])) {
+                MessageSendLater(appGetUiTask(), APP_UPGRADE_COPY_STATUS_GRADE, NULL, D_SEC(300));
+            }
             appUpgradeNotifyActivity();
             UpgradeCopyStatus(message);
+        }
             break;
 
         case MESSAGE_IMAGE_UPGRADE_HASH_ALL_SECTIONS_UPDATE_STATUS:
@@ -416,8 +458,14 @@ bool appUpgradeAllowUpgrades(bool allow)
        not been called previously */
     if (appInitCompleted())
     {
-         sts = UpgradePermit(allow ? upgrade_perm_assume_yes : upgrade_perm_no);
-         successful = (sts == upgrade_status_success);
+#ifdef CONFIG_STAROT
+//        sts = UpgradePermit(allow ? upgrade_perm_always_ask: upgrade_perm_no);
+        sts = UpgradePermit(allow ? upgrade_perm_assume_yes : upgrade_perm_no);
+#else
+        sts = UpgradePermit(allow ? upgrade_perm_assume_yes : upgrade_perm_no);
+#endif
+
+        successful = (sts == upgrade_status_success);
     }
 
     DEBUG_LOG("appUpgradeAllowUpgrades(%d) - success:%d (sts:%d)", allow, successful, sts);

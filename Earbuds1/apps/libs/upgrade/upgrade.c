@@ -774,6 +774,7 @@ void UpgradeImageSwap(void)
     UpgradeSMHandleValidated(UPGRADE_VM_DFU_COPY_VALIDATION_SUCCESS, NULL);
 }
 
+#ifdef CONFIG_STAROT_LIB
 extern UpgradeCtx *upgradeCtx;
 
 bool UpgradeInProgress(void) {
@@ -783,4 +784,25 @@ bool UpgradeInProgress(void) {
     return ((upgradeCtx->smState) >= UPGRADE_STATE_READY);
 }
 
+extern void CommitConfirmYes(void);
 
+void UpgradeCommitNewImage(void) {
+    CommitConfirmYes();
+}
+
+int UpgradeGetState(void) {
+    if (NULL == upgradeCtx) {
+        return -1;
+    }
+    return  upgradeCtx->smState;
+}
+
+void UpgradeRevertNewImage(void) {
+    UpgradeRevertUpgrades();
+    UpgradeCtxGetPSKeys()->upgrade_in_progress_key = UPGRADE_RESUME_POINT_ERROR;
+    UpgradeSavePSKeys();
+    PRINT(("P&R: UpgradeRevertNewImage saved\n"));
+    UpgradeSMSetState(UPGRADE_STATE_SYNC);
+    BootSetMode(BootGetMode());
+}
+#endif

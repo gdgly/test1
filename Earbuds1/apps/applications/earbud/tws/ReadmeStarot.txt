@@ -1,4 +1,32 @@
 
+
+20200305
+ 先拿出左耳机后拿出右耳机，手机设置音量， 先拿出右耳机后拿出左耳机，手机设置音量。导致不同的音量效果的问题。
+ apple 手机与耳机连接成功后，调用 appAvrcpHandleSetAbsoluteVolumeInd -->appAvInstanceHandleAvAvrcpSetVolumeInd->appAvVolumeSet
+ 来设置音量。因为两只耳机的蓝牙地址不一至，手机上分别保存了不同的音量，因此会设置不同的音量值。
+ 调试：
+   1、无论哪只耳机先出来，手机改写音量时都会自动同步到两只耳机中去。
+   2、耳机与手机连接成功，会先主动读取自己保存的音量值，但这时AVRCP还没有成功连接，因此不能同步到手机上去。
+   3、AVRCP连接成功之后，就会同步手机的音量过来。
+ 需要解决问题：
+   1、如何将耳机音量同步到手机中去。appAvAvrcpVolumeNotification。
+   2、如何去掉手机的第一次同步音量
+
+
+20200227
+ 板卡生产功耗问题,以下为刚生产的析卡
+ 1、单耳模式， 解决左右耳机相互查找问题
+ 2、耳机在出盒状态(并会打开接近光),没有连接过手机会（appConfigAutoHandsetPairingTimeout）连接失败
+    我们可以在手机配对
+
+
+20200225
+ appConfigAutoPeerPairingTimeout 设定耳机配对时间。 默认为0会一直查找直到成功，设置100后会在
+ 100秒后停止，但会再次启动查找，因此没有停下来。
+   1、如果需要停止需要修改appSmHandlePairingPeerPairConfirm -> appSetState(APP_STATE_STARTUP); 去掉
+   2、问题如果去掉了这个配对，那么什么时候再启动配对呢？
+
+
 20200224
  appPhyStateInit初始化涵数中，以下几个步骤会执行对应的函数来清除以下LOCK状态
  phy_state->lock = PHY_STATE_LOCK_EAR | PHY_STATE_LOCK_MOTION | PHY_STATE_LOCK_CASE;

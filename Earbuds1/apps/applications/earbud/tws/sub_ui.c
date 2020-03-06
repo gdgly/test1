@@ -17,6 +17,7 @@
 #include "apollo.h"
 #include "peer.h"
 #include "param.h"
+#include "online_dbg.h"
 
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
@@ -44,8 +45,19 @@ static void appNotifyPeerDeviceConfig(uint16 source);
 extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
                               uint16 payload_length, uint8 *payload);
 static void subUiEarInOutHandle(ProgRIPtr progRun, bool isIn);
+static void appUIUpgradeApplyInd(void);
+static void appUICheckVersion(void);
+static void appUICheckPeerVersionForUpdate(void);
+static void appUIUpgradeCommit(void);
+static void appUIUpgradeEnter(void);
+static void appUIUpgradeExit(void);
+static void appUIUpgradeNotifyCommitStatusInit(UI_APP_UPGRADE_COMMIT_STATUS* message);
+static void appUIUpgradeNotifyCommitStatusDo(UI_APP_UPGRADE_COMMIT_STATUS* message);
+static void appUIUpgradeNotifyCommitStatusTimeOut(UI_APP_UPGRADE_COMMIT_STATUS* message);
+static void appUIUpgradeNotifyCommitStatusTimeOutGrade(void);
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg);
+extern bool UpgradeSMAbort(void);
 
 
 /*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
@@ -197,7 +209,7 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
 #endif
 
         appSmConnectHandset();
-        appUiAvConnect();
+//        appUiAvConnect();
 
         DBCLINK_LOG("DBClink Two earbuds not connect phone");
         goto key_done;
@@ -274,15 +286,13 @@ void appSubUISetMicbias(int set)
 /////////////////////////////////////////////////////////////////////////
 static int16 subUiCallNumber2Gaia(ProgRIPtr progRun, const CALL_NUMBER_T* msg)
 {
-    if ((!progRun->gaiaStat) || (!msg)) return -1;
-
-    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
-
-    message->command = STAROT_DIALOG_CALL_NUMBER;
-    memcpy(message->payload, msg->number, msg->length);
-    message->payloadLen = msg->length;
-
-    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+    UNUSED(progRun);
+    MAKE_OBJECT_LEN(STAROT_DIALOG_CALL_NUMBER_T, msg->length);
+    message->len = msg->length;
+    memcpy(message->number, msg->number, msg->length);
+    MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER);
+    DEBUG_LOG("call subUiCallNumber2Gaia STAROT_DIALOG_CALL_NUMBER send conditionally");
+    MessageSendConditionally(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER, message, subGaiaGetConnectLock());
 
     DEBUG_LOG("subUiCallNumber2Gaia Call Number: ");
     int i = 0;
@@ -294,15 +304,22 @@ static int16 subUiCallNumber2Gaia(ProgRIPtr progRun, const CALL_NUMBER_T* msg)
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg)
 {
-    if ((!progRun->gaiaStat) || (!msg)) return -1;
-
-    MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, GAIA_PAYLOAD_LEN);
-
-    message->command    = STAROT_DIALOG_STATUS;
-    message->payload[0] = msg->command;
-    message->payloadLen = 1;
-
-    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
+    /// 1.如果电话接通时，没有和APP成功建立连接，缓存电话抵达、拨号等属性消息
+    /// 2.如果电话挂断，清理缓存的通话相关属性消息
+    if (HFP_STATE_CONNECTED_IDLE != msg->command) {
+        MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
+        message->status = msg->command;
+        DEBUG_LOG("call subUiCallIndicator2Gaia STAROT_DIALOG_STATUS send conditionally");
+        MessageSendConditionally(appGetGaiaTask(), STAROT_DIALOG_STATUS, message, subGaiaGetConnectLock());
+    } else {
+        MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER);
+        MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_STATUS);
+        if (!subGaiaIsConnectLock()) {
+            MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
+            message->status = msg->command;
+            MessageSend(appGetGaiaTask(), STAROT_DIALOG_STATUS, message);
+        }
+    }
 
     DEBUG_LOG("subUiCallIndicator2Gaia Status=0x%x, call indicator: 0x%02x",
               progRun->dial_stat, msg->command);
@@ -370,6 +387,7 @@ static void subUiStarttAssistantSystem(bool isTap)
 {
     (void)isTap;
     HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
+    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
 }
 
 static int16 subUiStartAssistant2Gaia(MessageId id, ProgRIPtr  progRun)
@@ -377,6 +395,7 @@ static int16 subUiStartAssistant2Gaia(MessageId id, ProgRIPtr  progRun)
     if(1 != progRun->gaiaStat)
         return -1;
 
+    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
     /* 唤醒系统助手，需要告诉APP是 APO还是TAP */
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
     if(id == APP_ASSISTANT_AWAKEN){
@@ -397,44 +416,15 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
         return -1;
 
     (void)id;
-
     uint16 battery_level, peer_battery_level;
     appPeerSyncGetPeerBatteryLevel(&battery_level, &peer_battery_level);
     progRun->peerElectrity = appBatteryConvertLevelToPercentage(peer_battery_level);
 
-//    phyState state = appPhyStateGetState();
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 5);
-
     message->command = STAROT_NOTIFY_STATUS;
     appUIGetPowerInfo(progRun, message->payload);
     message->payload[3] = appUIGetPositionInfo();//位置信息
     message->payload[4] = appUIGetConnectStatusInfo();//连接信息
-//    if(appConfigIsLeft()){
-//        if((uint8)progRun->gaiaStat)
-//            message->payload[4] |= 0X80;
-//        if(appDeviceIsHandsetAnyProfileConnected())
-//            message->payload[4] |= 0X40;
-//        if(appDeviceIsPeerConnected()) {
-//            message->payload[4] |= 0X20;
-//            message->payload[4] |= 0X04;
-//        }
-//        if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()
-//                || appPeerSyncIsPeerHandsetHfpConnected())
-//            message->payload[4] |= 0X08;
-//    }
-//    else {
-//        if((uint8)progRun->gaiaStat)
-//            message->payload[4] |= 0X10;
-//        if(appDeviceIsHandsetAnyProfileConnected())
-//            message->payload[4] |= 0X08;
-//        if(appDeviceIsPeerConnected()) {
-//            message->payload[4] |= 0X20;
-//            message->payload[4] |= 0X04;
-//        }
-//        if(appPeerSyncIsPeerHandsetA2dpConnected() || appPeerSyncIsPeerHandsetAvrcpConnected()
-//                || appPeerSyncIsPeerHandsetHfpConnected())
-//            message->payload[4] |= 0X40;
-//    }
     message->payloadLen = 5;
     MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, message);
 
@@ -491,9 +481,7 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     case STAROT_DIALOG_USER_REJECT_RECORD:
         disable_audio_forward(TRUE);
         break;
-    case STAROT_RECORD_RETURN_THREE_POWER:
-        subUiStat2Gaia(ind->command, progRun);
-        break;
+
     case STAROT_BASE_INFO_SET_APOLLO_WAKEUP_ENB: {  ///App设置语言唤醒是否使能
         APP_STAROT_WAKEUP_CONFIG_IND_T* m = (APP_STAROT_WAKEUP_CONFIG_IND_T*)message;
         gUserParam.apolloEnable = m->apollo_enable;
@@ -544,6 +532,22 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         if(progRun->iElectrity == ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent)
             break;
         progRun->iElectrity = ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent;
+        //---------------------------------------------------------------
+        if(progRun->powerflag15 == TRUE && progRun->iElectrity < 15 && (1 == progRun->bredrconnect) &&
+                (appSubGetProgRun()->chargeStat == CHARGE_ST_NONE))
+        {
+            if(progRun->iElectrity == 1){
+                appUiPlayPrompt(PROMPT_POWER_OFF);
+            }
+            appUiPlayPrompt(PROMPT_LOW_BATTERY);
+            progRun->powerflag15 = FALSE;
+        }
+
+        if((appSubGetProgRun()->chargeStat == CHARGE_ST_CONNECT) && (0 == progRun->bredrconnect))
+        {
+            progRun->powerflag15 = TRUE;
+        }
+        //---------------------------------------------------------------
         if (appPeerSyncIsComplete())
             appPeerSyncSend(FALSE);
         subUiStat2Gaia(id, progRun);
@@ -590,6 +594,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");    /* Get microphone sources */
 #ifdef HAVE_MAX20340
         appUiPowerSave((TRUE==max20340_GetConnect()) ? POWER_MODE_IN_CASE : POWER_MODE_OUT_CASE);
+        // 现在修改位置无效，处于dfu模式，不是core状态，会忽略，现在把dfu模式，添加到core中
         max20340_notify_current_status();
 #endif
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_UPGRADE);
@@ -616,7 +621,6 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case HFP_CALLER_ID_IND:
     case HFP_CURRENT_CALLS_IND:
         subUiCallNumber2Gaia(progRun, message);
-        subUiCallNumber2Gaia(progRun, message);
         break;
     case APP_CALL_ACTIVE:          // 拨号相关信息 接听
     {
@@ -629,11 +633,20 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CALLOUT_ACT:          // 拨号相关信息 拨出
     case APP_CALLOUT_INACT:        // 拨号相关信息 拨出断开
     case APP_CALL_INACTIVE:        // 拨号相关信息 断开
-        subUiCallIndicator2Gaia(progRun, message);		
+        //subUiCallIndicator2Gaia(progRun, message);
+        break;
+
+    case APP_UI_HFP_STATUS_CHANGE:
+        DEBUG_LOG("Call APP_UI_HFP_STATUS_CHANGE");
+        subUiCallIndicator2Gaia(progRun, message);
         break;
 
     case GAIA_STAROT_COMMAND_IND:           // GAIA 返回过来的消息
         subUiGaiaMessage(progRun, message);
+        break;
+
+    case APP_NOTIFY_DEVICE_CON_POS:         // 向GAIA发送消息，通知当前电量、位置信息
+        subUiStat2Gaia(0, progRun);
         break;
 
     // 盒子发送相关的命令操作
@@ -655,12 +668,14 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
    case APP_RESET_FACTORY:
        DEBUG_LOG("plc call reset headset");
 #ifdef TWS_DEBUG
+       UpgradeSMAbort();
        appSmHandleResetStatusToNormal();
        appSmFactoryReset();
 #endif
        break;
     case APP_CASE_OPEN:
         DEBUG_LOG("plc call case open");
+        online_dbg_record(ONLINE_DBG_CASE_OPEN);
 #ifdef TWS_DEBUG
         appConnRulesResetEvent(RULE_EVENT_CASE_OPEN);
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_OPEN);
@@ -668,8 +683,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
     case APP_CASE_CLOSE:
         DEBUG_LOG("plc call case close");
+        online_dbg_record(ONLINE_DBG_CASE_CLOSE);
 #ifdef TWS_DEBUG
-        if (appGaiaIsConnect()) {
+        if (appGaiaIsConnect() && !(appSmIsInDfuMode() && UpgradeInProgress())) {
             DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
             appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
         }
@@ -681,6 +697,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 #endif
         break;
     case APP_CASE_CLOSE_LATER:
+        /// focus (plc in / in case)
         appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
         break;
@@ -688,9 +705,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
-    case APP_THREE_POWER:         // 电量变化
-        subUiStat2Gaia(id, progRun);
-        break;
+
     case APP_CHARGE_STATUS:                 // 充电状态变化
         RETURN_APP_NOT_INIT();
 
@@ -727,6 +742,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case APP_ATTACH_PLC_IN: {
         DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
+        online_dbg_record(ONLINE_DBG_IN_CASE);
 #ifdef TWS_DEBUG
        // if (appSmIsOutOfEar()) {
 //        phyStateTaskData* phy_state = appGetPhyState();
@@ -745,6 +761,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case APP_ATTACH_PLC_OUT:  {
         DEBUG_LOG("parse APP_ATTACH_PLC_OUT event");
+        online_dbg_record(ONLINE_DBG_OUT_CASE);
 #ifdef TWS_DEBUG
        // if (appSmIsInCase()) {
 //        phyStateTaskData* phy_state = appGetPhyState();
@@ -766,13 +783,92 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         // 入耳 出耳
     case APP_PSENSOR_INEAR:
 //        appUiPowerSave(POWER_MODE_IN_EAR);
+        online_dbg_record(ONLINE_DBG_IN_EAR);
         subUiEarInOutHandle(progRun, TRUE);
+        //-------------------------------------------------------
+
+        DEBUG_LOG("progRun->bredrconnect =%d",progRun->bredrconnect);
+
+        if(appDeviceIsHandsetConnected() && (appDeviceIsPeerConnected()))
+        {
+            if((!appPeerSyncIsPeerInCase() && !appPeerSyncIsPeerInEar()) || appPeerSyncIsPeerInCase())
+            {
+                MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
+                MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
+            }
+        }
+        //-------------------------------------------------------
+//        appUiPowerSave(POWER_MODE_IN_EAR);
         break;
     case APP_PSENSOR_OUTEAR:
+        online_dbg_record(ONLINE_DBG_OUT_EAR);
         subUiEarInOutHandle(progRun, FALSE);
 //        appUiPowerSave(POWER_MODE_OUT_CASE);
         break;
 
+    case APP_UPGRADE_APPLY_IND:
+        DEBUG_LOG("do APP_UPGRADE_APPLY_IND");
+        appUIUpgradeApplyInd();
+        break;
+
+    case APP_UPGRADE_COPY_STATUS_GRADE:
+        DEBUG_LOG("do APP_UPGRADE_COPY_STATUS_GRADE");
+        MessageSendLater(appGetUiTask(), APP_UPGRADE_COPY_STATUS_GRADE, NULL, D_SEC(300));
+        break;
+
+    case APP_UPGRADE_REBOOT_TIMEOUT:
+        DEBUG_LOG("do APP_UPGRADE_REBOOT_TIMEOUT");
+    case APP_CHECK_VERSION:
+        DEBUG_LOG("do APP_CHECK_VERSION");
+        appUICheckVersion();
+        break;
+
+    case APP_CHECK_PEER_FOR_UPDATE:
+        DEBUG_LOG("do appUICheckPeerVersionForUpdate");
+        appUICheckPeerVersionForUpdate();
+        break;
+
+    case APP_UPGRADE_COMMIT: {
+        DEBUG_LOG("do APP_UPGRADE_COMMIT");
+        /// 每次启动，只会触发一次提交，现在测试一下，定时发送校验版本请求
+        static int onlyOne = 1;
+        MessageCancelAll(appGetUiTask(), APP_CHECK_PEER_FOR_UPDATE);
+        if (onlyOne > 0) {
+            appUIUpgradeCommit();
+            onlyOne -= 1;
+        }
+    }
+        break;
+
+    case APP_UPGRADE_ENTER_BY_PEER:
+        DEBUG_LOG("do APP_UPGRADE_ENTER_BY_PEER");
+    case APP_UPGRADE_ENTER_BY_GAIA:
+        DEBUG_LOG("do APP_UPGRADE_ENTER_BY_GAIA");
+        appUIUpgradeEnter();
+        break;
+
+    case APP_UPGRADE_EXIT_BY_PEER:
+        DEBUG_LOG("do APP_UPGRADE_EXIT_BY_PEER");
+    case APP_UPGRADE_EXIT_BY_GAIA:
+        DEBUG_LOG("do APP_UPGRADE_EXIT_BY_GAIA");
+        appUIUpgradeExit();
+        break;
+
+    case APP_UPGRADE_COMMIT_STATUS:
+        appUIUpgradeNotifyCommitStatusInit((UI_APP_UPGRADE_COMMIT_STATUS *) message);
+        break;
+    case APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT:
+        appUIUpgradeNotifyCommitStatusTimeOut((UI_APP_UPGRADE_COMMIT_STATUS*)message);
+        break;
+    case APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE:
+        appUIUpgradeNotifyCommitStatusTimeOutGrade();
+        break;
+
+    case APP_CONNECTED_HOST:
+        if(!appDeviceIsHandsetA2dpStreaming() &&
+                ((progRun->dial_stat & (DIAL_IN_ACTIVE|DIAL_OUT_ACTIVE|DIAL_ACTIVE)) == 0) && appDeviceIsHandsetConnected())
+            appUiPlayPrompt(PROMPT_CONNECTED);
+            break;
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
@@ -788,6 +884,10 @@ void appSubUIInit(void)
     progRun->caseLidOpen = UI_CASE_OPEN; /// 默认情况下，充电盒时开启状态，只有在收到明确的充电盒关闭事件，才设置为close
     appPeerVersionClearCache();
 
+    memcpy(progRun->currVer, gFixParam.hw_ver, DEV_HWVER_LEN);
+    progRun->currVer[DEV_HWVER_LEN] = ' ';
+    memcpy(&progRun->currVer[DEV_HWVER_LEN+1], SystemGetCurrentSoftware(), DEV_SWVER_LEN);
+
     // 运行到这个地方时外设都为正常打开状态
 #ifdef ENABLE_APOLLO
     apollo_sleep();
@@ -795,6 +895,7 @@ void appSubUIInit(void)
 
 #ifdef TWS_DEBUG
     progRun->realInCase = TRUE;
+    progRun->powerflag15 = TRUE;
 #endif
     /* 获取底层的电量信息 */
     battery_from.task            = &appGetUi()->task;
@@ -926,14 +1027,15 @@ int16 appUiHfpDialId(uint8 *number, uint16 size_number)
     if(0 == size_number)
         appSubGetProgRun()->dial_type = 0;
     else {
-            appSubGetProgRun()->dial_type = 1;
-            appUiHfpSaveId(number, size_number, NULL, 0, 0);
-        }
+        appSubGetProgRun()->dial_type = 1;
+        appUiHfpSaveId(number, size_number, NULL, 0, 0);
+    }
 
     MAKE_CALL_2_GAIA_MESSAGE(CALL_NUMBER);
+    message->length = size_number;
     memcpy(message->number, number, size_number);
-
     MessageSend(&appGetUi()->task, HFP_CURRENT_CALLS_IND, message);
+
     return 0;
 }
 
@@ -1078,9 +1180,12 @@ void appUiAvConnected(unsigned cad)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->bredrconnect = 1;
-
+    if(appSmIsInEar()){
+        MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
+        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
+    }
     appAdvParamInit();
-    MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
+    MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
 
 /*EDR disconnect state*/
@@ -1091,7 +1196,7 @@ void appUiAvDisconnected(void)
     progRun->bredrconnect = 0;
     apolloWakeupPower(0);               // 经典蓝牙断开，关闭APO
 
-    MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
+    MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
 
 /* EDR 配对成功与否 */
@@ -1114,6 +1219,13 @@ void appUiPairingFailed(void)
 }
 
 
+void appUiNotifyHtpStateChange(void) {
+    DEBUG_LOG("appUiNotifyHtpStateChange %d", appHfpGetState());
+    MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
+    message->command = appHfpGetState();
+    MessageSend(appGetUiTask(), APP_UI_HFP_STATUS_CHANGE, message);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///  盒子状态变化
 ///////////////////////////////////////////////////////////////////////////////
@@ -1121,16 +1233,17 @@ void appUiPairingFailed(void)
 void appUiCaseStatus2(int16 stat, int16 power)           // 当前USB状态
 {
     ProgRIPtr  progRun = appSubGetProgRun();
-
     if(progRun->caseUsb != stat) {
         uint8 buff[4];
-
         // 获取到状态变化，同步给对方
         buff[0] = stat;
         buff[1] = (uint8)power;
         appPeerSigTxDataCommandExt(appGetUiTask(), PEERTX_CMD_SYNC_CASEST, 2, buff);
         // MessageSend
-        progRun->caseUsb = stat;
+        if (progRun->caseUsb != stat) {
+            progRun->caseUsb = stat;
+            MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
+        }
     }
 }
 
@@ -1138,9 +1251,11 @@ void appUiCaseStatus2(int16 stat, int16 power)           // 当前USB状态
 void appUiCaseStatus2FromPeer(uint8 *buff)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
-
-    progRun->caseUsb       = buff[0];
-    progRun->caseElectrity = buff[1];
+    if ((progRun->caseUsb != buff[0]) || (progRun->caseElectrity != buff[1])) {
+        progRun->caseUsb       = buff[0];
+        progRun->caseElectrity = buff[1];
+        MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
+    }
 }
 
 
@@ -1163,7 +1278,7 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
         return;
     }
 
-    if(lidOpen >= 0) {
+    if(lidOpen >= 0 && appInitCompleted()) {
         static uint8 beforeStatus = 0xFF;                   // 先设置为0xFF,这样第一次过来就能发送信息了
         if (beforeStatus != lidOpen) {
             beforeStatus = lidOpen;
@@ -1334,8 +1449,10 @@ void appUiBatteryStat(int16 lbatt, int16 rbatt, int16 cbatt)
         iChange = 1;
     }
 
-    if(iChange > 0)
-        MessageSend(&appGetUi()->task, APP_THREE_POWER, 0);
+    if(iChange > 0) {
+        DEBUG_LOG("appUiBatteryStat, notify APP_NOTIFY_DEVICE_CON_POS to ui");
+        MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, 0);
+    }
 }
 
 // 临时停止BLE广播，以便开始新的广播内容
@@ -1474,7 +1591,6 @@ int apolloWakeupCallback(void)
             subUiVoiceTapWakeup(progRun, FALSE);
         }
     }
-    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
     return 0;
 }
 
@@ -1605,8 +1721,12 @@ void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
             arr[1] |= 0X80;
         }
     }
-    ///现在使用假的电量数据
-    arr[2] = (uint8)progRun->caseElectrity;//盒子电量
+
+    if (appPeerSyncIsPeerInCase() || appSmIsInCase()) {
+        arr[2] = (uint8)progRun->caseElectrity | (progRun->caseUsb ? 0X80 : 0X00); //盒子电量 充电，最高位为1
+    } else {
+        arr[2] = 0XFF; /// 任何一只耳机再充电盒中，都可以读取充电盒状态数据
+    }
 }
 
 uint8 appUIGetConnectStatusInfo(void) {
@@ -1770,6 +1890,11 @@ uint8* appPeerVersionGet(void) {
     return gProgRunInfo.peerVer;
 }
 
+uint8* appCurrVersionGet(void) {
+    return gProgRunInfo.currVer;
+}
+
+
 bool appPeerVersionSyncStatusIsComplete(void) {
     return (gProgRunInfo.peerVerSyncStatus == (uint8)PeerVersionSyncStatusComplete);
 }
@@ -1778,9 +1903,17 @@ void appPeerVersionSyncStatusSet(uint8 status) {
     gProgRunInfo.peerVerSyncStatus |= status;
 }
 
+void appPeerVersionSyncStatusClean(uint8 status) {
+    gProgRunInfo.peerVerSyncStatus ^= status;
+}
+
 void appPeerVersionSyncSent(void) {
-    appPeerSigTxSyncVersion(appGetUiTask());
-    appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
+    if (ParamUsingSingle()) {
+        appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent | PeerVersionSyncStatusRecv);
+    } else {
+        appPeerSigTxSyncVersionReq(appGetUiTask());
+        appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
+    }
 }
 
 void appPeerVersionClearCache(void) {
@@ -1793,6 +1926,150 @@ void appPeerVersionClearCache(void) {
 
 bool appPeerVersionSyncStatusHaveSent(void) {
     return (gProgRunInfo.peerVerSyncStatus & PeerVersionSyncStatusSent) > 0;
+}
+
+static void appUIUpgradeApplyInd(void) {
+    DEBUG_LOG("appUIUpgradeApplyInd parse, now sync version to peer earbuds");
+    // 使用定时器，如果MESSAGE_IMAGE_UPGRADE_COPY_STATUS（耗时操作）收到了，说明文件拷贝已经结束了
+    if (MessageCancelAll(appGetUiTask(), APP_UPGRADE_COPY_STATUS_GRADE) <= 0) {
+        // copy 还没有完成，不需要及时修改版本信息
+        DEBUG_LOG("appUIUpgradeApplyInd, copy not over, so defer this operation");
+        MessageSendLater(appGetUiTask(), APP_UPGRADE_APPLY_IND, NULL, 100);
+        return;
+    }
+    appUITempSetVersionToMemory(gProgRunInfo.tempCurrentVer);
+
+    // 如果双耳模式，查看另一只耳机版本。如果另一只耳机已经升级成功，向另一只耳机发送重启命令，当前耳机在收到重启命令的确认时重启，并设置定时器
+    // 如果单耳模式，直接重启
+    if (ParamUsingSingle()) {
+        UpgradeApplyResponse(0);
+    } else {
+        // 同步版本到另一只耳机
+        gProgRunInfo.upgradeNeedReboot = TRUE;
+        appPeerVersionSyncStatusSet(0);
+        appPeerVersionSyncSent();
+        const int versionSame = 2;
+        if (versionSame != SystemCheckMemoryVersion()) {
+            DEBUG_LOG("SystemCheckVersionWithPeer is not same, so need exit dfu mode");
+            appSmHandleDfuEnded(TRUE);
+        } else {
+            DEBUG_LOG("SystemCheckVersionWithPeer is same, now need think how reboot");
+            /// 可以执行重启，添加定时器，在版本同步确认的时候，去重新启动
+            // todo 此处需要考虑如果两只耳机连接不上，会发生什么事情
+            MessageSendLater(appGetUiTask(), APP_UPGRADE_REBOOT_TIMEOUT, NULL, D_SEC(5));
+        }
+    }
+}
+
+static void appUICheckVersion(void) {
+    DEBUG_LOG("enter appUICheckVersion");
+    appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
+    if (gProgRunInfo.upgradeNeedReboot) {
+        const int versionSame = 2;
+        if (versionSame == SystemCheckMemoryVersion()) {
+            DEBUG_LOG("appUICheckVersion SystemCheckVersionWithPeer is same, so need reboot self");
+            gProgRunInfo.upgradeNeedReboot = FALSE;
+            UpgradeApplyResponse(0);
+        }
+    }
+}
+
+extern void UpgradeCommitNewImage(void);
+extern void UpgradeRevertNewImage(void);
+
+static int haveCallappUICheckPeerVersionForUpdate = 0;
+static void appUICheckPeerVersionForUpdate(void) {
+    haveCallappUICheckPeerVersionForUpdate += 1;
+    DEBUG_LOG("call appUICheckPeerVersionForUpdate");
+    if (ParamUsingSingle()) {
+        /// 提交版本信息
+        UpgradeCommitNewImage();
+    } else {
+        /// note:只有重启才会进入该段code，所以不用重置(不管成功还是失败)
+        static int count = 1000;
+        if (count >= 0) {
+            DEBUG_LOG("appUICheckPeerVersionForUpdate, resend appUICheckPeerVersionForUpdate, count is :%d", count);
+            /// 重新发送同步version信息
+            CheckVersion checkVersion;
+            memcpy(checkVersion.softwareVersion, SystemGetCurrentSoftware(), DEV_SWVER_LEN);
+            appPeerSigTxUpgradeCheckVersionReq(appGetUiTask(), &checkVersion);
+            count -= 1;
+        } else {
+            /// 回滚版本
+            DEBUG_LOG("appUICheckPeerVersionForUpdate, revert image, count is :%d", count);
+            UpgradeRevertNewImage();
+        }
+    }
+}
+
+void appUITempSetVersionToMemory(uint8* ptr) {
+    for (int i = 0; i < DEV_SWVER_LEN; ++i) {
+        gProgRunInfo.currVer[DEV_HWVER_LEN + 1 + i] = ptr[i];
+    }
+    appPeerVersionSyncSent();
+}
+
+void appUIConvertTempVersionToMemory(void) {
+    memcpy(gProgRunInfo.currVer + DEV_HWVER_LEN, SystemGetCurrentSoftware(), DEV_SWVER_LEN);
+    appPeerVersionSyncSent();
+}
+
+static void appUIUpgradeCommit(void) {
+    UpgradeCommitNewImage();
+}
+
+static void appUIUpgradeEnter(void) {
+    DEBUG_LOG("call appUIUpgradeEnter");
+    gProgRunInfo.canContinueUpgrade = TRUE;
+    appSmEnterDfuMode();
+}
+
+void appUIUpgradeExit(void) {
+    DEBUG_LOG("call appUIUpgradeExit");
+    gProgRunInfo.canContinueUpgrade = FALSE;
+    appSmHandleDfuEnded(TRUE);
+}
+
+bool appUICanContinueUpgrade(void) {
+    return gProgRunInfo.canContinueUpgrade;
+}
+
+void appUICancelAllUpgradeTime(void) {
+    MessageCancelAll(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT);
+    MessageCancelAll(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE);
+}
+
+
+
+static void appUIUpgradeNotifyCommitStatusInit(UI_APP_UPGRADE_COMMIT_STATUS* message) {
+    MessageSendLater(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE, NULL, D_SEC(5 * 60));
+    appUIUpgradeNotifyCommitStatusDo(message);
+}
+
+static void appUIUpgradeNotifyCommitStatusDo(UI_APP_UPGRADE_COMMIT_STATUS* message) {
+
+    { // send to gaia
+        GAIA_STAROT_MESSAGE_T *msg = (GAIA_STAROT_MESSAGE_T *) PanicUnlessMalloc(sizeof(GAIA_STAROT_MESSAGE_T));
+        msg->command = STAROT_UI_NOTIFY_COMMIT_STATUS;
+        msg->payloadLen = 1;
+        msg->payload[0] = message->status;
+        MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, msg);
+    }
+    { // set timeout for resend
+        UI_APP_UPGRADE_COMMIT_STATUS *msg = (UI_APP_UPGRADE_COMMIT_STATUS *) PanicUnlessMalloc(
+                sizeof(UI_APP_UPGRADE_COMMIT_STATUS));
+        msg->status = message->status;
+        MessageSendLater(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT, msg, D_SEC(5));
+    }
+}
+
+static void appUIUpgradeNotifyCommitStatusTimeOut(UI_APP_UPGRADE_COMMIT_STATUS* message) {
+    appUIUpgradeNotifyCommitStatusDo(message);
+}
+
+static void appUIUpgradeNotifyCommitStatusTimeOutGrade(void) {
+    DEBUG_LOG("call appUIUpgradeNotifyCommitStatusTimeOutGrade");
+    MessageCancelAll(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT);
 }
 
 void testPrintBrEdr(void);
@@ -1808,3 +2085,43 @@ void testSiri(void) {
 }
 
 #endif
+
+// region SN同步
+
+void appUISetPeerSnDetail(uint8* peerSn, uint8 len) {
+    DEBUG_LOG("appUISetPeerSnDetail");
+    memcpy(gProgRunInfo.peerSn, peerSn, len > DEV_SN_LEN ? DEV_SN_LEN : len);
+}
+
+void appUISetPeerSnStatus(uint8 status) {
+    DEBUG_LOG("appUISetPeerSnStatus before %d, status : %d", gProgRunInfo.peerSnSyncStatus, status);
+    gProgRunInfo.peerSnSyncStatus |= status;
+    DEBUG_LOG("appUISetPeerSnStatus after %d, status : %d", gProgRunInfo.peerSnSyncStatus, status);
+}
+
+bool appUIGetPeerSnStatusIsComplete(void) {
+    return gProgRunInfo.peerSnSyncStatus == PEER_SN_SYNC_COMPLETE;
+}
+
+void appUIUnSetPeerSnStatus(uint8 status) {
+    DEBUG_LOG("appUIUnSetPeerSnStatus before is :%02X", gProgRunInfo.peerSnSyncStatus);
+    gProgRunInfo.peerSnSyncStatus ^= status;
+    DEBUG_LOG("appUIUnSetPeerSnStatus after is :%02X", gProgRunInfo.peerSnSyncStatus);
+}
+
+bool appUIGetPeerSnStatusIsHaveSent(void) {
+    return (gProgRunInfo.peerSnSyncStatus & PEER_SN_SYNC_SENT) > 0;
+}
+
+const uint8 *appUIGetPeerSnDetail(void) {
+    return gProgRunInfo.peerSn;
+}
+
+void appUIClearPeerSnStatus(void) {
+    DEBUG_LOG("appUIClearPeerSnStatus");
+    gProgRunInfo.peerSnSyncStatus = 0;
+}
+
+// endregion
+
+

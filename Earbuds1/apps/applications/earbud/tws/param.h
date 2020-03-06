@@ -19,6 +19,7 @@ typedef struct tagFIXPARAM {
     uint8          em20168_cal_already;         //接近光是否校准过了
     uint16         em20168_high_value;          //接近光校准高值
     uint16         em20168_low_value;           //接近光校准低值
+    uint16         ucs146e0_calib;//ucs146e0校准底噪值
 
     uint8          rev[8];
 }FixParam, *FixPrmPtr;
@@ -98,7 +99,7 @@ int16 SystemGetCurrentVersion(uint8 *buffer);             // Get Current Earbuds
 /// Peer > Current 1
 /// Peer = Current 2
 /// Peer < Current 3
-int SystemCheckVersionWithPeer(void);
+int SystemCheckMemoryVersion(void);
 int16 SystemSetVersion(DevType type, uint8 *buffer);
 int16 UserGetKeyFunc(uint8 *lKeyFunc, uint8 *rKeyFunc);   // 获取功能键
 int16 UserSetKeyFunc(uint8 lKeyFunc, uint8 rKeyFunc);     // 设置功能键
@@ -111,4 +112,6 @@ int16 SystemParamSn(uint8 type, uint8 *sn, bool bSave);        // Load/Save SN
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf);
 int16 ParamSaveSN(void *buff);
 int16 ParamLoadSN(void *buff);
+
+const uint8* SystemGetCurrentSoftware(void);
 #endif // PARAM_H

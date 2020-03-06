@@ -364,6 +364,9 @@ extern void appSmEnterDfuModeInCase(bool enable);
 /*! \brief 将非常规状态（比如与手机配对、与耳机配对）状态中跳转到InCase、OutCase等状态
  */
 void appSmHandleResetStatusToNormal(void);
+
+void appSmHandleDfuEnded(bool error);
+
 #endif
 
 #endif

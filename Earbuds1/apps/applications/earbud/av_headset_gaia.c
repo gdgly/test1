@@ -67,7 +67,7 @@ void appGaiaInit(void) {
     appGaiaClientRegister(appGetSmTask());
 
     GaiaInit(appGetGaiaTask(), 1);
-    starotGaiaInit();
+    subGaiaTaskInit();
 }
 
 
@@ -225,6 +225,7 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message) {
 #ifdef TWS_DEBUG
             appGaiaNotifyGaiaDisconnected();
             starotGaiaReset();
+            subGaiaClearConnectUnlock();
 #endif
             DEBUG_LOG("appGaiaMessageHandler GAIA_DISCONNECT_CFM");
             appSetGaiaTransport(NULL);

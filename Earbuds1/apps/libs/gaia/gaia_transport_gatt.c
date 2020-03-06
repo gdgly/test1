@@ -47,8 +47,19 @@ static void process_command(gaia_transport *transport, uint16 size_command, uint
     }
 }
 
+#include <stdio.h>
+
 static bool process_data(gaia_transport *transport, uint16 size_data, uint8 *data)
 {
+    uint16 s;
+
+    printf("gaia: size_data:%d\n",size_data);
+    printf("gaia: data:");
+    for (s = 0; s < size_data; ++s)
+    {
+        printf(" %02X",  data[s]);
+    }
+    printf("\n");
 #ifdef DEBUG_GAIA_TRANSPORT
     uint16 i;
     

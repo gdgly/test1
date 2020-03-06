@@ -101,6 +101,9 @@ static conManagerDevice *appConManageGetNewDevice(const bdaddr *addr, conManager
             device->local = is_local;
             device->ble = is_ble;
             device->lpState.pt_index = POWERTABLE_UNASSIGNED;
+#ifdef CONFIG_STAROT
+            device->residual_page_timeout = 0;
+#endif
             return device;
         }
     }
@@ -191,6 +194,8 @@ static uint16 *appConManagerCreateAclImpl(const bdaddr *addr, bool is_ble)
                                            appConfigRightEarbudPageTimeout();
     }
 
+
+
     /* Attempt to find existing device */
     conManagerDevice *device = appConManagerFindDeviceFromBdAddr(addr);
     if (device)
@@ -215,6 +220,10 @@ static uint16 *appConManagerCreateAclImpl(const bdaddr *addr, bool is_ble)
 
             DEBUG_LOGF("appConManagerCreateAclImpl, link-loss device, increasing page timeout to %u ms", page_timeout * 625UL / 1000UL);
 
+#ifdef CONFIG_STAROT
+            device->residual_page_timeout = staortConfigDefaultPageTimeout();
+#endif
+
             /* Reset device state */
             appConManagerSetDeviceState(device, ACL_DISCONNECTED);
         }
@@ -223,6 +232,13 @@ static uint16 *appConManagerCreateAclImpl(const bdaddr *addr, bool is_ble)
     /* Create new device */
     device = appConManagerAddDevice(addr, ACL_CONNECTING, TRUE, is_ble);
     device->users += 1;
+
+#ifdef CONFIG_STAROT
+    DEBUG_LOGF("appConManagerCreateAclImpl, residual_page_timeout is  %08X", device->residual_page_timeout);
+    if (device->residual_page_timeout > 0) {
+        device->residual_page_timeout -= page_timeout;  /// 去除当前这次的耗时
+    }
+#endif
 
     DEBUG_LOGF("appConManagerCreateAclImpl, %x,%x,%lx, create device, state %u, lock %u, users %u",
                device->addr.nap, device->addr.uap, device->addr.lap,
@@ -403,6 +419,45 @@ static void appConManagerHandleClDmAclOpenedIndication(const CL_DM_ACL_OPENED_IN
     }
     else
     {
+#ifdef CONFIG_STAROT
+        if(ind->status == hci_error_page_timeout) {
+            conManagerDevice *device = appConManagerFindDeviceFromBdAddr(&ind->bd_addr.addr);
+
+            /* if there is any residual page timeout, start the paging again */
+            if(device && device->residual_page_timeout > 0)
+            {
+                uint32 page_timeout;
+                DEBUG_LOGF("appConManagerHandleClDmAclOpenedIndication, there is still a residual timeout of %d slots", device->residual_page_timeout);
+                page_timeout = device->residual_page_timeout;
+                /* HCI timeout is 16 bits max */
+                if (page_timeout > 0xFFFF)
+                    page_timeout = 0xFFFF;
+
+                /* calculate the new residual timeout */
+                device->residual_page_timeout -= page_timeout;
+
+                /* Temporary direct use of DM_PRIMs until connection library API is created.
+                 * there is an API for page timeout, but we want to ensure it is set before using
+                 * the DM_ACK_OPEN_REQ. */
+                {
+                    MAKE_PRIM_C(DM_HCI_WRITE_PAGE_TIMEOUT_REQ);
+                    prim->page_timeout = (uint16)page_timeout;
+                    VmSendDmPrim(prim);
+                }
+                {
+                    /* Send DM_ACL_OPEN_REQ to open ACL manually */
+                    MAKE_PRIM_T(DM_ACL_OPEN_REQ);
+                    prim->addrt.type = TBDADDR_PUBLIC;
+                    prim->flags = 0;
+                    BdaddrConvertVmToBluestack(&prim->addrt.addr, &device->addr);
+                    VmSendDmPrim(prim);
+                }
+
+                /* should not proceed removing the device from the list */
+                return;
+            }
+        }
+#endif
         /* Remove this device from list of connected devices */
         appConManagerRemoveDevice(&ind->bd_addr.addr);
     }

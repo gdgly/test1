@@ -235,20 +235,20 @@ extern const ringtone_note app_tone_av_link_loss[];
     appUiPlayToneNotQueueable(app_tone_volume_limit)
 
 /*! \brief Play HFP SLC connected prompt */
-#define appUiHfpConnected(silent) \
-    { if (!(silent)) appUiPlayPrompt(PROMPT_CONNECTED); }
+#define appUiHfpConnected(silent)
+//    { if (!(silent)) appUiPlayPrompt(PROMPT_CONNECTED); }
 
 /*! \brief Play HFP SLC disconnected prompt */
 #define appUiHfpDisconnected() \
     appUiPlayPrompt(PROMPT_DISCONNECTED)
 
 /*! \brief Play HFP SLC link loss tone */
-#define appUiHfpLinkLoss() \
-    appUiPlayTone(app_tone_hfp_link_loss)
+#define appUiHfpLinkLoss()
+//    appUiPlayTone(app_tone_hfp_link_loss)
 
 /*! \brief Play HFP ring indication tone */
-#define appUiHfpRing(caller_id) \
-    appUiPlayTone(app_tone_hfp_ring)
+#define appUiHfpRing(caller_id)
+//    appUiPlayTone(app_tone_hfp_ring)
 
 #ifndef CONFIG_STAROT
 /*! \brief Handle caller ID */
@@ -257,12 +257,12 @@ extern const ringtone_note app_tone_av_link_loss[];
 #endif
 
 /*! \brief Play HFP SCO connected tone */
-#define appUiHfpScoConnected() \
-    appUiPlayTone(app_tone_hfp_sco_connected)
+#define appUiHfpScoConnected()
+//    appUiPlayTone(app_tone_hfp_sco_connected)
 
 /*! \brief Play HFP SCO disconnected tone */
-#define appUiHfpScoDisconnected() \
-    appUiPlayTone(app_tone_hfp_sco_disconnected)
+#define appUiHfpScoDisconnected()
+//    appUiPlayTone(app_tone_hfp_sco_disconnected)
 
 #ifndef CONFIG_STAROT
 /*! \brief Show HFP incoming call LED pattern */
@@ -338,8 +338,8 @@ extern const ringtone_note app_tone_av_link_loss[];
 #endif
 
 /*! \brief Play AV peer connected indication */
-#define appUiAvPeerConnected(silent) \
-    { if (!(silent)) appUiPlayTone(app_tone_av_connected);}
+#define appUiAvPeerConnected(silent)
+//    { if (!(silent)) appUiPlayTone(app_tone_av_connected);}
 
 #ifndef CONFIG_STAROT
 /*! \brief Play AV disconnected prompt */
@@ -348,8 +348,8 @@ extern const ringtone_note app_tone_av_link_loss[];
 #endif
 
 /*! \brief Play AV link-loss tone */
-#define appUiAvLinkLoss() \
-    appUiPlayTone(app_tone_av_link_loss)
+#define appUiAvLinkLoss()
+//    appUiPlayTone(app_tone_av_link_loss)
 
 /*! \brief Show AV streaming active LED pattern */
 #define appUiAvStreamingActive() \
@@ -455,10 +455,10 @@ do \
       MessageCancelFirst(appGetUiTask(), APP_INTERNAL_UI_INQUIRY_TIMEOUT); }
 
 /*! \brief Play inquiry error tone */
-#define appUiPeerPairingError() do { \
-      appUiPlayTone(app_tone_peer_pairing_error); \
-      appLedSetPattern(app_led_pattern_error, LED_PRI_EVENT); \
-      } while (0)
+#define appUiPeerPairingError() //do { \
+//      appUiPlayTone(app_tone_peer_pairing_error); \
+//      appLedSetPattern(app_led_pattern_error, LED_PRI_EVENT); \
+//      } while (0)
 
 #ifdef INCLUDE_DFU
 /*! \brief Play DFU active tone, show LED pattern */
