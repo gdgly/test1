@@ -448,10 +448,6 @@ void starotGaiaDefaultParse(MessageId id, Message message) {
 // endregion
 
         case GAIA_STAROT_MORE_SPACE: {
-<<<<<<< HEAD
-//            DEBUG_LOG("Call GAIA_STAROT_MORE_SPACE");
-=======
->>>>>>> origin/master
             starotGaiaParseMessageMoreSpace();
         }
             break;
