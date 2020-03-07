@@ -649,9 +649,9 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
         StarotAttr *attr = PanicNull(attrMalloc(&head, 1));
         attr->attr = 0X07;
         if(8000 == hstate)
-            attr->payload[0] == 0X01;
+            attr->payload[0] = 0X01;
         if(16000 == hstate)
-            attr->payload[0] == 0X02;
+            attr->payload[0] = 0X02;
 
         DEBUG_LOG("sample rate=%d", hstate);
         uint16 len = 0;
