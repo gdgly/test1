@@ -251,6 +251,9 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         case 0x0a:   //SPEAK
             ProductPlayTone();
             break;
+        case 0x0C:       // 播放指定的音频(与命令字0A差不多）
+            send_buf[2] = ProductPlayAudio(get_buf[2]);
+            break;
         case 0x0e:   //蓝牙
             ProductEnterDutMode();
             break;
@@ -331,10 +334,6 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         case 0x15:   //接近光验证状态
             send_buf[1] = 0x15;//需要返回值的话，给send_buf赋值
             send_buf[2] = EM20168_statcheck();
-            break;
-
-        case 0x4A:       // 播放指定的音频(与命令字0A差不多）
-            send_buf[2] = ProductPlayAudio(get_buf[2]);
             break;
 
         case 0x60:         // 当前 耳机的 STATE 发给盒子，调试使用
