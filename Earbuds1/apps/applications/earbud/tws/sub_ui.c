@@ -1226,6 +1226,12 @@ void appUiNotifyHtpStateChange(void) {
     MessageSend(appGetUiTask(), APP_UI_HFP_STATUS_CHANGE, message);
 }
 
+/* SCO chain建立的时候，通知上层应用当前sample,rate*/
+void appUiNotifyAudioSampleRate(uint16 rate, uint16 mode)
+{
+    DEBUG_LOG("appUiNotifyAudioSampleRate rate=%d %d", rate, mode);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 ///  盒子状态变化
 ///////////////////////////////////////////////////////////////////////////////

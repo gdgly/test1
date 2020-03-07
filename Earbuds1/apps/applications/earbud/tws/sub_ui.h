@@ -184,6 +184,10 @@ void appUiPairingComplete(void);
 void appUiPairingFailed(void);
 /* hfp 通知ui，通话状态发生变化 */
 void appUiNotifyHtpStateChange(void);
+
+/* SCO chain建立的时候，通知上层应用当前samplerate*/
+void appUiNotifyAudioSampleRate(uint16 rate, uint16 mode);
+
 ///////////////////////////////////////////////////////////////////////////////
 ///  APOLLO
 ///////////////////////////////////////////////////////////////////////////////

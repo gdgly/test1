@@ -279,6 +279,7 @@ void appKymeraHandleInternalScoStart(Sink sco_snk, const appKymeraScoChainInfo *
     /* Configure chain specific operators */
     appKymeraScoConfigureChain(wesco);
 #ifdef CONFIG_STAROT
+    appUiNotifyAudioSampleRate((uint16)info->rate, (uint16)info->mode);
     forwardAudioAndMic(sco_chain);
     appChangeCVCProcessMode();
 #endif
