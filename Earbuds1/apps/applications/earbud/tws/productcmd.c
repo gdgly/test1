@@ -178,6 +178,7 @@ extern int apolloGetStatus(void);
 extern int apollo_evoke(void);
 #endif
 extern void appSubUISetMicbias(int set);
+static void box_uc1460e_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_buf);
 
 
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
@@ -217,6 +218,11 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         DevType type = appConfigIsLeft() ? DEV_LEFT : DEV_RIGHT;
         SystemGetVersion(type, version);
         send_buf[2] = version[get_buf[1] - 0x48];
+        return;
+    }
+
+    if(get_buf[1] >= 0x6C && get_buf[1] <= 0x7F) {
+        box_uc1460e_calc_cmd(get_buf, send_buf, Sn);
         return;
     }
 
@@ -347,4 +353,102 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         default:
             break;
     }
+}
+
+#include "ucs146e0.h"
+static void box_uc1460e_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_buf)
+{
+#ifdef HAVE_UCS146E0
+    uint16 value;
+    FixPrmPtr prm = &gFixParam;
+
+    switch(get_buf[1]) {
+    case 0x6C:
+        send_buf[2] = Ucs146e0_statcheck();
+        break;
+
+        // 发送初始化命令，每次三个字节
+    case 0x6D:
+        send_buf[2] = 1;
+        static_buf[0] = get_buf[1];
+        break;
+    case 0x6E:
+        send_buf[2] = 2;
+        static_buf[1] = get_buf[1];
+        break;
+    case 0x6F:         // 开始启动并初始化
+        send_buf[2] = get_buf[2];
+        if(1 == send_buf[2]) {
+            Ucs146e0Power(TRUE);
+            Ucs146e0_get_crosstalk_init();
+        }
+        else if(2 == send_buf[2] || 3 == send_buf[2])
+            Ucs146e0_get_ps_cal_init((static_buf[0<<8] | static_buf[1]));
+        else
+            send_buf[2] = 0;
+        break;
+
+        // 读取talk值
+    case 0x70:
+        value = Ucs146e0_get_crosstalk_calvalue();
+        static_buf[2] = (value >> 8 ) & 0xFF;
+        static_buf[3] = (value >> 0 ) & 0xFF;
+        send_buf[2] = static_buf[2];
+        break;
+    case 0x71:
+        send_buf[2] = static_buf[3];
+        break;
+
+        // 读取 PS value
+    case 0x72:
+        value = Ucs146e0_get_ps_calvalue();
+        static_buf[4] = (value >> 8 ) & 0xFF;
+        static_buf[5] = (value >> 0 ) & 0xFF;
+        send_buf[2] = static_buf[4];
+        break;
+    case 0x73:
+        send_buf[2] = static_buf[5];
+        break;
+
+        // 读取参数
+    case 0x74:
+        memset(&static_buf[8], 0, 6);     // 需要先取出参数到static_buf中
+        if(prm->em20168_cal_already) {
+            static_buf[8] = (prm->em20168_high_value >> 8) & 0xFF;
+            static_buf[9] = (prm->em20168_high_value >> 0) & 0xFF;
+            static_buf[10] = (prm->em20168_low_value >> 8) & 0xFF;
+            static_buf[11] = (prm->em20168_low_value >> 0) & 0xFF;
+            static_buf[12] = (prm->ucs146e0_calib >> 8) & 0xFF;
+            static_buf[13] = (prm->ucs146e0_calib >> 0) & 0xFF;
+        }        // 不要加break
+    case 0x75:
+    case 0x76:
+    case 0x77:
+    case 0x78:
+    case 0x79:
+        value = get_buf[1] - 0x74;
+        send_buf[2] = static_buf[value+8];
+        break;
+
+        // 写参数
+    case 0x7A:
+    case 0x7B:
+    case 0x7C:
+    case 0x7D:
+    case 0x7E:
+    case 0x7F:
+        value = get_buf[1] - 0x7A;
+        static_buf[value+8] = get_buf[2];        // 因为是分多次发送过来，需要先保存到static_buf中
+        if(get_buf[1] == 0x7F) {
+            prm->em20168_high_value = (static_buf[8] << 8) & static_buf[9];
+            prm->em20168_low_value  = (static_buf[10] << 8) & static_buf[11];
+            prm->ucs146e0_calib     = (static_buf[12] << 8) & static_buf[13];
+            prm->em20168_cal_already = 1;
+            ParamSaveFixPrm(prm);
+        }
+        break;
+    }
+#else
+    (void)get_buf, (void)send_buf, (void)static_buf;
+#endif
 }
