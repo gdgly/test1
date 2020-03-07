@@ -615,7 +615,7 @@ static void appEnterInEar(void)
     }
 
     /* \todo this should move to a rule at some point */
-    if (appHfpIsCallIncoming())
+    if (appHfpIsCallIncoming()) /// 佩戴上，直接接听
     {
         DEBUG_LOG("appEnterInEar accepting call HFP");
         appHfpCallAccept();

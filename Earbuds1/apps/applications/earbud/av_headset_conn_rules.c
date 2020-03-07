@@ -1606,12 +1606,16 @@ static ruleAction ruleOutOfEarScoActive(void)
 
 static ruleAction ruleInEarScoTransferToEarbud(void)
 {
+#ifndef CONFIG_STAROT
+    /// 关闭理由：如果在佩戴的时候，对方电话没有接通，不是active状态，拨号音不是从耳机出来，
+    /// 导致后面的声音内容，都是从手机出来
     /* Check HFP state first, so if no active call we avoid unnecessary peer sync */
     if (!appHfpIsCallActive())
     {
         RULE_LOG("ruleInEarScoTransferToEarbud, ignore as this earbud has no active call");
         return RULE_ACTION_IGNORE;
     }
+#endif
 
     /* May already have SCO audio if kept while out of ear in order to service slave
      * for SCO forwarding */
