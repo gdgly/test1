@@ -32,6 +32,31 @@ void appSetSingleModeTest(void);
      appKymeraTonePlay(product_tone, TRUE, NULL, 0);
  }
 
+//extern void appPhyStateSetState(phyStateTaskData* phy_state, phyState new_state);
+static uint8 ProductPlayAudio(uint8 audNo)
+ {
+     if(audNo >= NUMBER_OF_PROMPTS)
+         return 0xFF;
+
+#if 10
+     uiTaskData *theUi = appGetUi();
+     const promptConfig *config = appConfigGetPromptConfig(audNo);
+     FILE_INDEX *index = theUi->prompt_file_indexes + audNo;
+     if (*index == FILE_NONE) {
+        const char* name = config->filename;
+        *index = FileFind(FILE_ROOT, name, strlen(name));
+     }
+
+     appKymeraPromptPlay(*index, config->format, config->rate,
+            TRUE, NULL, 0);
+
+#else
+     appPhyStateSetState(appGetPhyState(), PHY_STATE_IN_EAR);
+     appUiPlayPrompt(audNo);
+#endif
+     return audNo;
+ }
+
 //==================================================================================
 // 蓝牙传导测试时，可以通过盒子发送集合执行这个函数。
 // 然后测试设备就可以与析卡进行通信，并执行对应的测试
@@ -306,6 +331,10 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         case 0x15:   //接近光验证状态
             send_buf[1] = 0x15;//需要返回值的话，给send_buf赋值
             send_buf[2] = EM20168_statcheck();
+            break;
+
+        case 0x4A:       // 播放指定的音频(与命令字0A差不多）
+            send_buf[2] = ProductPlayAudio(get_buf[2]);
             break;
 
         case 0x60:         // 当前 耳机的 STATE 发给盒子，调试使用

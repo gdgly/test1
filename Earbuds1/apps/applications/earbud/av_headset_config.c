@@ -131,6 +131,11 @@ const promptConfig prompt_config[] =
         .filename = "connect_app.sbc",
         .rate = 16000,
         .format = PROMPT_FORMAT_SBC,
+    },    
+    [PROMPT_SPK_20000HZ] = {
+        .filename = "spk100_20000.sbc",
+        .rate = 16000,
+        .format = PROMPT_FORMAT_SBC,
     },
 };
 

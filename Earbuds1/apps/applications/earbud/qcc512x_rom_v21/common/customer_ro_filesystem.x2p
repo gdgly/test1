@@ -37,4 +37,5 @@
     <file path="../../prompts/pairing_successful.sbc"/>
     <file path="../../prompts/power_off.sbc"/>
     <file path="../../prompts/power_on.sbc"/>
+    <file path="../../prompts/spk100_20000.sbc"/>
 </project>
