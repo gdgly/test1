@@ -532,7 +532,6 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         if(progRun->iElectrity == ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent)
             break;
         progRun->iElectrity = ((MESSAGE_BATTERY_LEVEL_UPDATE_PERCENT_T*)message)->percent;
-        //---------------------------------------------------------------
         if(progRun->powerflag15 == TRUE && progRun->iElectrity < 15 && (1 == progRun->bredrconnect) &&
                 (appSubGetProgRun()->chargeStat == CHARGE_ST_NONE))
         {
@@ -547,7 +546,6 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         {
             progRun->powerflag15 = TRUE;
         }
-        //---------------------------------------------------------------
         if (appPeerSyncIsComplete())
             appPeerSyncSend(FALSE);
         subUiStat2Gaia(id, progRun);
@@ -790,7 +788,6 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 //        appUiPowerSave(POWER_MODE_IN_EAR);
         online_dbg_record(ONLINE_DBG_IN_EAR);
         subUiEarInOutHandle(progRun, TRUE);
-        //-------------------------------------------------------
 
         DEBUG_LOG("progRun->bredrconnect =%d",progRun->bredrconnect);
 
@@ -802,7 +799,6 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
                 MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
             }
         }
-        //-------------------------------------------------------
 //        appUiPowerSave(POWER_MODE_IN_EAR);
         break;
     case APP_PSENSOR_OUTEAR:
@@ -1234,6 +1230,13 @@ void appUiNotifyHtpStateChange(void) {
 /* SCO chain建立的时候，通知上层应用当前sample,rate*/
 void appUiNotifyAudioSampleRate(uint16 rate, uint16 mode)
 {
+    ProgRIPtr  progRun = appSubGetProgRun();
+    if(progRun->gaiaStat != 1) return;
+
+    MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
+    message->status = rate;
+    MessageSend(appGetGaiaTask(), STAROT_DIALOG_STATUS, message);
+
     DEBUG_LOG("appUiNotifyAudioSampleRate rate=%d %d", rate, mode);
 }
 
