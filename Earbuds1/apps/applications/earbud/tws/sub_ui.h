@@ -61,6 +61,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT       2119 // ui -> ui 定时返送，防止gaia没有连接，如果连接上了，不能收到升级状态
 #define APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE 2120 // ui -> ui 如果到了这个时间，还没有发送成功，取消通知
 #define APP_UPGRADE_COPY_STATUS_GRADE 2121  // upgrade/ui -> ui 拷贝成功之后，再去更新临时版本，copy操作很耗时，10s以上，导致不同步问题
+#define APP_BLE_SCANABLE_START        2122  // ble start adv
+#define APP_BLE_SCANABLE_TIMEOUT      2123  // ble adv timeout
 
 struct UI_APP_UPGRADE_COMMIT_STATUS_T {
     bool status;   // true:commit ;false:revert
@@ -221,6 +223,8 @@ void appUiChargerChargingLow(void);
 void appUiChargerChargingOk(void);
 void appUiChargerComplete(void);
 uint8 appUiGetPower(void);          // 获取当前耳机电量
+void appUIGetPowerInfo(ProgRIPtr  progRun, uint8* arr);
+uint8 appUIGetPositionInfo(void);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///  耳机连接

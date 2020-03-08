@@ -84,11 +84,13 @@ int16 ParamLoadUserPrm(UserPrmPtr pParam);
 int16 ParamLoadAll(void);
 int16 ParamGetPeerAddr( typed_bdaddr *taddr);       // 从内存中获取
 int16 ParamSavePeerAddr( typed_bdaddr *taddr);      // 盒子发来地址，需要保存
-int16 ParamLoadBlePair( BlePairInfo *blePairInfo);
+int16 ParamLoadBlePair(BlePairInfo *blePairInfo);
+BlePairInfo* ParamSearchBlePairByAddress(bdaddr* bd_addr);
 int16 ParamSaveBlePair(BlePairInfo *blePairInfo, uint32 timeModfy);
 int16 ParamSyncBlePair(int16 size_payload, uint8 *payload);    // 对方耳机发送过来的同步配对数据
 int16 ParamSyncBlePairSucc(void); // 已经成功同步给对方耳机了
 void bdaddr2buffer(bdaddr *addr, uint8* addrbuf);
+void ParamPrintBlePair(void);
 
 // 获取软硬件版本信息
 // type: 0:盒子，1:LEFT， 2耳机(右）

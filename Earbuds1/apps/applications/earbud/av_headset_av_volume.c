@@ -178,33 +178,23 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
     PanicFalse(appAvApplyVolume(volume));
 
 #ifdef CONFIG_STAROT
-    /// todo notify ble need start scanable, random code is volume,通过规则去触发
-    /// 如果ble没有设备已连接，则开始
-    /// 音量为非常规音量
-    while ((volume) % 8 != 0) {
-        /// ble没有建立连接
+    /*
+     * 收到特殊音量，说明时从APP发送过来的请求
+     * 如果BLE已经配对，开启快速广播
+     * 如果BLE未配对，说明用户第一次，是请求配对
+     * 为了防止广播滥用，在发出广播之后，需要在指定时间内，停止广播
+     */
+    while ((volume + 1) % 8 != 0) {
         if (appSmHasBleConnection()) {
             break;
         }
-        /// 设备未绑定
-        if (!appBleIsBond()) {
-            /// 比较音量信息
-            bool st = appAdvManagerAdvertdataUpdateRandomCode(ADV_VOLUME_RANDOM_CODE_MASK | volume);
-            /// 与之前音量一样
-            if (TRUE == st) {
-                break;
-            }
+        if (FALSE == appBleIsBond()) {
+            advManagerSetSpecialVol(volume);
         }
-
-        /// 设置未快广播
-//        appAdvManagerSetIsNeedFast(TRUE);
         appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
         GattManagerCancelWaitForRemoteClient();
-
+        MessageSendLater(appGetUiTask(), APP_BLE_SCANABLE_TIMEOUT, NULL, 30000);
         break;
-        /// 如果后期考虑降低电量消耗，使用定时器，将广播改为SLOW
-//        MessageCancelAll(appGetSmTask(), SM_INTERNAL_BLE_SCANABLE_TIMEOUT);
-//        MessageSendLater(appGetSmTask(), SM_INTERNAL_BLE_SCANABLE_TIMEOUT, NULL, 10000);
     }
 #endif
 

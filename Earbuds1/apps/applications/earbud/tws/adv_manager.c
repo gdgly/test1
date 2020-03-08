@@ -4,17 +4,89 @@
 #include "tws/adv_manager.h"
 #include "av_headset_log.h"
 
+// region Param参数获取与设置
 
 extern int16 ParamLoadBlePair(BlePairInfo *blePairInfo);
-
 extern int16 ParamSaveBlePair(BlePairInfo *blePairInfo, uint32 timeModfy);
+
+// endregion
+
+// region Task数据
+
+typedef struct  {
+//    1	产品型号，固定为0X01
+//    2	软件版本，固定为0X01
+//    3	耳机位置
+//    4	左耳机电量，FF表示异常
+//    5	右耳机电量，FF表示异常
+//    6	盒子电量，FF表示异常
+//    7-8	随机连接码
+//    9-17 left br/edr mac address
+//    18-24 right br/edr mac address
+//    25 ble feature
+    uint8 product;
+    uint8 version;
+    uint8 position;
+    uint8 leftPower;
+    uint8 rightPower;
+    uint8 casePower;
+    uint8 randomCodeHigh;
+    uint8 randomCodeLow;
+    uint8 leftEarMac[6];
+    uint8 rightEarMac[6];
+    uint8 bleFeture;
+} AdvManufacturerSpecificData;
+
+typedef struct {
+    bool enableSpecialVol;  /// 是否使能特殊音量广播
+    uint8 specialVolSize;   /// 特殊音量大小
+    AdvManufacturerSpecificData advManufacturerSpecificData;  /// 广播使用的数据
+} AdvManagerTaskData;
+
+static AdvManagerTaskData advManagerTask;
+
+void advManagerInit(void) {
+    memset(&advManagerTask, 0X00, sizeof(AdvManagerTaskData));
+    advManagerTask.advManufacturerSpecificData.product = 0X01;
+    advManagerTask.advManufacturerSpecificData.version = 0X01;
+}
+
+static AdvManagerTaskData* advManagerGet(void) {
+    return &advManagerTask;
+}
 
 extern void appGetLocalBrEdrAddress(uint8* addrbuf);
 extern void appGetPeerBrEdrAddress(uint8* addrbuf);
 
-void appAdvManagerAdvertdatafunc(void);
+void advManagerPrepareAdvInfo(void) {
+    uint8 feature;
+    uint16 advCode;
+    advManagerGetBleAdvInfo(&feature, &advCode);
 
-//static void appPrivateBleSetRandomCode(uint16 advCode);
+    AdvManagerTaskData *task = advManagerGet();
+    AdvManufacturerSpecificData* sd = &(task->advManufacturerSpecificData);
+    ProgRIPtr progRun = appSubGetProgRun();
+
+    sd->position = appUIGetPositionInfo();
+    appUIGetPowerInfo(progRun, &(sd->leftPower)); /// left - right - case
+
+    sd->randomCodeHigh = (uint8)((advCode & 0XFF00) >> 8);
+    sd->randomCodeLow = (uint8)(advCode & 0X00FF);
+
+    if (appConfigIsLeft()) {
+        appGetLocalBrEdrAddress(sd->leftEarMac);
+        appGetPeerBrEdrAddress(sd->rightEarMac);
+    } else {
+        appGetPeerBrEdrAddress(sd->leftEarMac);
+        appGetLocalBrEdrAddress(sd->rightEarMac);
+    }
+
+    sd->bleFeture = feature;
+}
+
+// endregion
+
+// region 广播使能时，设置广播数据
 
 static uint8 *addManufacturerSpecificData(uint8 *ad_data, uint8 *space, uint16 size_specific_data, const uint8 *specific_data) {
     uint8 field_length;
@@ -37,147 +109,101 @@ static uint8 *addManufacturerSpecificData(uint8 *ad_data, uint8 *space, uint16 s
     return ad_data;
 }
 
-struct AdvManufacturerSpecificData {
-//    1	产品型号，固定为0X01
-//    2	软件版本，固定为0X01
-//    3	耳机位置
-//    4	左耳机电量，FF表示异常
-//    5	右耳机电量，FF表示异常
-//    6	盒子电量，FF表示异常
-//    7-8	随机连接码
-//    9-17 left br/edr mac address
-//    18-24 right br/edr mac adddress
-//    25 ble feture
-    uint8 product;
-    uint8 version;
-    uint8 position;
-    uint8 leftPower;
-    uint8 rightPower;
-    uint8 casePower;
-    uint8 randomCodeHigh;
-    uint8 randomCodeLow;
-    uint8 leftEarMac[6];
-    uint8 rightEarMac[6];
-    uint8 bleFeture;
-};
-
-struct AdvTaskData {
-    struct AdvManufacturerSpecificData advManufacturerSpecificData;
-    BlePairInfo bleBondInfo;
-};
-
-static struct AdvTaskData advTaskData;
-
-void appAdvManagerAdvertdatafunc(void){
-    ProgRIPtr  progRun = appSubGetProgRun();
-    advTaskData.advManufacturerSpecificData.position = (0X40 | 0X08 | 0X01);
-    advTaskData.advManufacturerSpecificData.rightPower = progRun->peerElectrity;
-    advTaskData.advManufacturerSpecificData.leftPower = progRun->iElectrity;
-    advTaskData.advManufacturerSpecificData.casePower = progRun->caseElectrity;
-    if (appConfigIsLeft()) {
-        appGetLocalBrEdrAddress(advTaskData.advManufacturerSpecificData.leftEarMac);
-        appGetPeerBrEdrAddress(advTaskData.advManufacturerSpecificData.rightEarMac);
-    } else {
-        appGetPeerBrEdrAddress(advTaskData.advManufacturerSpecificData.leftEarMac);
-        appGetLocalBrEdrAddress(advTaskData.advManufacturerSpecificData.rightEarMac);
-    }
+uint8 *advManagerAddManufacturerSpecificData(uint8 *ad_data, uint8 *space) {
+    AdvManagerTaskData* task = advManagerGet();
+    advManagerPrepareAdvInfo();
+    DEBUG_LOG("call advManagerAddManufacturerSpecificData for ble adv data");
+    return addManufacturerSpecificData(ad_data, space, sizeof(AdvManufacturerSpecificData),
+                                       (const uint8 *) &(task->advManufacturerSpecificData));
 }
 
-uint8 *appAdvManagerAdvertdataAddManufacturerSpecificData(uint8 *ad_data, uint8 *space) {
-    advTaskData.advManufacturerSpecificData.product = 0X01;
-    advTaskData.advManufacturerSpecificData.version = 0X01;
-
-    appAdvManagerAdvertdatafunc();
-//    advManufacturerSpecificData.randomCode = 0X66;
-
-    DEBUG_LOG("call appAdvManagerAdvertdataAddManufacturerSpecificData for ble adv data");
-    return addManufacturerSpecificData(ad_data, space, sizeof(advTaskData.advManufacturerSpecificData),
-                                       (const uint8 *) &advTaskData.advManufacturerSpecificData);
-}
-
-bool appAdvManagerAdvertdataUpdateRandomCode(uint16 randomCode) {
-    uint16 beforeRandCode = advTaskData.advManufacturerSpecificData.randomCodeHigh;
-    beforeRandCode = (beforeRandCode << 8) + advTaskData.advManufacturerSpecificData.randomCodeLow;
-    appPrivateBleSetRandomCode(randomCode);
-    return (beforeRandCode == randomCode);
-}
+// endregion
 
 bool appBleIsBond(void) {
-    return advTaskData.bleBondInfo.bleIsBond;
+    BlePairInfo blePairInfo;
+    ParamLoadBlePair(&blePairInfo);
+    return blePairInfo.bleIsBond;
 }
 
-bool appAdvParamInit(void) {
-    ParamLoadBlePair(&advTaskData.bleBondInfo);
-    appPrivateBleSetRandomCode(advTaskData.bleBondInfo.advCode);
-    return TRUE;
+uint32 appBleGetBondCode(void) {
+    BlePairInfo blePairInfo;
+    ParamLoadBlePair(&blePairInfo);
+    return blePairInfo.bondCode;
 }
 
-void appAdvParamSave(uint32 timeModfy) {
-    int res = ParamSaveBlePair(&advTaskData.bleBondInfo, timeModfy);
-    if (res < 0) {
-        printf("save adv param failed\n");
-    }
-}
-
-void appBleClearBond(void) {
-    DEBUG_LOG("call appBleClearBond");
-    advTaskData.bleBondInfo.bleIsBond = FALSE;
-    advTaskData.bleBondInfo.advCode = 0X00;
-    advTaskData.bleBondInfo.bondCode = 0X00;
-//    appAdvParamSave(0);            // 保存多个时候，不需要CLEAR了
-    appPrivateBleSetRandomCode(0X00);
-}
-
-void appBleSetBond(uint16 advCode, uint32 bondCode, uint32 timeModfy) {
-    DEBUG_LOG("set pair ble code is : adv %04X, bond %04X", advCode, bondCode);
-    advTaskData.bleBondInfo.bleIsBond = TRUE;
-    advTaskData.bleBondInfo.advCode = advCode;
-    advTaskData.bleBondInfo.bondCode = bondCode;
-
-    appAdvParamSave(timeModfy);
-    appPrivateBleSetRandomCode(advCode);
-}
 
 void appBleSetSync(bool status) {
     (void)status;       // 这个函数在使用时间作为比较后，不需要单独保存了
 }
 
-uint32 appBleGetBondCode(void) {
-    return advTaskData.bleBondInfo.bondCode;
-}
 
-void appPrivateBleSetRandomCode(uint16 advCode) {
-    advTaskData.advManufacturerSpecificData.randomCodeHigh = (advCode & 0XFF00) >> 8;
-    advTaskData.advManufacturerSpecificData.randomCodeLow = advCode & 0X00FF;
-    DEBUG_LOG("random code : high %02X, low %02X", advTaskData.advManufacturerSpecificData.randomCodeHigh,
-              advTaskData.advManufacturerSpecificData.randomCodeLow);
-}
+// region 广播码
 
-void appBleAdvFeture(uint8 feture) {
-    advTaskData.advManufacturerSpecificData.bleFeture = feture;
-}
-
-void appBleSelectFeture(void) {
-    static int beforeAdvFeture = 0XFF;
-    int nowAdvFeture = -1;
+static uint8 selectFeature(void) {
+    uint8 nowAdvFeature = 0XFF;
     if (appSmIsPairing()) {
-        nowAdvFeture = ADV_FETURE_PAIR;
+        nowAdvFeature = ADV_FEATURE_PAIR;
     } else if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
-        nowAdvFeture = ADV_FETURE_GAIA;
+        nowAdvFeature = ADV_FEATURE_GAIA;
     } else if (appSmIsInDfuMode()) {
-        nowAdvFeture = ADV_FETURE_UPGRADE;
+        nowAdvFeature = ADV_FEATURE_UPGRADE;
+    }
+    return nowAdvFeature;
+}
+
+static uint16 selectAdvCode(void) {
+    uint16 nowAdvCode = 0XFFFF;
+    AdvManagerTaskData* task = advManagerGet();
+    if (appSmIsPairing()) {
+        nowAdvCode = 0X0000;
+    } else if (TRUE == task->enableSpecialVol) {
+        nowAdvCode = ADV_VOLUME_RANDOM_CODE_MASK | task->specialVolSize;
+    } else {
+        BlePairInfo blePairInfo;
+        ParamLoadBlePair(&blePairInfo);
+        nowAdvCode = blePairInfo.advCode;
+    }
+    return nowAdvCode;
+}
+
+void advManagerGetBleAdvInfo(uint8 *feature, uint16 *advCode) {
+    if (NULL != feature) {
+        *feature = selectFeature();
     }
 
-    if (nowAdvFeture >= 0) {
-        appBleAdvFeture(nowAdvFeture);
-        DEBUG_LOG("appBleSelectFeture before feture is : %d, now feture is : %d, state is %04X",
-                beforeAdvFeture, nowAdvFeture, appGetState());
-        if (beforeAdvFeture != nowAdvFeture) {
-            /// 停止ble
-            DEBUG_LOG("appBleSelectFeture update ble feture : %d", nowAdvFeture);
-            GattManagerCancelWaitForRemoteClient();
-            beforeAdvFeture = nowAdvFeture;
-        }
+    if (NULL != advCode) {
+        *advCode = selectAdvCode();
     }
 }
 
+bool advManagerSaveBleAdvInfo(uint16 adv, uint32 bond, uint32 timestamp) {
+    BlePairInfo blePairInfo;
+    ParamLoadBlePair(&blePairInfo);
+    blePairInfo.advCode = adv;
+    blePairInfo.bondCode = bond;
+    blePairInfo.bleIsBond = TRUE;
+    ParamSaveBlePair(&blePairInfo, timestamp);
+    return TRUE;
+}
+
+// endregion
+
+// region 特殊音量设置
+
+void advManagerSetSpecialVol(uint8 volSize) {
+    AdvManagerTaskData* task = advManagerGet();
+    task->enableSpecialVol = TRUE;
+    task->specialVolSize = volSize;
+}
+
+void advManagerStopSpecialVol(void) {
+    AdvManagerTaskData* task = advManagerGet();
+    task->enableSpecialVol = FALSE;
+    task->specialVolSize = 0X00;
+}
+
+bool advManagerIsEnableSpecialVol(void) {
+    return advManagerGet()->enableSpecialVol;
+}
+
+// endregion

@@ -433,8 +433,6 @@ static void ShellMessageHandler (Task pTask, MessageId pId, Message pMessage)
     }
 }
 
-//extern bool appAdvParamInit(void);
-
 void ShellCmdInit(void)
 {
     pShellTask = PanicUnlessNew(ShellInfoTask);

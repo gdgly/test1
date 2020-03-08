@@ -317,7 +317,7 @@ void appDeviceInit(void)
 
     /* 根据最后一次连接信息载入对应的配对码 */
 #ifdef CONFIG_STAROT
-    appAdvParamInit();
+    advManagerInit();
 #endif
 }
 

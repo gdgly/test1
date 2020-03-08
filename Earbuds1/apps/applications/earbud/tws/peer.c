@@ -269,7 +269,6 @@ bool appPeerSigHandleBleConfigCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind) {
         int advCode = data[0];
         int bondCode = data[1];
         /// 是直接存储，还是调用ui
-        appBleSetBond(advCode, bondCode);
         appBleSetSync(TRUE);
         return TRUE;
     }

@@ -362,7 +362,6 @@ static void appEnterHandsetPairing(void)
 
     appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
     GattManagerCancelWaitForRemoteClient();
-    //appBleClearBond();  // todo 要不记录多个，要不在成功配对之后，或在收到配对地址时，给清除掉
     appGaiaDisconnect();
 }
 
@@ -2740,17 +2739,7 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
         case SM_INTERNAL_BREDR_CONNECTED:
             appSmHandleInternalBredrConnected();
             break;
-#ifdef CONFIG_STAROT
-        case SM_INTERNAL_BLE_SCANABLE_START:
-            printf("sm call SM_INTERNAL_BLE_SCANABLE_START\n");
-            appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
-            break;
 
-        case SM_INTERNAL_BLE_SCANABLE_TIMEOUT:
-            printf("sm call SM_INTERNAL_BLE_SCANABLE_TIMEOUT\n");
-            GattManagerCancelWaitForRemoteClient();
-            break;
-#endif
         default:
             appHandleUnexpected(id);
             break;

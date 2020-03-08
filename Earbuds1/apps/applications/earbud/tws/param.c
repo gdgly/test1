@@ -316,6 +316,18 @@ int16 ParamSyncBlePairSucc(void)
     return ParamSaveBtAddrPrm(prm);
 }
 
+
+void ParamPrintBlePair(void) {
+    BtAddrPrmPtr prm = &gBtAddrParam;
+
+    for(int i = 0; i < BLEPAIR_COUNT; i++) {
+        BlePairInfo* p = &(prm->ble_pair[i]);
+        DEBUG_LOG("ParamPrintBlePair  %d: mac[%02X:%02X:%02X:%02X:%02X:%02X] adv[%04X] bond[%08X] bleIsBond[%02X]",
+                i, p->btAddr[0], p->btAddr[1],p->btAddr[2],p->btAddr[3],p->btAddr[4],p->btAddr[5],
+                p->advCode, p->bondCode, p->bleIsBond);
+    }
+}
+
 // 主耳机同步数配对码以副耳机
 // payload : BtAddrParam.syncTime 开始
 int16 ParamSyncBlePair(int16 size_payload, uint8 *payload)
@@ -386,6 +398,20 @@ int16 ParamLoadBlePair( BlePairInfo *blePairInfo)
     memset(blePairInfo, 0x00, sizeof(BlePairInfo));
 out:
     return sizeof(BlePairInfo);
+}
+
+BlePairInfo* ParamSearchBlePairByAddress(bdaddr* bd_addr) {
+    if (NULL == bd_addr) {
+        return NULL;
+    }
+    uint8 addressBuffer[6];
+    bdaddr2buffer(bd_addr, addressBuffer);
+    BtAddrPrmPtr prm = &gBtAddrParam;
+    int iNo = ParamSearchBlePair(prm->ble_pair, addressBuffer);
+    if(iNo >= 0 && iNo < BLEPAIR_COUNT) {   // 返回对应蓝牙地址的那一组
+        return &(prm->ble_pair[iNo]);
+    }
+    return NULL;
 }
 
 // 获取软硬件版本信息
@@ -524,7 +550,7 @@ int16 UserSetKeyFunc(uint8 lKeyFunc, uint8 rKeyFunc)     // 设置功能键
 }
 
 
-extern bool appAdvParamInit(void);
+extern void advManagerInit(void);
 
 void ParamConfigInit(void)
 {
@@ -534,7 +560,7 @@ void ParamConfigInit(void)
     ConnectionReadLocalAddr(appGetAppTask());
 
     /* 广播数据 */
-    appAdvParamInit();
+    advManagerInit();
 }
 
 void ParamInitHandleClDmLocalBdAddrCfm(Message message)

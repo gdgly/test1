@@ -1269,13 +1269,18 @@ static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {
         uint8 *data = message->payload;
         uint16 advCode = (((uint16) data[0]) << 8) | data[1];
         uint32 bindCode = (((uint32) data[2]) << 24) | (((uint32) data[3]) << 16) | (((uint32) data[4]) << 8) | data[5];
-        appBleSetBond(advCode, bindCode, 100);   // 修改APP传入真正的时间值
-        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
-        MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
-        GattManagerCancelWaitForRemoteClient();
-        subGaiaSetConnectUnlock();
-        /// 同步给对方耳机
-        appPeerSigTxSyncPair(appGetGaiaTask());
+        uint32 timestamp = (((uint32) data[6]) << 24) | (((uint32) data[7]) << 16) | (((uint32) data[8]) << 8) | data[9];
+        DEBUG_LOG("gaiaSetBondCode adv:%04X bond:%08X timestamp:%08X", advCode, bindCode, timestamp);
+        if (advManagerSaveBleAdvInfo(advCode, bindCode, timestamp)) {
+            appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+            GattManagerCancelWaitForRemoteClient();
+            subGaiaSetConnectUnlock();
+            MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
+            /// 同步给对方耳机
+            appPeerSigTxSyncPair(appGetGaiaTask());
+        } else {
+            appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_INCORRECT_STATE, 0, NULL);
+        }
     } else {
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_NOT_SUPPORTED, 0, NULL);
     }
@@ -1602,6 +1607,8 @@ void subGaiaSetCaller(uint8* data, uint16 len) {
 void subGaiaSetConnectUnlock(void) {
     subGaiaTaskData* task = subGaiaGetTaskData();
     task->connectLock = SUB_GAIA_CONNECT_UNLOCK;
+    advManagerStopSpecialVol();
+    MessageCancelAll(appGetUiTask(), APP_BLE_SCANABLE_TIMEOUT);
 }
 
 void subGaiaClearConnectUnlock(void) {

@@ -322,7 +322,7 @@ static void appAdvManagerSetupAdvert(advManagerAdvert *advert)
 //#endif
 
 #ifdef CONFIG_STAROT
-    ad_head = appAdvManagerAdvertdataAddManufacturerSpecificData(ad_head, &space);
+    ad_head = advManagerAddManufacturerSpecificData(ad_head, &space);
 #endif
 
     if (appAdvManagerSetAdvertisingData(ad_head - ad_start, ad_start))

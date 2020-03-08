@@ -2718,20 +2718,17 @@ static ruleAction ruleBleConnectionUpdate(void)
     /// 经典蓝牙配对中，发送配对的广播
     if (appSmIsPairing()) {
         DEBUG_LOG("ruleBleConnectionUpdate now is pair, so need ble adv for android");
-        appBleSelectFeture();
         return bleEnable();
     }
 
 //    if (!(appGaiaIsConnect()) && (TRUE == UpgradeInProgress())) {
 //        DEBUG_LOG("ruleBleConnectionUpdate gaia is connect, but now is upgrade, so need enable");
-//        appBleSelectFeture();
 //        return bleEnable();
 //    }
 
     /* 当前耳机连接了经典蓝牙hfp、a2dp、avrcp，则允许发出ble广播 */
     if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
         DEBUG_LOG("ruleBleConnectionUpdate appDeviceIsHandset[Hfp/A2dp/Avrcp]Connected() is run, so need enable");
-        appBleSelectFeture();
         return bleEnable();
     }
 
@@ -2755,7 +2752,6 @@ static ruleAction ruleBleConnectionUpdate(void)
 
     if (appSmIsPairing()) {
         RULE_LOG("ruleBleConnectionUpdate appSmIsPairing is true, so need enable");
-        appBleSelectFeture();
         return bleEnable();
     }
 
@@ -2778,7 +2774,6 @@ static ruleAction ruleBleConnectionUpdate(void)
         /// 单耳模式下，如果在充电盒中，处于空闲，直接发送可升级的广播
         if (appSmIsInCase() && appSmIsInDfuMode()) {
             DEBUG_LOG("ruleBleConnectionUpdate single mode, so enable");
-            appBleSelectFeture();
             return bleEnable();
         }
     } else {
@@ -2808,7 +2803,6 @@ static ruleAction ruleBleConnectionUpdate(void)
                         } else if (1 == st) {
                             DEBUG_LOG(
                                     "ruleBleConnectionUpdate now is all ear in case, and peer > current, so ble adv enable");
-                            appBleSelectFeture();
                             return bleEnable();
                         } else if (3 == st) {
                             DEBUG_LOG(
@@ -2820,7 +2814,6 @@ static ruleAction ruleBleConnectionUpdate(void)
                         bool left = appConfigIsLeft();
                         if (bleBattery(left)) {  /// 电量多
                             DEBUG_LOG("ruleBleConnectionUpdate self battery more, ble adv enable");
-                            appBleSelectFeture();
                             return bleEnable();
                         } else { /// 电量少
                             DEBUG_LOG("ruleBleConnectionUpdate self battery less, ble adv disable");
@@ -2840,7 +2833,6 @@ static ruleAction ruleBleConnectionUpdate(void)
                                               appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected();
                     if (TRUE == bredrHaveConnected) {
                         DEBUG_LOG("ruleBleConnectionUpdate bredr have connected ble enable");
-                        appBleSelectFeture();
                         return bleEnable();
                     } else {
                         DEBUG_LOG("ruleBleConnectionUpdate bredr don't connected ble disable");
@@ -2857,7 +2849,6 @@ static ruleAction ruleBleConnectionUpdate(void)
 //                if (appGetCaseIsOpen()) { /// 充电盒打开
 //                    DEBUG_LOG(
 //                            "ruleBleConnectionUpdate peer not connect, now in case, and case is open, so we ble adv enable");
-//                    appBleSelectFeture();
 //                    return bleEnable();
 //                } else {/// 充电盒关闭
 //                    DEBUG_LOG(
@@ -2866,7 +2857,6 @@ static ruleAction ruleBleConnectionUpdate(void)
 //                }
             } else { /// 不在盒子中
                 DEBUG_LOG("ruleBleConnectionUpdate not in case, ble enable");
-                appBleSelectFeture();
                 return bleEnable();
             }
         }

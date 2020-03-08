@@ -31,8 +31,6 @@ void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8
 void appUiBatteryStat(int16 lbatt, int16 rbatt, int16 cbatt);
 void appSubUISetMicbias(int set);
 
-static void appUIGetPowerInfo(ProgRIPtr  progRun, uint8* arr);
-static uint8 appUIGetPositionInfo(void);
 static uint8 appUIGetMasterSlave(void);
 static uint8 appUIGetPeerPosition(void);
 static uint8 appUIGetCurrentPosition(void);
@@ -664,9 +662,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_PAIR_HEADSET:
         DEBUG_LOG("plc call pair headset");
         progRun->handsetPair = 0;           // 准备配对，设置为unknown
-#ifdef TWS_DEBUG
         appSmPairHandset();
-#endif
         break;
 
    case APP_RESET_FACTORY: {
@@ -875,6 +871,21 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
                 ((progRun->dial_stat & (DIAL_IN_ACTIVE|DIAL_OUT_ACTIVE|DIAL_ACTIVE)) == 0) && appDeviceIsHandsetConnected())
             appUiPlayPrompt(PROMPT_CONNECTED);
             break;
+
+    case APP_BLE_SCANABLE_START:
+        printf("appSubUiHandleMessage APP_BLE_SCANABLE_START");
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
+        break;
+
+    case APP_BLE_SCANABLE_TIMEOUT:
+        DEBUG_LOG("appSubUiHandleMessage APP_BLE_SCANABLE_TIMEOUT");
+        if (advManagerIsEnableSpecialVol()) {
+            advManagerStopSpecialVol();
+        }
+        appGattSetAdvertisingMode(APP_ADVERT_RATE_SLOW);
+        GattManagerCancelWaitForRemoteClient();
+        break;
+
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
@@ -1190,7 +1201,7 @@ void appUiAvConnected(unsigned cad)
         MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
         MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
     }
-    appAdvParamInit();
+    advManagerInit();
     MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
 
