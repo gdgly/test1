@@ -64,9 +64,17 @@ enum {
     ADV_FEATURE_UPGRADE,
 };
 
+/*
+ * fun: 查询如果当前广播，广播的用途
+ * return: 特殊情况返回0XFF，其他返回ADV_FEATURE。
+ */
+uint8 advManagerSelectFeature(void);
+
 // endregion
 
 // region 广播码
+
+
 
 /*
  * fun: 选择对应的广播码

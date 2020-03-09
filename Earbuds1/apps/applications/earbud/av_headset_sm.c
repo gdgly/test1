@@ -405,12 +405,9 @@ static void appEnterInCaseDfu(void)
 
 #ifdef CONFIG_STAROT
     appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
+    GattManagerCancelWaitForRemoteClient();
 #else
     appGattSetAdvertisingMode(APP_ADVERT_RATE_SLOW);
-#endif
-
-#ifdef CONFIG_STAROT
-    // 进入dfu模式，需要断开与经典蓝牙的连接
 #endif
 }
 
@@ -1365,6 +1362,7 @@ static void appSmHandleConnRulesEnterDfu(void)
 static void appSmHandleConnRulesExitDfu(void)
 {
     DEBUG_LOG("appSmHandleConnRulesExitDfu");
+    appSmCancelDfuTimers();
     appSmHandleDfuEnded(TRUE);
 //    MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY);
 //    appUIUpgradeExit(FALSE);
@@ -1686,6 +1684,10 @@ static void appSmHandleConnRulesHandsetDisconnect(CONN_RULES_DISCONNECT_HANDSET_
 #ifdef CONFIG_STAROT
 static void appSmHandleConnRulesConnectInDfu(void)
 {
+    appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
+    // 重新启动BLE广播，及时修正广播Feature
+    appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
+
     DEBUG_LOG("appSmHandleConnRulesConnectInDfu");
     smPostDisconnectAction post_disconnect_action = POST_DISCONNECT_ACTION_NONE;
     appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
@@ -2292,10 +2294,10 @@ static void appSmHandleInternalAllRequestedLinksDisconnected(SM_INTERNAL_LINK_DI
                     break;
                 case APP_SUBSTATE_DISCONNECTING:
                     appSmSetCoreState();
-#ifdef CONFIG_STAROT
-                    /// 耳机断开连接，自动进入dfu+超时模式
-                    appSmHandleConnRulesEnterDfu();
-#endif
+//#ifdef CONFIG_STAROT
+//                    /// 耳机断开连接，自动进入dfu+超时模式
+//                    appSmHandleConnRulesEnterDfu();
+//#endif
                     break;
                 default:
                     break;
@@ -2832,12 +2834,12 @@ void appSmEnterDfuModeInCase(bool enable)
 */
 static void appSmEnterDfuOnStartup(bool upgrade_reboot)
 {
-#ifdef CONFIG_STAROT
-    /// 强制关闭音频
-    appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
-                                   appConfigLinkDisconnectionTimeoutTerminatingMs(),
-                                   POST_DISCONNECT_ACTION_NONE);
-#endif
+//#ifdef CONFIG_STAROT
+//    /// 强制关闭音频
+//    appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
+//                                   appConfigLinkDisconnectionTimeoutTerminatingMs(),
+//                                   POST_DISCONNECT_ACTION_NONE);
+//#endif
     MessageSend(appGetSmTask(),
                 upgrade_reboot ? SM_INTERNAL_ENTER_DFU_UPGRADED
                                : SM_INTERNAL_ENTER_DFU_STARTUP,

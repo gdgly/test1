@@ -2001,6 +2001,12 @@ static ruleAction ruleInCaseEnterDfu(void)
         RULE_LOG("ruleInCaseEnterDfu, single mode, so auto enter dfu");
         return RULE_ACTION_RUN;
     } else {
+        DEBUG_LOG("appSmIsInCase(%02X) && appPeerSyncIsPeerInCase(%02X) appGetState(%04X)",
+                  appSmIsInCase(), appPeerSyncIsPeerInCase(), appGetState());
+        if (!appPeerSyncIsComplete()) {
+            RULE_LOG("ruleInCaseEnterDfu, not complete, so defer");
+            return RULE_ACTION_DEFER;
+        }
         if (appSmIsInCase() && appPeerSyncIsPeerInCase()) {
             if (APP_STATE_IN_CASE_IDLE == appGetState() || APP_STATE_IN_CASE_DFU == appGetState()) {
                 RULE_LOG("ruleInCaseEnterDfu, all in case, so enter dfu");
@@ -2009,7 +2015,6 @@ static ruleAction ruleInCaseEnterDfu(void)
                 DEBUG_LOG("ruleInCaseEnterDfu, but current state is : %04X", appGetState());
                 return RULE_ACTION_DEFER;
             }
-
         } else {
             RULE_LOG("ruleInCaseEnterDfu, r + l earbuds not all in case, so ignore");
             return RULE_ACTION_IGNORE;
@@ -2680,16 +2685,12 @@ static bool bleBattery(bool left) {
     return TRUE;
 }
 
+// region ble使能
+
 static ruleAction bleEnable(void) {
-    bool has_ble_connection = appSmHasBleConnection();
-    bool is_ble_connecting = appSmIsBleAdvertising();
-    if (TRUE == has_ble_connection || TRUE == is_ble_connecting) {
-        return RULE_ACTION_IGNORE;
-    } else {
-        MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
-        bool connectable = TRUE;
-        return RULE_ACTION_RUN_PARAM(connectable);
-    }
+    MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
+    bool connectable = TRUE;
+    return RULE_ACTION_RUN_PARAM(connectable);
 }
 
 static ruleAction bleDisable(void) {
@@ -2697,6 +2698,8 @@ static ruleAction bleDisable(void) {
     MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
     return RULE_ACTION_RUN_PARAM(st);
 }
+
+// endregion
 
 extern bool appGetCaseIsOpen(void);
 extern bool appGaiaIsConnectBySpp(void);
@@ -2720,11 +2723,6 @@ static ruleAction ruleBleConnectionUpdate(void)
         DEBUG_LOG("ruleBleConnectionUpdate now is pair, so need ble adv for android");
         return bleEnable();
     }
-
-//    if (!(appGaiaIsConnect()) && (TRUE == UpgradeInProgress())) {
-//        DEBUG_LOG("ruleBleConnectionUpdate gaia is connect, but now is upgrade, so need enable");
-//        return bleEnable();
-//    }
 
     /* 当前耳机连接了经典蓝牙hfp、a2dp、avrcp，则允许发出ble广播 */
     if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
@@ -2750,29 +2748,9 @@ static ruleAction ruleBleConnectionUpdate(void)
         return bleDisable();
     }
 
-    if (appSmIsPairing()) {
-        RULE_LOG("ruleBleConnectionUpdate appSmIsPairing is true, so need enable");
-        return bleEnable();
-    }
-
-//    bool paired_with_peer = appDeviceGetPeerBdAddr(NULL);
-//    /// 没有和另一只耳机交换地址
-//    if (FALSE == paired_with_peer) {
-//        DEBUG_LOG("ruleBleConnectionUpdate paired_with_peer is false, ble disable");
-//        return bleDisable();
-//    }
-
-//    appState state = appGetState();
-//    bool allow_ble_connectable = appSmStateAreNewBleConnectionsAllowed(appGetState());
-//    DEBUG_LOG("ruleBleConnectionUpdate ble connect, app get state is %04X all_ble_connectable is : %02X", state, allow_ble_connectable);
-//    if (FALSE == allow_ble_connectable) { /// 状态不允许连接
-//        DEBUG_LOG("ruleBleConnectionUpdate allow_ble_connectable is false, ble disable");
-//        return bleDisable();
-//    }
-
     if (ParamUsingSingle()) {
         /// 单耳模式下，如果在充电盒中，处于空闲，直接发送可升级的广播
-        if (appSmIsInCase() && appSmIsInDfuMode()) {
+        if (appSmIsInDfuMode()) {
             DEBUG_LOG("ruleBleConnectionUpdate single mode, so enable");
             return bleEnable();
         }
@@ -2786,12 +2764,6 @@ static ruleAction ruleBleConnectionUpdate(void)
                 DEBUG_LOG("ruleBleConnectionUpdate peer sync ing, ignore the rules");
                 return RULE_ACTION_IGNORE;
             } else {
-                bool peer_dfu = appPeerSyncPeerDfuInProgress();
-                if (TRUE == peer_dfu) {
-                    DEBUG_LOG("ruleBleConnectionUpdate peer in dfu, so we need disable ble adv");
-                    return bleDisable();
-                }
-
                 if (TRUE == appSmIsInCase()) { /// 当前耳机在充电盒中
                     if (appPeerSyncIsPeerInCase() && (appGetCaseIsOpen() || appSmIsInDfuMode())) {
                         //1.比较版本号
@@ -2845,16 +2817,6 @@ static ruleAction ruleBleConnectionUpdate(void)
             if (TRUE == self_in_case) { /// 盒子中
                 DEBUG_LOG("ruleBleConnectionUpdate peer not connect, now in case, ble adv disable");
                 return bleDisable();
-
-//                if (appGetCaseIsOpen()) { /// 充电盒打开
-//                    DEBUG_LOG(
-//                            "ruleBleConnectionUpdate peer not connect, now in case, and case is open, so we ble adv enable");
-//                    return bleEnable();
-//                } else {/// 充电盒关闭
-//                    DEBUG_LOG(
-//                            "ruleBleConnectionUpdate peer not connect, now in case, and case is close, so we ble adv disable");
-//                    return bleDisable();
-//                }
             } else { /// 不在盒子中
                 DEBUG_LOG("ruleBleConnectionUpdate not in case, ble enable");
                 return bleEnable();
