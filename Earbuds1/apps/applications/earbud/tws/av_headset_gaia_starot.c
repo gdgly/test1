@@ -644,7 +644,7 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
         uint8 *data = attrEncode(head, &len);
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ACTIVE, 0xfe, len, data);
         attrFree(head, data);
-    }else if((8000 == hstate) || (16000 == hstate)) {
+    }else if((8000 == message->status) || (16000 == message->status)) {
         StarotAttr *head = NULL;
         StarotAttr *attr = PanicNull(attrMalloc(&head, 1));
         attr->attr = 0X07;
