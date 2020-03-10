@@ -20,6 +20,7 @@ apps/installed_libs
 .elf
 *.elf.*
 EarBuds/audio/kalimba/kymera/tools/KCSMaker/out/*
+Earbuds1/apps/applications/earbud/qcc512x_rom_v21/CF376_CG814/image
 flags.assemble
 flags.libs
 flags.link

@@ -281,6 +281,9 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 #define appConfigAutoHandsetPairingTimeout()    (60)     /* 等待手机配对时间 */
 #undef  appConfigDacDisconnectionDelayMs()
 #define appConfigDacDisconnectionDelayMs()      (2000)   /* 音频结束后停止ADC时间 */
+#undef  appConfigMaxPairedDevices()
+#define appConfigMaxPairedDevices()             (5)      /* 配对5组，4个手机地址 */
+#define appConfigOutOfEarA2dpTimeoutMsecs()     (30)     /* 出耳音乐暂停暂时(修改单位为ms) */
 
 
 // 充电电流及电压使用

@@ -1531,9 +1531,15 @@ static void appSmHandleConnRulesA2dpTimeout(void)
 
     if (appSmIsOutOfCase() && appConfigOutOfEarA2dpTimeoutSecs())
     {
+#ifdef CONFIG_STAROT
+        DEBUG_LOGF("appSmHandleConnRulesA2dpTimeout, out of case/ear, so starting %u MS timer", appConfigOutOfEarA2dpTimeoutMsecs());
+        MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_OUT_OF_EAR_A2DP,
+                         NULL, appConfigOutOfEarA2dpTimeoutMsecs());
+#else
         DEBUG_LOGF("appSmHandleConnRulesA2dpTimeout, out of case/ear, so starting %u second timer", appConfigOutOfEarA2dpTimeoutSecs());
         MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_OUT_OF_EAR_A2DP,
                          NULL, D_SEC(appConfigOutOfEarA2dpTimeoutSecs()));
+#endif
     }
 
     appConnRulesSetRuleComplete(CONN_RULES_A2DP_TIMEOUT);
