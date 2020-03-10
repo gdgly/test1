@@ -504,6 +504,9 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
 #ifdef HAVE_EM20168
         EM20168Power(gUserParam.sensorEnable);   ///App设置是否佩戴使能
 #endif
+#ifdef HAVE_UCS146E0
+        Ucs146e0Power(gUserParam.sensorEnable);
+#endif
         ParamSaveUserPrm(&gUserParam);
         appNotifyPeerDeviceConfig(m->messageFrom);
     }

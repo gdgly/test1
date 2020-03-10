@@ -12,6 +12,7 @@
 #include "av_headset_gaia_starot.h"
 #include "audio_forward.h"
 #include "apollo.h"
+#include "ucs146e0.h"
 
 #ifdef CUMMPC_PC_USB
 
@@ -23,7 +24,7 @@
 
 #define COMMU_INTERVAL_TIMER      (2000)
 #define COMMU_INTERVAL_RECORD     (2001)
-enum { TYPE_GET_VER, TYPE_BTADDR, TYPE_LIS25, TYPE_EM20168, TYPE_LIS2DW12, TYPE_MAX20340, TYPE_APOLLO, TYPE_APO_VER, TYPE_LAST};
+enum { TYPE_GET_VER, TYPE_BTADDR, TYPE_LIS25, TYPE_EM20168, TYPE_LIS2DW12, TYPE_MAX20340, TYPE_APOLLO, TYPE_APO_VER, TYPE_UCS146E0, TYPE_LAST};
 
 
 typedef struct tagCOMMUINFO {
@@ -96,6 +97,13 @@ static int CummuCheckAllItem(CommuInfo *com, char *outbuf, int bufize)
         case TYPE_EM20168:
             status = EM20168_GetStatus();
             outsize = sprintf(outbuf, "check EM20168 %s",
+                    (status == 0) ? "PASS" : "FAIL");
+            break;
+#endif
+#ifdef HAVE_UCS146E0
+        case TYPE_UCS146E0:
+            status = ((Ucs146e0_statcheck() == 0xFF) ? -1 : 0);
+            outsize = sprintf(outbuf, "check UCS146E0 %s",
                     (status == 0) ? "PASS" : "FAIL");
             break;
 #endif
@@ -246,7 +254,12 @@ static void CummuHandler(Task task, MessageId id, Message message)
             }
             if(strstr((char *)payload, "check RDSENSOR")){
 #ifdef HAVE_EM20168
-                value = EM20168_Get_psvalue();
+                if(EM20168_GetStatus() == 0)
+                    value = EM20168_Get_psvalue();
+#endif              
+#ifdef HAVE_UCS146E0
+                if((Ucs146e0_statcheck() != 0xFF))
+                    value = Ucs146e0_get_ps_calvalue();
 #endif
                 outsize = sprintf(outbuf, "checkresp RDSENSOR=%d", value);
                 CummuhandleSendData(task, (uint8*)outbuf, outsize);
@@ -256,7 +269,8 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 if((p = strchr((char *)payload, '=')) != NULL){
                     p += 1;
 #ifdef HAVE_EM20168
-                    EM20168_Set_psvalue(1, (unsigned short)atoi(p));
+                    if(EM20168_GetStatus() == 0)
+                        EM20168_Set_psvalue(1, (unsigned short)atoi(p));
 #endif
                     outsize = sprintf(outbuf, "checkresp WRSENSOR");
                     CummuhandleSendData(task, (uint8*)outbuf, outsize);
