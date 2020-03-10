@@ -1986,11 +1986,14 @@ static ruleAction ruleInCaseEnterDfu(void)
         return RULE_STATUS_IGNORED;
     }
 
-    if (!appGetCaseIsOpen()) {
+    static int firstStartUp = 1;
+    if (!appGetCaseIsOpen() && firstStartUp > 0) {
         /// 从dfu退出的时候，重新计算state，会发生重新incase规则
-        RULE_LOG("ruleInCaseEnterDfu, case is close, so don't enter dfu");
+        RULE_LOG("ruleInCaseEnterDfu, !appGetCaseIsOpen() && APP_STATE_STARTUP != appGetState(), so don't enter dfu");
         return RULE_ACTION_IGNORE;
     }
+    firstStartUp = 0;
+
 
     if (!appSmIsInCase()) {
         RULE_LOG("ruleInCaseEnterDfu, appSmIsInCase is false, so don't enter dfu");
