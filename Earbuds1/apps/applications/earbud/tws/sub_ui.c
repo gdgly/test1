@@ -502,10 +502,12 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         gUserParam.sensorEnable = m->wear_enable;
         gUserParam.sensorModifyTime = m->timestamp;
 #ifdef HAVE_EM20168
-        EM20168Power(gUserParam.sensorEnable);   ///App设置是否佩戴使能
+        if(EM20168_GetStatus() == 0)
+            EM20168Power(gUserParam.sensorEnable);   ///App设置是否佩戴使能
 #endif
 #ifdef HAVE_UCS146E0
-        Ucs146e0Power(gUserParam.sensorEnable);
+        if((Ucs146e0_statcheck() != 0xFF))
+            Ucs146e0Power(gUserParam.sensorEnable);
 #endif
         ParamSaveUserPrm(&gUserParam);
         appNotifyPeerDeviceConfig(m->messageFrom);
