@@ -747,7 +747,7 @@ int max20340_get_left_or_right(void)
         max20340ReadRegister(handle, 0x00, &value);
         max20340ReadRegister(handle, 0x00, &value);
         max20340Disable(handle);
-        if(value == 0x10){
+        if(value == 0x10 || value == 0x11){
             DEBUG_LOG("max20340 i2c addr = 0x%x\n",MAX20340_LEFTEAR_I2C_ADDR);
             ret_value = 1;
             return 1;
@@ -759,7 +759,7 @@ int max20340_get_left_or_right(void)
         max20340ReadRegister(handle, 0x00, &value);
         max20340ReadRegister(handle, 0x00, &value);
         max20340Disable(handle);
-        if(value == 0x10){
+        if(value == 0x10 || value == 0x11){
             DEBUG_LOG("max20340 i2c addr = 0x%x\n",MAX20340_RIGHTEAR_I2C_ADDR);
             ret_value = 2;
             return 2;
