@@ -12,6 +12,7 @@
 //#define HAVE_UCS146E0
 #define UCS146E0_ITR_PIN 8
 void Ucs146e0_init(void);
+int Ucs146e0_GetStatus(void);
 int Ucs146e0_statcheck(void);
 int Ucs146e0Power(bool isOn);
 void Ucs146e0_get_crosstalk_init(void);//260ms后读取crosstalk值

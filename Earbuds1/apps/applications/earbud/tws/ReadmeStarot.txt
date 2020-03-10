@@ -1,3 +1,6 @@
+20200309
+ appA2dpSetDefaultAttributes 这个函数来设置设置的音乐默认音量，appConfigDefaultVolumedB 计算出来为98.
+ META10手机好象不会修改这儿的值。
 
 
 20200305

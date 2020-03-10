@@ -180,6 +180,9 @@ extern int apollo_evoke(void);
 extern void appSubUISetMicbias(int set);
 static void box_uc1460e_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_buf);
 
+#ifdef HAVE_UCS146E0
+#include "ucs146e0.h"
+#endif
 
 void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 {
@@ -279,6 +282,9 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 #ifdef CONFIG_BOARD_V2_LIS25
         send_buf[2] |= (lis25GetStatus() == 0) ? 0x10 : 0;
 #endif
+#ifdef HAVE_UCS146E0
+        send_buf[2] |= (Ucs146e0_GetStatus() == 0) ? 0x20 : 0;
+#endif
             break;
 
         case 0x0f:
@@ -355,7 +361,6 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
     }
 }
 
-#include "ucs146e0.h"
 static void box_uc1460e_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_buf)
 {
 #ifdef HAVE_UCS146E0

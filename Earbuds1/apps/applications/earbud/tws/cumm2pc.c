@@ -102,7 +102,7 @@ static int CummuCheckAllItem(CommuInfo *com, char *outbuf, int bufize)
 #endif
 #ifdef HAVE_UCS146E0
         case TYPE_UCS146E0:
-            status = ((Ucs146e0_statcheck() == 0xFF) ? -1 : 0);
+            status = Ucs146e0_GetStatus();
             outsize = sprintf(outbuf, "check UCS146E0 %s",
                     (status == 0) ? "PASS" : "FAIL");
             break;
@@ -258,7 +258,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
                     value = EM20168_Get_psvalue();
 #endif              
 #ifdef HAVE_UCS146E0
-                if((Ucs146e0_statcheck() != 0xFF))
+                if(Ucs146e0_GetStatus() == 0)
                     value = Ucs146e0_get_ps_calvalue();
 #endif
                 outsize = sprintf(outbuf, "checkresp RDSENSOR=%d", value);

@@ -222,6 +222,15 @@ int Ucs146e0_statcheck(void)
         return 0xFF;
 }
 
+int Ucs146e0_GetStatus(void)
+{
+    if(Ucs146e0Task->status == TRUE){
+        return 0;
+    }else{
+        return -1;
+    }
+}
+
 int Ucs146e0Power(bool isOn)
 {
     int ret;

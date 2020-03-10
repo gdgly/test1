@@ -128,8 +128,15 @@ void SourceSinkI2SMasterClockEnable(void *source_sink, int isSource, int enable)
 //#define HAVE_EM20168
 #define EM20168_ITR_PIN 61
 void EM20168_init(void);
+int EM20168_GetStatus(void);
 int EM20168Power(bool isOn);
 
+//#define HAVE_UCS146E0
+void Ucs146e0_init(void);
+int Ucs146e0_GetStatus(void);
+int Ucs146e0Power(bool isOn);
+int Ucs146e0_statcheck(void);
+unsigned short Ucs146e0_get_ps_calvalue(void);
 
 //==============================================================================================
 //              /* bma400 Tap */
@@ -232,6 +239,7 @@ int Lis2dw12Power(bool isOn);//1 打开，0关闭
 
 /*接近光*/
 #define HAVE_EM20168
+// #define HAVE_UCS146E0           /* 第二版本硬件中，同时换了接近光芯片，需要同时支持 */
 #undef EM20168_ITR_PIN
 #define EM20168_ITR_PIN 8
 int EM20168_GetStatus(void);//0 表示初始化ok, -1 wrong
