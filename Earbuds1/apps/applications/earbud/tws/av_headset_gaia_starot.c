@@ -80,6 +80,7 @@ static void gaiaTestProductRest(GAIA_STAROT_IND_T *message);
 
 static void gaiaSendCallNumber(STAROT_DIALOG_CALL_NUMBER_T* message);
 
+static void gaiaTestInEarReadValue(GAIA_STAROT_IND_T *message);
 
 
 static void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message);
@@ -428,6 +429,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         {
             online_dbg_cmd_handler(message->payload[0]);
         }
+    	case GAIA_COMMAND_STAROT_TEST_IN_EAR_RDVALUE:
+        	gaiaTestInEarReadValue(message);
+        break;
     }
     return TRUE;
 }
@@ -1409,6 +1413,30 @@ void gaiaTestProductRest(GAIA_STAROT_IND_T *message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
 // }
+
+// 读取接近光在耳朵中的值
+static void gaiaTestInEarReadValue(GAIA_STAROT_IND_T *message)
+{
+    unsigned short value;
+    StarotAttr *head = NULL;
+    StarotAttr *attr = NULL;
+    if ((message->payload[0] & 0X01) > 0) {
+        attr = attrMalloc(&head, 2);
+        attr->attr = 0X01;
+        value = EM20168_Get_psvalue();
+        attr->payload[0] = ((value >> 8) & 0xFF);
+        attr->payload[1] = (value & 0xFF);
+    }
+
+    if (NULL != head) {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
+        attrFree(head, data);
+    } else {
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+    }
+}
 
 #if 0
 void gaiaSendDialogActiveStatus(int command, uint8* phone, int len) {

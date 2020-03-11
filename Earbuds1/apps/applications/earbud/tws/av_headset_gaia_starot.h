@@ -170,7 +170,8 @@ enum {
 enum {
     GAIA_COMMAND_STAROT_TEST_PRODUCT_REST = 0X5600,                           // 恢复出厂设置
     GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS = 0X5601,                          // 读取apollo状态
-    GAIA_COMMAND_STAROT_TEST_ONLINE_DBG = 0X5602
+    GAIA_COMMAND_STAROT_TEST_ONLINE_DBG = 0X5602,
+    GAIA_COMMAND_STAROT_TEST_IN_EAR_RDVALUE = 0X5603                          // 读取接近光在耳朵中的值
 };
 
 /////////////////////////////固件升级使用///////////////////////////////
