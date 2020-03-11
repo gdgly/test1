@@ -131,7 +131,7 @@ void EM20168_init(void);
 int EM20168_GetStatus(void);
 int EM20168Power(bool isOn);
 
-//#define HAVE_UCS146E0
+#define HAVE_UCS146E0
 void Ucs146e0_init(void);
 int Ucs146e0_GetStatus(void);
 int Ucs146e0Power(bool isOn);
