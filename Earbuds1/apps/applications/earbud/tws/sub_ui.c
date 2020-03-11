@@ -797,7 +797,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
             if((!appPeerSyncIsPeerInCase() && !appPeerSyncIsPeerInEar()) || appPeerSyncIsPeerInCase())
             {
                 MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
-                MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
+                MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 3000);
             }
         }
 //        appUiPowerSave(POWER_MODE_IN_EAR);
@@ -1199,7 +1199,7 @@ void appUiAvConnected(unsigned cad)
     progRun->bredrconnect = 1;
     if(appSmIsInEar()){
         MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
-        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
+        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 3000);
     }
     advManagerInit();
     MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
