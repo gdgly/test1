@@ -445,9 +445,9 @@ static void box_uc1460e_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_
         value = get_buf[1] - 0x7A;
         static_buf[value+8] = get_buf[2];        // 因为是分多次发送过来，需要先保存到static_buf中
         if(get_buf[1] == 0x7F) {
-            prm->em20168_high_value = (static_buf[8] << 8) & static_buf[9];
-            prm->em20168_low_value  = (static_buf[10] << 8) & static_buf[11];
-            prm->ucs146e0_calib     = (static_buf[12] << 8) & static_buf[13];
+            prm->em20168_high_value = (static_buf[8] << 8) | static_buf[9];
+            prm->em20168_low_value  = (static_buf[10] << 8) | static_buf[11];
+            prm->ucs146e0_calib     = (static_buf[12] << 8) | static_buf[13];
             prm->em20168_cal_already = 1;
             ParamSaveFixPrm(prm);
         }
