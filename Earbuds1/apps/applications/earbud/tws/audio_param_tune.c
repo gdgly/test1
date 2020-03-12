@@ -3,6 +3,8 @@
 #include <logging.h>
 #include <ps.h>
 
+#ifdef AUDIO_PARAM_TUNE
+
 void qact_tune_for_mic(void);
 
 #define write_audio_tune_param(key) write_audio_tune_key(psid_##key, (uint16*) psid_##key##_param, psid_##key##_len)
@@ -362,3 +364,5 @@ static void read_audio_tune_param(void) {
     printf("\n");
 }
 */
+
+#endif

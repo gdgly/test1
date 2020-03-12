@@ -1,27 +1,31 @@
-<?xml version='1.0' encoding='utf-8'?>
-<project>
-    <file path="subsys7_psflash.htf"/>
-    <file path="anc_tuning_config.htf"/>
-    <configurations>
-        <configuration name="filesystem" options="build|deploy|default" kit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}">
-            <devkitConfiguration>filesystem</devkitConfiguration>
-            <devkitGroup>kitres://{885B2E62-D6DE-4472-8989-51ED1537BF28}</devkitGroup>
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project name="user_ps_filesystem" path="">
+    <configurations defaultKit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}">
+        <configuration name="filesystem" kit="kitres://{e1276e0f-2bc1-4074-88a4-cdae1d9bc676}" options="build|deploy|default">
             <deployProject>deploy</deployProject>
-            <property name="BUILD_TYPE"/>
-            <property name="DBG_CORE"/>
-            <property name="DEFS"/>
-            <property name="FS_ROOT"/>
-            <property name="HW_VARIANT"/>
-            <property name="INCPATHS"/>
-            <property name="LIBPATHS"/>
-            <property name="LIBS"/>
-            <property name="OUTPUT"/>
-            <property name="OUTPUT_TYPE"/>
-            <property name="PRESERVED_LIBS"/>
-            <property name="STRIP_SYMBOLS"/>
-            <property name="SW_VARIANT"/>
+            <devkitConfiguration>filesystem</devkitConfiguration>
+            <devkitGroup>kitres://{885b2e62-d6de-4472-8989-51ed1537bf28}</devkitGroup>
+            <devkitPath>C:/qtil/ADK_QCC512X_ROM_V21_WIN_6.4.0.39</devkitPath>
+            <devkitRevision>1565343019</devkitRevision>
+            <property name="BUILD_TYPE"></property>
+            <property name="DBG_CORE"></property>
+            <property name="DEFS"></property>
+            <property name="FS_ROOT"></property>
+            <property name="HW_VARIANT"></property>
+            <property name="INCPATHS"></property>
+            <property name="LIBPATHS"></property>
+            <property name="LIBS"></property>
+            <property name="OUTPUT"></property>
+            <property name="OUTPUT_TYPE"></property>
+            <property name="PRESERVED_LIBS"></property>
+            <property name="STRIP_SYMBOLS"></property>
+            <property name="SW_VARIANT"></property>
             <property name="TYPE">user_ps</property>
             <property name="system_label">QCC512X_ROM_V21_CONFIG</property>
         </configuration>
     </configurations>
+    <file path="A2DP_parameters_20200113_2nd_final.htf"/>
+    <file path="NB_parameters_20200312_1st.htf"/>
+    <file path="WB_parameters_20200310_3rd.htf"/>
+    <file path="subsys7_psflash.htf"/>
 </project>
