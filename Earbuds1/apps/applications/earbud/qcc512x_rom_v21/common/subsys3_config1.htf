@@ -1,5 +1,8 @@
 file=audio1
 
+Codec0UseClassABAmplifier = true
+Codec0OutAmpQualityMode = true
+
 # Select PIOs for I2S interface 1: SCK, WS, MCLK, SD_OUT, SD_IN.
 PcmPioConfig = [10 11 0f FF 13]
 
