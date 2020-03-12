@@ -246,13 +246,13 @@
 
 
 /*! Minimum volume gain in dB */
-#define appConfigMinVolumedB() (-45)
+#define appConfigMinVolumedB() (-70)
 
 /*! Maximum volume gain in dB */
-#define appConfigMaxVolumedB() (0)
+#define appConfigMaxVolumedB() (-10)
 
 /*! Default volume gain in dB */
-#define appConfigDefaultVolumedB() (-10)
+#define appConfigDefaultVolumedB() (-25)
 
 /*! The volume setting to use for no gain, when volume is specifed on range of 0-127 */
 #define appConfigVolumeNoGain127Step()  (127)
