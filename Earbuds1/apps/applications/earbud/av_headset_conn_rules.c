@@ -1719,7 +1719,11 @@ static bool handsetDisconnectAllowed(void)
 */
 static ruleAction ruleInCaseDisconnectHandset(void)
 {
+#ifdef CONFIG_STAROT
+    if (appSmIsInCase())
+#else
     if (appSmIsInCase() && handsetDisconnectAllowed())
+#endif
     {
         RULE_LOG("ruleInCaseDisconnectHandset, run as in case and handset connected");
         // Try to handover the handset connection to the other earbud
@@ -2741,7 +2745,8 @@ static ruleAction ruleBleConnectionUpdate(void)
         }
     }
 
-    if (appGaiaIsConnect() && !handsetDisconnectAllowed()) {
+//    if (appGaiaIsConnect() && !handsetDisconnectAllowed())
+    if (appGaiaIsConnect()) {
         RULE_LOG("ruleBleConnectionUpdate current gaia is connect, and headset is connect");
         return RULE_ACTION_IGNORE;
     }
@@ -3354,16 +3359,17 @@ ruleAction ruleClearHandsetPair(void) {
 
 static ruleAction ruleDisconnectGaia(void)
 {
-    if (appSmIsInCase()) {
-        RULE_LOG("ruleDisconnectGaia, state is appSmIsInCase == true, so ignore");
-        return RULE_ACTION_IGNORE;
-    }
+//    if (appSmIsInCase()) {
+//        RULE_LOG("ruleDisconnectGaia, state is appSmIsInCase == true, so ignore");
+//        return RULE_ACTION_IGNORE;
+//    }
 
     if (APP_STATE_STARTUP == appGetState()) {
         RULE_LOG("ruleDisconnectGaia, state is APP_STATE_STARTUP, ignore");
         return RULE_ACTION_IGNORE;
     }
-    if (appGaiaIsConnect() && handsetDisconnectAllowed()) {
+
+    if (appGaiaIsConnect()) {
         RULE_LOG("ruleDisconnectGaia appGaiaIsConnect() && handsetDisconnectAllowed() is true, so run");
         return RULE_ACTION_RUN;
     } else {
