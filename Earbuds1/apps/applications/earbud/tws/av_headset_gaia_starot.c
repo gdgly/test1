@@ -660,7 +660,7 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
         DEBUG_LOG("sample rate=%d", hstate);
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-        appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, GAIA_STATUS_SUCCESS, len, data);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
         attrFree(head, data);
     } else if (HFP_STATE_CONNECTED_IDLE == hstate) {
         DEBUG_LOG("HFP_STATE_CONNECTED_IDLE");
