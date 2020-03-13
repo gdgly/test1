@@ -246,7 +246,7 @@ static void CummuHandler(Task task, MessageId id, Message message)
             if(strstr((char *)payload, "check WAKEUP")){
                 g_commuType = 1;
 #ifdef ENABLE_APOLLO
-				apollo_sleep();
+                apollo_evoke();
 #endif
                 OperatorFrameworkEnable(MAIN_PROCESSOR_ON);
                 appSubUISetMicbias(TRUE);
