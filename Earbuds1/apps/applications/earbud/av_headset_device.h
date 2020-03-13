@@ -592,4 +592,8 @@ bool appDeviceHasBlePairing(const bdaddr *bd_addr);
 //void checkNeedDisconnect(void);
 //#endif
 
+#ifdef CONFIG_STAROT
+bool appDeviceIsHandsetA2dpSuspended(void);
+#endif
+
 #endif

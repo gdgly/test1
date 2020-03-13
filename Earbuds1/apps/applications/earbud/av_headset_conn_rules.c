@@ -958,6 +958,7 @@ static ruleAction ruleConnectHandset(ruleConnectReason reason,
 */
 static ruleAction ruleSyncConnectHandset(void)
 {
+    RULE_LOG("ruleSyncConnectHandset");
     return ruleConnectHandset(RULE_CONNECT_PEER_SYNC, RULE_POST_HANDSET_CONNECT_ACTION_NONE);
 }
 
@@ -965,6 +966,7 @@ static ruleAction ruleSyncConnectHandset(void)
 */
 static ruleAction ruleUserConnectHandset(void)
 {
+    RULE_LOG("ruleUserConnectHandset");
     return ruleConnectHandset(RULE_CONNECT_USER, RULE_POST_HANDSET_CONNECT_ACTION_PLAY_MEDIA);
 }
 
@@ -1615,7 +1617,22 @@ static ruleAction ruleInEarScoTransferToEarbud(void)
         RULE_LOG("ruleInEarScoTransferToEarbud, ignore as this earbud has no active call");
         return RULE_ACTION_IGNORE;
     }
+#else
+    if (!(appHfpIsCallActive() || appHfpIsCallIncoming() || appHfpIsCallOutgoing()))
+    {
+        RULE_LOG("ruleInEarScoTransferToEarbud, ignore as this earbud has no active|incoming|outgoing call");
+        return RULE_ACTION_IGNORE;
+    }
 #endif
+    if (appSmIsInCase()) {
+        RULE_LOG("ruleInEarScoTransferToEarbud, now earbud in case, so ignore");
+        return RULE_ACTION_IGNORE;
+    }
+
+    if (!appDeviceIsHandsetA2dpSuspended()) {
+        RULE_LOG("ruleInEarScoTransferToEarbud, now a2dp not suspended, so defer!");
+        return RULE_ACTION_DEFER;
+    }
 
     /* May already have SCO audio if kept while out of ear in order to service slave
      * for SCO forwarding */
@@ -1720,7 +1737,7 @@ static bool handsetDisconnectAllowed(void)
 static ruleAction ruleInCaseDisconnectHandset(void)
 {
 #ifdef CONFIG_STAROT
-    if (appSmIsInCase())
+    if (appSmIsInCase() && appDeviceIsHandsetConnected())
 #else
     if (appSmIsInCase() && handsetDisconnectAllowed())
 #endif
@@ -2546,6 +2563,7 @@ static ruleAction ruleHandoverDisconnectHandset(void)
 /*! @brief Rule to validate whether handover should cause handset to be connected */
 static ruleAction ruleHandoverConnectHandset(void)
 {
+    RULE_LOG("ruleHandoverConnectHandset");
     return ruleConnectHandset(RULE_CONNECT_USER, RULE_POST_HANDSET_CONNECT_ACTION_NONE);
 }
 
@@ -2553,6 +2571,7 @@ static ruleAction ruleHandoverConnectHandset(void)
     then media played */
 static ruleAction ruleHandoverConnectHandsetAndPlay(void)
 {
+    RULE_LOG("ruleHandoverConnectHandsetAndPlay");
     return ruleConnectHandset(RULE_CONNECT_USER, RULE_POST_HANDSET_CONNECT_ACTION_PLAY_MEDIA);
 }
 

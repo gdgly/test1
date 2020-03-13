@@ -164,7 +164,9 @@ enum
     HFP_INTERNAL_HFP_MUTE_REQ,					/*!< Internal message to mute an active call */
     HFP_INTERNAL_HFP_TRANSFER_REQ,				/*!< Internal message to transfer active call between AG and device */
     HFP_INTERNAL_VOLUME_UP,						/*!< Internal message to increase the volume on the active call */
-    HFP_INTERNAL_VOLUME_DOWN					/*!< Internal message to decrease the volume on the active call */
+    HFP_INTERNAL_VOLUME_DOWN,					/*!< Internal message to decrease the volume on the active call */
+    APP_HFP_AUDIO_REQUEST_TIMEOUT,              /*!< 请求hfp音频超时 */
+    APP_HFP_NEED_RECONNECT_IND,                 /*!< 因为音频连接不能建立，收到断开指令是，需要重新连接 */
 };
 
 /*! \brief Message IDs from HFP to main application task */

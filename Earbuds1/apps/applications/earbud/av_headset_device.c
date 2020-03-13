@@ -1208,3 +1208,20 @@ void appDeviceUpdateMruDevice(const bdaddr *bd_addr)
 //    }
 //}
 //#endif
+
+#ifdef CONFIG_STAROT
+bool appDeviceIsHandsetA2dpSuspended(void)
+{
+    bdaddr handset_addr;
+    if (appDeviceGetHandsetBdAddr(&handset_addr))
+    {
+        avInstanceTaskData *inst = appAvInstanceFindFromBdAddr(&handset_addr);
+        if (inst)
+        {
+            if ((inst)->a2dp.state == A2DP_STATE_CONNECTED_MEDIA_SUSPENDED)
+                return TRUE;
+        }
+    }
+    return FALSE;
+}
+#endif

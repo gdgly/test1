@@ -63,6 +63,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_UPGRADE_COPY_STATUS_GRADE 2121  // upgrade/ui -> ui 拷贝成功之后，再去更新临时版本，copy操作很耗时，10s以上，导致不同步问题
 #define APP_BLE_SCANABLE_START        2122  // ble start adv
 #define APP_BLE_SCANABLE_TIMEOUT      2123  // ble adv timeout
+#define APP_HFP_connect_audio_request_timeout 2124 // 请求连接appHfpHandleInternalHfpTransferRequest无响应
 
 struct UI_APP_UPGRADE_COMMIT_STATUS_T {
     bool status;   // true:commit ;false:revert

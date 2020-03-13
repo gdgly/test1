@@ -2012,6 +2012,15 @@ static void appSmHandleHfpDisconnectedInd(APP_HFP_DISCONNECTED_IND_T *ind)
                    links, record that we're not connected with HFP to handset */
                 if (ind->reason == APP_HFP_DISCONNECT_NORMAL && !appSmIsDisconnectingLinks())
                     appDeviceSetHfpWasConnected(&ind->bd_addr, FALSE);
+
+#ifdef CONFIG_STAROT
+                /// 耳机因为Audio建立失败，主动断开，需要重新连接hfp
+                if (MessageCancelAll(appGetHfpTask(), APP_HFP_NEED_RECONNECT_IND) > 0 && appDeviceIsHandsetConnected() && !appSmIsInCase()) {
+                    DEBUG_LOG("appSmHandleHfpDisconnectedInd have APP_HFP_NEED_RECONNECT_IND and handset is connect, so reconnect");
+                    appHfpConnectHandset();
+                }
+#endif
+
 //#ifdef CONFIG_STAROT
 //                if (ind->reason == APP_HFP_CONNECT_FAILED && !appSmIsDisconnectingLinks()) {
 //                    /// reconnect to headset

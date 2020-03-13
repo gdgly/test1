@@ -908,6 +908,11 @@ static void appHfpHandleHfpAudioConnectIndication(const HFP_AUDIO_CONNECT_IND_T 
     DEBUG_LOG("appHfpHandleHfpAudioConnectIndication");
     const hfp_audio_params *hfp_sync_config_params = NULL;
 
+#ifdef CONFIG_STAROT
+    MessageCancelAll(appGetHfpTask(), APP_HFP_AUDIO_REQUEST_TIMEOUT);
+    MessageCancelAll(appGetHfpTask(), APP_HFP_NEED_RECONNECT_IND);
+#endif
+
     switch (appHfpGetState())
     {
         case HFP_STATE_CONNECTED_IDLE:
@@ -2768,7 +2773,10 @@ void appHfpTransferToHeadset(void)
             message->transfer_to_ag = FALSE;
             MessageSendConditionally(appGetHfpTask(), HFP_INTERNAL_HFP_TRANSFER_REQ,
                                      message, &appHfpGetLock());	
-
+#ifdef CONFIG_STAROT
+            MessageSendLater(appGetHfpTask(), APP_HFP_AUDIO_REQUEST_TIMEOUT, 0, D_SEC(3));
+            DEBUG_LOG("appHfpTransferToHeadset, send later APP_HFP_AUDIO_REQUEST_TIMEOUT");
+#endif
             /* Play tone */
             appUiHfpTransfer();
         }
@@ -2928,6 +2936,18 @@ static void appHfpHandleMessage(Task task, MessageId id, Message message)
         case HFP_INTERNAL_VOLUME_DOWN:
             appHfpVolumeRepeat(-1);
             return;
+
+#ifdef CONFIG_STAROT
+        case APP_HFP_AUDIO_REQUEST_TIMEOUT: {
+            bool condition = !appSmIsInCase() && appDeviceIsHandsetConnected();
+            DEBUG_LOG("appScoFwdHandleMessage APP_HFP_AUDIO_REQUEST_TIMEOUT condition:%02X", condition);
+            if (condition) {
+                MessageSendLater(appGetHfpTask(), APP_HFP_NEED_RECONNECT_IND, NULL, D_SEC(5));
+                appHfpDisconnectInternal();
+            }
+        }
+        return;
+#endif
     }
     
     /* HFP profile library messages */
