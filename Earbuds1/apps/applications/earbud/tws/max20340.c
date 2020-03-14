@@ -638,14 +638,15 @@ void singlebus_itr_process(void)
 void singlebus_itr_handler(Task task, MessageId id, Message msg)
 {
     (void)task;
-    unsigned long pin, pio_state;
-    MessagePioChanged *pioMsg = (MessagePioChanged*)msg;
-    pin = PIO2MASK(MAX20340_ITR_PIN);
-    pio_state = pioMsg->state16to31 << 16 | pioMsg->state;
+    (void)msg;
+//    unsigned long pin, pio_state;
+//    MessagePioChanged *pioMsg = (MessagePioChanged*)msg;
+//    pin = PIO2MASK(MAX20340_ITR_PIN);
+//    pio_state = pioMsg->state16to31 << 16 | pioMsg->state;
 
     switch(id) {
         case MESSAGE_PIO_CHANGED:
-            if( !(pin&pio_state) ){
+            if( !(PioGet32Bank(PIO2BANK(MAX20340_ITR_PIN)) & PIO2MASK(MAX20340_ITR_PIN)) ){
                 if(3 == g_commuType){
                     char* buff = "check PLC SUSS";
                     CommpcMessage((uint8*)buff, 15);
