@@ -39,6 +39,11 @@ static uint8 ProductPlayAudio(uint8 audNo)
          return 0xFF;
 
 #if 10
+     // 系统在开始播放提示音的时候，会阻塞CPU，从而导致盒子的播放命令不能返回。
+     // 我们在这儿处理如果已经在播放，直接返回成功（实际可能在播放的是上一条发送的命令)
+     if(appKymeraIsTonePlaying())
+         return audNo;
+
      uiTaskData *theUi = appGetUi();
      const promptConfig *config = appConfigGetPromptConfig(audNo);
      FILE_INDEX *index = theUi->prompt_file_indexes + audNo;
