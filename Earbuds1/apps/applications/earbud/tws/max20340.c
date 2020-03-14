@@ -15,6 +15,7 @@ void max20340_notify_plc_in(void);
 void max20340_notify_plc_out(void);
 
 #define MESSAGE_MAX30240_SEND_LATER    2000    // (延时反馈数据)
+static uint32 g_ms_senddata;                   // 数据必须在这个时间之前发送，否则对盒子来说已经超时，无意义
 static uint8 g_send_data[4];                   // 需要发送的数据
 void max20340_timer_send(int timeout);
 
@@ -73,6 +74,7 @@ bool max20340ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
 
 bool max20340ReadRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *value, uint8 len)
 {
+#if 0
     bitserial_result result;
     /* First write the register address to be read */
     result = BitserialWrite(handle,
@@ -90,6 +92,12 @@ bool max20340ReadRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *va
         //DEBUG_LOG("max20340ReadRegister_withlen faild,result= %d", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
+#else
+
+    bitserial_result result;
+    result = BitserialTransfer(handle, BITSERIAL_NO_MSG, &reg, 1, value, len);
+    return (result == BITSERIAL_RESULT_SUCCESS) ? TRUE : FALSE;
+#endif
 }
 
 /*! \brief Write to a proximity sensor register */
@@ -514,6 +522,9 @@ static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
     case 11://盒子关闭充电
         box_send_charge_event(&buf[MX20340_REG_RX_DATA0], send_buf);
         break;
+    default:
+        DEBUG_LOG("plc Unkcomand:%d(0x%x)", cmd, buf[MX20340_REG_RX_DATA0]);
+        break;
     }
 
 #ifdef MESSAGE_MAX30240_SEND_LATER
@@ -529,6 +540,7 @@ static void recv_data_process_cmd(bitserial_handle handle, uint8 *buf)
     (void)handle;
     memcpy(g_send_data, send_buf, 3);
     g_send_data[3] = (buf[MX20340_REG_PLC_CTL] | 3);
+    g_ms_senddata = VmGetClock() + 85; // 设置发送时间必须在 n ms内发送,盒子的超时设置为100
     max20340_timer_send(3);
   }
 #else
@@ -589,17 +601,19 @@ void singlebus_itr_process(void)
     if( (value_a[MX20340_REG_STA_IRQ]&0x1) ){
         if( ((value_a[MX20340_REG_STA1]&0x1c) == (5<<2)) ){
             //说明是插入动作,可能是芯片bug需要重写mask寄存器
-            DEBUG_LOG("plc in");
+            DEBUG_LOG("plc in 0x%x", value_a[MX20340_REG_PLC_IRQ]);
             if(0 == g_commuType){       // 非测试模式下去改变实际状态
                 max20340_notify_plc_in();
             }
         }else if( ((value_a[MX20340_REG_STA1]&0x1c) == (3<<2)) ){
             //说明是拔出动作,可能是芯片bug需要重写mask寄存器
-            DEBUG_LOG("plc out");
+            DEBUG_LOG("plc out 0x%x", value_a[MX20340_REG_PLC_IRQ]);
             if(0 == g_commuType) {       // 非测试模式下去改变实际状态
                 max20340_notify_plc_out();
             }
         }
+        else
+            DEBUG_LOG("plc unknown in/out 0x%x", value_a[MX20340_REG_PLC_IRQ]);
         //max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x2);
         max20340WriteRegister(handle, MX20340_REG_CTRL1, 0xe1);
         max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x7f);
@@ -638,17 +652,23 @@ void singlebus_itr_handler(Task task, MessageId id, Message msg)
                     return;     // 测试模式不发给UI
                 }
                 singlebus_itr_process();
-                max20340_timer_restart(20);     // 20ms后，查看中断是否拉回来了
+                max20340_timer_restart(15);     // 20ms后，查看中断是否拉回来了
             }
             break;
 #ifdef MESSAGE_MAX30240_SEND_LATER
-        case MESSAGE_MAX30240_SEND_LATER: {
-            bitserial_handle handle;
-            handle = max20340Enable();
-            max20340WriteRegister_withlen(handle, MX20340_REG_TX_DATA0, g_send_data, 3);
-            max20340WriteRegister(handle, MX20340_REG_PLC_CTL, g_send_data[3]);
-            max20340Disable(handle);
-        }
+        case MESSAGE_MAX30240_SEND_LATER:
+            if(VmGetClock() < g_ms_senddata) {
+                bitserial_handle handle;
+                handle = max20340Enable();
+                max20340WriteRegister_withlen(handle, MX20340_REG_TX_DATA0, g_send_data, 3);
+                max20340WriteRegister(handle, MX20340_REG_PLC_CTL, g_send_data[3]);
+                max20340Disable(handle);
+            }
+    #ifdef TIME_READ_MAX20340_REG
+            // 已经为高电平，取消定时器再次读取
+            if(PioGet32Bank(PIO2BANK(MAX20340_ITR_PIN)) & PIO2MASK(MAX20340_ITR_PIN))
+                max20340_timer_restart(-1);
+    #endif
             break;
 #endif
         default:
@@ -720,7 +740,7 @@ static void max20340_time_handle_msg(Task task, MessageId id, Message message)
             if(!(PioGet32Bank(PIO2BANK(MAX20340_ITR_PIN)) & PIO2MASK(MAX20340_ITR_PIN))) {
                 singlebus_itr_process();
                 DEBUG_LOG("max23040 timer READ");
-                max20340_timer_restart(20);
+                max20340_timer_restart(15);     // 连续数据发送时，其周期可能接近20ms,我们减少这儿的值
             }
         break;
     }
@@ -729,7 +749,8 @@ static void max20340_time_handle_msg(Task task, MessageId id, Message message)
 void max20340_timer_restart(int timeout)
 {
     MessageCancelAll(&time_funcTask->task, MESSAGE_MAX20340_TIME_TRIGGER);
-    MessageSendLater(&time_funcTask->task, MESSAGE_MAX20340_TIME_TRIGGER, 0, timeout);
+    if(timeout >= 0)
+        MessageSendLater(&time_funcTask->task, MESSAGE_MAX20340_TIME_TRIGGER, 0, timeout);
 }
 #else
 void max20340_timer_restart(int timeout) { (void)timeout;}
