@@ -1,0 +1,308 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{050382B6-EEEE-41C4-9FA3-1BBC8D079853}</ProjectGuid>
+    <RootNamespace>factory_workstation</RootNamespace>
+    <Keyword>MFCProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110_xp</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <LibraryWPath>
+    </LibraryWPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <LibraryWPath>
+    </LibraryWPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;libcmtd.lib</IgnoreSpecificDefaultLibraries>
+      <AdditionalDependencies>SQLite3.lib;</AdditionalDependencies>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>SQLite3.lib;</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>libcmtd.lib;</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="about_box.h" />
+    <ClInclude Include="acodec.h" />
+    <ClInclude Include="air_by_option_dlg.h" />
+    <ClInclude Include="barcode.h" />
+    <ClInclude Include="batpower_by_option_dlg.h" />
+    <ClInclude Include="batpower_option_dlg.h" />
+    <ClInclude Include="before_press_current_by_option_dlg.h" />
+    <ClInclude Include="bluetooth_option_dlg.h" />
+    <ClInclude Include="btaddr_sz_option_dlg.h" />
+    <ClInclude Include="burncheck_mpi.h" />
+    <ClInclude Include="burncheck_option_dlg.h" />
+    <ClInclude Include="burn_by_option_dlg.h" />
+    <ClInclude Include="burn_sz_option_dlg.h" />
+    <ClInclude Include="charge_check_option_dlg.h" />
+    <ClInclude Include="check_by_option_dlg.h" />
+    <ClInclude Include="check_sz_box_option_dlg.h" />
+    <ClInclude Include="check_sz_option_dlg.h" />
+    <ClInclude Include="ColorStatic.h" />
+    <ClInclude Include="ContrlComm_bluetooth.h" />
+    <ClInclude Include="ContrlComm_burncheck.h" />
+    <ClInclude Include="CurlCtrl.h" />
+    <ClInclude Include="ddr_base_param.h" />
+    <ClInclude Include="default_dlg.h" />
+    <ClInclude Include="DeviceCtrl.h" />
+    <ClInclude Include="ExecProcess.h" />
+    <ClInclude Include="factory_workstation.h" />
+    <ClInclude Include="factory_workstationDlg.h" />
+    <ClInclude Include="fz_jn_burncheck_mpi.h" />
+    <ClInclude Include="G722Play.h" />
+    <ClInclude Include="general_option_dlg.h" />
+    <ClInclude Include="glob_param.h" />
+    <ClInclude Include="Ini.h" />
+    <ClInclude Include="libusb\win32\libusb_devlistener.h" />
+    <ClInclude Include="libusb_legacy_protocol.h" />
+    <ClInclude Include="menu_use_option_dlg.h" />
+    <ClInclude Include="MyComm.h" />
+    <ClInclude Include="MySqlite.h" />
+    <ClInclude Include="page_by_dlg.h" />
+    <ClInclude Include="page_fz_dlg.h" />
+    <ClInclude Include="page_jn_dlg.h" />
+    <ClInclude Include="page_sz_dlg.h" />
+    <ClInclude Include="protocol.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="software_air_by.h" />
+    <ClInclude Include="software_air_fz.h" />
+    <ClInclude Include="software_batpower.h" />
+    <ClInclude Include="software_batpower_by.h" />
+    <ClInclude Include="software_bluetooth_fz.h" />
+    <ClInclude Include="software_bluetooth_jn.h" />
+    <ClInclude Include="software_burn.h" />
+    <ClInclude Include="software_burn_sz.h" />
+    <ClInclude Include="software_by_before_press_current.h" />
+    <ClInclude Include="software_by_burn.h" />
+    <ClInclude Include="software_charge_fzjn.h" />
+    <ClInclude Include="software_check_by.h" />
+    <ClInclude Include="software_check_by_with_wifibt.h" />
+    <ClInclude Include="software_check_fz.h" />
+    <ClInclude Include="software_check_jn.h" />
+    <ClInclude Include="software_check_sz.h" />
+    <ClInclude Include="software_sz_btaddr.h" />
+    <ClInclude Include="software_sz_checkbox.h" />
+    <ClInclude Include="software_tool_barcode.h" />
+    <ClInclude Include="software_tool_box_audio.h" />
+    <ClInclude Include="software_tool_by_getfile.h" />
+    <ClInclude Include="software_tool_current_board.h" />
+    <ClInclude Include="software_tool_gener_barcode.h" />
+    <ClInclude Include="software_tool_sz_btaddr.h" />
+    <ClInclude Include="software_tool_sz_freq.h" />
+    <ClInclude Include="software_tool_sz_light.h" />
+    <ClInclude Include="software_tool_version.h" />
+    <ClInclude Include="software_tool_vnc.h" />
+    <ClInclude Include="software_total_machine_by.h" />
+    <ClInclude Include="sqlite3.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="tools_dlg.h" />
+    <ClInclude Include="total_machine_by_option_dlg.h" />
+    <ClInclude Include="WaveSound.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="about_box.cpp" />
+    <ClCompile Include="air_by_option_dlg.cpp" />
+    <ClCompile Include="barcode.cpp" />
+    <ClCompile Include="batpower_by_option_dlg.cpp" />
+    <ClCompile Include="batpower_option_dlg.cpp" />
+    <ClCompile Include="before_press_current_by_option_dlg.cpp" />
+    <ClCompile Include="bluetooth_option_dlg.cpp" />
+    <ClCompile Include="btaddr_sz_option_dlg.cpp" />
+    <ClCompile Include="burncheck_option_dlg.cpp" />
+    <ClCompile Include="burn_by_option_dlg.cpp" />
+    <ClCompile Include="burn_sz_option_dlg.cpp" />
+    <ClCompile Include="charge_check_option_dlg.cpp" />
+    <ClCompile Include="check_by_option_dlg.cpp" />
+    <ClCompile Include="check_sz_box_option_dlg.cpp" />
+    <ClCompile Include="check_sz_option_dlg.cpp" />
+    <ClCompile Include="ColorStatic.cpp" />
+    <ClCompile Include="ContrlComm_bluetooth.cpp" />
+    <ClCompile Include="ContrlComm_burncheck.cpp" />
+    <ClCompile Include="CurlCtrl.cpp" />
+    <ClCompile Include="ddr_base_param.cpp" />
+    <ClCompile Include="default_dlg.cpp" />
+    <ClCompile Include="DeviceCtrl.cpp" />
+    <ClCompile Include="ExecProcess.cpp" />
+    <ClCompile Include="factory_workstation.cpp" />
+    <ClCompile Include="factory_workstationDlg.cpp" />
+    <ClCompile Include="G722Play.cpp" />
+    <ClCompile Include="general_option_dlg.cpp" />
+    <ClCompile Include="Ini.cpp" />
+    <ClCompile Include="libusb\win32\libusb_devlistener.cpp" />
+    <ClCompile Include="libusb_legacy_protocol.cpp" />
+    <ClCompile Include="menu_use_option_dlg.cpp" />
+    <ClCompile Include="MyComm.cpp" />
+    <ClCompile Include="MySqlite.cpp" />
+    <ClCompile Include="NewParam.cpp" />
+    <ClCompile Include="page_by_dlg.cpp" />
+    <ClCompile Include="page_fz_dlg.cpp" />
+    <ClCompile Include="page_jn_dlg.cpp" />
+    <ClCompile Include="page_sz_dlg.cpp" />
+    <ClCompile Include="ping.cpp" />
+    <ClCompile Include="protocol.cpp" />
+    <ClCompile Include="software_air_by.cpp" />
+    <ClCompile Include="software_air_fz.cpp" />
+    <ClCompile Include="software_batpower.cpp" />
+    <ClCompile Include="software_batpower_by.cpp" />
+    <ClCompile Include="software_bluetooth_fz.cpp" />
+    <ClCompile Include="software_bluetooth_jn.cpp" />
+    <ClCompile Include="software_burn.cpp" />
+    <ClCompile Include="software_burn_sz.cpp" />
+    <ClCompile Include="software_by_before_press_current.cpp" />
+    <ClCompile Include="software_by_burn.cpp" />
+    <ClCompile Include="software_charge_fzjn.cpp" />
+    <ClCompile Include="software_check_by.cpp" />
+    <ClCompile Include="software_check_by_with_wifibt.cpp" />
+    <ClCompile Include="software_check_fz.cpp" />
+    <ClCompile Include="software_check_jn.cpp" />
+    <ClCompile Include="software_check_sz.cpp" />
+    <ClCompile Include="software_sz_btaddr.cpp" />
+    <ClCompile Include="software_sz_checkbox.cpp" />
+    <ClCompile Include="software_tool_barcode.cpp" />
+    <ClCompile Include="software_tool_box_audio.cpp" />
+    <ClCompile Include="software_tool_by_getfile.cpp" />
+    <ClCompile Include="software_tool_current_board.cpp" />
+    <ClCompile Include="software_tool_gener_barcode.cpp" />
+    <ClCompile Include="software_tool_sz_btaddr.cpp" />
+    <ClCompile Include="software_tool_sz_freq.cpp" />
+    <ClCompile Include="software_tool_sz_light.cpp" />
+    <ClCompile Include="software_tool_version.cpp" />
+    <ClCompile Include="software_tool_vnc.cpp" />
+    <ClCompile Include="software_total_machine_by.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="tools_dlg.cpp" />
+    <ClCompile Include="total_machine_by_option_dlg.cpp" />
+    <ClCompile Include="WaveSound.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="factory_workstation.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\factory_workstation.rc2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\factory_workstation.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="res\1khz2c100ms.wav" />
+    <Media Include="res\1KHZ2c4s.wav" />
+    <Media Include="res\check_audio12.wav" />
+    <Media Include="res\check_audio13.wav" />
+    <Media Include="res\check_audio14.wav" />
+    <Media Include="res\check_audio23.wav" />
+    <Media Include="res\check_audio24.wav" />
+    <Media Include="res\check_audio34.wav" />
+    <Media Include="res\mono_audio1.wav" />
+    <Media Include="res\mono_audio2.wav" />
+    <Media Include="res\mono_audio3.wav" />
+    <Media Include="res\mono_audio4.wav" />
+    <Media Include="res\史小飞.wav" />
+    <Media Include="res\小薇小薇.wav" />
+    <Media Include="res\小飞小飞.wav" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="factory_workstation.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

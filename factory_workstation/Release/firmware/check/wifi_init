@@ -1,0 +1,15 @@
+#!/bin/sh
+killall servermanager > mylog.log 2>&1
+ifconfig wlan0 down > mylog.log 2>&1
+ifconfig wlan0 up > mylog.log 2>&1
+ifconfig > mylog.log 2>&1 
+
+log=`grep HWaddr mylog.log`
+hwaddr=`echo ${log##*HWaddr}`
+num=`echo $hwaddr|grep -o :|wc -l `
+if [ num==6 ];then
+	echo "wifi_init OK\r\n"  
+else
+	echo "wifi_init ERR\r\n"	 
+fi 	  
+rm -rf mylog.log                                                    

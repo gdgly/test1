@@ -1,0 +1,539 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="factory_workstation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="factory_workstationDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Ini.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="default_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="general_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="burncheck_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="bluetooth_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="batpower_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="glob_param.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="tools_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="page_fz_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="page_jn_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_burn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ExecProcess.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MyComm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ContrlComm_burncheck.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CurlCtrl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_check_fz.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="burncheck_mpi.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorStatic.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_check_jn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_bluetooth_fz.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ContrlComm_bluetooth.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="G722Play.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WaveSound.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="acodec.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_air_fz.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_bluetooth_jn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_batpower.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MySqlite.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_tool_box_audio.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_tool_version.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_tool_barcode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="barcode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_tool_current_board.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_tool_gener_barcode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="about_box.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="page_by_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_by_burn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="libusb\win32\libusb_devlistener.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="libusb_legacy_protocol.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ddr_base_param.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="burn_by_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_check_by.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="check_by_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_total_machine_by.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="total_machine_by_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_air_by.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="air_by_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_tool_vnc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_tool_by_getfile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="charge_check_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_charge_fzjn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_by_before_press_current.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="before_press_current_by_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_check_by_with_wifibt.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="batpower_by_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_batpower_by.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceCtrl.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="page_sz_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="burn_sz_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_burn_sz.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="menu_use_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="fz_jn_burncheck_mpi.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="check_sz_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_check_sz.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_tool_sz_light.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="btaddr_sz_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_sz_btaddr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_tool_sz_freq.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="check_sz_box_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_sz_checkbox.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="software_tool_sz_btaddr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="factory_workstation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="factory_workstationDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Ini.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="default_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="general_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="burncheck_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="bluetooth_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="batpower_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="tools_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="page_fz_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="page_jn_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_burn.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ExecProcess.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MyComm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NewParam.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ContrlComm_burncheck.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CurlCtrl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_check_fz.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorStatic.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_check_jn.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_bluetooth_fz.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ContrlComm_bluetooth.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="protocol.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="G722Play.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="WaveSound.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_air_fz.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_bluetooth_jn.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_batpower.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MySqlite.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_tool_box_audio.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_tool_version.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_tool_barcode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="barcode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_tool_current_board.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_tool_gener_barcode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="about_box.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="page_by_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_by_burn.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="libusb\win32\libusb_devlistener.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="libusb_legacy_protocol.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ddr_base_param.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="burn_by_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_check_by.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="check_by_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_total_machine_by.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="total_machine_by_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ping.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_air_by.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="air_by_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_tool_vnc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_tool_by_getfile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="charge_check_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_charge_fzjn.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_by_before_press_current.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="before_press_current_by_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_check_by_with_wifibt.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="batpower_by_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_batpower_by.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceCtrl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="page_sz_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="burn_sz_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_burn_sz.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="menu_use_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="check_sz_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_check_sz.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_tool_sz_light.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="btaddr_sz_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_sz_btaddr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_tool_sz_freq.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="check_sz_box_option_dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_sz_checkbox.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_tool_sz_btaddr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="factory_workstation.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\factory_workstation.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\factory_workstation.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="res\check_audio12.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\check_audio13.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\mono_audio4.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\check_audio14.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\check_audio23.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\check_audio24.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\check_audio34.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\mono_audio1.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\mono_audio2.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\mono_audio3.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\1KHZ2c4s.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\1khz2c100ms.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\小飞小飞.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\小薇小薇.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="res\史小飞.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+  </ItemGroup>
+</Project>

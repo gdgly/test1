@@ -1,0 +1,31 @@
+#!/bin/sh  
+
+killall -9 network_manager > /tmp/mylog.log
+killall -9 wpa_supplicant > /tmp/mylog.log
+killall -9 NetworkManagerDemo  > /tmp/mylog.log
+killall -9 test_wifi  > /tmp/mylog.log
+ifconfig wlan0 down
+rm /tmp/wpa_ctrl_*
+chmod 777 /tmp/* > /tmp/mylog.log
+usleep 100000
+network_manager   > /tmp/mylog.log &
+usleep 200000
+/tmp/test_wifi $1 $2  > /tmp/mylog.log &
+sleep 8
+rm /tmp/wifi_test.log   
+echo $3
+/tmp/iperf -c $3 -f M -i 6 -w 60K -t 5 >> /tmp/wifi_test.log
+result=$(tail -1 /tmp/wifi_test.log)
+echo result=$result
+sstr=`echo $result | cut -d \M -f 2`
+echo  $sstr
+fstr=`echo $sstr | cut -d \  -f 2`   
+echo  $fstr
+gstr=`echo $fstr | cut -d \. -f 1`
+echo  $gstr
+if [ $gstr -ge $4 ]
+then
+    echo "wifi_trans OK"
+else
+    echo "wifi_trans ERR"
+fi   

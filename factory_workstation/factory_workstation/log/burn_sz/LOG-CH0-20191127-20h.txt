@@ -1,0 +1,184 @@
+===============================================
+20:22:17 √ª”–≈‰÷√…’–¥÷˜–æ∆¨£°
+20:22:17 ≈‰÷√¡À…’–¥«∞≤¡≥˝flash£°
+20:22:17 …’–¥≈‰÷√Œ¥∞¸∫¨apollo…’–¥£°
+20:22:17 …’–¥≈‰÷√Œ¥∞¸∫¨¿∂—¿µ»≤Œ ˝…’–¥£°
+20:22:17 ≈‰÷√¡À…’–¥ÕÍ≥…≤‚ ‘£°
+20:22:17 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:22:18 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:22:25 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:22:25 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:22:25 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:22:25 check DEVICEINFO
+20:22:25 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:22:25 check BTADDR 00:09:5B:00:FF:01
+20:22:25 check LIS25 PASS
+20:22:26 check EM20168 FAIL
+20:22:26 check LIS2DW12 PASS
+20:22:26 check MAX20340 PASS
+20:22:26 check APOLLO PASSS
+20:22:27 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:22:28 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:22:28 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:22:28 check DEVICEINFO
+20:22:28 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:22:28 check BTADDR 00:09:5B:00:FF:01
+20:22:28 check LIS25 PASS
+20:22:28 check EM20168 FAIL
+20:22:28 check LIS2DW12 PASS
+20:22:28 check MAX20340 PASS
+20:22:28 check APOLLO PASSS
+20:22:32 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:22:32 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:22:32 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+===============================================
+20:23:36 √ª”–≈‰÷√…’–¥÷˜–æ∆¨£°
+20:23:36 ≈‰÷√¡À…’–¥«∞≤¡≥˝flash£°
+20:23:36 …’–¥≈‰÷√Œ¥∞¸∫¨apollo…’–¥£°
+20:23:36 …’–¥≈‰÷√Œ¥∞¸∫¨¿∂—¿µ»≤Œ ˝…’–¥£°
+20:23:36 ≈‰÷√¡À…’–¥ÕÍ≥…≤‚ ‘£°
+20:23:36 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:23:40 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:23:41 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:23:41 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:23:41 check DEVICEINFO
+20:23:41 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:23:41 check BTADDR 00:09:5B:00:FF:01
+20:23:41 check LIS25 PASS
+20:23:41 check EM20168 FAIL
+20:23:41 check LIS2DW12 PASS
+20:23:41 check MAX20340 PASS
+20:23:41 check APOLLO PASSS
+20:23:43 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:23:44 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:23:44 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:23:44 check DEVICEINFO
+20:23:44 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:23:44 check BTADDR 00:09:5B:00:FF:01
+20:23:44 check LIS25 PASS
+20:23:44 check EM20168 FAIL
+20:23:44 check LIS2DW12 PASS
+20:23:44 check MAX20340 PASS
+20:23:44 check APOLLO PASSS
+20:23:48 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:23:49 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:23:49 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:23:49 check DEVICEINFO
+20:23:49 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:23:49 check BTADDR 00:09:5B:00:FF:01
+20:23:49 check LIS25 PASS
+20:23:49 check EM20168 FAIL
+20:23:49 check LIS2DW12 PASS
+20:23:49 check MAX20340 PASS
+20:23:49 check APOLLO PASSS
+20:23:54 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:23:56 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:23:56 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:23:56 check DEVICEINFO
+20:23:56 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:23:56 check BTADDR 00:09:5B:00:FF:01
+20:23:56 check LIS25 PASS
+20:23:56 check EM20168 FAIL
+20:23:56 check LIS2DW12 PASS
+20:23:56 check MAX20340 PASS
+20:23:56 check APOLLO PASSS
+20:24:01 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:24:01 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:24:01 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:24:02 check DEVICEINFO
+20:24:02 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:24:02 check BTADDR 00:09:5B:00:FF:01
+20:24:02 check LIS25 PASS
+20:24:02 check EM20168 FAIL
+20:24:02 check LIS2DW12 PASS
+20:24:02 check MAX20340 PASS
+20:24:02 check APOLLO PASSS
+20:24:07 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:24:07 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:24:08 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:24:08 check DEVICEINFO
+20:24:08 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:24:08 check BTADDR 00:09:5B:00:FF:01
+20:24:08 check LIS25 PASS
+20:24:08 check EM20168 FAIL
+20:24:08 check LIS2DW12 PASS
+20:24:08 check MAX20340 PASS
+20:24:08 check APOLLO PASSS
+20:24:14 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:24:15 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:24:15 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:24:15 check DEVICEINFO
+20:24:15 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:24:15 check BTADDR 00:09:5B:00:FF:01
+20:24:15 check LIS25 PASS
+20:24:15 check EM20168 FAIL
+20:24:15 check LIS2DW12 PASS
+20:24:15 check MAX20340 PASS
+20:24:15 check APOLLO PASSS
+20:24:21 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:24:23 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:24:23 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:24:23 check DEVICEINFO
+20:24:23 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:24:23 check BTADDR 00:09:5B:00:FF:01
+20:24:23 check LIS25 PASS
+20:24:23 check EM20168 FAIL
+20:24:23 check LIS2DW12 PASS
+20:24:23 check MAX20340 PASS
+20:24:23 check APOLLO PASSS
+20:24:28 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:24:29 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:24:29 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:24:29 check DEVICEINFO
+20:24:29 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:24:29 check BTADDR 00:09:5B:00:FF:01
+20:24:29 check LIS25 PASS
+20:24:29 check EM20168 FAIL
+20:24:29 check LIS2DW12 PASS
+20:24:29 check MAX20340 PASS
+20:24:29 check APOLLO PASSS
+20:24:34 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:24:35 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:24:35 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:24:35 check DEVICEINFO
+20:24:35 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:24:35 check BTADDR 00:09:5B:00:FF:01
+20:24:35 check LIS25 PASS
+20:24:35 check EM20168 FAIL
+20:24:35 check LIS2DW12 PASS
+20:24:35 check MAX20340 PASS
+20:24:35 check APOLLO PASSS
+20:24:44 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:25:04 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:25:04 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:25:04 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:25:04 check DEVICEINFO
+20:25:04 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:25:04 check BTADDR 00:09:5B:00:FF:01
+20:25:04 check LIS25 PASS
+20:25:04 check EM20168 FAIL
+20:25:04 check LIS2DW12 PASS
+20:25:04 check MAX20340 PASS
+20:25:04 check APOLLO PASSS
+20:25:10 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:25:11 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:25:11 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:25:11 check DEVICEINFO
+20:25:11 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:25:11 check BTADDR 00:09:5B:00:FF:01
+20:25:11 check LIS25 PASS
+20:25:11 check EM20168 FAIL
+20:25:11 check LIS2DW12 PASS
+20:25:11 check MAX20340 PASS
+20:25:11 check APOLLO PASSS
+20:25:16 #####µ»¥˝”√ªß ‰»Îsn∫≈#####
+20:25:17 sn∫≈ ‰»Î≥…π¶£¨µ»¥˝…œµÁ
+20:25:17 ∆Ù∂Ø…’–¥Ω¯≥Ã£°
+20:25:18 check DEVICEINFO
+20:25:18 check RIGHTVERSION E0.01.00-00.01.02.24ˇ
+20:25:18 check BTADDR 00:09:5B:00:FF:01
+20:25:18 check LIS25 PASS
+20:25:18 check EM20168 FAIL
+20:25:18 check LIS2DW12 PASS
+20:25:18 check MAX20340 PASS
+20:25:18 check APOLLO PASSS

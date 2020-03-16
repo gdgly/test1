@@ -1,0 +1,27 @@
+#!/bin/sh  
+myFile1="/var/run/bt-avk-fifo"
+myFile2="/var/run/bt-daemon-socket"
+
+killall servermanager > mylog.log 2>&1
+killall bsa_server_mips
+echo 0 > /sys/class/rfkill/rfkill0/state
+echo 1 > /sys/class/rfkill/rfkill0/state
+bsa_server_mips -all=0 -r 14 -d /dev/ttyS0 -u /var/run/ -p /etc/6212a.hcd &
+# -f 参数判断 $file 是否存在
+for i in $(seq 1 1 100)
+do
+	if [ ! -f "$myFile1" ]; then
+		if [ ! -f "$myFile2" ]; then
+		break
+		fi	
+	fi
+	usleep 50000 #50ms
+done
+
+if [ $i -lt 100 ]; then
+	echo "bt_init OK\r\n"
+else
+	echo "bt_init ERR\r\n"
+fi
+
+rm -rf mylog.log

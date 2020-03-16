@@ -1,0 +1,67 @@
+===============================================
+===============================================
+10:02:23 sn号输入成功，等待上电
+10:02:32 ERROR: err msg = ERROR_PLC
+===============================================
+10:03:15 sn号输入成功，等待上电
+10:03:30 sn号输入成功，等待上电
+10:03:35 sn号输入成功，等待上电
+10:03:50 sn号输入成功，等待上电
+===============================================
+10:05:04 sn号输入成功，等待上电
+===============================================
+10:05:18 sn号输入成功，等待上电
+10:05:18 checkresp RDSENSOR=1435
+10:05:19 checkresp WRSENSOR
+10:05:23 ERROR: err msg = ERROR_SENSOR
+10:07:33 sn号输入成功，等待上电
+10:07:33 checkresp RDSENSOR=1435
+10:07:33 checkresp WRSENSOR
+10:07:38 ERROR: err msg = ERROR_SENSOR
+10:17:18 sn号输入成功，等待上电
+10:17:18 checkresp RDSENSOR=1435
+10:17:18 checkresp WRSENSOR
+10:17:23 ERROR: err msg = ERROR_SENSOR
+10:17:57 sn号输入成功，等待上电
+10:17:57 checkresp RDSENSOR=1435
+10:18:00 checkresp WRSENSOR
+10:18:22 ERROR: err msg = ERROR_SENSOR
+10:18:35 sn号输入成功，等待上电
+10:18:35 checkresp RDSENSOR=1435
+10:18:39 checkresp WRSENSOR
+10:18:44 ERROR: err msg = ERROR_SENSOR
+10:20:45 sn号输入成功，等待上电
+10:20:45 checkresp RDSENSOR=1435
+10:20:45 checkresp WRSENSOR
+10:20:51 ERROR: err msg = ERROR_SENSOR
+===============================================
+===============================================
+10:30:03 sn号输入成功，等待上电
+10:30:03 checkresp RDSENSOR=1435
+10:30:03 checkresp WRSENSOR
+10:30:04 check SENSOR SUSS
+10:32:24 sn号输入成功，等待上电
+10:32:25 checkresp RDSENSOR=1435
+10:32:25 checkresp WRSENSOR
+10:32:49 ERROR: err msg = ERROR_SENSOR
+===============================================
+10:35:30 sn号输入成功，等待上电
+10:35:42 checkresp RDSENSOR=1435
+10:35:42 checkresp WRSENSOR
+10:35:53 ERROR: err msg = ERROR_SENSOR TimeOut check SENSOR
+===============================================
+10:38:01 sn号输入成功，等待上电
+10:38:01 checkresp RDSENSOR=1435
+10:38:01 checkresp WRSENSOR
+10:38:07 接近光检测超时！
+10:38:07 ERROR: err msg = ERROR_SENSOR 
+===============================================
+===============================================
+10:59:38 sn号输入成功，等待上电
+10:59:44 接近光检测超时！
+10:59:44 ERROR: err msg = ERROR_SENSOR 
+11:00:00 sn号输入成功，等待上电
+11:00:06 接近光检测超时！
+11:00:06 ERROR: err msg = ERROR_SENSOR 
+11:00:07 sn号输入成功，等待上电
+11:00:10 sn号输入成功，等待上电

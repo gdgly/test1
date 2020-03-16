@@ -1,0 +1,57 @@
+#!/bin/sh
+#client
+export LD_LIBRARY_PATH=/tmp/:$LD_LIBRARY_PATH
+
+DIR=/tmp
+killall brcm_patchram_plus
+$DIR/hciconfig hci0 down
+sleep 0.5
+echo 0 > /sys/class/rfkill/rfkill0/state
+sleep 0.5
+echo 1 > /sys/class/rfkill/rfkill0/state
+sleep 0.5
+$DIR/hciconfig hci0 down
+sleep 0.5
+echo 0 > /sys/class/rfkill/rfkill0/state
+sleep 0.5
+echo 1 > /sys/class/rfkill/rfkill0/state
+sleep 0.5
+$DIR/brcm_patchram_plus --patchram /etc/firmware/bluetooth/bcm_43438/BCM43438_A1.hcd --baudrate 3000000 --bd_addr $BLUETOOTH_MAC_ADDR --enable_lpm --enable_hci --no2bytes /dev/ttyS0 &
+
+for i in $(seq 1 1 30)
+do
+	if [ -d /sys/class/bluetooth/hci0 ] ;then
+		break
+	fi
+		sleep 0.5
+done
+
+$DIR/hciconfig hci0 down
+usleep  100000
+$DIR/hciconfig hci0 up
+
+rm /tmp/rfcomm.log
+rm /tmp/test.txt
+
+$DIR/rfcomm connect 0 $1 1 & 
+
+for i in $(seq 1 1 20)
+do
+	if [ -f /tmp/rfcomm.log ] ;then
+		break
+	fi
+		sleep 0.5
+done
+
+
+$DIR/ble_read
+
+diff /tmp/test.txt /tmp/Comparison.txt
+if [[ $? = 0 ]];then
+    echo "bt_trans OK\r\n"
+else
+    echo "bt_trans ERR\r\n" 
+fi
+
+
+$DIR/hciconfig hci0 down

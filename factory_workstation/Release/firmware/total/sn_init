@@ -1,0 +1,34 @@
+#!/bin/sh
+sn=`/usr/bin/mtdrw -r svn |grep svn= |awk -Fsvn= '{printf("%s", $(NF))}'`
+
+if [ "$sn" = "" ]; then
+ echo "sn_init ERR"
+else 
+ echo "sn_init OK"
+ echo "SN:"$sn
+fi
+
+KERNEL_VERSION=`cat /proc/sys/kernel/osrelease`
+if [ "$KERNEL_VERSION" = "" ]; then
+ echo "kernel_version ERR"
+else 
+ echo "kernel_version OK"
+ echo "KERNEL_VERSION:"$KERNEL_VERSION
+fi
+
+
+if [ -f "/etc/buildversion" ]; then
+  ROOTFS_VERSION=`cat  /etc/buildversion |awk -Frootfsversion= '{printf("%s", $(NF))}'`
+fi
+
+if [ "$ROOTFS_VERSION" = "" ]; then
+ echo "rootfs_version ERR"
+else 
+ echo "rootfs_version OK"
+ echo "ROOTFS_VERSION:"$ROOTFS_VERSION
+fi
+
+
+
+
+

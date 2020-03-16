@@ -1,0 +1,21 @@
+===============================================
+===============================================
+===============================================
+===============================================
+19:59:47 sn号输入成功，等待上电
+19:59:47 启动烧写进程！
+19:59:47 check DEVICEINFO
+19:59:47 check RIGHTVERSION E0.01.00-00.01.02.24
+19:59:47 check BTADDR 00:02:5B:00:FF:04
+19:59:47 check LIS25 PASS
+19:59:47 check EM20168 PASS
+19:59:47 check LIS2DW12 FAIL
+19:59:47 check MAX20340 PASS
+19:59:47 check APOLLO PASS
+19:59:47 check APOLLOVERSION 0C.00.01.00
+19:59:47 checkresp SENSOR
+19:59:47 check ENDCHECK
+19:59:47 checkresp RDSENSOR=1435
+19:59:47 checkresp WRSENSOR
+19:59:47 checkresp SENSOR
+19:59:51 ERROR: err msg = ERROR_SENSOR
