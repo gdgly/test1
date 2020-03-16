@@ -40,7 +40,7 @@ static void appSmStartDfuTimer(void);
 #endif
 
 #ifdef HFP_BATTERY_STATUS_NOTIFY
-static void batteryStatusNotifyEnableReport(void);
+extern void batteryStatusNotifyEnableReport(void);
 #endif
 
 /*****************************************************************************
@@ -2938,20 +2938,4 @@ extern void appSmInitiateHandover(void)
 {
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDOVER_DISCONNECT);
 }
-
-// region 通知手机电量变化
-
-#ifdef HFP_BATTERY_STATUS_NOTIFY
-
-static const char batt_enable_string[] = "AT+XAPL=05AC-1702-0100,7\r";
-
-void batteryStatusNotifyEnableReport(void) {
-    DEBUG_PRINTF("AT Send:[%s]\n", batt_enable_string);
-    HfpAtCmdRequest(hfp_primary_link, batt_enable_string);
-}
-
-#endif
-
-// endregion
-
 

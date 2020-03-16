@@ -187,6 +187,10 @@ static void appInitDebug(void)
 extern void qact_tune_for_mic(void);
 #endif
 
+#ifdef HFP_BATTERY_STATUS_NOTIFY
+extern void batteryStatusNotifyInit(void);
+#endif
+
 /*! \brief Table of initialisation functions */
 static const appInitTableEntry appInitTable[] =
 {
@@ -272,6 +276,9 @@ static const appInitTableEntry appInitTable[] =
 #endif
 #ifdef AUDIO_PARAM_TUNE
     {qact_tune_for_mic, 0, NULL},
+#endif
+#ifdef HFP_BATTERY_STATUS_NOTIFY
+    {batteryStatusNotifyInit, 0, NULL},
 #endif
     {NULL,                  0, NULL}
 };

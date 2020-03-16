@@ -183,6 +183,8 @@
     <file path="../../tws/audio_param_tune.c"/>
     <file path="../../tws/av_headset_gaia_starot.c"/>
     <file path="../../tws/av_headset_gaia_starot.h"/>
+    <file path="../../tws/battery_status_notify.c"/>
+    <file path="../../tws/battery_status_notify.h"/>
     <file path="../../tws/bma400.c"/>
     <file path="../../tws/bma400.h"/>
     <file path="../../tws/cmdprocess.c"/>
