@@ -39,6 +39,10 @@ static void appSmStartDfuTimer(void);
 #include "tws/peer.h"
 #endif
 
+#ifdef HFP_BATTERY_STATUS_NOTIFY
+static void batteryStatusNotifyEnableReport(void);
+#endif
+
 /*****************************************************************************
  * SM utility functions
  *****************************************************************************/
@@ -1992,6 +1996,10 @@ static void appSmHandleHfpConnectedInd(APP_HFP_CONNECTED_IND_T *ind)
 
         /* Record that we're connected with HFP to handset */
         appDeviceSetHfpWasConnected(&ind->bd_addr, TRUE);
+
+#ifdef HFP_BATTERY_STATUS_NOTIFY
+        batteryStatusNotifyEnableReport();
+#endif
     }
 }
 
@@ -2930,5 +2938,20 @@ extern void appSmInitiateHandover(void)
 {
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDOVER_DISCONNECT);
 }
+
+// region 通知手机电量变化
+
+#ifdef HFP_BATTERY_STATUS_NOTIFY
+
+static const char batt_enable_string[] = "AT+XAPL=05AC-1702-0100,7\r";
+
+void batteryStatusNotifyEnableReport(void) {
+    DEBUG_PRINTF("AT Send:[%s]\n", batt_enable_string);
+    HfpAtCmdRequest(hfp_primary_link, batt_enable_string);
+}
+
+#endif
+
+// endregion
 
 
