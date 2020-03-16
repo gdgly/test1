@@ -6,7 +6,7 @@
 #include "afxcmn.h"
 #include "CurlCtrl.h"
 // software_burn_sz ¶Ô»°¿ò
-#define SZ_DEFAULT_BTADDR "{0x4d3064, 0xd5, 0x70b3}"//"00:ff:01:5b:00:02"
+#define SZ_DEFAULT_BTADDR "70B3D54D3064"//"{0x4d3064, 0xd5, 0x70b3}"//"00:ff:01:5b:00:02"
 #define SZ_DEFAULT_BTNAME "\"iFLYBUDS\""
 
 class software_burn_sz : public CDialogEx

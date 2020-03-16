@@ -2,8 +2,8 @@
 #include "afxcmn.h"
 #include "Ini.h"
 
-#define	SOFT_VERSION	" V0.74.3"
-//#define	SOFT_VERSION	" VT.74.3"
+#define	SOFT_VERSION	" V0.74.4"
+//#define	SOFT_VERSION	" VT.74.4"
 #define DEVICE_CHECK_CONF "config.ini"
 
 #define CHILD_DLG_NAME_FZ_BURN "∑Ω÷€ …’–¥"

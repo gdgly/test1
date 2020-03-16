@@ -120,6 +120,7 @@ void check_sz_option_dlg::OnBnClickedOk()
 	ini.WriteUInt("SZ_CHECK" ,"g_play_time_sec",check_sz_option_instance.g_play_time_sec,10);
 	ini.WriteUInt("SZ_CHECK" ,"g_play_passdb",check_sz_option_instance.g_play_passdb,10);
 
+	ini.WriteUInt("SZ_CHECK" ,"g_glob_if_check_reboot",check_sz_option_instance.g_glob_if_check_reboot,10);
 	ini.WriteUInt("SZ_CHECK" ,"g_wait_reboot_time_sec",check_sz_option_instance.g_wait_reboot_time_sec,10);
 	ini.WriteUInt("SZ_CHECK" ,"g_wait_key_time_sec",check_sz_option_instance.g_wait_key_time_sec,10);
 

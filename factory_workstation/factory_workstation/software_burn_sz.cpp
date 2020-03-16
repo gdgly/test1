@@ -397,7 +397,13 @@ struct bt_lic_ins_str_burn{
 CString software_burn_sz::con_btaddr_format(CString btaddr_12B)
 {
 	CString sText;
-	//sText.Format();
+	sText = "{0x";
+	sText += btaddr_12B.Mid(6,6);
+	sText += ", 0x";
+	sText += btaddr_12B.Mid(4,2);
+	sText += ", 0x";
+	sText += btaddr_12B.Mid(0,4);
+	sText += "}";
 	return sText;
 }
 int software_burn_sz::WorkerThreadProc(void *param)
@@ -443,7 +449,9 @@ int software_burn_sz::WorkerThreadProc(void *param)
 	sText = p->burn_sz_option_instance.g_wrFirm_folder+"\\flash_image.xuv";
 	p->m_devCtrl.SetFlashImage(sText);
 	p->m_btname.GetWindowText(sText); p->m_devCtrl.SetBtName(sText);
-	p->m_btaddr.GetWindowText(sText); p->m_devCtrl.SetBtAddr(sText); mac_addr = sText;
+	p->m_btaddr.GetWindowText(sText);
+	CString con_sText;con_sText = p->con_btaddr_format(sText);
+	p->m_devCtrl.SetBtAddr(con_sText); mac_addr = con_sText;
 	p->m_devCtrl.SetHwVersion(p->burn_sz_option_instance.g_hw_version);
 	//m_devCtrl.SetEraseAll(burn_sz_option_instance.g_if_erase_flash);
 	p->m_devCtrl.SetJlinkPath(p->burn_sz_option_instance.g_sJLinkPath);
@@ -576,7 +584,9 @@ void software_burn_sz::OnEnChangeEdit2()
 void software_burn_sz::OnBnClickedButton1()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	m_btaddr.SetWindowTextA("");
+	if(burn_sz_option_instance.g_if_burn_param){
+		m_btaddr.SetWindowTextA("");
+	}
 	all_init();
 }
 
@@ -590,7 +600,11 @@ void software_burn_sz::all_init()
 	m_apollo_progress.SetPos(0);
 	m_box_progress.SetPos(0);
 
-	m_EditSn.SetFocus();
+	if(burn_sz_option_instance.g_if_burn_param){
+		m_btaddr.SetFocus();
+	}else{
+		m_EditSn.SetFocus();
+	}
 	m_listEvt.ResetContent();
 	if(burn_sz_option_instance.g_if_burn_box){
 		AddEvent2List("盒子烧写需先连接好jlink，否则烧写会导致程序卡住！");	
