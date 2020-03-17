@@ -178,6 +178,8 @@ void appUiHfpCallOutcomingInactive(int16 isEnd);
 void appUiHfpCallActive(void);
 /* Show HFP call imactive */
 void appUiHfpCallInactive(void);
+/* HFP connect state */
+void appUiHfpConnected(unsigned cad);
 /*EDR connect state*/
 void appUiAvConnected(unsigned cad);
 /*EDR disconnect state*/

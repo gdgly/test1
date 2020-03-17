@@ -167,6 +167,7 @@ extern const ringtone_note app_tone_av_link_loss[];
 #endif
 //!@}
 
+#ifndef CONFIG_STAROT  //关于button提示音
 /*! \brief Play button held/press connect tone */
 #define appUiButton() \
     appUiPlayTone(app_tone_button)
@@ -244,28 +245,25 @@ extern const ringtone_note app_tone_av_link_loss[];
     appUiPlayPrompt(PROMPT_DISCONNECTED)
 
 /*! \brief Play HFP SLC link loss tone */
-#define appUiHfpLinkLoss()
-//    appUiPlayTone(app_tone_hfp_link_loss)
+#define appUiHfpLinkLoss() \
+    appUiPlayTone(app_tone_hfp_link_loss)
 
 /*! \brief Play HFP ring indication tone */
-#define appUiHfpRing(caller_id)
-//    appUiPlayTone(app_tone_hfp_ring)
+#define appUiHfpRing(caller_id) \
+    appUiPlayTone(app_tone_hfp_ring)
 
-#ifndef CONFIG_STAROT
 /*! \brief Handle caller ID */
 #define appUiHfpCallerId(caller_number, size_caller_number, caller_name, size_caller_name)
     /* Add text to speech call here */
-#endif
 
 /*! \brief Play HFP SCO connected tone */
 #define appUiHfpScoConnected()
-//    appUiPlayTone(app_tone_hfp_sco_connected)
+    appUiPlayTone(app_tone_hfp_sco_connected)
 
 /*! \brief Play HFP SCO disconnected tone */
 #define appUiHfpScoDisconnected()
-//    appUiPlayTone(app_tone_hfp_sco_disconnected)
+    appUiPlayTone(app_tone_hfp_sco_disconnected)
 
-#ifndef CONFIG_STAROT
 /*! \brief Show HFP incoming call LED pattern */
 #define appUiHfpCallIncomingActive() \
     appLedSetPattern(app_led_pattern_call_incoming, LED_PRI_HIGH)
@@ -281,7 +279,6 @@ extern const ringtone_note app_tone_av_link_loss[];
 /*! \brief Show HFP call imactive LED pattern */
 #define appUiHfpCallInactive() \
     appLedStopPattern(LED_PRI_HIGH)
-#endif
 
 /*! \brief Play HFP mute active tone */
 #define appUiHfpMuteActive() \
@@ -306,8 +303,32 @@ extern const ringtone_note app_tone_av_link_loss[];
 /*! \brief Play HFP talk button long press tone */
 #define appUiHfpTalkLongPress() \
     appUiPlayTone(app_tone_hfp_talk_long_press)
-
+#define appUiHfpConnected(silent)                   /* HFP连接完之后 */
+#else
+#define appUiHfpDisconnected()                      /* HFP断开连接之后 */
+#define appUiHfpLinkLoss()
+#define appUiHfpRing(caller_id)                     /* */
+#define appUiHfpScoConnected()
+#define appUiHfpScoDisconnected()
+#define appUiHfpVoiceDial()
+#define appUiHfpVoiceDialDisable()
+#define appUiHfpLastNumberRedial()                  /* 播放HFP最后数字重拨音 */
+#define appUiHfpAnswer()                            /* 播放HFP接听来电音 */
+#define appUiHfpReject()                            /* 播放HFP拒绝呼叫音 */
+#define appUiHfpHangup()                            /* 播放HFP挂断呼叫音 */
+#define appUiHfpVolumeLimit()                       /* 播放HFP音量限制达到音色 */
+#define appUiHfpVolumeUp()                          /* 播放HFP音量调高 */
+#define appUiHfpVolumeDown()                        /* 播放HFP音量调底 */
+#define appUiHfpTransfer()                          /* 播放HFP转接呼叫音 */
+#define appUiHfpMuteActive()                        /* 播放HFP静音主动音 */
+#define appUiHfpMuteInactive()                      /* 播放HFP静音无效音 */
+#define appUiHfpMuteReminder()                      /* 播放HFP静音提示音 */
+#define appUiHfpScoUnencryptedReminder()            /* 播放HFP SCO未加密的声音 */
+#define appUiHfpState(state)                        /* 处理HFP状态更改的UI更改 */
+#define appUiHfpTalkLongPress()                     /* 播放HFP对话键长按音 */
+#endif
 #ifdef INCLUDE_AV
+#ifndef CONFIG_STAROT
 /*! \brief Play AV connect tone */
 #define appUiAvConnect() \
     appUiPlayTone(app_tone_av_connect)
@@ -340,7 +361,7 @@ extern const ringtone_note app_tone_av_link_loss[];
 
 /*! \brief Play AV peer connected indication */
 #define appUiAvPeerConnected(silent)
-//    { if (!(silent)) appUiPlayTone(app_tone_av_connected);}
+    { if (!(silent)) appUiPlayTone(app_tone_av_connected);}
 
 #ifndef CONFIG_STAROT
 /*! \brief Play AV disconnected prompt */
@@ -350,7 +371,7 @@ extern const ringtone_note app_tone_av_link_loss[];
 
 /*! \brief Play AV link-loss tone */
 #define appUiAvLinkLoss()
-//    appUiPlayTone(app_tone_av_link_loss)
+    appUiPlayTone(app_tone_av_link_loss)
 
 /*! \brief Show AV streaming active LED pattern */
 #define appUiAvStreamingActive() \
@@ -367,7 +388,6 @@ extern const ringtone_note app_tone_av_link_loss[];
 /*! \brief Handle UI changes for AV state change */
 #define appUiAvState(state) \
     /* Add any AV state indication here */    
-#endif
 
 /*! \brief Battery OK, cancel any battery filter */
 #define appUiBatteryOk() \
@@ -423,6 +443,48 @@ do \
 #define appUiPairingInactive(is_user_initiated) \
     appLedStopPattern(LED_PRI_MED)
 
+#else
+#define appUiAvConnect()                            /* 播放AV连接音 */
+#define appUiAvDisconnect()                         /* 播放AV断开音色 */
+#define appUiAvVolumeDown()                         /* 播放AV音量调低 */
+#define appUiAvVolumeUp()                           /* 简短播放AV音量调高 */
+#define appUiAvVolumeLimit()                        /* 播放AV音量限制达到音质 */
+#define appUiAvRemoteControl()                      /* 播放AVRCP遥控音 */
+#define appUiAvPeerConnected(silent)                /* 播放AV连接指示 */
+#define appUiAvLinkLoss()                           /* 播放AV连接丢失音调 */
+//关于SBC.或AAC的方面
+#define appUiAvStreamingActive()                    /* 显示AV流激活LED模式 */
+#define appUiAvStreamingActiveAptx()                /* 显示AV APIX流积极的LED模式 */
+#define appUiAvStreamingInactive()                  /* 取消AV SBC/MP3流激活LED模式 */
+#define appUiAvState(state)                         /* 处理AV状态变化的UI变化*/
+#endif
+//电池方面没用到
+#define appUiBatteryOk()                            /* 电池好，取消任何电池过滤器 */
+#define appUiBatteryLow()                           /* 使电池电量过低 */
+#define appUiBatteryCritical()                      /* 播放音调和显示电池临界状态的LED模式 */
+//HFP连接方面
+#define appUiPagingStart()                          /*  */
+#define appUiPagingStop()                           /*  */
+#define appUiPagingReminder()                       /*  */
+//LED方面
+/*! \brief Show LED pattern for idle headset */
+#define appUiIdleActive()                           /* 空闲耳机显示LED模式 */
+/*! \brief Show LED pattern for connected headset */
+#define appUiIdleConnectedActive()                  /* 显示连接耳机的LED模式 */
+#define appUiIdleInactive()                         /* 取消空闲/连接耳机的LED模式 */
+//配对没用到
+#define appUiPairingStart()                         /* 播放配对起始音 */
+
+/*! \brief Show pairing active LED pattern and play prompt */
+#define appUiPairingActive(is_user_initiated) \
+do \
+{  \
+    appUiPlayPrompt(PROMPT_PAIRING); \
+    appLedSetPattern(app_led_pattern_pairing, LED_PRI_MED); \
+} while(0)
+#define appUiPairingInactive(is_user_initiated)     /* 取消配对积极的LED模式*/
+#endif
+
 #ifndef CONFIG_STAROT
 /*! \brief Play pairing complete prompt */
 #define appUiPairingComplete() \
@@ -455,11 +517,16 @@ do \
     { appLedStopPattern(LED_PRI_MED); \
       MessageCancelFirst(appGetUiTask(), APP_INTERNAL_UI_INQUIRY_TIMEOUT); }
 
+#ifndef CONFIG_STAROT
 /*! \brief Play inquiry error tone */
 #define appUiPeerPairingError() //do { \
 //      appUiPlayTone(app_tone_peer_pairing_error); \
 //      appLedSetPattern(app_led_pattern_error, LED_PRI_EVENT); \
 //      } while (0)
+#else
+/*! \brief Play inquiry error tone */
+#define appUiPeerPairingError()     /*  */
+#endif
 
 #ifdef INCLUDE_DFU
 /*! \brief Play DFU active tone, show LED pattern */
@@ -519,7 +586,7 @@ extern void appUiPowerOn(void);
 extern void appUiPowerOff(uint16 *lock, uint16 lock_mask);
 extern void appUiSleep(void);
 /*! \brief Play a tone to completion */
-#define appUiPlayTone(tone) appUiPlayToneCore(tone, FALSE, TRUE, NULL, 0)
+#define appUiPlayTone(tone) //appUiPlayToneCore(tone, FALSE, TRUE, NULL, 0)
 /*! \brief Play a tone allowing another tone/prompt/event to interrupt (stop) this tone
      before completion. */
 #define appUiPlayToneInterruptible(tone) appUiPlayToneCore(tone, TRUE, TRUE, NULL, 0)

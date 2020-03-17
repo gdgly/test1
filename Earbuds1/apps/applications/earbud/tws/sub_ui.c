@@ -235,6 +235,19 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
         goto key_done;
     }
 
+    /* 允许上一首下一首暂停手势的时候,在入耳状态下,音乐暂停,首次敲击,音乐播放 */
+    if((keyFunc == TAP_PREVIOUS_TRACK)||(keyFunc == TAP_NEXT_TRACK)||(keyFunc == TAP_PLAY_PAUSE)){
+        bool pause_stop = (appAvPlayStatus() == avrcp_play_status_paused) || (appAvPlayStatus() == avrcp_play_status_stopped);
+        if(appDeviceIsHandsetConnected() && ((!appDeviceIsHandsetA2dpStreaming()) || pause_stop)){
+            appAvPlay(FALSE);
+            goto key_done;
+        }
+        if(!appDeviceIsHandsetConnected() && ((!appPeerSyncIsPeerHandsetA2dpStreaming()) || pause_stop)){
+            appAvPlay(FALSE);
+            goto key_done;
+        }
+    }
+
     /* 音乐播放中 */
     if(appDeviceIsHandsetAvrcpConnected() ||
         (appDeviceIsPeerAvrcpConnectedForAv() && appPeerSyncIsComplete() && appPeerSyncIsPeerHandsetAvrcpConnected()))
@@ -499,6 +512,7 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         APP_STAROT_WEAR_CONFIG_IND* m = (APP_STAROT_WEAR_CONFIG_IND*)message;
         gUserParam.sensorEnable = m->wear_enable;
         gUserParam.sensorModifyTime = m->timestamp;
+#if 0      //不应该把接近光给关掉
 #ifdef HAVE_EM20168
         if(EM20168_GetStatus() == 0)
             EM20168Power(gUserParam.sensorEnable);   ///App设置是否佩戴使能
@@ -506,6 +520,7 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
 #ifdef HAVE_UCS146E0
         if(Ucs146e0_GetStatus() == 0)
             Ucs146e0Power(gUserParam.sensorEnable);
+#endif
 #endif
         ParamSaveUserPrm(&gUserParam);
         appNotifyPeerDeviceConfig(m->messageFrom);
@@ -792,7 +807,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
         DEBUG_LOG("progRun->bredrconnect =%d",progRun->bredrconnect);
 
-        if(appDeviceIsHandsetConnected() && (appDeviceIsPeerConnected()))
+        if(appDeviceIsHandsetConnected() && (appDeviceIsPeerConnected()) && (appHfpGetState() == HFP_STATE_CONNECTED_IDLE))
         {
             if((!appPeerSyncIsPeerInCase() && !appPeerSyncIsPeerInEar()) || appPeerSyncIsPeerInCase())
             {
@@ -1190,6 +1205,17 @@ void appUiHfpCallInactive(void)
     MessageSend(&appGetUi()->task, APP_CALL_INACTIVE, message);
 }
 
+//HFP connect state
+void appUiHfpConnected(unsigned cad)
+{
+    (void)cad;
+    //当HFP连接之后，耳机在耳朵中，并且还是主耳，延时检测
+    if(appSmIsInEar() && appDeviceIsHandsetConnected()){
+        MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
+        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 4000);
+    }
+}
+
 /*EDR connect state*/
 void appUiAvConnected(unsigned cad)
 {
@@ -1197,10 +1223,6 @@ void appUiAvConnected(unsigned cad)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->bredrconnect = 1;
-    if(appSmIsInEar()){
-        MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
-        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 3000);
-    }
     advManagerInit();
     MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
