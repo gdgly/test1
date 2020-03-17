@@ -307,7 +307,7 @@ extern const ringtone_note app_tone_av_link_loss[];
 #else
 #define appUiHfpDisconnected()                      /* HFP断开连接之后 */
 #define appUiHfpLinkLoss()
-#define appUiHfpRing(caller_id)                     /* */
+#define appUiHfpRing(caller_id)       appUiPlayToneCore(app_tone_hfp_ring, FALSE, TRUE, NULL, 0) /* HFP电话响铃 */
 #define appUiHfpScoConnected()
 #define appUiHfpScoDisconnected()
 #define appUiHfpVoiceDial()
