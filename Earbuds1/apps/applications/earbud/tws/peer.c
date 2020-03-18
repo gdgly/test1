@@ -147,6 +147,11 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
     case PEERTX_CMD_SYNC_CASEST:
         appUiCaseStatus2FromPeer(req->data);
         break;
+
+    case PEERTX_CMD_SENSOR_ENB:
+        gUserParam.sensorEnable = req->data[0];
+        ParamSaveUserPrm(&gUserParam);
+        break;
     default:
         DEBUG_LOG("Unknown command:%d", req->command);
         ret = FALSE;

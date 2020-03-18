@@ -611,7 +611,8 @@ static void appEnterInEar(void)
      * send a play request to the handset */
     if (MessageCancelFirst(appGetSmTask(), SM_INTERNAL_TIMEOUT_IN_EAR_A2DP_START))
     {
-        appAvPlay(FALSE);
+        if(gUserParam.sensorEnable == 1)
+            appAvPlay(FALSE);
     }
 
     /* \todo this should move to a rule at some point */
@@ -1551,7 +1552,7 @@ static void appSmHandleConnRulesScoTimeout(void)
 {
     DEBUG_LOG("appSmHandleConnRulesA2dpTimeout");
 
-    if (appSmIsOutOfCase() && appConfigOutOfEarScoTimeoutSecs())
+    if (appSmIsOutOfCase() && appConfigOutOfEarScoTimeoutSecs() && (gUserParam.sensorEnable == 1))
     {
         DEBUG_LOGF("appSmHandleConnRulesScoTimeout, out of case/ear, so starting %u second timer", appConfigOutOfEarScoTimeoutSecs());
         MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_OUT_OF_EAR_SCO,
@@ -1604,7 +1605,8 @@ static void appSmHandleInternalTimeoutOutOfEarA2dp(void)
     {
         /* request the handset pauses the AV, indicate not a UI initiated
          * request with FALSE */
-        appAvPause(FALSE);
+        if(gUserParam.sensorEnable == 1)
+            appAvPause(FALSE);
 
         /* start the timer to autorestart the audio if earbud is placed
          * back in the ear. */

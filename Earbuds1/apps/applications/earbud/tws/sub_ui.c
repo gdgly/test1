@@ -522,6 +522,7 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
             Ucs146e0Power(gUserParam.sensorEnable);
 #endif
 #endif
+        appPeerSigTxDataCommandUi(PEERTX_CMD_SENSOR_ENB, ((gUserParam.sensorEnable == 0)? 0 : 1));
         ParamSaveUserPrm(&gUserParam);
         appNotifyPeerDeviceConfig(m->messageFrom);
     }
