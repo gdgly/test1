@@ -812,7 +812,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
             if((!appPeerSyncIsPeerInCase() && !appPeerSyncIsPeerInEar()) || appPeerSyncIsPeerInCase())
             {
                 MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
-                MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 3000);
+                MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 500);
             }
         }
 //        appUiPowerSave(POWER_MODE_IN_EAR);
@@ -882,9 +882,14 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
 
     case APP_CONNECTED_HOST:
-        if(!appDeviceIsHandsetA2dpStreaming() &&
-                ((progRun->dial_stat & (DIAL_IN_ACTIVE|DIAL_OUT_ACTIVE|DIAL_ACTIVE)) == 0) && appDeviceIsHandsetConnected())
-            appUiPlayPrompt(PROMPT_CONNECTED);
+        if(appTestIsHandsetA2dpMediaConnected()){
+            if(!appDeviceIsHandsetA2dpStreaming() &&
+                    ((progRun->dial_stat & (DIAL_IN_ACTIVE|DIAL_OUT_ACTIVE|DIAL_ACTIVE)) == 0) && appDeviceIsHandsetConnected())
+                    appUiPlayPrompt(PROMPT_CONNECTED);
+        }else{
+            MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
+            MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 1000);
+        }
             break;
 
     case APP_BLE_SCANABLE_START:
@@ -1211,8 +1216,7 @@ void appUiHfpConnected(unsigned cad)
     (void)cad;
     //当HFP连接之后，耳机在耳朵中，并且还是主耳，延时检测
     if(appSmIsInEar() && appDeviceIsHandsetConnected()){
-        MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
-        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 4000);
+        MessageSend(appGetUiTask(), APP_CONNECTED_HOST, NULL);
     }
 }
 
