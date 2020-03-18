@@ -138,6 +138,8 @@ enum {
     GAIA_COMMAND_STAROT_CONTROL_PREVIOUS_MUSIC= 0X5403,                       // 上一首音乐
     GAIA_COMMAND_STAROT_CONTROL_NEXT_MUSIC= 0X5404,                           // 下一首音乐
     GAIA_COMMAND_STAROT_CONTROL_VOLUME_SET= 0X5405,                           // 音量设置
+    GAIA_COMMAND_STAROT_CONTROL_HFP_MUTE= 0X5406,                             // 静音
+    GAIA_COMMAND_STAROT_CONTROL_HFP_UNMUTE= 0X5407,                           // 非静音
 };
 ///////////////////////////base info///////////////////////////////
 enum {

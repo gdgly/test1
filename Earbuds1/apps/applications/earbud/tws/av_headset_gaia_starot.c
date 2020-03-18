@@ -66,6 +66,8 @@ static void gaiaControlNextMusic(GAIA_STAROT_IND_T *message);
 
 static void gaiaControlVolumeSet(GAIA_STAROT_IND_T *message);
 
+static void gaiaControlHfpMute(bool isMute);
+
 static void gaiaSetBondCode(GAIA_STAROT_IND_T *message);
 
 static void gaiaCheckBondCode(GAIA_STAROT_IND_T *message);
@@ -356,6 +358,12 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_CONTROL_VOLUME_SET:
             gaiaControlVolumeSet(message);
+            break;
+        case GAIA_COMMAND_STAROT_CONTROL_HFP_MUTE:
+            gaiaControlHfpMute(TRUE);
+            break;
+        case GAIA_COMMAND_STAROT_CONTROL_HFP_UNMUTE:
+            gaiaControlHfpMute(FALSE);
             break;
     }
     /// 助手52NN
@@ -1266,6 +1274,17 @@ void gaiaControlVolumeSet(GAIA_STAROT_IND_T *message) {
 
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+}
+
+static void gaiaControlHfpMute(bool isMute) {
+    if(isMute == TRUE){
+        appTestHandsetHfpMute();
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CONTROL_HFP_MUTE, GAIA_STATUS_SUCCESS, 0, NULL);
+    }
+    if(isMute == FALSE){
+        appTestHandsetHfpUnMute();
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CONTROL_HFP_UNMUTE, GAIA_STATUS_SUCCESS, 0, NULL);
+    }
 }
 
 static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {
