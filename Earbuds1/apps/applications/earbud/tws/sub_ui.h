@@ -288,4 +288,20 @@ const uint8* appUIGetPeerSnDetail(void);
 
 // endregion
 
+// region 工具类方法
+
+/*
+ * fun: 获取当前耳机是否在充电
+ * return: TRUE:在充电  FALSE:不在充电
+ */
+bool appUICurrentIsCharger(void);
+
+/*
+ * fun: 获取对方耳机是否在充电
+ * return: TRUE:在充电  FALSE:不在充电
+ */
+bool appUIPeerIsCharger(void);
+
+// endregion
+
 #endif // SUB_UI_H

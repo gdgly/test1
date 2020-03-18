@@ -1747,42 +1747,25 @@ uint8 appUIGetPositionInfo(void) {
 void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
     // 原始的电量信息获取有问题
     // 0:left 1:right 2:case
+    uint8 chargerFlag = 0X80, illegalBattery = 0XFF;
     if (appConfigIsLeft()) {
-        arr[0] = (uint8)progRun->iElectrity;
-        if ((CHARGE_ST_OK==progRun->chargeStat) || (CHARGE_ST_LOW == progRun->chargeStat)) {
-            arr[0] |= 0X80;
-        }
+        arr[0] = (appUICurrentIsCharger() ? chargerFlag : 0X00) | (uint8)progRun->iElectrity;
+        arr[1] = illegalBattery;
         if (appDeviceIsPeerConnected()) {
-            arr[1] = (uint8)progRun->peerElectrity;//对方电量
-            if (appPeerSyncIsPeerInCase()) {
-                if (arr[1] != 100) {
-                    arr[1] |= 0X80;
-                }
-            }
-        } else {
-            arr[1] = 0XFF;
+            arr[1] = (appUIPeerIsCharger() ? chargerFlag : 0X00) | (uint8)progRun->peerElectrity;//对方电量
         }
     } else {
+        arr[0] = illegalBattery;
         if (appDeviceIsPeerConnected()) {
-            arr[0] = (uint8)progRun->peerElectrity;//对方电量
-            if (appPeerSyncIsPeerInCase()) {
-                if (arr[0] != 100) {
-                    arr[0] |= 0X80;
-                }
-            }
-        } else {
-            arr[0] = 0XFF;
+            arr[0] = (appUIPeerIsCharger() ? chargerFlag : 0X00) | (uint8)progRun->peerElectrity;//对方电量
         }
-        arr[1] = (uint8)progRun->iElectrity;
-        if ((CHARGE_ST_OK==progRun->chargeStat) || (CHARGE_ST_LOW == progRun->chargeStat)) {
-            arr[1] |= 0X80;
-        }
+        arr[1] = ((appUICurrentIsCharger() ? chargerFlag : 0X00)) | (uint8)progRun->iElectrity;
     }
 
     if (appPeerSyncIsPeerInCase() || appSmIsInCase()) {
-        arr[2] = (uint8)progRun->caseElectrity | (progRun->caseUsb ? 0X80 : 0X00); //盒子电量 充电，最高位为1
+        arr[2] = (uint8)progRun->caseElectrity | (progRun->caseUsb ? chargerFlag : 0X00); //盒子电量 充电，最高位为1
     } else {
-        arr[2] = 0XFF; /// 任何一只耳机再充电盒中，都可以读取充电盒状态数据
+        arr[2] = illegalBattery; /// 任何一只耳机再充电盒中，都可以读取充电盒状态数据
     }
 }
 
@@ -2182,3 +2165,16 @@ void appUIClearPeerSnStatus(void) {
 // endregion
 
 
+// region 工具类方法
+
+bool appUICurrentIsCharger(void) {
+    chargerTaskData *theCharger = appGetCharger();
+    return theCharger->is_charging > 0;
+}
+
+bool appUIPeerIsCharger(void) {
+    peerSyncTaskData* ps = appGetPeerSync();
+    return (ps->peer_battery_level & 0X8000) > 0;
+}
+
+// endregion
