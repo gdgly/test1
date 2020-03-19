@@ -21,6 +21,11 @@ typedef struct tagFIXPARAM {
     uint16         em20168_low_value;           //接近光校准低值
     uint16         ucs146e0_calib;//ucs146e0校准底噪值
 
+    uint8          lisdw12_cal_already;         //敲击是否校准过了
+    int8           lisdw12_cal_x;//校准x轴值，下面相同
+    int8           lisdw12_cal_y;
+    int8           lisdw12_cal_z;
+
     uint8          rev[8];
 }FixParam, *FixPrmPtr;
 

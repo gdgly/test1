@@ -184,7 +184,7 @@ int Lis2dw12Power(bool isOn)
     return ret;
 }
 
-
+extern FixParam gFixParam;
 void lis2dw12_init(void)
 {
     uint16 bank;
@@ -227,6 +227,13 @@ void lis2dw12_init(void)
                 lis2dw12_init_array[i].reg,
                 value);
     }
+
+    if(gFixParam.lisdw12_cal_already == 1){
+        lis2dw12WriteRegister(handle, 0x3c, gFixParam.lisdw12_cal_x);
+        lis2dw12WriteRegister(handle, 0x3d, gFixParam.lisdw12_cal_y);
+        lis2dw12WriteRegister(handle, 0x3e, gFixParam.lisdw12_cal_z);
+    }
+
     for(i=0; i<ARRAY_DIM(lis2dw12_init_array); i++){
         lis2dw12ReadRegister(handle, lis2dw12_init_array[i].reg, &value);
         DEBUG_LOG("lis2dw12 reg 0x%x = 0x%x\n", lis2dw12_init_array[i].reg, value);
