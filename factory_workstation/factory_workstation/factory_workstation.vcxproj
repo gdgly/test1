@@ -126,6 +126,7 @@
     <ClInclude Include="burncheck_mpi.h" />
     <ClInclude Include="burncheck_option_dlg.h" />
     <ClInclude Include="burn_by_option_dlg.h" />
+    <ClInclude Include="burn_sn_sz_option_dlg.h" />
     <ClInclude Include="burn_sz_option_dlg.h" />
     <ClInclude Include="charge_check_option_dlg.h" />
     <ClInclude Include="check_by_option_dlg.h" />
@@ -174,6 +175,7 @@
     <ClInclude Include="software_check_jn.h" />
     <ClInclude Include="software_check_sz.h" />
     <ClInclude Include="software_sz_btaddr.h" />
+    <ClInclude Include="software_sz_burn_sn.h" />
     <ClInclude Include="software_sz_checkbox.h" />
     <ClInclude Include="software_tool_barcode.h" />
     <ClInclude Include="software_tool_box_audio.h" />
@@ -204,6 +206,7 @@
     <ClCompile Include="btaddr_sz_option_dlg.cpp" />
     <ClCompile Include="burncheck_option_dlg.cpp" />
     <ClCompile Include="burn_by_option_dlg.cpp" />
+    <ClCompile Include="burn_sn_sz_option_dlg.cpp" />
     <ClCompile Include="burn_sz_option_dlg.cpp" />
     <ClCompile Include="charge_check_option_dlg.cpp" />
     <ClCompile Include="check_by_option_dlg.cpp" />
@@ -251,6 +254,7 @@
     <ClCompile Include="software_check_jn.cpp" />
     <ClCompile Include="software_check_sz.cpp" />
     <ClCompile Include="software_sz_btaddr.cpp" />
+    <ClCompile Include="software_sz_burn_sn.cpp" />
     <ClCompile Include="software_sz_checkbox.cpp" />
     <ClCompile Include="software_tool_barcode.cpp" />
     <ClCompile Include="software_tool_box_audio.cpp" />

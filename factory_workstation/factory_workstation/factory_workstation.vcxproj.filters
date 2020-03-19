@@ -252,6 +252,12 @@
     <ClInclude Include="software_tool_sz_btaddr.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="software_sz_burn_sn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="burn_sn_sz_option_dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="factory_workstation.cpp">
@@ -471,6 +477,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="software_tool_sz_btaddr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="software_sz_burn_sn.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="burn_sn_sz_option_dlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
