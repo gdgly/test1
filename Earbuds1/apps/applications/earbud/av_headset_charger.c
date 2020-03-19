@@ -19,6 +19,7 @@
 static void appChargerChangeIsChargingStatus(bool status);
 #endif
 
+//#define CONFIG_STAROT_CHARGE_TIME
 /**************************************************************************/
 /*! /brief Check if we KNOW that the system can power off.
 
@@ -393,10 +394,16 @@ static void appChargerHandleMessage(Task task, MessageId id, Message message)
     {
         case TEMPERATURE_STATE_CHANGED_IND:
             appChargerHandleTemperatureStateChange(message);
+#ifdef CONFIG_STAROT_CHARGE_TIME
+            UartPuts("\r\n temperature state changed ind");
+#endif
         break;
 
         case CHARGER_INTERNAL_CHARGE_TIMEOUT:
             appChargerHandleChargeTimeout();
+#ifdef CONFIG_STAROT_CHARGE_TIME
+            UartPuts("\r\n charger internal charge timeout");
+#endif
         break;
 #ifndef CONFIG_STAROT  /* 删除修改 */
         case CHARGER_INTERNAL_CHARGE_DELAY:
@@ -407,11 +414,18 @@ static void appChargerHandleMessage(Task task, MessageId id, Message message)
 
         case MESSAGE_CHARGER_DETECTED:
             appChargerHandleChargerDetected(message);
+#ifdef CONFIG_STAROT_CHARGE_TIME
+            UartPuts("\r\n message charger detected");
+            UartPuts1("\r\n message attached_status=%d ", ((MessageChargerDetected *)message)->attached_status);
+#endif
         break;
 
         default:
             /* Check for charger events */
             appChargerCheck();
+#ifdef CONFIG_STAROT_CHARGE_TIME
+            UartPuts1("\r\n default id = %d ", id);
+#endif
         break;
     }
 }
@@ -494,6 +508,26 @@ void appChargerRestoreState(void)
 #endif
 }
 
+#ifdef CONFIG_STAROT_CHARGE_TIME
+typedef struct tagSHELLCMDINFO {
+    TaskData       task;
+}charge_tfuncInfoTask;
+static charge_tfuncInfoTask *time_funcTask = NULL;
+
+#define MESSAGE_CHARGE_TIME_TRIGGER 1
+static void charge_time_handle_msg(Task task, MessageId id, Message message)
+{
+    (void)message;(void)task;
+    chargerTaskData *theCharger = appGetCharger();
+    switch (id)
+    {
+        case MESSAGE_CHARGE_TIME_TRIGGER:
+            MessageSendLater(&time_funcTask->task, MESSAGE_CHARGE_TIME_TRIGGER, 0, 2000);
+            UartPuts2("\r\n is_connected=%d is_charging=%d ", theCharger->is_connected, theCharger->is_charging);
+        break;
+    }
+}
+#endif
 
 /*! \brief Initialise the application handling of charger
 
@@ -537,6 +571,15 @@ void appChargerInit(void)
            Should only happen when temperature support is not compiled. */
         appChargerDisableReasonClear(CHARGER_DISABLE_REASON_EXTREME_TEMPERATURE);
     }
+
+#ifdef CONFIG_STAROT_CHARGE_TIME
+    time_funcTask = PanicUnlessNew(charge_tfuncInfoTask);
+    memset(time_funcTask, 0, sizeof(charge_tfuncInfoTask));
+    time_funcTask->task.handler = charge_time_handle_msg;
+    MessageSendLater(&time_funcTask->task, MESSAGE_CHARGE_TIME_TRIGGER, 0, 5000);
+    UartPuts("\r\n i am 526");
+#endif
+
 }
 #endif /* INCLUDE_CHARGER */
 

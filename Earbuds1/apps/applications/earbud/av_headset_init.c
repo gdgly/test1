@@ -204,13 +204,14 @@ static const appInitTableEntry appInitTable[] =
     {appTemperatureInit,    TEMPERATURE_INIT_CFM, NULL},
 #endif
     {appBatteryInit,        MESSAGE_BATTERY_INIT_CFM, NULL},
+#ifdef CONFIG_HW_UART
+    {uartInit,              0, NULL},                     // 一 串口调试输出放前面
+#endif
 #ifdef INCLUDE_CHARGER
     {appChargerInit,        0, NULL},
 #endif
     {appLedInit,            0, NULL},
-#ifdef CONFIG_HW_UART
-    {uartInit,              0, NULL},                     // 一 串口调试输出放前面
-#endif
+
 #ifdef ENABLE_APOLLO
     {apollo_int_io_init,    APOLLO_INIT_CFM, NULL},       // 二
 #endif
