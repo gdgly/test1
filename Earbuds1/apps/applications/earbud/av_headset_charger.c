@@ -15,6 +15,10 @@
 #include "av_headset_log.h"
 #include "av_headset_temperature.h"
 
+#ifdef CONFIG_STAROT
+static void appChargerChangeIsChargingStatus(bool status);
+#endif
+
 /**************************************************************************/
 /*! /brief Check if we KNOW that the system can power off.
 
@@ -207,7 +211,11 @@ static void appChargerCheck(void)
             MessageCancelAll(&theCharger->task, CHARGER_INTERNAL_TIMER);
 
             /* Clear charging flag */
+#ifndef CONFIG_STAROT
             theCharger->is_charging = FALSE;
+#else
+            appChargerChangeIsChargingStatus(FALSE);
+#endif
 
             /* Allow the battery to charge after timeout if the charger is disconnected */
             appChargerDisableReasonClear(CHARGER_DISABLE_REASON_TIMEOUT);
@@ -225,8 +233,11 @@ static void appChargerCheck(void)
             appUiChargerConnected();
 
             /* Clear charging flag now to kick off charging indication later */
+#ifndef CONFIG_STAROT
             theCharger->is_charging = FALSE;
-
+#else
+            appChargerChangeIsChargingStatus(FALSE);
+#endif
             /* Check if charger is connected with no error before attempt supply switch */
             if (is_connected == CHARGER_CONNECTED_NO_ERROR)
             {
@@ -263,7 +274,11 @@ static void appChargerCheck(void)
         }
 
         /* Store updated charging status */
+#ifndef CONFIG_STAROT
         theCharger->is_charging = is_charging;
+#else
+        appChargerChangeIsChargingStatus(is_charging);
+#endif
     }
 
     /* Start charger poll timer if charger is connected and still charging */
@@ -566,3 +581,13 @@ void appChargerClientUnregister(Task client_task)
 #endif
 }
 
+#ifdef CONFIG_STAROT
+void appChargerChangeIsChargingStatus(bool status) {
+    chargerTaskData *theCharger = appGetCharger();
+    bool before = theCharger->is_charging;
+    theCharger->is_charging = status;
+    if (before != status) {
+        appPeerSyncSend(FALSE);
+    }
+}
+#endif

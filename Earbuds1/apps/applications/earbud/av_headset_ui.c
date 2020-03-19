@@ -970,6 +970,7 @@ static void appUiHandleMessage(Task task, MessageId id, Message message)
         case UI_INTERNAL_CLEAR_LAST_PROMPT:
             theUi->prompt_last = PROMPT_NONE;
         break;
+#ifndef CONFIG_STAROT
         /* ANC ON and OFF based on current ANC status */
         case APP_MFB_BUTTON_ANC_TOGGLE_ON_OFF:
         {
@@ -1341,7 +1342,7 @@ static void appUiHandleMessage(Task task, MessageId id, Message message)
                 appUiButtonFactoryReset();
         }
         break;
-#ifdef CONFIG_STAROT
+#else
     default:
         appSubUiHandleMessage(task, id, message);
         break;

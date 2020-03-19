@@ -40,7 +40,7 @@ static void appSmStartDfuTimer(void);
 #endif
 
 #ifdef HFP_BATTERY_STATUS_NOTIFY
-static void batteryStatusNotifyEnableReport(void);
+extern void batteryStatusNotifyEnableReport(void);
 #endif
 
 /*****************************************************************************
@@ -611,7 +611,8 @@ static void appEnterInEar(void)
      * send a play request to the handset */
     if (MessageCancelFirst(appGetSmTask(), SM_INTERNAL_TIMEOUT_IN_EAR_A2DP_START))
     {
-        appAvPlay(FALSE);
+        if(gUserParam.sensorEnable == 1)
+            appAvPlay(FALSE);
     }
 
     /* \todo this should move to a rule at some point */
@@ -1551,7 +1552,7 @@ static void appSmHandleConnRulesScoTimeout(void)
 {
     DEBUG_LOG("appSmHandleConnRulesA2dpTimeout");
 
-    if (appSmIsOutOfCase() && appConfigOutOfEarScoTimeoutSecs())
+    if (appSmIsOutOfCase() && appConfigOutOfEarScoTimeoutSecs() && (gUserParam.sensorEnable == 1))
     {
         DEBUG_LOGF("appSmHandleConnRulesScoTimeout, out of case/ear, so starting %u second timer", appConfigOutOfEarScoTimeoutSecs());
         MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_OUT_OF_EAR_SCO,
@@ -1604,7 +1605,8 @@ static void appSmHandleInternalTimeoutOutOfEarA2dp(void)
     {
         /* request the handset pauses the AV, indicate not a UI initiated
          * request with FALSE */
-        appAvPause(FALSE);
+        if(gUserParam.sensorEnable == 1)
+            appAvPause(FALSE);
 
         /* start the timer to autorestart the audio if earbud is placed
          * back in the ear. */
@@ -2938,20 +2940,4 @@ extern void appSmInitiateHandover(void)
 {
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDOVER_DISCONNECT);
 }
-
-// region 通知手机电量变化
-
-#ifdef HFP_BATTERY_STATUS_NOTIFY
-
-static const char batt_enable_string[] = "AT+XAPL=05AC-1702-0100,7\r";
-
-void batteryStatusNotifyEnableReport(void) {
-    DEBUG_PRINTF("AT Send:[%s]\n", batt_enable_string);
-    HfpAtCmdRequest(hfp_primary_link, batt_enable_string);
-}
-
-#endif
-
-// endregion
-
 

@@ -178,6 +178,8 @@ void appUiHfpCallOutcomingInactive(int16 isEnd);
 void appUiHfpCallActive(void);
 /* Show HFP call imactive */
 void appUiHfpCallInactive(void);
+/* HFP connect state */
+void appUiHfpConnected(unsigned cad);
 /*EDR connect state*/
 void appUiAvConnected(unsigned cad);
 /*EDR disconnect state*/
@@ -283,6 +285,22 @@ void appUIUnSetPeerSnStatus(uint8 status);
 bool appUIGetPeerSnStatusIsComplete(void);
 bool appUIGetPeerSnStatusIsHaveSent(void);
 const uint8* appUIGetPeerSnDetail(void);
+
+// endregion
+
+// region 工具类方法
+
+/*
+ * fun: 获取当前耳机是否在充电
+ * return: TRUE:在充电  FALSE:不在充电
+ */
+bool appUICurrentIsCharger(void);
+
+/*
+ * fun: 获取对方耳机是否在充电
+ * return: TRUE:在充电  FALSE:不在充电
+ */
+bool appUIPeerIsCharger(void);
 
 // endregion
 

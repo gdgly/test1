@@ -235,6 +235,19 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
         goto key_done;
     }
 
+    /* 允许上一首下一首暂停手势的时候,在入耳状态下,音乐暂停,首次敲击,音乐播放 */
+    if((keyFunc == TAP_PREVIOUS_TRACK)||(keyFunc == TAP_NEXT_TRACK)||(keyFunc == TAP_PLAY_PAUSE)){
+        bool pause_stop = (appAvPlayStatus() == avrcp_play_status_paused) || (appAvPlayStatus() == avrcp_play_status_stopped);
+        if(appDeviceIsHandsetConnected() && ((!appDeviceIsHandsetA2dpStreaming()) || pause_stop)){
+            appAvPlay(FALSE);
+            goto key_done;
+        }
+        if(!appDeviceIsHandsetConnected() && ((!appPeerSyncIsPeerHandsetA2dpStreaming()) || pause_stop)){
+            appAvPlay(FALSE);
+            goto key_done;
+        }
+    }
+
     /* 音乐播放中 */
     if(appDeviceIsHandsetAvrcpConnected() ||
         (appDeviceIsPeerAvrcpConnectedForAv() && appPeerSyncIsComplete() && appPeerSyncIsPeerHandsetAvrcpConnected()))
@@ -499,6 +512,7 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         APP_STAROT_WEAR_CONFIG_IND* m = (APP_STAROT_WEAR_CONFIG_IND*)message;
         gUserParam.sensorEnable = m->wear_enable;
         gUserParam.sensorModifyTime = m->timestamp;
+#if 0      //不应该把接近光给关掉
 #ifdef HAVE_EM20168
         if(EM20168_GetStatus() == 0)
             EM20168Power(gUserParam.sensorEnable);   ///App设置是否佩戴使能
@@ -507,6 +521,8 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         if(Ucs146e0_GetStatus() == 0)
             Ucs146e0Power(gUserParam.sensorEnable);
 #endif
+#endif
+        appPeerSigTxDataCommandUi(PEERTX_CMD_SENSOR_ENB, ((gUserParam.sensorEnable == 0)? 0 : 1));
         ParamSaveUserPrm(&gUserParam);
         appNotifyPeerDeviceConfig(m->messageFrom);
     }
@@ -792,12 +808,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
         DEBUG_LOG("progRun->bredrconnect =%d",progRun->bredrconnect);
 
-        if(appDeviceIsHandsetConnected() && (appDeviceIsPeerConnected()))
+        if(appDeviceIsHandsetConnected() && (appDeviceIsPeerConnected()) && (appHfpGetState() == HFP_STATE_CONNECTED_IDLE))
         {
             if((!appPeerSyncIsPeerInCase() && !appPeerSyncIsPeerInEar()) || appPeerSyncIsPeerInCase())
             {
                 MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
-                MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 3000);
+                MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 500);
             }
         }
 //        appUiPowerSave(POWER_MODE_IN_EAR);
@@ -867,9 +883,14 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
 
     case APP_CONNECTED_HOST:
-        if(!appDeviceIsHandsetA2dpStreaming() &&
-                ((progRun->dial_stat & (DIAL_IN_ACTIVE|DIAL_OUT_ACTIVE|DIAL_ACTIVE)) == 0) && appDeviceIsHandsetConnected())
-            appUiPlayPrompt(PROMPT_CONNECTED);
+        if(appTestIsHandsetA2dpMediaConnected()){
+            if(!appDeviceIsHandsetA2dpStreaming() &&
+                    ((progRun->dial_stat & (DIAL_IN_ACTIVE|DIAL_OUT_ACTIVE|DIAL_ACTIVE)) == 0) && appDeviceIsHandsetConnected())
+                    appUiPlayPrompt(PROMPT_CONNECTED);
+        }else{
+            MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
+            MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 1000);
+        }
             break;
 
     case APP_BLE_SCANABLE_START:
@@ -1190,6 +1211,16 @@ void appUiHfpCallInactive(void)
     MessageSend(&appGetUi()->task, APP_CALL_INACTIVE, message);
 }
 
+//HFP connect state
+void appUiHfpConnected(unsigned cad)
+{
+    (void)cad;
+    //当HFP连接之后，耳机在耳朵中，并且还是主耳，延时检测
+    if(appSmIsInEar() && appDeviceIsHandsetConnected()){
+        MessageSend(appGetUiTask(), APP_CONNECTED_HOST, NULL);
+    }
+}
+
 /*EDR connect state*/
 void appUiAvConnected(unsigned cad)
 {
@@ -1197,10 +1228,6 @@ void appUiAvConnected(unsigned cad)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->bredrconnect = 1;
-    if(appSmIsInEar()){
-        MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
-        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 3000);
-    }
     advManagerInit();
     MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
@@ -1720,42 +1747,25 @@ uint8 appUIGetPositionInfo(void) {
 void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
     // 原始的电量信息获取有问题
     // 0:left 1:right 2:case
+    uint8 chargerFlag = 0X80, illegalBattery = 0XFF;
     if (appConfigIsLeft()) {
-        arr[0] = (uint8)progRun->iElectrity;
-        if ((CHARGE_ST_OK==progRun->chargeStat) || (CHARGE_ST_LOW == progRun->chargeStat)) {
-            arr[0] |= 0X80;
-        }
+        arr[0] = (appUICurrentIsCharger() ? chargerFlag : 0X00) | (uint8)progRun->iElectrity;
+        arr[1] = illegalBattery;
         if (appDeviceIsPeerConnected()) {
-            arr[1] = (uint8)progRun->peerElectrity;//对方电量
-            if (appPeerSyncIsPeerInCase()) {
-                if (arr[1] != 100) {
-                    arr[1] |= 0X80;
-                }
-            }
-        } else {
-            arr[1] = 0XFF;
+            arr[1] = (appUIPeerIsCharger() ? chargerFlag : 0X00) | (uint8)progRun->peerElectrity;//对方电量
         }
     } else {
+        arr[0] = illegalBattery;
         if (appDeviceIsPeerConnected()) {
-            arr[0] = (uint8)progRun->peerElectrity;//对方电量
-            if (appPeerSyncIsPeerInCase()) {
-                if (arr[0] != 100) {
-                    arr[0] |= 0X80;
-                }
-            }
-        } else {
-            arr[0] = 0XFF;
+            arr[0] = (appUIPeerIsCharger() ? chargerFlag : 0X00) | (uint8)progRun->peerElectrity;//对方电量
         }
-        arr[1] = (uint8)progRun->iElectrity;
-        if ((CHARGE_ST_OK==progRun->chargeStat) || (CHARGE_ST_LOW == progRun->chargeStat)) {
-            arr[1] |= 0X80;
-        }
+        arr[1] = ((appUICurrentIsCharger() ? chargerFlag : 0X00)) | (uint8)progRun->iElectrity;
     }
 
     if (appPeerSyncIsPeerInCase() || appSmIsInCase()) {
-        arr[2] = (uint8)progRun->caseElectrity | (progRun->caseUsb ? 0X80 : 0X00); //盒子电量 充电，最高位为1
+        arr[2] = (uint8)progRun->caseElectrity | (progRun->caseUsb ? chargerFlag : 0X00); //盒子电量 充电，最高位为1
     } else {
-        arr[2] = 0XFF; /// 任何一只耳机再充电盒中，都可以读取充电盒状态数据
+        arr[2] = illegalBattery; /// 任何一只耳机再充电盒中，都可以读取充电盒状态数据
     }
 }
 
@@ -2155,3 +2165,16 @@ void appUIClearPeerSnStatus(void) {
 // endregion
 
 
+// region 工具类方法
+
+bool appUICurrentIsCharger(void) {
+    chargerTaskData *theCharger = appGetCharger();
+    return theCharger->is_charging > 0;
+}
+
+bool appUIPeerIsCharger(void) {
+    peerSyncTaskData* ps = appGetPeerSync();
+    return (ps->peer_battery_level & 0X8000) > 0;
+}
+
+// endregion

@@ -539,6 +539,12 @@ void appPeerSyncSend(bool response)
         ps->sent_in_progress = appConnRulesInProgress();
         /* Store battery level we sent, so we can compare with peer */
         ps->sync_battery_level = appBatteryGetVoltage();
+#ifdef CONFIG_STAROT
+        /// 同步充电状态到对方耳机
+        if (appUICurrentIsCharger()) {
+            ps->sync_battery_level |= 0X8000;
+        }
+#endif
 
         /* build the peer sync message */
         uint8 message[PEER_SYNC_MSG_SIZE];
@@ -833,8 +839,14 @@ void appPeerSyncGetPeerBatteryLevel(uint16 *battery_level, uint16 *peer_battery_
 {
     peerSyncTaskData* ps = appGetPeerSync();
 
+#ifdef CONFIG_STAROT
+    /// 添加充电状态在首位
+    *battery_level = (ps->sync_battery_level & 0X7FFF);
+    *peer_battery_level = (ps->peer_battery_level & 0X7FFF);
+#else
     *battery_level = ps->sync_battery_level;
     *peer_battery_level = ps->peer_battery_level;
+#endif
 }
 
 void appPeerSyncGetPeerHandsetAddr(bdaddr *peer_handset_addr)
