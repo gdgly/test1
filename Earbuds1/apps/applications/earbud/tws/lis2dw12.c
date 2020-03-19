@@ -124,6 +124,40 @@ lis2dw12_str lis2dw12_init_array[] = {
     {0x17, 1<<6,    1<<6},
 };
 
+int lis2dw12_get_xyz_cal(lis2dw12_cal_str *cal_p)
+{
+//    int8 x_cal,y_cal,z_cal;
+    bitserial_handle handle;
+    uint8 value_arr[6];
+    int16 x,y,z; float xf,yf,zf; float off=0.977;
+    int16 half = 32767; int half_g = 2;
+    handle = lis2dw12Enable();
+    lis2dw12ReadRegister_withlen(handle, 0x28, value_arr, 6);
+    x = value_arr[1]<<8; x += value_arr[0]; xf = x; xf = xf/half*half_g;
+    y = value_arr[3]<<8; y += value_arr[2]; yf = y; yf = yf/half*half_g;
+    z = value_arr[5]<<8; z += value_arr[4]; zf = z; zf = zf/half*half_g;
+    DEBUG_LOG("x = %d, y= %d, z=%d\r\n",x,y,z);
+
+    cal_p->x_orig = x; cal_p->y_orig = y; cal_p->z_orig = z;
+
+    xf = xf*1000; xf = xf/off;
+    yf = yf*1000; yf = yf/off;
+    zf = (1-zf)*1000; zf = zf/off;
+
+    if( (xf > 126 || xf < -126) ||
+        (yf > 126 || yf < -126) ||
+        (zf > 126 || zf < -126) ){
+        DEBUG_LOG("error: lis2dw12 cal value over range!");
+        lis2dw12Disable(handle);
+        return -1;
+    }
+    cal_p->x_cal = xf; cal_p->y_cal = yf; cal_p->z_cal = zf;
+//    x_cal = xf; y_cal = yf; z_cal = zf;
+//    printf("xc = %d, yc= %d, zc=%d\r\n",x_cal, y_cal, z_cal);
+    lis2dw12Disable(handle);
+    return 0;
+}
+
 bool lis2dw12_status = FALSE;
 int lis2dw12_GetStatus(void)
 {

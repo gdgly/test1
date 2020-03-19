@@ -23,4 +23,14 @@ bool lis2dw12ReadRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *va
 bitserial_handle lis2dw12Enable(void);
 void lis2dw12Disable(bitserial_handle handle);
 
+typedef struct{
+    int8 x_cal;
+    int8 y_cal;
+    int8 z_cal;
+    int16 x_orig;
+    int16 y_orig;
+    int16 z_orig;
+}lis2dw12_cal_str;
+int lis2dw12_get_xyz_cal(lis2dw12_cal_str *cal_p);
+
 #endif // LIS2DW12_H
