@@ -1,5 +1,6 @@
 #pragma once
 
+#include "WinUser.h"
 #include "ExecProcess.h"
 
 #include "bluesite\\include\\TestFlash.h"

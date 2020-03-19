@@ -17,6 +17,7 @@
 #include "software_check_sz.h"
 #include "software_sz_btaddr.h"
 #include "software_sz_checkbox.h"
+#include "software_sz_burn_sn.h"
 // default_dlg ¶Ô»°¿ò
 
 IMPLEMENT_DYNAMIC(default_dlg, CPropertyPage)
@@ -137,6 +138,10 @@ void default_dlg::OnBnClickedgoon()
 		Dlg.DoModal();	
 	}else if(last_soft == CHILD_DLG_NAME_SZ_CHECKBOX){
 		software_sz_checkbox  Dlg; 
+		Dlg.get_param( &( (Cfactory_workstationDlg*)glob_param_p )->glob_param_instance ) ;
+		Dlg.DoModal();	
+	}else if(last_soft == CHILD_DLG_NAME_SZ_BURNSN){
+		software_sz_burn_sn  Dlg; 
 		Dlg.get_param( &( (Cfactory_workstationDlg*)glob_param_p )->glob_param_instance ) ;
 		Dlg.DoModal();	
 	}

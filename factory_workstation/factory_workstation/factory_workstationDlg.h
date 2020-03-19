@@ -92,4 +92,5 @@ public:
 	afx_msg void Onszcheck();
 	afx_msg void Onszbtaddr();
 	afx_msg void Onszcheckbox();
+	afx_msg void Onszburnsn();
 };

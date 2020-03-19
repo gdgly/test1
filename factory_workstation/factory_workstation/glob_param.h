@@ -2,8 +2,8 @@
 #include "afxcmn.h"
 #include "Ini.h"
 
-#define	SOFT_VERSION	" V0.74.4"
-//#define	SOFT_VERSION	" VT.74.4"
+#define	SOFT_VERSION	" V0.74.5"
+//#define	SOFT_VERSION	" VT.74.5"
 #define DEVICE_CHECK_CONF "config.ini"
 
 #define CHILD_DLG_NAME_FZ_BURN "·½ÖÛ ÉÕÐ´"
@@ -30,7 +30,8 @@
 #define CHILD_DLG_NAME_SZ_BURN "Ë«×Ó ÉÕÐ´"
 #define CHILD_DLG_NAME_SZ_CHECK "Ë«×Ó °å²â"
 #define CHILD_DLG_NAME_SZ_BTADDR "Ë«×Ó ÉÕÐ´À¶ÑÀµØÖ·"
-#define CHILD_DLG_NAME_SZ_CHECKBOX "Ë«×Ó ºÐ×Ó²âÊÔ"
+#define CHILD_DLG_NAME_SZ_CHECKBOX "Ë«×Ó ºÐ×Ó²âÊÔ(´®¿Ú)"
+#define CHILD_DLG_NAME_SZ_BURNSN "Ë«×Ó snÉÕÐ´(´®¿Ú)"
 
 #define LOG_PATH_BURN_fz "log\\burn_fz\\"
 #define LOG_PATH_CHECK_fz "log\\check_fz\\"
@@ -57,6 +58,7 @@
 #define LOG_PATH_CHECK_sz "log\\check_sz\\"
 #define LOG_PATH_BTADDR_sz "log\\btaddr_sz\\"
 #define LOG_PATH_CHECKBOX_sz "log\\checkbox_sz\\"
+#define LOG_PATH_BURNSN_sz "log\\BURNSN_sz\\"
 
 #define WM_USERMSG_MASSPRODUCT         (WM_USER+33)
 
@@ -312,6 +314,10 @@ struct checkbox_sz_option_str{
 	UINT g_if_check_cal_vol;
 };
 
+struct burnsn_sz_option_str{
+	UINT g_burn_sn_len;
+};
+
 struct glob_param{
 	CString sFName;//ini file path
 	CString last_sel_soft;
@@ -331,4 +337,5 @@ struct glob_param{
 	struct check_sz_option_str check_sz_option_instance;
 	struct btaddr_sz_option_str btaddr_sz_option_instance;
 	struct checkbox_sz_option_str checkbox_sz_option_instance;
+	struct burnsn_sz_option_str burnsn_sz_option_instance;
 };

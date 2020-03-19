@@ -84,6 +84,7 @@ BEGIN_MESSAGE_MAP(Cfactory_workstationDlg, CDialogEx)
 	ON_COMMAND(ID_sz_check, &Cfactory_workstationDlg::Onszcheck)
 	ON_COMMAND(ID_sz_btaddr, &Cfactory_workstationDlg::Onszbtaddr)
 	ON_COMMAND(ID_sz_checkbox, &Cfactory_workstationDlg::Onszcheckbox)
+	ON_COMMAND(ID_sz_burnsn, &Cfactory_workstationDlg::Onszburnsn)
 END_MESSAGE_MAP()
 
 
@@ -311,6 +312,8 @@ int Cfactory_workstationDlg::LoadCheckConf()
 	glob_param_instance.checkbox_sz_option_instance.g_if_check_hal_after_plc =		ini.GetUInt("SZ_CHECKBOX", "g_if_check_hal_after_plc", 0x11, 10);
 	glob_param_instance.checkbox_sz_option_instance.g_if_check_cal_vol =			ini.GetUInt("SZ_CHECKBOX", "g_if_check_cal_vol", 0x11, 10);
 	glob_param_instance.checkbox_sz_option_instance.g_if_check_plc_commu_right =	ini.GetUInt("SZ_CHECKBOX", "g_if_check_plc_commu_right", 0x11, 10);
+
+	glob_param_instance.burnsn_sz_option_instance.g_burn_sn_len =	ini.GetUInt("SZ_BURNSN", "g_burn_sn_len", 0x11, 10);
 	
 	glob_param_instance.last_sel_soft = ini.GetString("GLOBLE", "last_sel_soft");
 	if(glob_param_instance.last_sel_soft == ""){//ini中没找到last_sel_soft配置说明是第一次打开软件
@@ -666,6 +669,16 @@ void Cfactory_workstationDlg::Onszcheckbox()
 	Dlg.output_param( &(glob_param_instance.checkbox_sz_option_instance) );
 }
 
+#include "burn_sn_sz_option_dlg.h"
+void Cfactory_workstationDlg::Onszburnsn()
+{
+	// TODO: 在此添加命令处理程序代码
+	burn_sn_sz_option_dlg  Dlg; 
+	Dlg.get_param( &glob_param_instance );
+	Dlg.DoModal();
+	Dlg.output_param( &(glob_param_instance.burnsn_sz_option_instance) );
+}
+
 #include "menu_use_option_dlg.h"
 void Cfactory_workstationDlg::Onuse()
 {
@@ -673,6 +686,7 @@ void Cfactory_workstationDlg::Onuse()
 	menu_use_option_dlg  Dlg; 
 	Dlg.DoModal();
 }
+
 
 BOOL CAboutDlg::OnInitDialog()
 {
@@ -693,6 +707,4 @@ BOOL Cfactory_workstationDlg::PreTranslateMessage(MSG* pMsg)
 	else
 		return CDialog::PreTranslateMessage(pMsg);
 }
-
-
 

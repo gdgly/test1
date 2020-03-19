@@ -10,7 +10,7 @@
 #include "software_check_sz.h"
 #include "software_sz_btaddr.h"
 #include "software_sz_checkbox.h"
-
+#include "software_sz_burn_sn.h"
 // page_sz_dlg 对话框
 IMPLEMENT_DYNAMIC(page_sz_dlg, CDialogEx)
 
@@ -34,6 +34,7 @@ BEGIN_MESSAGE_MAP(page_sz_dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON4, &page_sz_dlg::OnBnClickedButton4)
 	ON_BN_CLICKED(IDC_BUTTON5, &page_sz_dlg::OnBnClickedButton5)
 	ON_BN_CLICKED(IDC_BUTTON6, &page_sz_dlg::OnBnClickedButton6)
+	ON_BN_CLICKED(IDC_BUTTON7, &page_sz_dlg::OnBnClickedButton7)
 END_MESSAGE_MAP()
 
 // page_sz_dlg 消息处理程序
@@ -123,6 +124,24 @@ void page_sz_dlg::OnBnClickedButton6()
 	Dlg.DoModal();
 }
 
+void page_sz_dlg::OnBnClickedButton7()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CIni ini;
+	CString sText = CHILD_DLG_NAME_SZ_BURNSN;
+	ini_path = ( (Cfactory_workstationDlg*)glob_param_p )->glob_param_instance.sFName;
+	ini.SetPathName(ini_path);
+	ini.WriteString("GLOBLE" ,"last_sel_soft", sText);
+	( (Cfactory_workstationDlg*)glob_param_p )->glob_param_instance.last_sel_soft = sText;
+	//if( ( (Cfactory_workstationDlg*)glob_param_p )->glob_param_instance.general_option_instance.g_quit_config_dilog ){
+		HWND hwnd = GetParent()->GetParent()->m_hWnd;
+		::SendMessage(hwnd,WM_CLOSE,0,0);
+	//}
+	software_sz_burn_sn  Dlg; 
+	Dlg.get_param( &( (Cfactory_workstationDlg*)glob_param_p )->glob_param_instance ) ;
+	Dlg.DoModal();
+}
+
 
 BOOL page_sz_dlg::OnInitDialog()
 {
@@ -135,6 +154,4 @@ BOOL page_sz_dlg::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
-
-
 

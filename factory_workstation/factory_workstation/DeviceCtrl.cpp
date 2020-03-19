@@ -4,7 +4,7 @@
 #pragma comment(lib,"bluesite\\lib\\TestEngine.lib")
 #pragma comment(lib,"bluesite\\lib\\TestFlash.lib")
 
-#define  MESSAGE2DIALOG         PostMessage
+#define  MESSAGE2DIALOG         PostMessage//SendMessage //SendNotifyMessage//PostMessage
 
 
 const char* const CFG_DB_PARAM = "hydracore_config.sdb:QCC512X_CONFIG";
@@ -252,6 +252,7 @@ int CDeviceCtrl::RuningProc(void)
 	if ((m_iThreadFunc & THREAD_WAKEUP)) {
 		if (((ret = CheckInterrupt(INTR_T_WAKEUP, m_secTimeout)) < 0) || (m_bExit == TRUE))
 			goto out;
+		Sleep(2000);//加个延时防止消息接收慢，先启动了录音
 	}
 
 	if ((m_iThreadFunc & THREAD_SENSOR)) {
@@ -312,8 +313,9 @@ int CDeviceCtrl::RuningProc(void)
 out:
 	CloseEngine();
 
-	if (m_bExit == TRUE)
-		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_USER_EXIT, (LPARAM)0);
+	if (m_bExit == TRUE){
+		//MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_USER_EXIT, (LPARAM)0);
+	}
 	
 	MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_END_ALL, (LPARAM)ret);
 
@@ -1643,7 +1645,7 @@ int CDeviceCtrl::CloseEngine(void)
 	if (m_devHandle > 0) {
 		closeTestEngine(m_devHandle);
 		m_devHandle = 0;
-		MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_CLOSE_ENGINE, (LPARAM)0);
+		//MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_CLOSE_ENGINE, (LPARAM)0);
 	}
 
 	return 0;

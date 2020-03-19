@@ -730,9 +730,13 @@ int software_sz_checkbox::WorkerThreadProc_cal(void *param)
 void software_sz_checkbox::OnBnClickedButton2()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	if(WorkerThreadProc_in_flag == 1){
-		CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_sz_checkbox::WorkerThreadProc_cal, this, 0, NULL);
+	if(checkbox_sz_option_instance.g_if_check_cal_vol){
+		if(WorkerThreadProc_in_flag == 1){
+			CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_sz_checkbox::WorkerThreadProc_cal, this, 0, NULL);
+		}else{
+			AddEvent2List("等待测试开始后开始校准！");
+		}
 	}else{
-		AddEvent2List("等待测试开始后开始校准！");
+		AddEvent2List("未勾选校准测试！");
 	}
 }
