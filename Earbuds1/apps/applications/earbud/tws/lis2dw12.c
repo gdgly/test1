@@ -142,7 +142,8 @@ int lis2dw12_get_xyz_cal(lis2dw12_cal_str *cal_p)
 
     xf = xf*1000; xf = xf/off;
     yf = yf*1000; yf = yf/off;
-    zf = (1-zf)*1000; zf = zf/off;
+    //zf = (1-zf)*1000; zf = zf/off;//芯片朝上
+    zf = (-1-zf)*1000; zf = zf/off;//芯片朝下
 
     if( (xf > 126 || xf < -126) ||
         (yf > 126 || yf < -126) ||
