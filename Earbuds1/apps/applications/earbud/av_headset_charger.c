@@ -629,7 +629,7 @@ void appChargerChangeIsChargingStatus(bool status) {
     chargerTaskData *theCharger = appGetCharger();
     bool before = theCharger->is_charging;
     theCharger->is_charging = status;
-    if (before != status) {
+    if (before != status && appPeerSyncIsComplete()) {
         appPeerSyncSend(FALSE);
     }
 }
