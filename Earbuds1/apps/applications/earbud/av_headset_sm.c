@@ -199,6 +199,11 @@ static void appSmInitiateLinkDisconnection(smDisconnectBits links_to_disconnect,
 
             disconnecting_links |= SM_DISCONNECT_HANDSET;
         }
+#ifdef CONFIG_STAROT
+        /// 与手机距离远，导致连接丢失，再A2dp和Hfp层，显示连接都是断开的，但是再指定时间内，都是与手机重试建立连接
+        /// 导致重新配对时，还在上次连接丢失的范围内，导致不能建立连接
+        disconnecting_links |= SM_DISCONNECT_HANDSET;
+#endif
     }
 
 
@@ -360,7 +365,8 @@ static void appEnterHandsetPairing(void)
     DEBUG_LOG("appEnterHandsetPairing");
 
     appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
-                                   appConfigLinkPairingDisconnectionTimeoutTerminatingMs(),
+//                                   appConfigLinkPairingDisconnectionTimeoutTerminatingMs(),
+                                   0,
                                    POST_DISCONNECT_ACTION_HANDSET_PAIRING);
     appPeerSyncSend(FALSE);
 
@@ -1101,7 +1107,7 @@ static void appSmHandlePairingHandsetPairConfirm(PAIRING_HANDSET_PAIR_CFM_T *cfm
         default:
             /* Ignore, paired with handset with known address as requested by peer */
             if (appPeerSyncIsPeerInCase() && appSmIsOutOfCase()) {
-                DEBUG_LOG("active rule RULE_EVENT_HANDOVER_RECONNECT");
+                DEBUG_LOG("active rule RULE_EVENT_HANDOVER_RECONNECT appGetState:%04X", appGetState());
                 appSmConnectHandset();
             }
             break;
@@ -2154,6 +2160,14 @@ static void appSmHandleInternalLinkDisconnectionTimeout(void)
             DEBUG_LOG("appSmHandleInternalLinkDisconnectionTimeout HANDSET IS STILL CONNECTED");
             appConManagerSendCloseAclRequest(&addr, TRUE);
         }
+#ifdef CONFIG_STAROT
+        else if (appDeviceGetHandsetBdAddr(&addr) && appConManagerHaveAnyLink(&addr))
+        {
+            DEBUG_LOG("appSmHandleInternalLinkDisconnectionTimeout Handset's ACL IS STILL trying");
+            appConManagerSendCloseAclRequest(&addr, TRUE);
+            appSmDisconnectLockClearLinks(SM_DISCONNECT_HANDSET);
+        }
+#endif
         else
         {
             appSmDisconnectLockClearLinks(SM_DISCONNECT_HANDSET);

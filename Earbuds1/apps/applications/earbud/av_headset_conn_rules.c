@@ -1737,7 +1737,10 @@ static bool handsetDisconnectAllowed(void)
 static ruleAction ruleInCaseDisconnectHandset(void)
 {
 #ifdef CONFIG_STAROT
-    if (appSmIsInCase() && appDeviceIsHandsetConnected())
+    bdaddr handsetAddr;
+    if (appSmIsInCase() && (appDeviceIsHandsetConnected() ||
+                           (appDeviceGetHandsetBdAddr(&handsetAddr) &&
+                            appConManagerHaveAnyLink(&handsetAddr))))
 #else
     if (appSmIsInCase() && handsetDisconnectAllowed())
 #endif

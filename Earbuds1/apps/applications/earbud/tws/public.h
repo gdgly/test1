@@ -364,4 +364,19 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 // 使能android状态栏显示电量
 #define HFP_BATTERY_STATUS_NOTIFY
 
+/// 使用公司扩展的连接: 主要用于解决问题
+/*
+场景:
+	耳机与A手机配对
+	耳机与B手机配对
+	耳机与A手机建立连接（从充电盒中取出耳机）
+	手机A与耳机距离拉远（放入屏蔽箱）
+	耳机进入连接丢失阶段（appConManagerHandleClDmAclClosedIndication, status 8, 4d1,3a,edca8f）
+	耳机重连手机A（40s）
+	在B手机系统设置页面，点击蓝牙设备，主动连接耳机
+结果：
+	B手机只与耳机建立HFP连接，A2DP连接没有建立成功
+ */
+#define STAROT_EXT_CONNECT_TIMEOUT
+
 #endif // PUBLIC_H

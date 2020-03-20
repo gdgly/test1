@@ -661,6 +661,12 @@ extern void appAvVolumeAttributeStore(avTaskData *theAv);
 
 extern bool appAvInstanceStartMediaPlayback(avInstanceTaskData* theInst);
 
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+void appAvDisconnectNotExpect(const bdaddr *not_bd_addr);
 #endif
+
+#endif
+
+
 
 #endif

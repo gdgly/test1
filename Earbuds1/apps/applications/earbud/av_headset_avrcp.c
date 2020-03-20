@@ -543,6 +543,7 @@ static void appAvrcpHandleInternalAvrcpConnectRequest(avInstanceTaskData *theIns
             /* Add client to list */
             if (appAvrcpAddClient(theInst, req->client_task))
             {
+                DEBUG_LOG("appAvrcpHandleInternalAvrcpConnectRequest appAvrcpAddClient(theInst, req->client_task) client_lock += 1");
                 theInst->avrcp.client_lock += 1;
             }
 
@@ -775,15 +776,19 @@ static void appAvrcpHandleInternalAvrcpConnectResponse(avInstanceTaskData *theIn
                     if (appAvrcpAddClient(theInst, res->client_task))
                     {
                         /* Increment lock is connection was accepted */
-                        if (res->accept == AV_AVRCP_ACCEPT)
+                        if (res->accept == AV_AVRCP_ACCEPT) {
+                            DEBUG_LOG("appAvrcpHandleInternalAvrcpConnectResponse appAvrcpAddClient(theInst, res->client_task) &&res->accept == AV_AVRCP_ACCEPT client_lock += 1");
                             theInst->avrcp.client_lock += 1;
+                        }
                     }
                 }
                 else
                 {
                     /* Increment lock is connection was accepted */
-                    if (res->accept == AV_AVRCP_ACCEPT)
+                    if (res->accept == AV_AVRCP_ACCEPT) {
+                        DEBUG_LOG("1 appAvrcpHandleInternalAvrcpConnectResponse res->accept == AV_AVRCP_ACCEPT client_lock += 1");
                         theInst->avrcp.client_lock += 1;
+                    }
                 }
             }
 
@@ -830,8 +835,10 @@ static void appAvrcpHandleInternalAvrcpConnectResponse(avInstanceTaskData *theIn
             }
 
             /* Increment lock is connection was accepted */
-            if (res->accept == AV_AVRCP_ACCEPT)
+            if (res->accept == AV_AVRCP_ACCEPT) {
+                DEBUG_LOG("2 appAvrcpHandleInternalAvrcpConnectResponse res->accept == AV_AVRCP_ACCEPT client_lock += 1");
                 theInst->avrcp.client_lock += 1;
+            }
 
             /* Check if we've now got responses from all clients */
             theInst->avrcp.client_responses -= 1;

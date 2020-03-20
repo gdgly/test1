@@ -246,4 +246,21 @@ extern bool appConManagerAnyLinkConnected(void);
  */
 void appConManagerAllowHandsetConnect(bool allowed);
 
+#ifdef CONFIG_STAROT
+/*
+ * fun: 判断acl层是否有该Mac地址的device信息
+ * param: addr 设备地址信息
+ * return: TRUE/FALSE
+ */
+bool appConManagerHaveAnyLink(const bdaddr *addr);
+#endif
+
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+/*
+ * fun: 清理连接，除了Peer和指定地址的连接
+ * param: not_addr 此地址连接信息不能清理
+ */
+void appConManagerRemoveNotExpect(const bdaddr *not_addr);
+#endif
+
 #endif

@@ -368,11 +368,19 @@ static void appConManagerHandleClDmAclOpenedIndication(const CL_DM_ACL_OPENED_IN
 
     if (ind->status == hci_success)
     {
+
         const bool is_local = !!(~ind->flags & DM_ACL_FLAG_INCOMING);
         const bool is_ble = !!(ind->flags & DM_ACL_FLAG_ULP);
 
         /* Update local ACL flag */
         appConManagerSetAclLocal(&ind->bd_addr.addr, is_local);
+
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+        if (!appDeviceIsPeer(&ind->bd_addr.addr)) {
+            appConManagerRemoveNotExpect(&ind->bd_addr.addr);
+            appAvDisconnectNotExpect(&ind->bd_addr.addr);
+        }
+#endif
 
         /* Set default link supervision timeout if locally inititated (i.e. we're master) */
         if (is_local)
@@ -747,3 +755,25 @@ void appConManagerAllowHandsetConnect(bool allowed)
     theConMgr->handset_connect_allowed = allowed;
 }
 
+#ifdef CONFIG_STAROT
+bool appConManagerHaveAnyLink(const bdaddr *addr) {
+    const conManagerDevice *device = appConManagerFindDeviceFromBdAddr(addr);
+    return NULL != device;
+}
+#endif
+
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+void appConManagerRemoveNotExpect(const bdaddr *not_addr)
+{
+    DEBUG_LOG("appConManagerRemoveNotExpect");
+    conManagerTaskData *theConMgr = appGetConManager();
+    for (int i = 0; i < CON_MANAGER_MAX_DEVICES; i++) {
+        conManagerDevice *device = &theConMgr->devices[i];
+        if (device && !BdaddrIsZero(&device->addr) && !BdaddrIsSame(&device->addr, not_addr) && !appDeviceIsPeer(&device->addr)) {
+            appConManagerSetDeviceState(device, ACL_DISCONNECTED);
+            BdaddrSetZero(&device->addr);
+            device->users = 0;
+        }
+    }
+}
+#endif

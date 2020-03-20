@@ -537,7 +537,11 @@ void appAvInstanceA2dpDisconnected(avInstanceTaskData *theInst)
 {
     DEBUG_LOG("appAvInstanceA2dpDisconnected");
 
+#ifdef CONFIG_STAROT
+    appAvAvrcpDisconnectLaterRequest(theInst, 500);
+#else
     appAvAvrcpDisconnectLaterRequest(theInst, D_SEC(2));
+#endif
 
     appAvVolumeHandleAvDisconnect(theInst);
 
@@ -663,6 +667,8 @@ bool appAvIsAvrcpConnected(avInstanceTaskData *theInst)
         possible to create
 
 */
+extern void bdaddr2buffer(bdaddr *addr, uint8* addrbuf);
+
 avInstanceTaskData *appAvInstanceCreate(const bdaddr *bd_addr)
 {
     avTaskData *theAv = appGetAv();
@@ -699,6 +705,13 @@ avInstanceTaskData *appAvInstanceCreate(const bdaddr *bd_addr)
 
             /* Return pointer to new instance */
             return theInst;
+        }
+        else
+        {
+            uint8 buffer[6];
+            bdaddr2buffer(&(theAv->av_inst[instance]->bd_addr), buffer);
+            DEBUG_LOG("appAvInstanceCreate, now have %02X:%02X:%02X:%02X:%02X:%02X AV instance",
+                    buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5]);
         }
     }
 
@@ -1028,6 +1041,7 @@ static void appAvHandleConManagerConnectionInd(CON_MANAGER_CONNECTION_IND_T *ind
             }
         }
     }
+
 }
 
 /*! \brief Initialise AV task
@@ -1703,5 +1717,23 @@ void appAvHandleMessage(Task task, MessageId id, Message message)
             return;
     }
 }
+
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+
+void appAvDisconnectNotExpect(const bdaddr *not_bd_addr) {
+    DEBUG_LOG("appAvDisconnectNotExpect");
+    avTaskData *theAv = appGetAv();
+    for (int instance = 0; instance < AV_MAX_NUM_INSTANCES; instance++) {
+        avInstanceTaskData *theInst = theAv->av_inst[instance];
+        if (theInst && !BdaddrIsSame(not_bd_addr, &theInst->bd_addr) && !appDeviceIsPeer(&theInst->bd_addr)) {
+            DEBUG_LOG("appA2dpIsDisconnected(theInst):%d && appAvrcpIsDisconnected(theInst):%d",
+                      appA2dpIsDisconnected(theInst),appAvrcpIsDisconnected(theInst));
+            MessageCancelAll(&theInst->av_task, AV_INTERNAL_A2DP_CONNECT_REQ);
+            appAvInstanceDestroy(theInst);
+        }
+    }
+}
+
+#endif
 
 #endif
