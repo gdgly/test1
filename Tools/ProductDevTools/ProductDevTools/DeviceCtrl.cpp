@@ -1638,7 +1638,7 @@ int CDeviceCtrl::CloseEngine(void)
 int CDeviceCtrl::RuningUpgrade(CString sFile)
 {
 	int ret = 0, rdsize, fsize, foffset, start_loops = 0;
-	unsigned int checksum = 0;
+	unsigned int checksum = 0, checksum2 = 0;
 	CFile hFile;
 	BYTE wbuf[128], rbuf[128];
 	char sbuf[32], *msgbuf;
@@ -1704,6 +1704,10 @@ goto out;
 			break;
 		}
 
+		for(int k = 0; k < rdsize; k++) {
+			checksum2 += wbuf[k];
+		}
+
 		foffset = (int)hFile.GetPosition();
 
 		for (int i = 0; i < 1; i++) {
@@ -1724,7 +1728,7 @@ goto out;
 				break;
 		}
 		if (rbuf[0] == '\0') sprintf_s((char*)rbuf, 16, "\r\n");
-		TRACE("cnt=0x%x/%d/0x%x|%s", fsize, rdsize, foffset, (char*)rbuf);
+		TRACE("cnt=0x%x/%d/0x%x/%05d|%s", fsize, rdsize, foffset, checksum2, (char*)rbuf);
 		if ((foffset % 512) == 0) {
 			foffset = (foffset * 100) / fsize;
 			MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_UPGCASE, (LPARAM)foffset);
@@ -1735,7 +1739,7 @@ goto out;
 	}
 
 finish:
-	TRACE("Waite Finish Data\r\n");
+	TRACE("Waite Finish Data,k=%05d\r\n", checksum2);
 	ret = -99;
 	for (int i = 0; i < 300; i++) {
 		DWORD len = 0;
@@ -1753,7 +1757,7 @@ finish:
 				break;
 			}
 			else if ((ptr = strstr((char*)rbuf, "UpgradeEnd fail"))) {
-				sprintf_s((char*)msgbuf, 128, "%s", ptr);
+				sprintf_s((char*)msgbuf, 128, "%s  ck2=%05d", ptr, checksum2);
 				MESSAGE2DIALOG(m_hWnd, WM_DEV_REPORT, REPORT_UPGCASE_STR, (LPARAM)msgbuf);
 				break;
 			}

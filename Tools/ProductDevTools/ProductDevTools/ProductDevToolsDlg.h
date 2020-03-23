@@ -98,6 +98,7 @@ public:
 	afx_msg void OnBnClickedBtnOpen();
 	afx_msg void OnBnClickedBtnCaseUpg();
 	int m_comPort;
+	UINT m_secRecord;
 };
 
 

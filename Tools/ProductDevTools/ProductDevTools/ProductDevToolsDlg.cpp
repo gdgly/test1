@@ -56,6 +56,7 @@ CProductDevToolsDlg::CProductDevToolsDlg(CWnd* pParent /*=NULL*/)
 	, m_edTrim(-10)
 	, m_btWrite(FALSE)
 	, m_comPort(7)
+	, m_secRecord(6)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
@@ -81,6 +82,7 @@ void CProductDevToolsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_BT_WR, m_btWrite);
 	DDX_Control(pDX, IDC_EDIT_CASEIMAGE, m_sImageName);
 	DDX_Text(pDX, IDC_EDIT_COMPORT, m_comPort);
+	DDX_Text(pDX, IDC_EDIT_REC_SEC, m_secRecord);
 }
 
 BEGIN_MESSAGE_MAP(CProductDevToolsDlg, CDialogEx)
@@ -732,6 +734,7 @@ void CProductDevToolsDlg::StartDevContrl(UINT type)
 	m_edAddr.GetWindowText(sText); m_devCtrl.SetBtAddr(sText);
 	m_edHWver.GetWindowTextA(sText); m_devCtrl.SetHwVersion(sText);
 	m_devCtrl.SetEraseAll(m_bEraseAll);
+	m_devCtrl.SetRecordTime(m_secRecord);
 
 	m_devCtrl.SetThreadFunc(type);
 	m_devCtrl.Start(this->m_hWnd);
