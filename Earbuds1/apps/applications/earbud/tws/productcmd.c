@@ -111,6 +111,7 @@ int appChangeCVCProcessMode(void)
     return 0;
 }
 
+extern void max20340_notify_plc_out(void);
 ///////////////////////////////////////////////////////////////////////////
 //  部分命令需要使用TASK来处理
 ///////////////////////////////////////////////////////////////////////////
@@ -123,6 +124,7 @@ ProdCmdIPtr _ProdCmdPtr = NULL;
 #define  PRODCMD_HANDSET_PAIR_STEP1   0x2500
 #define  PRODCMD_HANDSET_PAIR_STEP2   0x2501
 #define  PRODCMD_HANDSET_PAIR_STEP3   0x2502
+#define  PRODCMD_HANDSET_PAIR_STEP4   0x2503
 
 static void ProductTaskHandleMessage(Task task, MessageId id, Message message)
 {
@@ -136,8 +138,12 @@ static void ProductTaskHandleMessage(Task task, MessageId id, Message message)
         appSmPairHandset();
         MessageSendLater(&_ProdCmdPtr->task, PRODCMD_HANDSET_PAIR_STEP3, 0, 150);
         break;
-    case PRODCMD_HANDSET_PAIR_STEP3:
-        MessageSend(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL);
+    case PRODCMD_HANDSET_PAIR_STEP3:        // 出盒
+        max20340_notify_plc_out();
+        MessageSendLater(&_ProdCmdPtr->task, PRODCMD_HANDSET_PAIR_STEP4, 0, 100);
+        break;
+    case PRODCMD_HANDSET_PAIR_STEP4:        // 入耳
+        appPhyStateInEarEvent();
         break;
     }
 }
@@ -184,6 +190,7 @@ extern int apollo_evoke(void);
 #endif
 extern void appSubUISetMicbias(int set);
 static void box_uc1460e_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_buf);
+static void box_tap_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_buf);
 
 #ifdef HAVE_UCS146E0
 #include "ucs146e0.h"
@@ -231,6 +238,10 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
 
     if(get_buf[1] >= 0x6C && get_buf[1] <= 0x7F) {
         box_uc1460e_calc_cmd(get_buf, send_buf, Sn);
+        return;
+    }
+    else if(get_buf[1] >= 0x80 && get_buf[1] <= 0x86) {
+        box_tap_calc_cmd(get_buf, send_buf, Sn);
         return;
     }
 
@@ -293,7 +304,16 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             break;
 
         case 0x0f:
-            appEnterSingleForTest();
+            if(0 == get_buf[2])
+                appEnterSingleForTest();
+            else if(1 == get_buf[2]) {
+                max20340_notify_plc_out();
+                send_buf[2] = 1;
+            }
+            else if(2 == get_buf[2]) {
+                appPhyStateInEarEvent();
+                send_buf[2] = 2;
+            }
             break;
         case 0x10:   //读接近光校准高_H
             send_buf[1] = 0x10;
@@ -394,6 +414,9 @@ static void box_uc1460e_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_
         }
         else if(2 == send_buf[2] || 3 == send_buf[2])
             Ucs146e0_get_ps_cal_init((static_buf[0<<8] | static_buf[1]));
+        else if(4 == send_buf[2]) {         // 打开电源供 6C命令检测使用
+            Ucs146e0Power(TRUE);
+        }
         else
             send_buf[2] = 0;
         break;
@@ -461,4 +484,70 @@ static void box_uc1460e_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_
 #else
     (void)get_buf, (void)send_buf, (void)static_buf;
 #endif
+}
+
+#include "lis2dw12.h"
+// 敲击传感器校准，注意首先需要耳机水平放置
+static void box_tap_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_buf)
+{
+    uint16 value;
+
+    switch(get_buf[1]) {
+    case 0x80:                      // 启动
+        Lis2dw12Power(TRUE);
+        break;
+    case 0x81:                      // 校准
+        if(1 == get_buf[2]) {
+            lis2dw12_cal_str calc;
+            memset(&calc, 0, sizeof(lis2dw12_cal_str));
+            lis2dw12_get_xyz_cal(&calc);
+            static_buf[0] = calc.x_cal;
+            static_buf[1] = calc.y_cal;
+            static_buf[2] = calc.z_cal;
+
+            static_buf[3] = calc.x_orig >> 8;
+            static_buf[4] = calc.x_orig;
+            static_buf[5] = calc.y_orig >> 8;
+            static_buf[6] = calc.y_orig;
+            static_buf[7] = calc.z_orig >> 8;
+            static_buf[8] = calc.z_orig;
+        }
+
+        value = get_buf[2] - 1;
+        if(value < 9)
+            send_buf[2] = static_buf[value];
+        break;
+
+    case 0x82:                      // 写参数
+    case 0x83:
+    case 0x84:
+        value = get_buf[1] - 0x82;
+        static_buf[value+9] = get_buf[2];
+        if(2 == value) {      // Save
+            FixPrmPtr prm = &gFixParam;
+            prm->lisdw12_cal_x = static_buf[0+9];
+            prm->lisdw12_cal_y = static_buf[1+9];
+            prm->lisdw12_cal_z = static_buf[2+9];
+            prm->lisdw12_cal_already = 1;
+
+            ParamSaveFixPrm(prm);
+        }
+        break;
+
+    case 0x85:                      // 读参数
+        if(1 == get_buf[2]) {
+            FixPrmPtr prm = &gFixParam;
+            static_buf[12] = prm->lisdw12_cal_x;
+            static_buf[13] = prm->lisdw12_cal_y;
+            static_buf[14] = prm->lisdw12_cal_z;
+        }
+
+        value = get_buf[2] - 1;
+        if(value < 3)
+            send_buf[2] = static_buf[value + 12];
+        break;
+
+    case 0x86:                       // 读取是否有敲击
+        break;
+    }
 }
