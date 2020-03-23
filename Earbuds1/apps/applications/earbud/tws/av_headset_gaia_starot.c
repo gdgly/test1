@@ -1516,7 +1516,8 @@ void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message) {
         const uint8 VERSION_CMD = 0X01;
         if(VERSION_CMD == pAttr->attr) {
             memcpy(tempForUpgradeVersion, pAttr->payload, DEV_SWVER_LEN);
-            DEBUG_LOG("appGaiaHandlerEnterDfu want upgrade software version is :%02X%02X%02X", tempForUpgradeVersion[1],
+            DEBUG_LOG("appGaiaHandlerEnterDfu want upgrade software version is :%02X%02X%02X%02X",
+                      tempForUpgradeVersion[0], tempForUpgradeVersion[1],
                       tempForUpgradeVersion[2], tempForUpgradeVersion[3]);
         }
         attrFree(head, NULL);
