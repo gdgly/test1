@@ -22,7 +22,7 @@ static bool Ucs146e0ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *val
                                 BITSERIAL_FLAG_BLOCK);
     }
     if(result != BITSERIAL_RESULT_SUCCESS){
-        DEBUG_LOG("EM20168ReadRegister faild,result = %d\n", result);
+        DEBUG_LOG("Ucs146e0ReadRegister faild,result = %d\n", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -39,7 +39,7 @@ static bool Ucs146e0WriteRegister(bitserial_handle handle, uint8 reg, uint8 valu
                             command, 2,
                             BITSERIAL_FLAG_BLOCK);
     if(result != BITSERIAL_RESULT_SUCCESS){
-        DEBUG_LOG("EM20168WriteRegister faild,result = %d\n", result);
+        DEBUG_LOG("Ucs146e0WriteRegister faild,result = %d\n", result);
     }
     return (result == BITSERIAL_RESULT_SUCCESS);
 }
@@ -224,7 +224,7 @@ int Ucs146e0_statcheck(void)
 
 int Ucs146e0_GetStatus(void)
 {
-    if(Ucs146e0Task->status == TRUE){
+    if(Ucs146e0Task && Ucs146e0Task->status == TRUE){
         return 0;
     }else{
         return -1;

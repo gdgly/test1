@@ -329,7 +329,7 @@ static void delay_ms(int time_ms)
 
 int EM20168_GetStatus(void)
 {
-    if(EM20168Task->status == TRUE){
+    if(EM20168Task && EM20168Task->status == TRUE){
         return 0;
     }else{
         return -1;
