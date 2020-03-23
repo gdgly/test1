@@ -462,7 +462,8 @@ int SystemCheckMemoryVersion(void) {
     int peerLast = 1, sameLast = 2, currentLast = 3;
     uint8* current = gProgRunInfo.currVer;
     uint8* peer = gProgRunInfo.peerVer;
-    for (int i = 5; i < 8; ++i) {
+    /// 只比较软件版本，不比较硬件版本
+    for (int i = DEV_HWVER_LEN + 1; i < 8; ++i) {
         if (current[i] < peer[i]) {
             return  peerLast;
         } else if (current[i] > peer[i]) {
