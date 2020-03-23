@@ -182,9 +182,11 @@
     <ClInclude Include="software_tool_by_getfile.h" />
     <ClInclude Include="software_tool_current_board.h" />
     <ClInclude Include="software_tool_gener_barcode.h" />
+    <ClInclude Include="software_tool_psensor_calc.h" />
     <ClInclude Include="software_tool_sz_btaddr.h" />
     <ClInclude Include="software_tool_sz_freq.h" />
     <ClInclude Include="software_tool_sz_light.h" />
+    <ClInclude Include="software_tool_tap_calc.h" />
     <ClInclude Include="software_tool_version.h" />
     <ClInclude Include="software_tool_vnc.h" />
     <ClInclude Include="software_total_machine_by.h" />
@@ -261,9 +263,11 @@
     <ClCompile Include="software_tool_by_getfile.cpp" />
     <ClCompile Include="software_tool_current_board.cpp" />
     <ClCompile Include="software_tool_gener_barcode.cpp" />
+    <ClCompile Include="software_tool_psensor_calc.cpp" />
     <ClCompile Include="software_tool_sz_btaddr.cpp" />
     <ClCompile Include="software_tool_sz_freq.cpp" />
     <ClCompile Include="software_tool_sz_light.cpp" />
+    <ClCompile Include="software_tool_tap_calc.cpp" />
     <ClCompile Include="software_tool_version.cpp" />
     <ClCompile Include="software_tool_vnc.cpp" />
     <ClCompile Include="software_total_machine_by.cpp" />
