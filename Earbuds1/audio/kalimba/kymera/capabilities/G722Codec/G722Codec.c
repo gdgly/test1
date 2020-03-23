@@ -26,7 +26,8 @@
 #define G722_DEBUG3(...)
 #endif
 
-// #define TEST_NO_ENC       // 测试,类似于 PASS through，可以正常多次拨打电话
+//#define TEST_NO_ENC       // 测试,类似于 PASS through，可以正常多次拨打电话
+//#define TEST_DAT_2BYTE    // 上面定义会每个sample传输4个字节
 
 /****************************************************************************
 Private Function Definitions
@@ -129,7 +130,10 @@ static signed G722Codec_metadata_write(G722CODEC_OP_DATA *opx_data, tCbuffer *ds
         METADATA_PACKET_START_SET(new_mtag);
         METADATA_PACKET_END_SET(new_mtag);
 #ifdef TEST_NO_ENC
-        new_mtag->length = px_data->in_samples * OCTETS_PER_SAMPLE;
+        new_mtag->length = opx_data->in_samples * OCTETS_PER_SAMPLE;
+  #ifdef TEST_DAT_2BYTE
+        new_mtag->length = opx_data->in_samples * 2;
+  #endif
 #else
         new_mtag->length = opx_data->out_samples * G722_BYTE_PER_SAMPLE;        // bytePERsample = 2
 #endif
@@ -148,10 +152,18 @@ static void G722Codec_processing_encode(G722CODEC_OP_DATA *opx_data, unsigned oc
 
 #ifdef TEST_NO_ENC
     (void)i; (void)ptr; (void)outsize;
+  #ifdef TEST_DAT_2BYTE
+    ptr = (signed short *)opx_data->in_buffer;
+    for(i = 0; i < octets; i++) {
+           ptr[i*2] = ptr[i*2+1]; // 在前端为SPLITER 时我们是取 ptr[i*2+1]
+    }
+    cbuffer_write(opx_data->op_buffer, (int*)opx_data->in_buffer,  octets);
+  #else
     cbuffer_write(opx_data->op_buffer, (int*)opx_data->in_buffer, octets);
 
     acodec_encoder(opx_data->g722Handle, (unsigned char*)opx_data->in_buffer, (short)(opx_data->in_samples*G722_BYTE_PER_SAMPLE),
                    (unsigned char*)opx_data->out_buffer, (unsigned short*)&outsize);
+  #endif
 
 #else
     // 将每个SAMPLE为4个字节转换为2个字节
@@ -421,7 +433,9 @@ bool G722Codec_connect(OPERATOR_DATA *op_data, void *message_data, unsigned *res
                     /* Set the usable octets for the metadata. */
                     cbuffer_set_usable_octets(opx_data->metadata_op_buffer, 2);
 #ifdef TEST_NO_ENC
+   #ifndef TEST_DAT_2BYTE
                     cbuffer_set_usable_octets(opx_data->metadata_op_buffer, 4);
+   #endif
 #endif
                     L2_DBG_MSG2("G722Codec_connect opbuf size=%d ptr=%p", opx_data->metadata_op_buffer->size,
                         opx_data->metadata_op_buffer->base_addr);
