@@ -1738,9 +1738,12 @@ static ruleAction ruleInCaseDisconnectHandset(void)
 {
 #ifdef CONFIG_STAROT
     bdaddr handsetAddr;
-    if (appSmIsInCase() && (appDeviceIsHandsetConnected() ||
-                           (appDeviceGetHandsetBdAddr(&handsetAddr) &&
-                            appConManagerHaveAnyLink(&handsetAddr))))
+    bool deviceIsConnect = appDeviceIsHandsetConnected();
+    bool linkIsConnect = appDeviceGetHandsetBdAddr(&handsetAddr) && appConManagerHaveAnyLink(&handsetAddr);
+    bool protocolIsConnect =(appDeviceIsHandsetA2dpConnected() ||
+            appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected());
+
+    if (appSmIsInCase() && (deviceIsConnect || linkIsConnect || protocolIsConnect))
 #else
     if (appSmIsInCase() && handsetDisconnectAllowed())
 #endif

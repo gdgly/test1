@@ -376,7 +376,7 @@ static void appConManagerHandleClDmAclOpenedIndication(const CL_DM_ACL_OPENED_IN
         appConManagerSetAclLocal(&ind->bd_addr.addr, is_local);
 
 #ifdef STAROT_EXT_CONNECT_TIMEOUT
-        if (!appDeviceIsPeer(&ind->bd_addr.addr)) {
+        if (!appDeviceIsPeer(&ind->bd_addr.addr) && !is_ble) {
             appConManagerRemoveNotExpect(&ind->bd_addr.addr);
             appAvDisconnectNotExpect(&ind->bd_addr.addr);
         }

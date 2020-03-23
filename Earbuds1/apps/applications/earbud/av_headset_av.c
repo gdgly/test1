@@ -1729,7 +1729,13 @@ void appAvDisconnectNotExpect(const bdaddr *not_bd_addr) {
             DEBUG_LOG("appA2dpIsDisconnected(theInst):%d && appAvrcpIsDisconnected(theInst):%d",
                       appA2dpIsDisconnected(theInst),appAvrcpIsDisconnected(theInst));
             MessageCancelAll(&theInst->av_task, AV_INTERNAL_A2DP_CONNECT_REQ);
-            appAvInstanceDestroy(theInst);
+            if (appA2dpIsConnected(theInst)) {
+                appAvA2dpDisconnectRequest(theInst);
+            } else if (appAvrcpIsConnected(theInst)) {
+                appAvAvrcpDisconnectLaterRequest(theInst, 0);
+            } else {
+                appAvInstanceDestroy(theInst);
+            }
         }
     }
 }
