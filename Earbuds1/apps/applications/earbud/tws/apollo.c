@@ -37,7 +37,8 @@ static int check_fw_ver(uint32 fw_ver);
 static void wait_for_timeout(int delay);
 static void apollo_init_finish(void);
 static int apollo_update_header_and_reset(void);
-
+void reset_out_low(void);
+void reset_in_high(void);
 
 /****** debug ******/
 #define ENABLE_APOLLO_DEBUG (1)
@@ -123,16 +124,32 @@ void apollo_int_io_init(void) {
     PioSetMapPins32Bank(bank, mask, mask);
     PioSetDir32Bank(bank, mask, mask);
 
-    // reset io init
+
+    // reset apollo to enter app mode
+    IO_LOW(APOLLO_OVERRIDE_IO);
+    reset_out_low();
+    wait_for_timeout(100);
+}
+
+void reset_out_low(void)
+{
+    uint32 bank = 0, mask = 0;
     bank = PIO2BANK(APOLLO_RESET_IO);
     mask = PIO2MASK(APOLLO_RESET_IO);
     PioSetMapPins32Bank(bank, mask, mask);
     PioSetDir32Bank(bank, mask, mask);
-
-    // reset apollo to enter app mode
-    IO_LOW(APOLLO_OVERRIDE_IO);
     IO_LOW(APOLLO_RESET_IO);
-    wait_for_timeout(100);
+}
+
+void reset_in_high(void)
+{
+    uint32 bank = 0, mask = 0;
+    bank = PIO2BANK(APOLLO_RESET_IO);
+    mask = PIO2MASK(APOLLO_RESET_IO);
+    PioSetMapPins32Bank(bank, mask, mask);
+    PioSetDir32Bank(bank, mask, mask);
+    PioSet32Bank(bank, mask, mask);
+    PioSetWakeupStateBank( bank,  mask,  mask);
 }
 
 void register_apollo_wakeup_cb(apollo_wakeup_cb_t cb) {
@@ -340,7 +357,7 @@ static void apollo_init_handler(MessageId id, Message msg)
             else if(APOLLO_CMD_WAIT_TIMEOUT == message->command) {
                 if (APOLLO_STATE_INIT_IO == apollo_state) {
                     apollo_state = APOLLO_STATE_START_UP;
-                    IO_HIGH(APOLLO_RESET_IO);
+                    reset_in_high();
                     wait_for_int_low(60);
                 }
             }
@@ -403,7 +420,7 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
 
                     apollo_state = APOLLO_STATE_UPGRADE_S4;
                     IO_LOW(APOLLO_OVERRIDE_IO);
-                    IO_LOW(APOLLO_RESET_IO);
+                    reset_out_low();
                     wait_for_timeout(100);
 
                     break;
@@ -443,7 +460,7 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
                 }
                 case APOLLO_CMD_WAIT_TIMEOUT: {
                     if (APOLLO_STATE_ENTERING_BOOT_MODE_S1 == apollo_state) {
-                        IO_HIGH(APOLLO_RESET_IO);
+                        reset_in_high();
                         wait_for_int_low(60);
                     }
                     if (APOLLO_STATE_UPGRADE_S4 == apollo_state) {
@@ -455,7 +472,7 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
                         upgrade_times = 0;
                         io_init_wait_int_low_interrupt = 0;
                         apollo_init_end_cb = NULL;
-                        IO_HIGH(APOLLO_RESET_IO);
+                        reset_in_high();
                         wait_for_int_low(60);
                     }
                     break;
@@ -620,7 +637,7 @@ static int apollo_check_and_start_upgrade(void) {
 static void start_boot_mode_1(void) {
     /* drive override high during boot up to enter boot mode. */
     IO_HIGH(APOLLO_OVERRIDE_IO);
-    IO_LOW(APOLLO_RESET_IO);
+    reset_out_low();
     /* keep reset low for 10ms */
     wait_for_timeout(60);
 }
