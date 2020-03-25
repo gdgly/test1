@@ -354,6 +354,11 @@ static void appA2dpEnterConnectingCrossover(avInstanceTaskData *theInst)
 
     /* Set operation lock */
     appA2dpSetTransitionLockBit(theInst);
+
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+    MessageSendLater(&theInst->av_task, AV_INTERNAL_A2DP_CROSSOVER_TIMEOUT, NULL, D_SEC(2));
+    DEBUG_LOG("appA2dpEnterConnectingCrossover set timeout for disconnect");
+#endif
 }
 
 /*! \brief Exit A2DP_STATE_CONNECTING_CROSSOVER
@@ -366,6 +371,11 @@ static void appA2dpExitConnectingCrossover(avInstanceTaskData *theInst)
 
     /* Clear operation lock */
     appA2dpClearTransitionLockBit(theInst);
+
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+    MessageCancelAll(&theInst->av_task, AV_INTERNAL_A2DP_CROSSOVER_TIMEOUT);
+    DEBUG_LOG("appA2dpExitConnectingCrossover cancel timeout for disconnect");
+#endif
 }
 
 /*! \brief  Enter A2DP_STATE_CONNECTED_SIGNALLING
@@ -892,7 +902,7 @@ static void appA2dpExitDisconnected(avInstanceTaskData *theInst)
 static void appA2dpSetState(avInstanceTaskData *theInst, avA2dpState a2dp_state)
 {
     avA2dpState a2dp_old_state = theInst->a2dp.state;
-    DEBUG_LOGF("appA2dpSetState(%p) state(%02x)", (void *)theInst, a2dp_state);
+    DEBUG_LOGF("appA2dpSetState(%p) before(%02X) state(%02x)", (void *)theInst, a2dp_old_state, a2dp_state);
 
     /* Handle state exit functions */
     switch (a2dp_old_state)
@@ -1441,7 +1451,7 @@ static void appA2dpHandleInternalA2dpSignallingConnectIndication(avInstanceTaskD
 
             /* Move to 'connecting crossover' state */
             appA2dpSetState(theInst, A2DP_STATE_CONNECTING_CROSSOVER);
-        }    
+        }
         return;
         
         
@@ -2492,6 +2502,9 @@ static void appA2dpHandleInternalAvrcpUnlockInd(avInstanceTaskData *theInst)
 static void appA2dpHandleInternalA2dpCodecReconfigInd(avInstanceTaskData *theInst,
                                                       const AV_INTERNAL_A2DP_CODEC_RECONFIG_IND_T *ind);
 
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+static void appA2dpHandleInternalA2dpCrossoverTimeout(avInstanceTaskData *theInst);
+#endif
 
 /*! \brief Handle internal indication instance sync request.
     \param theInst This instance.
@@ -2791,6 +2804,21 @@ static void appA2dpHandleInternalA2dpCodecReconfigInd(avInstanceTaskData *theIns
     }
 }
 
+
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+
+void appA2dpHandleInternalA2dpCrossoverTimeout(avInstanceTaskData *theInst) {
+     DEBUG_LOGF("appA2dpHandleInternalA2dpCrossoverTimeout(%p), state(0x%x)", (void *)theInst, theInst->a2dp.state);
+    if (appA2dpIsStateConnectedSignalling(appA2dpGetState(theInst))) {
+        appA2dpSetState(theInst, A2DP_STATE_DISCONNECTING);
+        MessageSend(&theInst->av_task, AV_INTERNAL_A2DP_DESTROY_REQ, NULL);
+    } else if (!appA2dpIsDisconnected(theInst)) {
+        appA2dpSetState(theInst, A2DP_STATE_DISCONNECTED);
+    }
+}
+
+#endif
+
 /*! \brief Initialise AV instance
 
     This function initialises the specified AV instance, all state variables are
@@ -2913,6 +2941,11 @@ void appA2dpInstanceHandleMessage(avInstanceTaskData *theInst, MessageId id, Mes
         case AV_INTERNAL_A2DP_CODEC_RECONFIG_IND:
             appA2dpHandleInternalA2dpCodecReconfigInd(theInst, message);
             return;
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+        case AV_INTERNAL_A2DP_CROSSOVER_TIMEOUT:
+            appA2dpHandleInternalA2dpCrossoverTimeout(theInst);
+            return;
+#endif
     }
 
     /* Handle A2DP library messages */

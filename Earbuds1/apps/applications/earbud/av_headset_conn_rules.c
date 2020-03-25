@@ -1860,13 +1860,14 @@ static ruleAction rulePairingConnectTwsPlusHfp(void)
 }
 
 static ruleAction ruleConnectBTHappenInDfu(void) {
-    DEBUG_LOG("ruleRealInCaseDisconnect");
-    if (appSmIsInDfuMode()) {
-        DEBUG_LOG("ruleRealInCaseDisconnect in dfu mode, so need disconnect");
+    DEBUG_LOG("ruleConnectBTHappenInDfu");
+    if (appSmIsInDfuMode() && appDeviceIsHandsetAvrcpConnected()
+       && appDeviceIsHandsetA2dpConnected() && appDeviceIsHandsetHfpConnected()) {
+        DEBUG_LOG("ruleConnectBTHappenInDfu in dfu mode, so need disconnect");
         appConnRulesResetEvent(CONN_RULES_DISCONNECT_HANDSET);
         return RULE_ACTION_RUN;
     }
-    DEBUG_LOG("ruleRealInCaseDisconnect ignore");
+    DEBUG_LOG("ruleConnectBTHappenInDfu ignore");
     return RULE_ACTION_IGNORE;
 }
 
@@ -2043,7 +2044,7 @@ static ruleAction ruleInCaseEnterDfu(void)
                 return RULE_ACTION_RUN;
             } else {
                 DEBUG_LOG("ruleInCaseEnterDfu, but current state is : %04X", appGetState());
-                return RULE_ACTION_DEFER;
+                return RULE_ACTION_IGNORE;
             }
         } else {
             RULE_LOG("ruleInCaseEnterDfu, r + l earbuds not all in case, so ignore");

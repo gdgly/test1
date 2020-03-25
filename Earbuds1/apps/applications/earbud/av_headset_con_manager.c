@@ -375,13 +375,6 @@ static void appConManagerHandleClDmAclOpenedIndication(const CL_DM_ACL_OPENED_IN
         /* Update local ACL flag */
         appConManagerSetAclLocal(&ind->bd_addr.addr, is_local);
 
-#ifdef STAROT_EXT_CONNECT_TIMEOUT
-        if (!appDeviceIsPeer(&ind->bd_addr.addr) && !is_ble) {
-            appConManagerRemoveNotExpect(&ind->bd_addr.addr);
-            appAvDisconnectNotExpect(&ind->bd_addr.addr);
-        }
-#endif
-
         /* Set default link supervision timeout if locally inititated (i.e. we're master) */
         if (is_local)
             appLinkPolicyUpdateLinkSupervisionTimeout(&ind->bd_addr.addr);
@@ -556,6 +549,10 @@ static void appConManagerHandleClSmAuthoriseIndication(const CL_SM_AUTHORISE_IND
                 }
                 else if (appDeviceIsHandsetConnected() && BdaddrIsSame(&handset_bd_addr, &ind->bd_addr))
                 {
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+                    appConManagerRemoveNotExpect(&ind->bd_addr);
+                    appAvDisconnectNotExpect(&ind->bd_addr);
+#endif
                     /* NB: appDeviceIsHandsetConnected() will be set on an ACL connection */
                     DEBUG_LOGF("appConManagerHandleClSmAuthoriseIndication peer_sync %d peer_handset %d peer_handset_tws %d",
                                peer_sync, peer_handset, peer_handset_tws);

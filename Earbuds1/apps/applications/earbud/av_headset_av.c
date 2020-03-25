@@ -1720,8 +1720,14 @@ void appAvHandleMessage(Task task, MessageId id, Message message)
 
 #ifdef STAROT_EXT_CONNECT_TIMEOUT
 
-void appAvDisconnectNotExpect(const bdaddr *not_bd_addr) {
+void appAvDisconnectNotExpect(bdaddr *not_bd_addr) {
     DEBUG_LOG("appAvDisconnectNotExpect");
+    bdaddr defaultBDAddr;
+    memset(&defaultBDAddr, 0X00, sizeof(bdaddr));
+    if (NULL == not_bd_addr) {
+        not_bd_addr = &defaultBDAddr;
+    }
+
     avTaskData *theAv = appGetAv();
     for (int instance = 0; instance < AV_MAX_NUM_INSTANCES; instance++) {
         avInstanceTaskData *theInst = theAv->av_inst[instance];
@@ -1729,9 +1735,9 @@ void appAvDisconnectNotExpect(const bdaddr *not_bd_addr) {
             DEBUG_LOG("appA2dpIsDisconnected(theInst):%d && appAvrcpIsDisconnected(theInst):%d",
                       appA2dpIsDisconnected(theInst),appAvrcpIsDisconnected(theInst));
             MessageCancelAll(&theInst->av_task, AV_INTERNAL_A2DP_CONNECT_REQ);
-            if (appA2dpIsConnected(theInst)) {
+            if (!appA2dpIsDisconnected(theInst)) {
                 appAvA2dpDisconnectRequest(theInst);
-            } else if (appAvrcpIsConnected(theInst)) {
+            } else if (!appAvrcpIsDisconnected(theInst)) {
                 appAvAvrcpDisconnectLaterRequest(theInst, 0);
             } else {
                 appAvInstanceDestroy(theInst);

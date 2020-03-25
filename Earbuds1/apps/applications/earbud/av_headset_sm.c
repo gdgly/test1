@@ -114,7 +114,7 @@ static appState appSmCalcCoreState(void)
 static void appSmSetCoreState(void)
 {
     appState state = appSmCalcCoreState();
-    printf("appSmCalcCoreState is %d, appSetState is %d\n", state, appGetState());
+    DEBUG_LOG("appSmCalcCoreState is %04X, appSetState is %04X\n", state, appGetState());
     if (state != appGetState())
         appSetState(state);
 }
@@ -135,6 +135,7 @@ static void appSmSetInitialCoreState(void)
     switch (sm->phy_state)
     {
         case PHY_STATE_IN_CASE:
+            appConnRulesResetEvent(RULE_EVENT_IN_CASE);
             appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_IN_CASE);
             break;
 
@@ -555,6 +556,7 @@ static void appExitInCase(void)
 
     /* run rules for being taken out of the case */
     appConnRulesResetEvent(RULE_EVENT_IN_CASE);
+    appConnRulesResetEvent(RULE_EVENT_OUT_CASE);
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_OUT_CASE);
 }
 
@@ -587,6 +589,7 @@ static void appEnterInCase(void)
 
     /* Run rules for in case event */
     appConnRulesResetEvent(RULE_EVENT_OUT_CASE);
+    appConnRulesResetEvent(RULE_EVENT_IN_CASE);
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_IN_CASE);
 }
 
@@ -759,8 +762,14 @@ void appSetState(appState new_state)
         appExitSubStateTerminating();
 
     /* if exiting the APP_STATE_IN_CASE parent state */
+#ifdef CONFIG_STAROT
+    if (appSmStateInCase(previous_state) && !appSmStateInCase(new_state) && ((APP_STATE_HANDSET_PAIRING & new_state) == 0))
+#else
     if (appSmStateInCase(previous_state) && !appSmStateInCase(new_state))
+#endif
+    {
         appExitInCase();
+    }
 
     /* if exiting the APP_STATE_OUT_OF_CASE parent state */
     if (appSmStateOutOfCase(previous_state) && !appSmStateOutOfCase(new_state))
@@ -1091,12 +1100,27 @@ static void appSmHandlePairingHandsetPairConfirm(PAIRING_HANDSET_PAIR_CFM_T *cfm
     DEBUG_LOGF("appSmHandlePairingHandsetPairConfirm, status %d", cfm->status);
     if (pairingHandsetSuccess == cfm->status) {
         /// 尝试连接手机，如果连接成功，会在连接成功的地方，校验是否可以连接
+        DEBUG_LOG("appSmHandlePairingHandsetPairConfirm pair success allow connect");
+        appConManagerAllowHandsetConnect(TRUE);
     }
 
     switch (appGetState())
     {
         case APP_STATE_HANDSET_PAIRING:
+#ifdef CONFIG_STAROT
+        {
+            appState state = appSmCalcCoreState();
+            if (pairingHandsetSuccess != cfm->status && (state & APP_STATE_IN_CASE) && appDeviceGetHandsetBdAddr(NULL)) {
+                DEBUG_LOG("appSmHandlePairingHandsetPairConfirm, not new connect, and now in case, before have pair, so can go dfu");
+                state = APP_STATE_IN_CASE_DFU;
+            }
+            DEBUG_LOG("appSmCalcCoreState is %04X, appSetState is %04X\n", state, appGetState());
+            if (state != appGetState())
+                appSetState(state);
+        }
+#else
             appSmSetCoreState();
+#endif
             break;
 
         case APP_STATE_FACTORY_RESET:
@@ -2164,6 +2188,7 @@ static void appSmHandleInternalLinkDisconnectionTimeout(void)
         else if (appDeviceGetHandsetBdAddr(&addr) && appConManagerHaveAnyLink(&addr))
         {
             DEBUG_LOG("appSmHandleInternalLinkDisconnectionTimeout Handset's ACL IS STILL trying");
+            appAvDisconnectNotExpect(NULL);
             appConManagerSendCloseAclRequest(&addr, TRUE);
             appSmDisconnectLockClearLinks(SM_DISCONNECT_HANDSET);
         }

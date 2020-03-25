@@ -622,4 +622,5 @@ void appTestEnterDfuImmediate(void);
  */
 bool appTestIsInitialisationCompleted(void);
 
+void appTestPrintAllConnection(void);
 #endif // AV_HEADSET_TEST_H

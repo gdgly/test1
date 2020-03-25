@@ -379,6 +379,9 @@ enum av_headset_internal_messages
     AV_INTERNAL_A2DP_INST_SYNC_RES,     /*!< The instance's reponse to the sync indication. */
     AV_INTERNAL_A2DP_CODEC_RECONFIG_IND,/*!< Indication the instance's codec was reconfigured, the other instance may
                                              also need to reconfigure */
+#ifdef STAROT_EXT_CONNECT_TIMEOUT
+    AV_INTERNAL_A2DP_CROSSOVER_TIMEOUT, /*!< crossover 超时，卡在这个状态，需要强制退出，供下一次可用 */
+#endif
     AV_INTERNAL_A2DP_TOP,
 
     AV_INTERNAL_AVRCP_BASE,
@@ -662,7 +665,7 @@ extern void appAvVolumeAttributeStore(avTaskData *theAv);
 extern bool appAvInstanceStartMediaPlayback(avInstanceTaskData* theInst);
 
 #ifdef STAROT_EXT_CONNECT_TIMEOUT
-void appAvDisconnectNotExpect(const bdaddr *not_bd_addr);
+void appAvDisconnectNotExpect(bdaddr *not_bd_addr);
 #endif
 
 #endif

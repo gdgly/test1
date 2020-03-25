@@ -2116,7 +2116,7 @@ static void appHfpHandleInternalHfpTransferRequest(const HFP_INTERNAL_HFP_TRANSF
         }
         return;
         
-        case HFP_STATE_CONNECTED_IDLE:   
+        case HFP_STATE_CONNECTED_IDLE:
         case HFP_STATE_CONNECTED_INCOMING:
         case HFP_STATE_DISCONNECTED:
             /* Ignore call accept request as it doesn't make sense in these states */

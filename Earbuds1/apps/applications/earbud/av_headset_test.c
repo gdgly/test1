@@ -1536,3 +1536,29 @@ bool appTestIsInitialisationCompleted(void)
     return appInitCompleted();
 }
 
+extern void bdaddr2buffer(bdaddr *addr, uint8* addrbuf);
+
+void appTestPrintAllConnection(void) {
+    DEBUG_LOG("######################################################");
+    DEBUG_LOG("#appGetState is :%04X", appGetState());
+    DEBUG_LOG("#Handset is connect:%02X", appDeviceIsHandsetConnected());
+    DEBUG_LOG("##appDeviceIsHandsetHfpConnected:%02X", appDeviceIsHandsetHfpConnected());
+    DEBUG_LOG("##appDeviceIsHandsetA2dpConnected:%02X", appDeviceIsHandsetA2dpConnected());
+    DEBUG_LOG("##appDeviceIsHandsetAvrcpConnected:%02X", appDeviceIsHandsetAvrcpConnected());
+    DEBUG_LOG("#Peer is connect:%02X", appDeviceIsPeerConnected());
+    DEBUG_LOG("#AV connect list:");
+    avTaskData *theAv = appGetAv();
+    for (int instance = 0; instance < AV_MAX_NUM_INSTANCES; instance++) {
+        avInstanceTaskData *theInst = theAv->av_inst[instance];
+        theInst->bd_addr;
+        if (NULL != theInst) {
+            uint8 buffer[6];
+            bdaddr2buffer(&theInst->bd_addr, buffer);
+            DEBUG_LOG("##Address:[%02X:%02X:%02X:%02X:%02X:%02X]", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5]);
+            DEBUG_LOG("####appA2dpIsConnected:%02X, state is:%02X, lock is:%02X", appA2dpIsConnected(theInst), theInst->a2dp.state, appA2dpGetLock(theInst));
+            DEBUG_LOG("####appAvrcpIsConnected:%02X, state is:%02X", appAvrcpIsConnected(theInst), theInst->avrcp.state);
+        }
+    }
+    DEBUG_LOG("######################################################");
+
+}
