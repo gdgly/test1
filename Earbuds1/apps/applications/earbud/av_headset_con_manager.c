@@ -766,6 +766,9 @@ void appConManagerRemoveNotExpect(const bdaddr *not_addr)
     conManagerTaskData *theConMgr = appGetConManager();
     for (int i = 0; i < CON_MANAGER_MAX_DEVICES; i++) {
         conManagerDevice *device = &theConMgr->devices[i];
+        if (device->ble) {
+            continue;
+        }
         if (device && !BdaddrIsZero(&device->addr) && !BdaddrIsSame(&device->addr, not_addr) && !appDeviceIsPeer(&device->addr)) {
             appConManagerSetDeviceState(device, ACL_DISCONNECTED);
             BdaddrSetZero(&device->addr);

@@ -372,7 +372,7 @@ static void appEnterHandsetPairing(void)
     appPeerSyncSend(FALSE);
 
     appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
-    GattManagerCancelWaitForRemoteClient();
+//    GattManagerCancelWaitForRemoteClient();
     appGaiaDisconnect();
 }
 
@@ -386,7 +386,7 @@ static void appExitHandsetPairing(void)
     appPeerSyncSend(FALSE);
     appPairingHandsetPairCancel();
     appGattSetAdvertisingMode(APP_ADVERT_RATE_SLOW);
-    GattManagerCancelWaitForRemoteClient();
+//    GattManagerCancelWaitForRemoteClient();
 }
 
 /*! \brief Enter
@@ -793,6 +793,8 @@ void appSetState(appState new_state)
     /* transitioning from BLE connectable to not connectable, or vice versa */
     if (appSmStateNewBleConnectionChange(previous_state,new_state))
     {
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
+    } else {
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
     }
 

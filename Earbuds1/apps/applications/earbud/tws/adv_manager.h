@@ -86,6 +86,17 @@ uint8 advManagerSelectFeature(void);
 void advManagerGetBleAdvInfo(uint8 *feature, uint16 *advCode);
 
 /*
+ * fun: 保持当前的BLE用途，如果下次不一样，需要先cancel再enable
+ */
+void advManagerSaveCurrentFeature(uint8 feature);
+
+/*
+ * fun: 获取上一次ble的用途
+ * return: 上一次bel用途
+ */
+uint8 advManagerGetBeforeFeature(void);
+
+/*
  * fun: 保存用户设置ble信息 前提：经典蓝牙已经建立连接
  * param: adv 广播码
  * param: bond 验证绑定码

@@ -203,6 +203,9 @@ static void appGattDeleteCurrentAdvert(void)
         appAdvManagerDeleteAdvert(advert);
         gatt->advert_settings = NULL;
     }
+#ifdef CONFIG_STAROT
+    advManagerSaveCurrentFeature(0XFF);
+#endif
 }
 
 #ifdef CONFIG_STAROT

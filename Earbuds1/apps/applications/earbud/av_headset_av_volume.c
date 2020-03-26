@@ -184,17 +184,14 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
      * 如果BLE未配对，说明用户第一次，是请求配对
      * 为了防止广播滥用，在发出广播之后，需要在指定时间内，停止广播
      */
-    while ((volume + 1) % 8 != 0) {
-        if (appSmHasBleConnection()) {
-            break;
-        }
+    if (((volume + 1) % 8 != 0) && !appSmHasBleConnection()) {
         if (FALSE == appBleIsBond()) {
             advManagerSetSpecialVol(volume);
+            appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
+            DEBUG_LOG("focus stop ble for use volume adv code");
+            GattManagerCancelWaitForRemoteClient();
+            MessageSendLater(appGetUiTask(), APP_BLE_SCANABLE_TIMEOUT, NULL, 30000);
         }
-        appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
-        GattManagerCancelWaitForRemoteClient();
-        MessageSendLater(appGetUiTask(), APP_BLE_SCANABLE_TIMEOUT, NULL, 30000);
-        break;
     }
 #endif
 

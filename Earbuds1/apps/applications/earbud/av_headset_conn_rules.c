@@ -2726,14 +2726,25 @@ static bool bleBattery(bool left) {
 // region ble使能
 
 static ruleAction bleEnable(void) {
-    MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
-    bool connectable = TRUE;
-    return RULE_ACTION_RUN_PARAM(connectable);
+//    MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
+    uint8 current = advManagerSelectFeature();
+    uint8 before = advManagerGetBeforeFeature();
+    DEBUG_LOG("bleEnable before:%02X current:%02X", before, current);
+    if (0XFF != before && current != before) {
+        // 需要先停止之前的ble，等cancel的cfm中，再触发新的ble广播
+        DEBUG_LOG("bleEnable current != before so need restart");
+        //GattManagerCancelWaitForRemoteClient();
+        bool connectable = FALSE;
+        return RULE_ACTION_RUN_PARAM(connectable);
+    } else {
+        bool connectable = TRUE;
+        return RULE_ACTION_RUN_PARAM(connectable);
+    }
 }
 
 static ruleAction bleDisable(void) {
+//    MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
     bool st = FALSE;
-    MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
     return RULE_ACTION_RUN_PARAM(st);
 }
 

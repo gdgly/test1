@@ -37,6 +37,7 @@ typedef struct  {
     uint8 bleFeture;
 } AdvManufacturerSpecificData;
 
+uint8 bleFeature = 0XFF;
 typedef struct {
     bool enableSpecialVol;  /// 是否使能特殊音量广播
     uint8 specialVolSize;   /// 特殊音量大小
@@ -62,6 +63,7 @@ void advManagerPrepareAdvInfo(void) {
     uint8 feature;
     uint16 advCode;
     advManagerGetBleAdvInfo(&feature, &advCode);
+    advManagerSaveCurrentFeature(feature);
 
     AdvManagerTaskData *task = advManagerGet();
     AdvManufacturerSpecificData* sd = &(task->advManufacturerSpecificData);
@@ -204,6 +206,14 @@ void advManagerStopSpecialVol(void) {
 
 bool advManagerIsEnableSpecialVol(void) {
     return advManagerGet()->enableSpecialVol;
+}
+
+void advManagerSaveCurrentFeature(uint8 feature) {
+    bleFeature = feature;
+}
+
+uint8 advManagerGetBeforeFeature(void) {
+    return bleFeature;
 }
 
 // endregion
