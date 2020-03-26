@@ -216,7 +216,13 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message) {
             break;
 
         case GAIA_DISCONNECT_IND:                /* Indication that the connection has closed */
+            DEBUG_LOG("appGaiaMessageHandler GAIA_DISCONNECT_IND");
             appGaiaHandleDisconnectInd((const GAIA_DISCONNECT_IND_T *) message);
+#ifdef TWS_DEBUG
+            appGaiaNotifyGaiaDisconnected();
+            starotGaiaReset();
+            subGaiaClearConnectUnlock();
+#endif
             break;
 
         case GAIA_DISCONNECT_CFM:                /* Confirmation that a requested disconnection has completed */

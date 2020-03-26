@@ -1562,3 +1562,9 @@ void appTestPrintAllConnection(void) {
     DEBUG_LOG("######################################################");
 
 }
+
+void testHfpCallWaitingEnableRequest (bool enable) {
+    UNUSED(enable);
+    HfpSubscriberNumbersRequest(hfp_primary_link);
+//    HfpCallWaitingEnableRequest(hfp_primary_link, enable);
+}

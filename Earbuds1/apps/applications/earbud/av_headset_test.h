@@ -623,4 +623,6 @@ void appTestEnterDfuImmediate(void);
 bool appTestIsInitialisationCompleted(void);
 
 void appTestPrintAllConnection(void);
+void testHfpCallWaitingEnableRequest (bool enable);
+
 #endif // AV_HEADSET_TEST_H

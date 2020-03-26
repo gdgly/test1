@@ -620,6 +620,7 @@ uint8 starotGaiaTransGetAudioType(void) {
 void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
     if (NULL == message) return;
     hfpState hstate = message->status;
+    DEBUG_LOG("gaiaParseDialogStatus hfpStatus is :%04X", hstate);
 
     if(HFP_STATE_CONNECTED_OUTGOING == hstate || HFP_STATE_CONNECTED_INCOMING == hstate) {
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, 0xfe, 0, NULL);
@@ -691,13 +692,13 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
 
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_END, 0xfe, len, data);
 
-        appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
-
         if (appGetGaia()->transformAudioFlag > TRANSFORM_CANT) {
             /// todo 建议放到知道电话彻底结束的地方调用，需要考虑多方会话的情况
             DEBUG_LOG("disable audio forward");
             disable_audio_forward(TRUE);
         }
+        appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
+
         subGaiaClearCaller();
     }
 }
@@ -1405,6 +1406,7 @@ void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T *message) {
         gaiaStarotPrivateData.testSpeedIndex = 0;
         appGetGaia()->transformAudioFlag = DIALOG_CAN_TRANSFORM;
         appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
+        DEBUG_LOG("starotGaiaDialogStartTransport call start record dialog");
         gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_ACCEPT_RECORD);
         DEBUG_LOG("call disable_audio_forward(FALSE);");
         gaiaStarotPrivateData.audioTransType = 0;
@@ -1419,6 +1421,7 @@ void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T *message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
                         ((appGetGaia()->transformAudioFlag == DIALOG_CAN_TRANSFORM) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE), 0, NULL);
     if (appGetGaia()->transformAudioFlag == DIALOG_CAN_TRANSFORM) {
+        DEBUG_LOG("starotGaiaDialogStopTransport call stop record dialog");
         gaiaNotifyAudioAcceptStatus(appGetUiTask(), STAROT_DIALOG_USER_REJECT_RECORD);
         appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
     }

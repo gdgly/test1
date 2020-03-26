@@ -1353,7 +1353,12 @@ static void appHfpHandleHfpVoiceRecognitionEnableConfirmation(const HFP_VOICE_RE
 static void appHfpHandleHfpCallerIdIndication(const HFP_CALLER_ID_IND_T *ind)
 {
     DEBUG_LOG("appHfpHandleHfpCallerIdIndication");
-    
+    DEBUG_LOG("ind->name length %d", ind->size_name);
+    for (int i = 0; i < ind->size_name; ++i) {
+        printf("%02X", ind->caller_name[i]);
+    }
+    printf("\n");
+
     switch (appHfpGetState())
     {
         case HFP_STATE_CONNECTED_INCOMING:
@@ -2996,7 +3001,8 @@ static void appHfpHandleMessage(Task task, MessageId id, Message message)
         case HFP_CURRENT_CALLS_IND:
              appUiHfpDialId(((const HFP_CURRENT_CALLS_IND_T *)message)->number,
                                 ((const HFP_CURRENT_CALLS_IND_T *)message)->size_number);
-             DEBUG_LOG("CALL IND number_len=%d", ((const HFP_CURRENT_CALLS_IND_T *)message)->size_number);
+             DEBUG_LOG("CALL IND number_len=%d dialogType=%d name ", ((const HFP_CURRENT_CALLS_IND_T *)message)->size_number,
+                       ((const HFP_CURRENT_CALLS_IND_T *)message)->number_type);
              return;
         case HFP_DIAL_NUMBER_CFM:
              DEBUG_LOG("DialNumber CFM");
