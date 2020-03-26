@@ -591,6 +591,11 @@ static void appEnterInCase(void)
     appConnRulesResetEvent(RULE_EVENT_OUT_CASE);
     appConnRulesResetEvent(RULE_EVENT_IN_CASE);
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_IN_CASE);
+#ifdef CONFIG_STAROT
+    /// 理由：从耳中取出耳机，5min之后，如果之前再播放音乐，会设置定时器
+    /// 5分钟之后，取出耳机，再播放音乐，继续了之前的定时器，需要清理
+    MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_IN_EAR_A2DP_START);
+#endif
 }
 
 /*! \brief Enter APP_STATE_OUT_OF_CASE parent function actions. */

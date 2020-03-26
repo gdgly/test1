@@ -642,14 +642,14 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         subUiCallNumber2Gaia(progRun, message);
         break;
     case APP_CALL_ACTIVE:          // 拨号相关信息 接听
+    case APP_CALLIN_ACT:           // 拨号相关信息 拨入
+    case APP_CALLOUT_ACT:          // 拨号相关信息 拨出
     {
         //添加一个空的定时消息，如果在指定的时间内，发生了该定时器，则可以忽略hfp切换音频链路的问题
         MessageCancelAll(appGetUiTask(), APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT);
         MessageSendLater(appGetUiTask(), APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT, NULL, D_SEC(1));
     }
-    case APP_CALLIN_ACT:           // 拨号相关信息 拨入
     case APP_CALLIN_INACT:         // 拨号相关信息 拨入断开
-    case APP_CALLOUT_ACT:          // 拨号相关信息 拨出
     case APP_CALLOUT_INACT:        // 拨号相关信息 拨出断开
     case APP_CALL_INACTIVE:        // 拨号相关信息 断开
         //subUiCallIndicator2Gaia(progRun, message);
@@ -727,7 +727,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT:
         DEBUG_LOG("appSubUiHandleMessage APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT");
         // 暂时不启用，在appHfpHandleHfpAudioConnectIndication中添加了两种临时状态也可以接受audio
-        // appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HFP_REQUEST_SCO_AUDIO);
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HFP_REQUEST_SCO_AUDIO);
         break;
 
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
