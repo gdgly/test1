@@ -986,6 +986,10 @@ static void appHfpHandleHfpAudioConnectConfirmation(const HFP_AUDIO_CONNECT_CFM_
         case HFP_STATE_CONNECTED_INCOMING:
         case HFP_STATE_CONNECTED_ACTIVE:
         case HFP_STATE_DISCONNECTING:
+#ifdef CONFIG_STAROT
+        case HFP_STATE_CONNECTING_REMOTE:
+        case HFP_STATE_CONNECTING_LOCAL:
+#endif
         {
             /* Check if audio connection was successful */
             if (cfm->status == hfp_audio_connect_success)
