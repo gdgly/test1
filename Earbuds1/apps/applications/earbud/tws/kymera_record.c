@@ -36,6 +36,7 @@ static void appKymeraCreateRecordChain(uint32 rate)
 #if 1
     /* Get microphone sources */
     appKymeraMicSetup(appConfigScoMic1(), &mic, appConfigScoMic2(), &mic2, rate);
+    PanicFalse(SourceConfigure(mic, STREAM_CODEC_RAW_INPUT_GAIN, 0x8020 | 3 << 16));
 #else
     /* Configure the DAC channel */
     mic = StreamAudioSource(appConfigLeftAudioHardware(), appConfigLeftAudioInstance(), appConfigLeftAudioChannel());
