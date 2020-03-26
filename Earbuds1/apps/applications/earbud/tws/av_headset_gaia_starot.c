@@ -710,7 +710,7 @@ static void gaiaSendCallNumber(STAROT_DIALOG_CALL_NUMBER_T* message) {
     StarotAttr *head = NULL;
     uint16 len = 0;
 
-    DEBUG_LOG("send call number");
+    DEBUG_LOG("gaiaSendCallNumber");
 
     // make call number attribute
     StarotAttr *attr = PanicNull(attrMalloc(&head, message->len));
@@ -1659,6 +1659,7 @@ void subGaiaSetCaller(uint8* data, uint16 len) {
 // region 使用conditionally发送消息
 
 void subGaiaSetConnectUnlock(void) {
+    DEBUG_LOG("subGaiaSetConnectUnlock");
     subGaiaTaskData* task = subGaiaGetTaskData();
     task->connectLock = SUB_GAIA_CONNECT_UNLOCK;
     advManagerStopSpecialVol();
@@ -1666,6 +1667,7 @@ void subGaiaSetConnectUnlock(void) {
 }
 
 void subGaiaClearConnectUnlock(void) {
+    DEBUG_LOG("subGaiaClearConnectUnlock");
     subGaiaTaskData* task = subGaiaGetTaskData();
     task->connectLock = SUB_GAIA_CONNECT_LOCK;
 }

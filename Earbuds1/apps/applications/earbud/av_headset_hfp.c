@@ -1267,9 +1267,10 @@ static void appHfpHandleHfpCallStateIndication(const HFP_CALL_STATE_IND_T *ind)
             appGetHfp()->call_state = ind->call_state;
 
 #ifdef CONFIG_STAROT
-            if(ind->call_state== hfp_call_state_outgoing)
+            /// 呼出电话，请求电话号码
+            if (ind->call_state == hfp_call_state_outgoing)
             {
-                 HfpCurrentCallsRequest(hfp_primary_link);
+                HfpCurrentCallsRequest(hfp_primary_link);
             }
 #endif
             /* Move to new state, depending on call state */

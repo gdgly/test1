@@ -106,7 +106,9 @@ enum {
 #define GAIA_COMMAND_STAROT_TRANS_AUDIO (0x5004)
 
 ///////////////////////////dialog//////////////////////////////////
-/// 电话开始
+
+// region 电话
+
 enum {
     GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN = 0X5005,                   // 通话接入 还没有接通
     GAIA_COMMAND_STAROT_CALL_SETUP_END =0x5006 ,
@@ -114,14 +116,18 @@ enum {
     GAIA_COMMAND_STAROT_CALL_AUDIO_CFM = 0x5008,                        // xxx
     GAIA_COMMAND_STAROT_CALL_AUDIO_END = 0x5009,                        // xxx
     GAIA_COMMAND_STAROT_CALL_SOURCE_IND = 0x500a,                       // xxx
-    GAIA_COMMAND_STAROT_START_TRANS_AUDIO_IND = 0x500b,                 // xxx
-    GAIA_COMMAND_STAROT_END_TRANS_AUDIO_IND = 0x500c,                   // xxx
+    GAIA_COMMAND_STAROT_START_TRANS_AUDIO_IND = 0x500b,                 // app请求开始传输音频
+    GAIA_COMMAND_STAROT_END_TRANS_AUDIO_IND = 0x500c,                   // app请求停止传输音频
     GAIA_COMMAND_STAROT_CALL_AUDIO_DEVICE = 0X500D,                     // xxx
     GAIA_COMMAND_STAROT_CALL_DEVICE_TRANS_AUDIO_REQUEST = 0X500E,       // xxx
     GAIA_COMMAND_STAROT_CALL_ATTR = 0X500F,                             // xxx
     GAIA_COMMAND_STAROT_CALL_ACTIVE = 0X5010,                           // 电话接通
     GAIA_COMMAND_STAROT_CALL_INACTIVE = 0X5011,                         // 电话结束
 };
+
+
+
+// endregion
 
 
 ///////////////////////////bond code///////////////////////////////
