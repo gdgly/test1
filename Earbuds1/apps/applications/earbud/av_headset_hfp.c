@@ -919,6 +919,10 @@ static void appHfpHandleHfpAudioConnectIndication(const HFP_AUDIO_CONNECT_IND_T 
         case HFP_STATE_CONNECTED_OUTGOING:
         case HFP_STATE_CONNECTED_INCOMING:
         case HFP_STATE_CONNECTED_ACTIVE:
+#ifdef CONFIG_STAROT
+        case HFP_STATE_CONNECTING_LOCAL:
+        case HFP_STATE_CONNECTING_REMOTE:
+#endif
         {
             /* Check if audio connection is for us */
             /* TODO: Support for multipoint */

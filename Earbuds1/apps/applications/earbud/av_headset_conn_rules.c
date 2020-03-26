@@ -332,6 +332,8 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_IN_EAR,                     ruleInEarLedsDisable,               CONN_RULES_LED_DISABLE),
     RULE(RULE_EVENT_IN_EAR,                     ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
     RULE(RULE_EVENT_IN_EAR,                     ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
+
+
     /*! \} */
 
     /*! \{
@@ -382,6 +384,9 @@ ruleEntry appConnRules[] =
 #endif
     RULE(RULE_EVENT_CHECK_GAIA_CONNECTION,      ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
     RULE(RULE_EVENT_UPGRADE,                    ruleAllowGaiaConnect,               CONN_RULES_ALLOW_HANDSET_CONNECT),
+
+    /// 通话处于active时，需要请求HFP音频
+    RULE(RULE_EVENT_HFP_REQUEST_SCO_AUDIO,      ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
 
 };
 

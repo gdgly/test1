@@ -300,6 +300,7 @@ typedef enum
 
 #define RULE_EVENT_CHECK_GAIA_CONNECTION         (1ULL << 57)    /*!< 检查gaia是否需要断开 */
 #define RULE_EVENT_UPGRADE                       (1ULL << 58)    /*!<  */
+#define RULE_EVENT_HFP_REQUEST_SCO_AUDIO         (1ULL << 59)    /*!< HFP主动请求音频 */
 
 #define RULE_EVENT_ALL_EVENTS_MASK               (0xFFFFFFFFFFFFFFFFULL)
 

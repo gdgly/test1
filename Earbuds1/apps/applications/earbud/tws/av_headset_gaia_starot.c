@@ -644,6 +644,9 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
         appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
     } else if (HFP_STATE_CONNECTED_ACTIVE == hstate) {
         DEBUG_LOG("HFP_STATE_CONNECTED_ACTIVE");
+        if (appGetGaia()->transformAudioFlag < TRANSFORM_CANT) {
+            appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
+        }
         StarotAttr *head = NULL;
         uint16 numberLen = 0;
         const uint8* numberInfo = subGaiaGetCaller(&numberLen);

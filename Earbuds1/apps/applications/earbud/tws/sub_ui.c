@@ -724,6 +724,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
         break;
 
+    case APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT:
+        DEBUG_LOG("appSubUiHandleMessage APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT");
+        // 暂时不启用，在appHfpHandleHfpAudioConnectIndication中添加了两种临时状态也可以接受audio
+        // appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HFP_REQUEST_SCO_AUDIO);
+        break;
+
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
     case APP_CASE_SET_BTINFO:               // 盒子设置耳机经典蓝牙配对地址
         break;
