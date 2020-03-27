@@ -1236,6 +1236,8 @@ void appUiAvConnected(unsigned cad)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->bredrconnect = 1;
+    if(appSmIsInEar())
+        apolloWakeupPower(1);
     advManagerInit();
     MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
@@ -1671,8 +1673,8 @@ void apolloWakeupPower(int enable)        // 开启或停止 APO2
     ProgRIPtr  progRun = appSubGetProgRun();
 
     if(enable) {
-        // 系统配置是否启动APO，与APP是否启动无关系
-        if(1 == gUserParam.apolloEnable /* &&
+        // 系统配置是否启动APO，与APP是否启动无关系。当前只支持主耳机的唤醒
+        if(1 == gUserParam.apolloEnable && appDeviceIsHandsetConnected() && (0 == progRun->apolloWakeup) /* &&
                 (1 == progRun->gaiaStat || gUserParam.assistantType == ASSISTANT_TYPE_SYSTEM) */){
             progRun->apolloWakeup = 1;
             OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 前,否则有时电压上不来
