@@ -581,8 +581,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_GAIA_CONNECTED:
         DEBUG_LOG("GAIA connect to phone");
         progRun->gaiaStat  = 1;
-        if(1 == gUserParam.apolloEnable)
-            apolloWakeupPower(1);
+        // if(1 == gUserParam.apolloEnable)
+        //     apolloWakeupPower(1);
         appPeerSigTxDataCommandUi(PEERTX_CMD_SYNCGAIA, 1);
         break;
     case APP_GAIA_DISCONNECTED:
@@ -600,8 +600,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         ///todo 添加通话录音停止操作
 #endif
         // 退出APP时，如果设置的为唤醒APP，是停止它
-        if(gUserParam.assistantType != ASSISTANT_TYPE_SYSTEM)
-            apolloWakeupPower(0);
+        //if(gUserParam.assistantType != ASSISTANT_TYPE_SYSTEM)
+        //    apolloWakeupPower(0);
         appPeerSigTxDataCommandUi(PEERTX_CMD_SYNCGAIA, 0);
         break;
 
@@ -1671,9 +1671,9 @@ void apolloWakeupPower(int enable)        // 开启或停止 APO2
     ProgRIPtr  progRun = appSubGetProgRun();
 
     if(enable) {
-        // 系统配置了启动并且 设置为唤醒APP需要APP连接，唤醒系统则不需要
-        if(1 == gUserParam.apolloEnable &&
-                (1 == progRun->gaiaStat || gUserParam.assistantType == ASSISTANT_TYPE_SYSTEM)){
+        // 系统配置是否启动APO，与APP是否启动无关系
+        if(1 == gUserParam.apolloEnable /* &&
+                (1 == progRun->gaiaStat || gUserParam.assistantType == ASSISTANT_TYPE_SYSTEM) */){
             progRun->apolloWakeup = 1;
             OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 前,否则有时电压上不来
             appSubUISetMicbias(TRUE);
