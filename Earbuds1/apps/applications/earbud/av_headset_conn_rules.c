@@ -3519,6 +3519,10 @@ static ruleAction ruleDisconnectBTNeedEnterDfu(void) {
     return ruleInCaseEnterDfu();
 }
 
+/*
+ * fun: 检查释放需要断开GAIA连接
+ * > 如果正在升级 IGNORE
+ */
 static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
 {
     if (UpgradeInProgress()) {
@@ -3531,11 +3535,6 @@ static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
         return RULE_ACTION_IGNORE;
     }
 
-    if (appUICaseIsOpen()) {
-        RULE_LOG("ruleCheckGaiaIsNeedDisconnection, appUICaseIsOpen is true, ignore");
-        return RULE_ACTION_IGNORE;
-    }
-
     if (!appDeviceIsHandsetAnyProfileConnected()) {
         if (appGaiaIsConnect()) {
             RULE_LOG("ruleCheckGaiaIsNeedDisconnection, need disconnect");
@@ -3545,6 +3544,12 @@ static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
             return RULE_ACTION_COMPLETE;
         }
     }
+
+    if (appUICaseIsOpen()) {
+        RULE_LOG("ruleCheckGaiaIsNeedDisconnection, appUICaseIsOpen is true, ignore");
+        return RULE_ACTION_IGNORE;
+    }
+
     RULE_LOG("ruleCheckGaiaIsNeedDisconnection, is RULE_ACTION_IGNORE");
     return RULE_ACTION_IGNORE;
 }
