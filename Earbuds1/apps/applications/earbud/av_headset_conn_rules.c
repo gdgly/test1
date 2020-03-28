@@ -387,7 +387,7 @@ ruleEntry appConnRules[] =
 
     /// 通话处于active时，需要请求HFP音频
     RULE(RULE_EVENT_HFP_REQUEST_SCO_AUDIO,      ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
-
+    RULE(RULE_EVENT_SCO_FORCE_SELECT_MIC,       ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
 };
 
 /*! \brief Types of event that can cause connect rules to run. */
@@ -2508,6 +2508,16 @@ static ruleAction ruleSelectMicrophone(void)
         RULE_LOG("ruleSelectMicrophone, defer as peer sync not complete");
         return RULE_ACTION_DEFER;
     }
+
+#ifdef  CONFIG_STAROT
+    /// 如果当前使用静音模式，强制使用当前mic
+    if (appHfpIsCall() && appHfpIsMuted()) {
+        RULE_LOG("ruleSelectMicrophone, current is hfp && mute, so use local");
+        selected_mic = MIC_SELECTION_LOCAL;
+        return RULE_ACTION_RUN_PARAM(selected_mic);
+    }
+#endif
+
     if (!appSmIsInEar() && appPeerSyncIsPeerInEar())
     {
         selected_mic = MIC_SELECTION_REMOTE;
