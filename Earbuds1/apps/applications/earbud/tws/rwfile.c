@@ -9,11 +9,40 @@
 
 
 /*
+ * 获取文件大小
+ * @findex: 文件索引号
+ * @return: 文件大小
+ */
+int16 getFileSize(FILE_INDEX findex)
+{
+    Source file_source;
+    uint16 source_size = 0;
+    uint16 fileSize    = 0;
+
+    file_source = StreamFileSource(findex);
+    if (!file_source) return -1;
+    while((source_size = SourceSize(file_source)) != 0)
+    {
+        fileSize += source_size;
+        SourceDrop(file_source,source_size);
+        source_size *= 100;
+        while(source_size--)
+        {
+            printf("");
+        }
+    }
+    SourceClose(file_source);
+    printf("fileSize = %d\n",fileSize);
+
+    return fileSize;
+}
+
+/*
  * 查找文件
  * @file_name: 文件名字,必须是/rwfs/目录下的
  * @return: 该文件索引号
  */
-FILE_INDEX FindFileIndex(char * file_name)
+FILE_INDEX FindFileIndex(char *file_name)
 {
     FILE_INDEX file_index;
 
@@ -160,7 +189,7 @@ uint8 FileReadOk(void)
     uint8 ret;
 
     file_index=FileFind(FILE_ROOT, FILE_NAME_OK, (uint16)strlen(FILE_NAME_OK));
-    if(file_index == FILE_NONE)
+    if (file_index == FILE_NONE)
         return 0;
     fsource = StreamFileSource(file_index);
     rLen = SourceSize(fsource);
@@ -173,3 +202,39 @@ uint8 FileReadOk(void)
     return ret;
 }
 
+//test
+void test_read(void);
+void test_read(void)
+{
+    /* 下面代码可以循环读取,SourceDrop可能会panic */
+    uint16 source_size,fileSize = 0;
+    uint8 *map_address;
+    Source file_source;
+    uint32 check_sum = 0;
+    FILE_INDEX findex = FindFileIndex(FILE_LOG);
+
+    if (findex == FILE_NONE)
+    {
+        DEBUG_LOG("can't find file %s",FILE_LOG);
+        return;
+    }
+    PanicNull((file_source = StreamFileSource(findex)));
+    while((source_size = SourceSize(file_source)) != 0)
+    {
+        map_address = (uint8 *)SourceMap(file_source);
+        for (int i = 0; i< source_size;i++)
+        {
+            check_sum += map_address[i];
+        }
+        fileSize += source_size;
+        SourceDrop(file_source,source_size);
+        source_size *= 100;
+        while(source_size--)
+        {
+            printf("");
+        }
+    }
+    DEBUG_LOG("check_sum %u",check_sum);
+    SourceClose(file_source);
+    printf("fileSize = %d\n",fileSize);
+}

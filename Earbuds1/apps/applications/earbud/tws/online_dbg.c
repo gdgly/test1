@@ -8,6 +8,7 @@
 #include "online_dbg.h"
 #include "av_headset_gaia_starot.h"
 #include "gaia.h"
+#include <system_clock.h>
 
 #define ENABLE_DBG_PRINT    (1)
 
@@ -47,12 +48,31 @@ uint8 get_online_dbg_state(void) {
 }
 
 void online_dbg_record(online_dbg_t code) {
+    uint16 fileLogIndex = 0;
+    rtime_t timeStamp = 0;
+    uint16 fileSize = 0;
+
     online_dbg_buf[record_idx++] = code;
     if (record_idx == trans_idx) trans_idx++;
 
     if ((ONLINE_DBG_STATE_RT_PACKET == online_dbg_state)
             && (record_idx - trans_idx > SEND_PKT_LENGTH)) {
         MessageSend(onlineDbgTask, ONLINE_DBG_MSG_TRANS_RT_ONLINE_DBG, NULL);
+    }
+    /* 写入日志 */
+    fileLogIndex = FindFileIndex(FILE_LOG);
+    if (fileLogIndex == FILE_NONE)
+        fileLogIndex = FileCreate(FILE_LOG, (uint16)strlen(FILE_LOG));
+
+    fileSize = getFileSize(fileLogIndex);
+    if (fileSize < MAX_LOG_SIZE && fileSize > 0)
+    {
+        /* 写入时间戳 */
+        timeStamp = SystemClockGetTimerTime();
+        FileWrite(fileLogIndex,(uint8 *)(&timeStamp),sizeof (rtime_t));
+        /* 写入状态码 */
+        FileWrite(fileLogIndex,(uint8 *)&code,sizeof (online_dbg_t));
+        ONLINE_DBG_LOG("timeStame = %u,code = %d",timeStamp,code);
     }
 }
 

@@ -8,7 +8,9 @@
 #define FILE_NAME "/rwfs/firmware.bin"
 /* 标记升级文件是否下载成功 */
 #define FILE_NAME_OK "/rwfs/firmware_ok.bin"
-
+/* 系统日志文件 */
+#define FILE_LOG "/rwfs/dgb_log.bin"
+#define MAX_LOG_SIZE 20480
 
 FILE_INDEX FileOpen(char * file_name);
 FILE_INDEX FindFileIndex(char * file_name);
@@ -18,6 +20,7 @@ int FileCancel(char *fname);
 
 uint8 FileWriteOk(uint8 value);
 uint8 FileReadOk(void);
+int16 getFileSize(FILE_INDEX findex);
 
 #endif //RWFILE_H
 
