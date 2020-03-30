@@ -1466,6 +1466,7 @@ void appUiPowerSaveSync(void)
 #ifdef CONFIG_BOARD_V2
     ProgRIPtr  progRun = appSubGetProgRun();
 
+    UartPuts1("Pwr mode=", progRun->iPowerSaveMode);
     DEBUG_LOG("PowerSaveSync mode=%d", progRun->iPowerSaveMode);
 
     switch(progRun->iPowerSaveMode) {
@@ -1602,10 +1603,13 @@ void appUiChargerComplete(void)
 
 uint8 appUiGetPower(void)      // 获取当前耳机电量
 {
-    ProgRIPtr  progRun = appSubGetProgRun();
+    chargerTaskData *theCharger = appGetCharger();
+    uint8 value = appSubGetProgRun()->iElectrity;
 
-//    if(CHARGE_ST_FIN == progRun->chargeStat)   // XXX 是否需要考虑当前充电状态 ？
-    return progRun->iElectrity;
+    if(theCharger->is_charging)
+        value |= (1<<7);               // 使用最高位表示是正在充电
+
+    return value;
 }
 
 //static bool deviceRealInCase = TRUE;
