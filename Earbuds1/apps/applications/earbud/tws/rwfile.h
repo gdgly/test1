@@ -21,6 +21,7 @@ int FileCancel(char *fname);
 uint8 FileWriteOk(uint8 value);
 uint8 FileReadOk(void);
 int16 getFileSize(FILE_INDEX findex);
+uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address);
 
 #endif //RWFILE_H
 

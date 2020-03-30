@@ -9,6 +9,7 @@
 #include "av_headset_gaia_starot.h"
 #include "gaia.h"
 #include <system_clock.h>
+#include "rwfile.h"
 
 #define ENABLE_DBG_PRINT    (1)
 
@@ -34,7 +35,7 @@ void appGaiaSendPacket(uint16 vendor_id, uint16 command_id,
 static OnlineDbgTaskData onlineDbgTaskData = {.data = {.handler = online_dbg_handler}};
 static Task onlineDbgTask = &(onlineDbgTaskData.data);
 
-static uint8 online_dbg_buf[ONLINE_DBG_BUF_LEN];
+static online_dbg_t online_dbg_buf[ONLINE_DBG_BUF_LEN];
 static volatile uint8 online_dbg_state = ONLINE_DBG_STATE_IDLE;
 static volatile uint8 record_idx = 0;
 static volatile uint8 trans_idx = 0;

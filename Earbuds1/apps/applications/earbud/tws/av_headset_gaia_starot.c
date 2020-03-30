@@ -118,15 +118,78 @@ void starotGaiaReset(void) {
 }
 
 /*
- * 返回升级固件的MD5
+ * 上传日志文件到手机APP
+ * @return:
+ *    TRUE: 成功
+ */
+bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
+{
+    static Source file_source;
+    static uint8 *buff;
+    static FILE_INDEX findex;
+    static uint8  index;
+    static uint16 readSize;
+
+    /* 丢包的话就再次发送 */
+//    if (index == message->payload[0])
+//        goto sendData;
+    /* 只会在开始传输的时候执行一次 */
+    if ((message->payload[1] & 0x03) == 0)
+    {
+        findex = FindFileIndex(FILE_LOG);
+        if (findex == FILE_NONE)return FALSE;
+        PanicNull((file_source = StreamFileSource(findex)));
+        readSize = FileRead(findex,&file_source,buff);
+    }
+    else if ((message->payload[1] & 0x03) == 0x03)
+    {
+        readSize = FileRead(findex,&file_source,buff);
+    }
+    index = message->payload[0];
+//sendData:
+
+    /* 把读取的数据包发送走
+     * 协议中需要包含发送中和最后一次发送，当readSize == 0就是最后一次发送
+    */
+    StarotAttr *head = NULL;
+    StarotAttr *attr = NULL;
+
+    attr = attrMalloc(&head, readSize + 6);
+    attr->attr = 0X02;
+    attr->payload[0]  = 0;
+    attr->payload[1]  = 0;
+    attr->payload[2]  = (GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE >> 8) & 0xFF;
+    attr->payload[3]  = GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE & 0xFF;
+    attr->payload[4]  = index;/* session id */
+    attr->payload[5]  = message->payload[1];
+    if (readSize == 0)/* 需要结束传输 */
+    {
+        attr->payload[5] &= ~( 1 << 0);
+    }
+    else
+    {
+        /* 复制到发送区 */
+        memcpy(&attr->payload[6],buff,readSize);
+    }
+    if (NULL != head)
+    {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
+        attrFree(head, data);
+    }
+    return TRUE;
+}
+/*
+ * 返回升级固件的校验码,校验码为字符内容累加
  * @message: APP传输的数据类型
  * @return:
  *      FALSE: 失败
  *      TRUE: 成功
  */
-bool starotGaiaHandleDataMD5(GAIA_STAROT_IND_T *message)
+bool starotGaiaHandleDataSumCheck(GAIA_STAROT_IND_T *message)
 {
-    DEBUG_LOG("starotGaiaHandleDataMD5");
+    DEBUG_LOG("starotGaiaHandleDataSumCheck");
     uint32 check;
     uint8 ack;
 
@@ -388,10 +451,13 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
     switch (message->command) {
         case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE:
             starotGaiaHandleData(message);
-        break;
+            break;
         case GAIA_CONNECT_STAROT_UPDATE_FIRMWARE_MD5:
-            starotGaiaHandleDataMD5(message);
-        break;
+            starotGaiaHandleDataSumCheck(message);
+            break;
+        case GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE:
+            starotGaiaHandleUploadLogFile(message);
+            break;
     }
 
     /// 升级

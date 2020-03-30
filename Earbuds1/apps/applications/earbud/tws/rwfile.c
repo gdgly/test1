@@ -201,7 +201,27 @@ uint8 FileReadOk(void)
 
     return ret;
 }
+uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address);
+uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address)
+{
+    UNUSED(findex);
+    uint16 source_size;
+    uint16 source_size_ret = 0;
 
+    while((source_size = SourceSize(*file_source)) != 0)
+    {
+        source_size_ret = source_size;
+        map_address = (uint8 *)SourceMap(*file_source);
+        SourceDrop(*file_source,source_size);
+        source_size *= 100;
+        while(source_size--)
+        {
+            printf("");
+        }
+    }
+
+    return source_size_ret;
+}
 //test
 void test_read(void);
 void test_read(void)
