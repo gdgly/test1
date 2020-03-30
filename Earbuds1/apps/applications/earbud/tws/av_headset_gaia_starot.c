@@ -11,7 +11,9 @@
 #include "rwfile.h"
 #include "online_dbg.h"
 
-uint16 bufferSendUnit = 80;
+uint16 bufferSendUnit = 120;
+const uint16 AndroidSendUnit = 120;
+const uint16 IosSendUnit = 80;
 
 #ifdef GAIA_TEST
 
@@ -111,10 +113,12 @@ void starotGaiaInit(void) {
 }
 
 void starotGaiaReset(void) {
-    memset(&gaiaStarotPrivateData, 0x00, sizeof(struct GaiaStarotPrivateData_T));
+//    memset(&gaiaStarotPrivateData, 0x00, sizeof(struct GaiaStarotPrivateData_T));
     appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
     appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
     appGetGaia()->needCycleSendAudio = 0;
+    /// only test
+    disable_audio_forward(TRUE);
 }
 
 /*
@@ -452,6 +456,7 @@ void starotGaiaDefaultParse(MessageId id, Message message) {
             break;
 // region 通话速记
         case STAROT_DIALOG_STATUS:
+        case STAROT_DIALOG_STATUS_ACTIVE:
             gaiaParseDialogStatus((STAROT_DIALOG_STATUS_T *)message);
             break;
         case STAROT_DIALOG_CALL_NUMBER:
@@ -552,7 +557,8 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
     UNUSED(message);
 
     /// 不能传输，在source中缓存，如果缓存过多，会丢弃
-    //DEBUG_LOG("transformAudioFlag: %d nowSendAudioPhase is %d", appGetGaia()->transformAudioFlag, appGetGaia()->nowSendAudioPhase);
+    DEBUG_LOG("transformAudioFlag: %d nowSendAudioPhase is %d",
+            appGetGaia()->transformAudioFlag, appGetGaia()->nowSendAudioPhase);
     if (appGetGaia()->transformAudioFlag < TRANSFORM_CANT) {
         return FALSE;
     }
@@ -1402,6 +1408,11 @@ void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
 
 void starotGaiaSetTransportType(gaia_transport_type gaiaTransportType) {
     gaiaStarotPrivateData.gaiaTransportType = gaiaTransportType;
+    if (gaia_transport_gatt == gaiaStarotPrivateData.gaiaTransportType) {
+        bufferSendUnit = IosSendUnit;
+    } else {
+        bufferSendUnit = AndroidSendUnit;
+    }
 }
 
 void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T *message) {
@@ -1660,6 +1671,13 @@ void subGaiaSetCaller(uint8* data, uint16 len) {
 
 void subGaiaSetConnectUnlock(void) {
     DEBUG_LOG("subGaiaSetConnectUnlock");
+    if (appHfpIsCall()) {
+        MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_STATUS_ACTIVE);
+        MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
+        message->status = appHfpGetState();
+        MessageSendConditionally(appGetGaiaTask(), STAROT_DIALOG_STATUS_ACTIVE, message, subGaiaGetConnectLock());
+    }
+
     subGaiaTaskData* task = subGaiaGetTaskData();
     task->connectLock = SUB_GAIA_CONNECT_UNLOCK;
     advManagerStopSpecialVol();

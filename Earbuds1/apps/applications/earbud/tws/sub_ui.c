@@ -321,7 +321,8 @@ static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T*
         MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
         message->status = msg->command;
         DEBUG_LOG("call subUiCallIndicator2Gaia STAROT_DIALOG_STATUS send conditionally");
-        MessageSendConditionally(appGetGaiaTask(), STAROT_DIALOG_STATUS, message, subGaiaGetConnectLock());
+        MessageId mid = (HFP_STATE_CONNECTED_ACTIVE == msg->command ? STAROT_DIALOG_STATUS_ACTIVE : STAROT_DIALOG_STATUS);
+        MessageSendConditionally(appGetGaiaTask(), mid, message, subGaiaGetConnectLock());
     } else {
         disable_audio_forward(TRUE);
 

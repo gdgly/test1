@@ -266,6 +266,7 @@ void starotGaiaSetTransportType(gaia_transport_type gaiaTransportType);
 
 enum {
     STAROT_DIALOG_STATUS = AV_GAIA_MESSAGE_BASE + 0X20,   // ui -> gaia 通话状态
+    STAROT_DIALOG_STATUS_ACTIVE,                          // ui -> gaia active状态独立处理，如果有缓存，不重新发送，如果正在通话，并且没有缓存，说明app接收过，但是app退出，之后没有状态数据
     STAROT_DIALOG_TYPE,                                   // ui -> gaia 报告当前通话是电话还是WX其它通话
     STAROT_DIALOG_USER_ACCEPT_RECORD,                     // gaia -> (ui & dsp) 用户请求录音
     STAROT_DIALOG_AUDIO_DATA,                             // dsp -> gaia 请求传输数据
