@@ -21,6 +21,10 @@
 
 #pragma unitsuppress Unused
 
+#ifdef CONFIG_STAROT
+extern bool subGaiaIsDialogRecoding(void);
+#endif
+
 /*! \{
     Macros for diagnostic output that can be suppressed.
     Allows debug of the rules module at two levels. */
@@ -1594,8 +1598,14 @@ static ruleAction ruleOutOfEarScoActive(void)
         return RULE_ACTION_DEFER;
     }
 
+#ifdef CONFIG_STAROT
+    if ((appScoFwdIsSending() && appPeerSyncIsPeerInEar()) || subGaiaIsDialogRecoding())
+#else
     if (appScoFwdIsSending() && appPeerSyncIsPeerInEar())
+#endif
     {
+        DEBUG_LOG("appScoFwdIsSending()=%d appPeerSyncIsPeerInEar()=%d subGaiaIsDialogRecoding()=%d",
+                appScoFwdIsSending(), appPeerSyncIsPeerInEar(), subGaiaIsDialogRecoding());
         RULE_LOG("ruleOutOfEarScoActive, ignore as we have SCO forwarding running and peer is in ear");
         return RULE_ACTION_IGNORE;
     }
@@ -2552,7 +2562,7 @@ static ruleAction ruleScoForwardingControl(void)
         RULE_LOG("ruleScoForwardingControl, defer as peer sync not complete");
         return RULE_ACTION_DEFER;
     }
-    if (!appPeerSyncIsPeerInEar())
+    if (!appPeerSyncIsPeerInEar() && !subGaiaIsDialogRecoding())
     {
         RULE_LOG("ruleScoForwardingControl, run and disable forwarding as peer out of ear");
         return RULE_ACTION_RUN_PARAM(forwarding_disabled);

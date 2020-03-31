@@ -1737,3 +1737,21 @@ void subGaiaNotifyDataRecord(uint8* data) {
 
 // endregion
 
+// region 常用条件判断
+
+bool subGaiaIsDialogRecoding(void) {
+    if (!appHfpIsCall()) {
+        DEBUG_LOG("subGaiaIsDialogRecoding appHfpIsCall == FALSE");
+        return FALSE;
+    }
+
+    if (appGetGaia()->transformAudioFlag != DIALOG_CAN_TRANSFORM) {
+        DEBUG_LOG("subGaiaIsDialogRecoding transformAudioFlag : %04X", appGetGaia()->transformAudioFlag);
+        return FALSE;
+    }
+
+    DEBUG_LOG("subGaiaIsDialogRecoding return TRUE");
+    return TRUE;
+}
+
+// endregion

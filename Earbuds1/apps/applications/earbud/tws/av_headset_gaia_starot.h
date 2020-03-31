@@ -353,4 +353,16 @@ typedef struct {
     uint8 number[2];
 } STAROT_DIALOG_CALL_NUMBER_T;
 
+
+// region 常用条件判断
+
+/*
+ * fun: 判断当前是否在录音转写过程中
+ * return: TRUE/FALSE
+ */
+bool subGaiaIsDialogRecoding(void);
+
+// endregion
+
+
 #endif // AV_HEADSET_GAIA_STAROT_H
