@@ -86,6 +86,7 @@ static void gaiaSendCallNumber(STAROT_DIALOG_CALL_NUMBER_T* message);
 
 static void gaiaTestInEarReadValue(GAIA_STAROT_IND_T *message);
 
+extern int16 gaiaTestProduct(uint8_t *payload);
 
 static void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message);
@@ -444,6 +445,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         }
     	case GAIA_COMMAND_STAROT_TEST_IN_EAR_RDVALUE:
         	gaiaTestInEarReadValue(message);
+        break;
+        case GAIA_COMMAND_STAROT_TEST_PRODUCT:
+            gaiaTestProduct(message->payload);
         break;
     }
     return TRUE;
