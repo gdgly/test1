@@ -246,6 +246,7 @@ void starotGaiaReset(void);
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
 bool starotGaiaHandleData(GAIA_STAROT_IND_T *message);
+void sendData(GAIA_STAROT_IND_T *message,uint8 index,uint8 header,uint8 readSize,uint8 *map_address);
 bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message);
 bool starotGaiaHandleDataSumCheck(GAIA_STAROT_IND_T *message);
 void starotGaiaParseMessageMoreSpace(void);

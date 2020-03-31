@@ -22,6 +22,6 @@ uint8 FileWriteOk(uint8 value);
 uint8 FileReadOk(void);
 int16 getFileSize(FILE_INDEX findex);
 uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address);
-
+void readDelay(uint16 value);
 #endif //RWFILE_H
 

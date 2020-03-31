@@ -201,6 +201,14 @@ uint8 FileReadOk(void)
 
     return ret;
 }
+void readDelay(uint16 value)
+{
+    value *= 100;
+    while(value--)
+    {
+        printf("");
+    }
+}
 uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address);
 uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address)
 {
@@ -213,11 +221,7 @@ uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address)
         source_size_ret = source_size;
         map_address = (uint8 *)SourceMap(*file_source);
         SourceDrop(*file_source,source_size);
-        source_size *= 100;
-        while(source_size--)
-        {
-            printf("");
-        }
+        readDelay(source_size);
     }
 
     return source_size_ret;
@@ -245,14 +249,11 @@ void test_read(void)
         for (int i = 0; i< source_size;i++)
         {
             check_sum += map_address[i];
+            DEBUG_LOG("map_address[%d]=%x",i,map_address[i]);
         }
         fileSize += source_size;
         SourceDrop(file_source,source_size);
-        source_size *= 100;
-        while(source_size--)
-        {
-            printf("");
-        }
+        readDelay(source_size);
     }
     DEBUG_LOG("check_sum %u",check_sum);
     SourceClose(file_source);

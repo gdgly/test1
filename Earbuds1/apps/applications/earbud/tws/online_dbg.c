@@ -60,6 +60,7 @@ void online_dbg_record(online_dbg_t code) {
             && (record_idx - trans_idx > SEND_PKT_LENGTH)) {
         MessageSend(onlineDbgTask, ONLINE_DBG_MSG_TRANS_RT_ONLINE_DBG, NULL);
     }
+    if (0){
     /* 写入日志 */
     fileLogIndex = FindFileIndex(FILE_LOG);
     if (fileLogIndex == FILE_NONE)
@@ -70,7 +71,7 @@ void online_dbg_record(online_dbg_t code) {
     else
     {
         fileSize = getFileSize(fileLogIndex);
-        if (fileSize < MAX_LOG_SIZE && fileSize >= 0)
+        if (fileSize < MAX_LOG_SIZE && fileSize > 0)
         {
             goto write;
         }
@@ -83,6 +84,8 @@ write:
     /* 写入状态码 */
     FileWrite(fileLogIndex,(uint8 *)&code,sizeof (online_dbg_t));
     ONLINE_DBG_LOG("timeStame = %u,code = %d",timeStamp,code);
+
+    }
 }
 
 void online_dbg_cmd_handler(online_dbg_cmd cmd) {
