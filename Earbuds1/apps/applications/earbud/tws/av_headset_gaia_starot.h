@@ -11,6 +11,7 @@ typedef struct {
     uint8 callerNumber[32];
     uint16 callerLen;
     uint16 connectLock; // 0:无锁 1:加锁
+    uint8 notifyData[5];  // 防止重复数据，直接避免传输
 } subGaiaTaskData;
 
 void subGaiaTaskInit(void);
@@ -40,6 +41,13 @@ bool subGaiaIsConnectLock(void);
 
 // endregion
 
+// region 校验通知的数据，是否一致
+
+bool subGaiaNotifyDataIsSame(uint8* data);
+void subGaiaNotifyDataClear(void);
+void subGaiaNotifyDataRecord(uint8* data);
+
+// endregion
 
 #define CALL_IN_ACTIVE          (1 << 0)
 #define CALL_OUT_ACTIVE         (1 << 1)
