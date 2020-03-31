@@ -258,3 +258,16 @@ void test_read(void)
     SourceClose(file_source);
     printf("fileSize = %d\n",fileSize);
 }
+int FileCancel1(void);
+int FileCancel1(void)
+{
+    FILE_INDEX   fIndex = FileFind(FILE_ROOT, FILE_LOG, strlen(FILE_LOG));;
+
+    if (FILE_NONE != fIndex)
+    {
+        FileDelete(fIndex);
+        return 0;
+    }
+
+    return -1;
+}

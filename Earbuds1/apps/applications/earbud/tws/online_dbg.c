@@ -51,7 +51,7 @@ uint8 get_online_dbg_state(void) {
 void online_dbg_record(online_dbg_t code) {
     uint16 fileLogIndex = 0;
     rtime_t timeStamp = 0;
-    uint16 fileSize = 0;
+    int16 fileSize = 0;
 
     online_dbg_buf[record_idx++] = code;
     if (record_idx == trans_idx) trans_idx++;
@@ -63,18 +63,26 @@ void online_dbg_record(online_dbg_t code) {
     /* 写入日志 */
     fileLogIndex = FindFileIndex(FILE_LOG);
     if (fileLogIndex == FILE_NONE)
-        fileLogIndex = FileCreate(FILE_LOG, (uint16)strlen(FILE_LOG));
-
-    fileSize = getFileSize(fileLogIndex);
-    if (fileSize < MAX_LOG_SIZE && fileSize > 0)
     {
-        /* 写入时间戳 */
-        timeStamp = SystemClockGetTimerTime();
-        FileWrite(fileLogIndex,(uint8 *)(&timeStamp),sizeof (rtime_t));
-        /* 写入状态码 */
-        FileWrite(fileLogIndex,(uint8 *)&code,sizeof (online_dbg_t));
-        ONLINE_DBG_LOG("timeStame = %u,code = %d",timeStamp,code);
+        fileLogIndex = FileCreate(FILE_LOG, (uint16)strlen(FILE_LOG));
+        goto write;
     }
+    else
+    {
+        fileSize = getFileSize(fileLogIndex);
+        if (fileSize < MAX_LOG_SIZE && fileSize >= 0)
+        {
+            goto write;
+        }
+        return;
+    }
+write:
+    /* 写入时间戳 */
+    timeStamp = SystemClockGetTimerTime();
+    FileWrite(fileLogIndex,(uint8 *)(&timeStamp),sizeof (rtime_t));
+    /* 写入状态码 */
+    FileWrite(fileLogIndex,(uint8 *)&code,sizeof (online_dbg_t));
+    ONLINE_DBG_LOG("timeStame = %u,code = %d",timeStamp,code);
 }
 
 void online_dbg_cmd_handler(online_dbg_cmd cmd) {
