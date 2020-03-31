@@ -117,39 +117,6 @@ void starotGaiaReset(void) {
     appGetGaia()->needCycleSendAudio = 0;
 }
 
-void sendData(GAIA_STAROT_IND_T *message,uint8 index,uint8 header,uint8 readSize,uint8 *map_address)
-{
-    /* 把读取的数据包发送走
-     * 协议中需要包含发送中和最后一次发送，当readSize == 0就是最后一次发送
-    */
-    StarotAttr *head = NULL;
-    StarotAttr *attr = NULL;
-
-    attr = attrMalloc(&head, readSize + 6);
-    attr->attr = 0X02;
-    attr->payload[0]  = 0;
-    attr->payload[1]  = 0;
-    attr->payload[2]  = (GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE >> 8) & 0xFF;
-    attr->payload[3]  = GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE & 0xFF;
-    attr->payload[4]  = index;/* session id */
-    attr->payload[5]  = header;
-    if (readSize == 0)/* 需要结束传输 */
-    {
-        attr->payload[5] &= ~( 1 << 0);
-    }
-    else
-    {
-        /* 复制到发送区 */
-        memcpy(&attr->payload[6],map_address,readSize);
-    }
-    if (NULL != head)
-    {
-        uint16 len = 0;
-        uint8 *data = attrEncode(head, &len);
-        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
-        attrFree(head, data);
-    }
-}
 /*
  * 上传日志文件到手机APP
  * @return:
@@ -209,6 +176,8 @@ bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
     if (1)
     while (sendtemp > 0)
     {
+        head = NULL;
+        attr = NULL;
         if (sendtemp > 40)
         {
             sendtemp-=40;
@@ -251,6 +220,11 @@ bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
             uint8 *data = attrEncode(head, &len);
             appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
             attrFree(head, data);
+        }
+        uint32 delay = 0xffff;
+        while(delay--)
+        {
+            printf("");
         }
     }
     /* 文件发送完成 */

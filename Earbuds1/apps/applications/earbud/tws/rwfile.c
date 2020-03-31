@@ -201,6 +201,10 @@ uint8 FileReadOk(void)
 
     return ret;
 }
+/*
+ * 读取文件使用的延时函数
+ * @value：延时参数
+ */
 void readDelay(uint16 value)
 {
     value *= 100;
@@ -209,6 +213,9 @@ void readDelay(uint16 value)
         printf("");
     }
 }
+/*
+ * 读取文件
+ */
 uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address);
 uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address)
 {
