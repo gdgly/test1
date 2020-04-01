@@ -1633,7 +1633,7 @@ static ruleAction ruleInEarScoTransferToEarbud(void)
         return RULE_ACTION_IGNORE;
     }
 #else
-    if (!(appHfpIsCallActive() || appHfpIsCallIncoming() || appHfpIsCallOutgoing()))
+    if (!(appHfpIsCallActive() || appHfpIsCallIncoming() || appHfpIsCallOutgoing() || appSmIsInEar() || appPeerSyncIsPeerInEar()))
     {
         RULE_LOG("ruleInEarScoTransferToEarbud, ignore as this earbud has no active|incoming|outgoing call");
         return RULE_ACTION_IGNORE;

@@ -1605,6 +1605,10 @@ static void appSmHandleConnRulesScoTransferToEarbud(void)
 {
     DEBUG_LOGF("appSmHandleConnRulesScoTransferToEarbud, in ear transferring audio this %u peer %u", appSmIsInEar(), appPeerSyncIsPeerInEar());
     appHfpTransferToHeadset();
+
+    if (HFP_STATE_DISCONNECTED == appHfpGetState())
+        appHfpConnectHandset();
+
     appConnRulesSetRuleComplete(CONN_RULES_SCO_TRANSFER_TO_EARBUD);
 }
 
@@ -2067,6 +2071,8 @@ static void appSmHandleHfpDisconnectedInd(APP_HFP_DISCONNECTED_IND_T *ind)
                 /// 耳机因为Audio建立失败，主动断开，需要重新连接hfp
                 if (MessageCancelAll(appGetHfpTask(), APP_HFP_NEED_RECONNECT_IND) > 0 && appDeviceIsHandsetConnected() && !appSmIsInCase()) {
                     DEBUG_LOG("appSmHandleHfpDisconnectedInd have APP_HFP_NEED_RECONNECT_IND and handset is connect, so reconnect");
+                    appHfpConnectHandset();
+                } else if (appDeviceIsHandsetConnected() && !appSmIsInCase() && appSmIsInEar()) {
                     appHfpConnectHandset();
                 }
 #endif

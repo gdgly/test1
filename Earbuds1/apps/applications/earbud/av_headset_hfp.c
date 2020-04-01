@@ -573,6 +573,10 @@ static void appHfpSetState(hfpState state)
             appHfpExitConnectedActive();
             if (state < HFP_STATE_CONNECTED_IDLE || state > HFP_STATE_CONNECTED_ACTIVE)
                 appHfpExitConnected();
+            if (HFP_STATE_CONNECTED_IDLE == state) {
+                MessageCancelAll(appGetHfpTask(), APP_HFP_AUDIO_REQUEST_TIMEOUT);
+                appHfpDisconnectInternal();
+            }
             break;
         case HFP_STATE_CONNECTED_INCOMING:
             appHfpExitConnectedIncoming(state);
