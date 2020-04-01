@@ -53,7 +53,7 @@ void online_dbg_record(online_dbg_t code) {
     uint16 fileLogIndex = 0;
     rtime_t timeStamp = 0;
     uint8 buffer[5];
-    int16 fileSize = 0;
+    static int16 fileSize;
 
     online_dbg_buf[record_idx++] = code;
     if (record_idx == trans_idx) trans_idx++;
@@ -68,6 +68,7 @@ void online_dbg_record(online_dbg_t code) {
         fileLogIndex = FindFileIndex(FILE_LOG);
         if (fileLogIndex == FILE_NONE)
         {
+            fileSize = 0;
             fileLogIndex = FileCreate(FILE_LOG, (uint16)strlen(FILE_LOG));
             goto write;
         }
@@ -80,7 +81,7 @@ void online_dbg_record(online_dbg_t code) {
                 fileSize = getFileSize(fileLogIndex);
             }
             else
-                fileSize += 5;
+                fileSize += sizeof (buffer)/sizeof (uint8);
             if (fileSize < MAX_LOG_SIZE && fileSize > 0)
             {
                 goto write;
