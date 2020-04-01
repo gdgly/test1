@@ -136,14 +136,14 @@ void starotGaiaHandleDeleteLogFile(GAIA_STAROT_IND_T *message)
  * @return:
  *    TRUE: 成功
  */
+#define PER_BAGE_SIZE  40
 static uint8 buff[256] = {0};
-static int16 sendtemp = 0;
+static uint16 sendtemp = 0;
 static uint16 pix = 0;
 bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
 {
     static Source file_source;
     static FILE_INDEX findex;
-    uint8 *map_address = NULL;
     static uint16 readSize;
 
     /* 包内数据发送完成 */
@@ -155,23 +155,11 @@ bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
             findex = FindFileIndex(FILE_LOG);
             if (findex == FILE_NONE)return FALSE;
             PanicNull((file_source = StreamFileSource(findex)));
-            if ((readSize = SourceSize(file_source)) != 0)
-            {
-                map_address = (uint8 *)SourceMap(file_source);
-                memcpy(buff,map_address,readSize);
-                SourceDrop(file_source,readSize);
-//                readDelay(readSize);
-            }
+            readSize = FileRead(file_source,buff);
         }
         else if ((message->payload[1] & 0x03) == 0x03)/* 数据发送过程中 */
         {
-            if ((readSize = SourceSize(file_source)) != 0)
-            {
-                map_address = (uint8 *)SourceMap(file_source);
-                memcpy(buff,map_address,readSize);
-                SourceDrop(file_source,readSize);
-//                readDelay(readSize);
-            }
+            readSize = FileRead(file_source,buff);
         }
         sendtemp = readSize;
         pix = 0;
@@ -183,11 +171,10 @@ bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
 
-
-    if (sendtemp > 40)
+    if (sendtemp > PER_BAGE_SIZE)
     {
-        sendtemp -= 40;
-        attr = attrMalloc(&head, 40 + 6);
+        sendtemp -= PER_BAGE_SIZE;
+        attr = attrMalloc(&head, PER_BAGE_SIZE + 6);
         attr->payload[5]  = message->payload[1];
         attr->payload[5] &= ~( 1 << 2);/* 数据包内传输 */
         attr->payload[5] &= ~( 1 << 3);
@@ -210,13 +197,24 @@ bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
     /* 复制到发送区 */
     if (((attr->payload[5] >> 2)&0x3) == 0)/* 数据包内传输 */
     {
-        memcpy(&attr->payload[6],&buff[pix],40);
-        pix += 40;
+        memcpy(&attr->payload[6],&buff[pix],PER_BAGE_SIZE);
+        pix += PER_BAGE_SIZE;
     }
     else if (((attr->payload[5] >> 2)&0x3) == 1)/* 最后一个数据包内传输 */
     {
         memcpy(&attr->payload[6],&buff[pix],sendtemp);
         sendtemp = 0;
+    }
+
+    /* 文件发送完成 */
+    if (readSize == 0)
+    {
+        attr = attrMalloc(&head, 6);
+        attr->payload[5]  = message->payload[1];
+        attr->payload[5] &= ~( 1 << 0);
+        attr->payload[5] |=  ( 1 << 1);
+        attr->payload[5] |=  ( 1 << 2);
+        attr->payload[5] &= ~( 1 << 3);
     }
 
     if (NULL != head)
@@ -225,32 +223,6 @@ bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
         uint8 *data = attrEncode(head, &len);
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
         attrFree(head, data);
-    }
-
-    /* 文件发送完成 */
-    if (readSize == 0)
-    {
-        head = NULL;
-        attr = NULL;
-        attr = attrMalloc(&head, 6);
-        attr->attr = 0X02;
-        attr->payload[0]  = 0;
-        attr->payload[1]  = 0;
-        attr->payload[2]  = (GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE >> 8) & 0xFF;
-        attr->payload[3]  = GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE & 0xFF;
-        attr->payload[4]  = message->payload[0];/* session id */
-        attr->payload[5]  = message->payload[1];
-        attr->payload[5] &= ~( 1 << 0);
-        attr->payload[5] |=  ( 1 << 1);
-        attr->payload[5] |=  ( 1 << 2);
-        attr->payload[5] &= ~( 1 << 3);
-        if (NULL != head)
-        {
-            uint16 len = 0;
-            uint8 *data = attrEncode(head, &len);
-            appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
-            attrFree(head, data);
-        }
     }
     return TRUE;
 }

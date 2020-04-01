@@ -215,23 +215,23 @@ void readDelay(uint16 value)
 }
 /*
  * 读取文件
+ * @file_source:文件源
+ * @buff:读取的空间
+ * @return:读取到的文件大小
  */
-uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address);
-uint16 FileRead(FILE_INDEX findex,Source *file_source,uint8 *map_address)
+uint16 FileRead(Source file_source,uint8 *buff)
 {
-    UNUSED(findex);
     uint16 source_size;
-    uint16 source_size_ret = 0;
+    uint8 *map_address = NULL;
 
-    while((source_size = SourceSize(*file_source)) != 0)
+    if ((source_size = SourceSize(file_source)) != 0)
     {
-        source_size_ret = source_size;
-        map_address = (uint8 *)SourceMap(*file_source);
-        SourceDrop(*file_source,source_size);
-        readDelay(source_size);
+        map_address = (uint8 *)SourceMap(file_source);
+        memcpy(buff,map_address,source_size);
+        SourceDrop(file_source,source_size);
     }
 
-    return source_size_ret;
+    return source_size;
 }
 //test
 void test_read(void);
