@@ -11,6 +11,7 @@ void ProductEnterReocrdMode(int16 isLeft);      // 1: left, 0:right
 int appChangeCVCProcessMode(void);
 void appEnterSingleForTest(void);
 void appSetSingleModeTest(void);
+int16 gaiaTestProduct(uint8_t *payload);
 
  #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
  static const ringtone_note product_tone[] =
@@ -550,4 +551,31 @@ static void box_tap_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_buf)
     case 0x86:                       // 读取是否有敲击
         break;
     }
+}
+
+// 手机下发命令
+// payload[3]:command, payload[2/1/0]:cmd param
+int16 gaiaTestProduct(uint8_t *payload)
+{
+    int16 result = 0;
+
+    switch (payload[3]) {
+        case 0x01:      // Select mic
+            g_appConfigSocMic1 = NO_MIC;
+            g_appConfigSocMic2 = NO_MIC;
+            if((payload[2] & 0x01))
+                g_appConfigSocMic1 = 0;
+            if((payload[2] & 0x02))
+                g_appConfigSocMic2 = 1;
+            if((payload[2] & 0x03))
+                g_appConfigSocMic1 = 0;
+                g_appConfigSocMic2 = 1;
+            break;
+
+        default:
+			result = -1;
+            break;
+    }
+
+	return result;
 }

@@ -1363,6 +1363,7 @@ static void appSmHandleConnRulesDisconnectHfpA2dpAvrcp(void) {
 }
 
 static void appSmHandleConnRulesNotifyAppPosition(void) {
+    MessageCancelAll(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS);
     MessageSendLater(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL, 200);
     appConnRulesSetRuleComplete(CONN_RULES_NOTIFY_APP_POSITION);
 }
