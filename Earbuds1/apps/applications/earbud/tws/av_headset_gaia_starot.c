@@ -708,8 +708,6 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
     UNUSED(message);
 
     /// 不能传输，在source中缓存，如果缓存过多，会丢弃
-    DEBUG_LOG("transformAudioFlag: %d nowSendAudioPhase is %d",
-            appGetGaia()->transformAudioFlag, appGetGaia()->nowSendAudioPhase);
     if (appGetGaia()->transformAudioFlag < TRANSFORM_CANT) {
         return FALSE;
     }
