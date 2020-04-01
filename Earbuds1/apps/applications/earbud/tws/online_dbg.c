@@ -48,9 +48,11 @@ uint8 get_online_dbg_state(void) {
     return online_dbg_state;
 }
 
+uint8 sign = 0;
 void online_dbg_record(online_dbg_t code) {
     uint16 fileLogIndex = 0;
     rtime_t timeStamp = 0;
+    uint8 buffer[5];
     int16 fileSize = 0;
 
     online_dbg_buf[record_idx++] = code;
@@ -60,30 +62,41 @@ void online_dbg_record(online_dbg_t code) {
             && (record_idx - trans_idx > SEND_PKT_LENGTH)) {
         MessageSend(onlineDbgTask, ONLINE_DBG_MSG_TRANS_RT_ONLINE_DBG, NULL);
     }
-    if (0){
     /* 写入日志 */
-    fileLogIndex = FindFileIndex(FILE_LOG);
-    if (fileLogIndex == FILE_NONE)
+    if (appInitCompleted())
     {
-        fileLogIndex = FileCreate(FILE_LOG, (uint16)strlen(FILE_LOG));
-        goto write;
-    }
-    else
-    {
-        fileSize = getFileSize(fileLogIndex);
-        if (fileSize < MAX_LOG_SIZE && fileSize > 0)
+        fileLogIndex = FindFileIndex(FILE_LOG);
+        if (fileLogIndex == FILE_NONE)
         {
+            fileLogIndex = FileCreate(FILE_LOG, (uint16)strlen(FILE_LOG));
             goto write;
         }
-        return;
-    }
-write:
-    /* 写入时间戳 */
-    timeStamp = SystemClockGetTimerTime();
-    FileWrite(fileLogIndex,(uint8 *)(&timeStamp),sizeof (rtime_t));
-    /* 写入状态码 */
-    FileWrite(fileLogIndex,(uint8 *)&code,sizeof (online_dbg_t));
-    ONLINE_DBG_LOG("timeStame = %u,code = %d",timeStamp,code);
+        else
+        {
+            if (sign == 0)
+            {
+                sign = 1;
+                /* 频繁获取文件大小会系统崩溃，所以只在启动获取一次 */
+                fileSize = getFileSize(fileLogIndex);
+            }
+            else
+                fileSize += 5;
+            if (fileSize < MAX_LOG_SIZE && fileSize > 0)
+            {
+                goto write;
+            }
+            return;
+        }
+    write:
+        /* 写入时间戳和code日志 */
+        timeStamp = SystemClockGetTimerTime();
+        for (int i = 0; i < 4; i++)
+        {
+            buffer[i] = (timeStamp>>(i*8))&0xFF;
+        }
+        buffer[4] = code;
+        FileWrite(fileLogIndex, buffer, sizeof (buffer)/sizeof (uint8));
+        ONLINE_DBG_LOG("timeStame = %u,code = %d",timeStamp,code);
 
     }
 }

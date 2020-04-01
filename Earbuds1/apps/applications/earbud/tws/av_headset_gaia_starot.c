@@ -225,6 +225,8 @@ bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
     /* 文件发送完成 */
     if (readSize == 0)
     {
+        head = NULL;
+        attr = NULL;
         attr = attrMalloc(&head, 6);
         attr->attr = 0X02;
         attr->payload[0]  = 0;
