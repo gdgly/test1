@@ -2745,17 +2745,29 @@ static bool bleBattery(bool left) {
 
 // region ble使能
 
+extern bool gattManagerDataIsCancelPending(void);
+
 static ruleAction bleEnable(void) {
 //    MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
     uint8 current = advManagerSelectFeature();
     uint8 before = advManagerGetBeforeFeature();
     DEBUG_LOG("bleEnable before:%02X current:%02X", before, current);
+    if (0XFF == current) {
+        DEBUG_LOG("bleEnable current is FF, so need disable");
+        bool connectable = FALSE;
+        return RULE_ACTION_RUN_PARAM(connectable);
+    }
     if (0XFF != before && current != before) {
         // 需要先停止之前的ble，等cancel的cfm中，再触发新的ble广播
         DEBUG_LOG("bleEnable current != before so need restart");
-        //GattManagerCancelWaitForRemoteClient();
-        bool connectable = FALSE;
-        return RULE_ACTION_RUN_PARAM(connectable);
+        if (gattManagerDataIsCancelPending()) {
+            // 如果正在停止ble广播，取消执行disable操作，等待
+            DEBUG_LOG("bleEnable gattManagerDataIsCancelPending is TRUE, so ignore");
+            return RULE_ACTION_IGNORE;
+        } else {
+            bool connectable = FALSE;
+            return RULE_ACTION_RUN_PARAM(connectable);
+        }
     } else {
         bool connectable = TRUE;
         return RULE_ACTION_RUN_PARAM(connectable);

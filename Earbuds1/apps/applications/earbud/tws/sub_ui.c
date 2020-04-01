@@ -1901,8 +1901,7 @@ void appGetLocalBrEdrAddress(uint8* addrbuf) {
     addrbuf[3] = (progRun->addr.lap >> 16) & 0xFF;
     addrbuf[4] = (progRun->addr.lap >> 8) & 0xFF;
     addrbuf[5] = (progRun->addr.lap & 0xFF);
-    for (int i = 0; i < 6; ++i)
-        DEBUG_LOG("MAC ADDRESS :%d %02X", i, addrbuf[i]);
+    DEBUG_LOG("MAC ADDRESS : %02X%02X%02X%02X%02X%02X", addrbuf[0], addrbuf[1], addrbuf[2], addrbuf[3], addrbuf[4], addrbuf[5],);
 }
 
 
