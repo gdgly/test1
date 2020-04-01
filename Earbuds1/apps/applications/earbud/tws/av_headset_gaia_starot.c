@@ -821,12 +821,12 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
         StarotAttr *head = NULL;
         StarotAttr *attr = PanicNull(attrMalloc(&head, 1));
         attr->attr = 0X07;
-        if(8000 == hstate)
+        if(8000 == message->status)
             attr->payload[0] = 0X01;
-        if(16000 == hstate)
+        if(16000 == message->status)
             attr->payload[0] = 0X02;
 
-        DEBUG_LOG("sample rate=%d", hstate);
+        DEBUG_LOG("sample rate=%d", message->status);
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
