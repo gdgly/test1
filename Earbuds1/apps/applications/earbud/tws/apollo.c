@@ -37,8 +37,10 @@ static int check_fw_ver(uint32 fw_ver);
 static void wait_for_timeout(int delay);
 static void apollo_init_finish(void);
 static int apollo_update_header_and_reset(void);
-void reset_out_low(void);
-void reset_in_high(void);
+static void enter_sleep(void);
+static void apollo_reinit(void);
+static void reset_out_low(void);
+static void reset_in_high(void);
 
 /****** debug ******/
 #define ENABLE_APOLLO_DEBUG (1)
@@ -82,12 +84,19 @@ static apollo_wakeup_cb_t apollo_wakeup_cb = NULL;
 static volatile uint8 apollo_state = APOLLO_STATE_UNINIT;
 
 static int io_init_wait_int_low_to = 0;
-static int io_init_wait_int_low_interrupt = 0;
+static int io_init_rd_fw_wait_int_low = 0;
 static int io_init_i2c_rd_err_times = 0;
 static int io_init_rd_fw_err_times = 0;
-static int enter_boot_int_times = 0;
+static int rd_fwv_wait_int_low = 0;
+static int rd_fwv_err_times = 0;
+static int enter_sleep_wait_int_low = 0;
+static int enter_sleep_err_times = 0;
 static int upgrade_times = 0;
-static int sleep_times = 0;
+static int upgrade_times_2 = 0;
+static int enter_boot_mode_err = 0;
+static int upgrading_img_err = 0;
+static int upgrading_img_end_err = 0;
+static int upgrading_img_end_err_2 = 0;
 
 /*
  * APIs
@@ -99,12 +108,22 @@ void apollo_int_io_init(void) {
     APOLLO_DBG_LOG("initing");
 
     apollo_state = APOLLO_STATE_INIT_IO;
+
     io_init_wait_int_low_to = 0;
     io_init_i2c_rd_err_times = 0;
     io_init_rd_fw_err_times = 0;
-    enter_boot_int_times = 0;
-    io_init_wait_int_low_interrupt = 0;
+    io_init_rd_fw_wait_int_low = 0;
+    rd_fwv_wait_int_low = 0;
+    rd_fwv_err_times = 0;
+    enter_sleep_wait_int_low = 0;
+    enter_sleep_err_times = 0;
     upgrade_times = 0;
+    upgrade_times_2 = 0;
+    enter_boot_mode_err = 0;
+    upgrading_img_err = 0;
+    upgrading_img_end_err = 0;
+    upgrading_img_end_err_2 = 0;
+
     apollo_init_end_cb = apollo_check_and_start_upgrade;
     apollo_enter_boot_cb = apollo_start_new_image;
 
@@ -131,7 +150,7 @@ void apollo_int_io_init(void) {
     wait_for_timeout(100);
 }
 
-void reset_out_low(void)
+static void reset_out_low(void)
 {
     uint32 bank = 0, mask = 0;
     bank = PIO2BANK(APOLLO_RESET_IO);
@@ -141,7 +160,7 @@ void reset_out_low(void)
     IO_LOW(APOLLO_RESET_IO);
 }
 
-void reset_in_high(void)
+static void reset_in_high(void)
 {
     uint32 bank = 0, mask = 0;
     bank = PIO2BANK(APOLLO_RESET_IO);
@@ -157,12 +176,18 @@ void register_apollo_wakeup_cb(apollo_wakeup_cb_t cb) {
 }
 
 int apollo_start_boot_mode(void) {
-    if (APOLLO_STATE_IDLE != apollo_state) {
+    if (APOLLO_STATE_IDLE != apollo_state || INT_IS_HIGH) {
         APOLLO_DBG_LOG("apollo_start_boot_mode: busy(state: %d)", apollo_state);
         return -1;
     }
 
     apollo_state = APOLLO_STATE_ENTERING_BOOT_MODE_S1;
+
+    enter_boot_mode_err = 0;
+    upgrading_img_err = 0;
+    upgrading_img_end_err = 0;
+    upgrading_img_end_err_2 = 0;
+    upgrade_times = 0;
 
     start_boot_mode_1();
 
@@ -170,14 +195,18 @@ int apollo_start_boot_mode(void) {
 }
 
 int apollo_start_new_image(void) {
-    if (APOLLO_STATE_IDLE != apollo_state) {
+    if (APOLLO_STATE_IDLE != apollo_state || INT_IS_HIGH) {
         APOLLO_DBG_LOG("apollo_start_new_image: busy(state: %d)", apollo_state);
         return -1;
     }
 
     int status = start_new_image_s1();
 
-    if (0 == status) apollo_state = APOLLO_STATE_UPGRADE_S1;
+    if (0 == status) {
+        apollo_state = APOLLO_STATE_UPGRADE_S1;
+        // XXX: still wait for 45ms here?
+        wait_for_int_low(45);
+    }
 
     APOLLO_DBG_LOG("map image status: %d", status);
 
@@ -185,26 +214,31 @@ int apollo_start_new_image(void) {
 }
 
 int apollo_read_fw_version(void) {
-    if (APOLLO_STATE_IDLE != apollo_state) {
-        APOLLO_DBG_LOG("busy, state: %d", apollo_state);
-        return -1;
-    }
+    if (APOLLO_STATE_IDLE != apollo_state || INT_IS_HIGH) return -1;
 
     apollo_state = APOLLO_STATE_READING_FW_VER;
 
+    rd_fwv_wait_int_low = 0;
+    rd_fwv_err_times = 0;
+
     read_fw_version();
+
+    wait_for_int_low(150);
 
     return 0;
 }
 
 int apollo_sleep(void) {
-    if (APOLLO_STATE_IDLE != apollo_state) return -1;
+    if (APOLLO_STATE_IDLE != apollo_state || INT_IS_HIGH) return -1;
 
     apollo_state = APOLLO_STATE_ENTERING_SLEEP;
-    sleep_times = 0;
-    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
-    apollo_send_cmd(APOLLO_SLEEP, handle);
-    hwi2cClose(handle);
+
+    enter_sleep_err_times = 0;
+    enter_sleep_wait_int_low = 0;
+
+    enter_sleep();
+
+    wait_for_int_low(150);
 
     return 0;
 }
@@ -214,6 +248,7 @@ int apollo_evoke(void) {
 
     apollo_state = APOLLO_STATE_AWAKING;
     IO_HIGH(APOLLO_INT_IO);
+    // XXX: double check this timeout.
     wait_for_timeout(30);
     return 0;
 }
@@ -245,53 +280,68 @@ static void apollo_init_handler(MessageId id, Message msg)
         case MESSAGE_PIO_CHANGED:
         {
             if (INT_IS_LOW) {
-                if(APOLLO_STATE_START_UP == apollo_state) {
-                    apollo_state = APOLLO_STATE_INIT_IO;
+
+            if(APOLLO_STATE_INIT_IO == apollo_state) {
+                APOLLO_DBG_LOG("io init ok");
+
+                MessageCancelAll(apolloTask, APOLLO_MESSAGE_CMD);
+
+                if(!read_fw_version()) {
+                    apollo_state = APOLLO_STATE_INIT_RD_FW_VER;
+                    wait_for_int_low(150);
+                } else {
+                    /* 老开发板如果没有连接apollo，读版本号时i2c操作会失败，当失败时也要发送结束消息，否则init过程无法走完. */
+                    apollo_state = APOLLO_STATE_ERR;
+                    IO_LOW(APOLLO_OVERRIDE_IO);
+                    apollo_init_finish();
+                    online_dbg_record(ONLINE_DBG_APO_INIT_FAIL);
                 }
-                else if (APOLLO_STATE_INIT_RD_FW_VER == apollo_state) {
-                    /* reading apollo fw version during start up. */
-                    uint32 feedback[2];
-                    int ret = apollo_fb((uint8*)feedback, 8);
+            }
+            else if (APOLLO_STATE_INIT_RD_FW_VER == apollo_state) {
+                /* reading apollo fw version during start up. */
+                uint32 feedback[2];
 
-                    if (ret) {
-                        if (io_init_i2c_rd_err_times < 3) {
-                            /* if read fw ver cause i2c err during boot up, we re-init again. */
-                            APOLLO_DBG_LOG("init read feed back fail");
-                            apollo_state = APOLLO_STATE_INIT_IO;
-                            wait_for_int_low(50);
-                            io_init_i2c_rd_err_times ++;
-                        }
-                        else {
-                            /* i2c fail to read fw version several times, mark apollo as error. */
-                            APOLLO_DBG_LOG("init fail");
-                            apollo_state = APOLLO_STATE_ERR;
-                            IO_LOW(APOLLO_OVERRIDE_IO);
-                            apollo_init_finish();
-                            online_dbg_record(ONLINE_DBG_APO_INIT_FAIL);
-                        }
-                        break;
-                    }
+                MessageCancelAll(apolloTask, APOLLO_MESSAGE_CMD);
 
-                    if (APOLLO_ACK_RD_FW_VER == feedback[0]) {
-                        /* init success when we go in this block. */
+                if (apollo_fb((uint8*)feedback, 8)) {
+                    if (io_init_i2c_rd_err_times < 3) {
+                        /* if read fw ver cause i2c err during boot up, re-init apollo again. */
+                        APOLLO_DBG_LOG("init read feed back fail");
+                        io_init_i2c_rd_err_times ++;
+                        apollo_reinit();
+                    } else {
+                        /* i2c fail to read fw version several times, mark apollo as error. */
+                        APOLLO_DBG_LOG("init fail");
+                        apollo_state = APOLLO_STATE_ERR;
                         IO_LOW(APOLLO_OVERRIDE_IO);
-                        apollo_fw_ver = feedback[1];
-                        APOLLO_DBG_LOG("init ok, fw ver: 0x%x.", apollo_fw_ver);
-                        apollo_state = APOLLO_STATE_IDLE;
                         apollo_init_finish();
-                        online_dbg_record(ONLINE_DBG_APO_INIT_SUCC);
-                        if (apollo_init_end_cb) apollo_init_end_cb();
+                        online_dbg_record(ONLINE_DBG_APO_INIT_FAIL);
                     }
-                    else if (APOLLO_ACK_WAKEUP == feedback[0]) {
-                        /* an wakeup mixed with fw version read event, read fw ver again. */
-                        APOLLO_DBG_LOG("wakeup during init, read fw again...");
-                        if (apollo_wakeup_cb) apollo_wakeup_cb();
-                        read_fw_version();
+                    break;
+                }
+
+                if (APOLLO_ACK_RD_FW_VER == feedback[0]) {
+                    /* init success when we go in this block. */
+                    IO_LOW(APOLLO_OVERRIDE_IO);
+                    apollo_fw_ver = feedback[1];
+                    APOLLO_DBG_LOG("init ok, fw ver: 0x%x.", apollo_fw_ver);
+                    apollo_state = APOLLO_STATE_IDLE;
+                    apollo_init_finish();
+                    online_dbg_record(ONLINE_DBG_APO_INIT_SUCC);
+                    if (apollo_init_end_cb) apollo_init_end_cb();
+                }
+                else if (APOLLO_ACK_WAKEUP == feedback[0]) {
+                    /* an wakeup mixed with fw version read event, read fw ver again. */
+                    APOLLO_DBG_LOG("wakeup during init, read fw again...");
+                    if (apollo_wakeup_cb) apollo_wakeup_cb();
+                    read_fw_version();
+                    wait_for_int_low(150);
                     } else {
                         if (io_init_rd_fw_err_times < 3) {
                             /* fw ver read err during boot up, try again. */
                             APOLLO_DBG_LOG("read fw err, try again");
                             read_fw_version();
+                            wait_for_int_low(150);
                             io_init_rd_fw_err_times ++;
                         } else {
                             /* finally read fw version fail, mark apollo as error. */
@@ -309,44 +359,30 @@ static void apollo_init_handler(MessageId id, Message msg)
         {
             APOLLO_COMMAND_T *message = ((APOLLO_COMMAND_T*)msg);
 
-            /* waiting for init gap end */
             if (APOLLO_CMD_WAIT_INT_LOW == message->command) {
                 if (APOLLO_STATE_INIT_IO == apollo_state) {
-                    if (INT_IS_LOW) {
-                        APOLLO_DBG_LOG("int init ok");
-                        apollo_state = APOLLO_STATE_INIT_RD_FW_VER;
-                        if(read_fw_version()) {
-                            /* 老开发板如果没有连接apollo，读版本号时i2c操作会失败，当失败时也要发送结束消息，否则init过程无法走完. */
-                            apollo_state = APOLLO_STATE_ERR;
-                            IO_LOW(APOLLO_OVERRIDE_IO);
-                            apollo_init_finish();
-                            online_dbg_record(ONLINE_DBG_APO_INIT_FAIL);
-                        }
-                    }
-                    else if (io_init_wait_int_low_to < 5) {
-                        /* if apollo not up in the last gap, we can wait more gap. */
+                    if (io_init_wait_int_low_to < 3) {
+                        /* if apollo not up in the last gap, we can wait more. */
                         APOLLO_DBG_LOG("init wait int low timeout");
-                        wait_for_int_low(40);
                         io_init_wait_int_low_to ++;
+                        apollo_reinit();
                     }
                     else {
-                        /* apollo finally can not go up, marked as error. */
+                        /* apollo finally can not go up, mark as error. */
                         apollo_state = APOLLO_STATE_ERR;
                         IO_LOW(APOLLO_OVERRIDE_IO);
                         apollo_init_finish();
                         online_dbg_record(ONLINE_DBG_APO_INIT_FAIL);
                     }
                 }
-                else if(APOLLO_STATE_START_UP == apollo_state)
-                {
-                    if (io_init_wait_int_low_interrupt < 5) {
-                        /* if apollo not up in the last gap, we can wait more gap. */
-                        APOLLO_DBG_LOG("init wait int low interrupt timeout");
-                        wait_for_int_low(40);
-                        io_init_wait_int_low_interrupt ++;
+                else if (APOLLO_STATE_INIT_RD_FW_VER == apollo_state) {
+                    if (io_init_rd_fw_wait_int_low < 3) {
+                        /* if apollo not up in the last gap, we can wait more. */
+                        APOLLO_DBG_LOG("init wait int low timeout");
+                        io_init_rd_fw_wait_int_low ++;
+                        apollo_reinit();
                     }
                     else {
-                        /* apollo finally can not go up, marked as error. */
                         apollo_state = APOLLO_STATE_ERR;
                         IO_LOW(APOLLO_OVERRIDE_IO);
                         apollo_init_finish();
@@ -356,9 +392,8 @@ static void apollo_init_handler(MessageId id, Message msg)
             }
             else if(APOLLO_CMD_WAIT_TIMEOUT == message->command) {
                 if (APOLLO_STATE_INIT_IO == apollo_state) {
-                    apollo_state = APOLLO_STATE_START_UP;
                     reset_in_high();
-                    wait_for_int_low(60);
+                    wait_for_int_low(200);
                 }
             }
             break;
@@ -368,67 +403,96 @@ static void apollo_init_handler(MessageId id, Message msg)
     }
 }
 
-static int apollo_update_header_and_reset(void)
-{
-    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
-    int ret = apollo_send_cmd(APOLLO_RESET_2, handle);
-    hwi2cClose(handle);
-    return ret;
-}
-
 /* apollo upgrade handler */
 static void apollo_upgrade_handler(MessageId id, Message msg)
 {
     switch (id) {
         case MESSAGE_PIO_CHANGED:
         {
-            if (0 == GET_INT) {
-                switch (apollo_state) {
-                    case APOLLO_STATE_UPGRADE_S1: {
-                        int trans_bytes_calc = upgrade_remain_bytes;
-                        int remain_bytes = transfer_image();
-                        trans_bytes_calc -= remain_bytes;
-                        APOLLO_DBG_LOG("transfer bytes: %d, remain: %d", trans_bytes_calc, remain_bytes);
-                        if (0 == remain_bytes) apollo_state = APOLLO_STATE_UPGRADE_S2;
-                        break;
-                    }
-                    case APOLLO_STATE_UPGRADE_S2: {
-                        int ret = transfer_image_3();
-                        release_image();
-                        if (!ret) {
-                            APOLLO_DBG_LOG("upgrade success, reboot.");
-                            apollo_state = APOLLO_STATE_UPGRADE_S3;
-                            apollo_update_header_and_reset();
-                        }
-                        else if (upgrade_times < 3) {
-                            APOLLO_DBG_LOG("upgrade fail, re-init and try upgrade again");
-                            upgrade_times ++;
-                            apollo_state = APOLLO_STATE_INIT_IO;
-                            wait_for_timeout(60);
-                        }
-                        else {
-                            apollo_init_end_cb = NULL;
-                            APOLLO_DBG_LOG("upgrade fail, re-init and stop upgrade");
-                        }
+            if (INT_IS_LOW) {
 
-                        break;
+            switch (apollo_state) {
+                case APOLLO_STATE_ENTERING_BOOT_MODE_S1: {
+                    /* we are entering boot mode in IO driving method, so we are assumed
+                     * to be success by default.
+                     */
+                    MessageCancelAll(apolloTask, APOLLO_MESSAGE_CMD);
+
+                    IO_LOW(APOLLO_OVERRIDE_IO);
+                    apollo_state = APOLLO_STATE_IDLE;
+                    if (apollo_enter_boot_cb) apollo_enter_boot_cb();
+                    break;
+                }
+                case APOLLO_STATE_UPGRADE_S1: {
+                    MessageCancelAll(apolloTask, APOLLO_MESSAGE_CMD);
+
+                    int trans_bytes_calc = upgrade_remain_bytes;
+                    int remain_bytes = transfer_image();
+                    trans_bytes_calc -= remain_bytes;
+                    APOLLO_DBG_LOG("transfer bytes: %d, remain: %d", trans_bytes_calc, remain_bytes);
+                    if (0 == remain_bytes) {
+                        apollo_state = APOLLO_STATE_UPGRADE_S2;
+                        wait_for_int_low(2000);
+                    }else{
+                        wait_for_int_low(150);
                     }
+
+                    break;
+                }
+                case APOLLO_STATE_UPGRADE_S2: {
+                    int ret = transfer_image_3();
+                    release_image();
+
+                    MessageCancelAll(apolloTask, APOLLO_MESSAGE_CMD);
+
+                    if (!ret) {
+                        APOLLO_DBG_LOG("upgrade success, reboot.");
+                        apollo_state = APOLLO_STATE_UPGRADE_S3;
+                        apollo_update_header_and_reset();
+                        wait_for_int_low(300);
+                    }
+                    else {
+                        if (upgrade_times < 3) {
+                            APOLLO_DBG_LOG("upgrade fail, re-upgrade again");
+                            upgrade_times ++;
+                            apollo_state = APOLLO_STATE_ENTERING_BOOT_MODE_S1;
+                            start_boot_mode_1();
+                        } else {
+                            APOLLO_DBG_LOG("upgrade fail, re-init and stop upgrade");
+                            apollo_init_end_cb = NULL;
+                            apollo_reinit();
+                        }
+                    }
+
+                    break;
+                }
                 case APOLLO_STATE_UPGRADE_S3:{
                     uint32 feedback[2];
                     PanicNotZero(apollo_fb((uint8*)feedback, 8));
-                    PanicFalse(0x02 == feedback[0]);
 
-                    apollo_state = APOLLO_STATE_UPGRADE_S4;
-                    IO_LOW(APOLLO_OVERRIDE_IO);
-                    reset_out_low();
-                    wait_for_timeout(100);
+                    MessageCancelAll(apolloTask, APOLLO_MESSAGE_CMD);
 
+                    if (0x02 == feedback[0])
+                        apollo_reinit();
+                    else {
+                        if (upgrade_times_2 < 3) {
+                            APOLLO_DBG_LOG("upgrade fail, re-upgrade again");
+                            upgrade_times_2 ++;
+                            apollo_state = APOLLO_STATE_ENTERING_BOOT_MODE_S1;
+                            start_boot_mode_1();
+                        } else {
+                            APOLLO_DBG_LOG("upgrade fail, re-init and stop upgrade");
+                            apollo_init_end_cb = NULL;
+                            apollo_reinit();
+                        }
+                    }
                     break;
                 }
                 default:
                     break;
-                }
             }
+            }
+            break;
         }
         case APOLLO_MESSAGE_CMD:
         {
@@ -437,23 +501,51 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
             switch (message->command) {
                 case APOLLO_CMD_WAIT_INT_LOW: {
                     if (APOLLO_STATE_ENTERING_BOOT_MODE_S1 == apollo_state) {
-                        if (INT_IS_LOW) {
-                            /* we are entering boot mode in IO driving method, so we are assumed
-                             * to success by default.
-                             */
-                            IO_LOW(APOLLO_OVERRIDE_IO);
-                            apollo_state = APOLLO_STATE_IDLE;
-                            if (apollo_enter_boot_cb) apollo_enter_boot_cb();
+                        if (enter_boot_mode_err < 3) {
+                            enter_boot_mode_err++;
+                            start_boot_mode_1();
                         } else {
-                            if (enter_boot_int_times < 5) {
-                                enter_boot_int_times++;
-                                APOLLO_DBG_LOG("enter boot mode wait int low timeout");
-                                wait_for_int_low(50);
-                            } else {
-                                APOLLO_DBG_LOG("enter boot mode fail");
-                                apollo_state = APOLLO_STATE_ERR;
-                                IO_LOW(APOLLO_OVERRIDE_IO);
-                            }
+                            APOLLO_DBG_LOG("enter boot mode fail.");
+                            // stop upgrade and re-init apollo
+                            apollo_init_end_cb = NULL;
+                            apollo_reinit();
+                        }
+                    }
+                    else if (APOLLO_STATE_UPGRADE_S1 == apollo_state) {
+                        if (upgrading_img_err < 3) {
+                            upgrading_img_err++;
+
+                            apollo_state = APOLLO_STATE_ENTERING_BOOT_MODE_S1;
+                            start_boot_mode_1();
+                        } else {
+                            APOLLO_DBG_LOG("start upgrade fail.");
+                            // stop upgrade and re-init apollo
+                            apollo_init_end_cb = NULL;
+                            apollo_reinit();
+                        }
+                    }
+                    else if (APOLLO_STATE_UPGRADE_S2 == apollo_state) {
+                        if (upgrading_img_end_err < 3) {
+                            upgrading_img_end_err++;
+                            apollo_state = APOLLO_STATE_ENTERING_BOOT_MODE_S1;
+                            start_boot_mode_1();
+                        } else {
+                            APOLLO_DBG_LOG("start upgrade fail.");
+                            // stop upgrade and re-init apollo
+                            apollo_init_end_cb = NULL;
+                            apollo_reinit();
+                        }
+                    }
+                    else if (APOLLO_STATE_UPGRADE_S3 == apollo_state) {
+                        if (upgrading_img_end_err_2 < 3) {
+                            upgrading_img_end_err_2++;
+                            apollo_state = APOLLO_STATE_ENTERING_BOOT_MODE_S1;
+                            start_boot_mode_1();
+                        } else {
+                            APOLLO_DBG_LOG("start upgrade fail.");
+                            // stop upgrade and re-init apollo
+                            apollo_init_end_cb = NULL;
+                            apollo_reinit();
                         }
                     }
                     break;
@@ -461,19 +553,7 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
                 case APOLLO_CMD_WAIT_TIMEOUT: {
                     if (APOLLO_STATE_ENTERING_BOOT_MODE_S1 == apollo_state) {
                         reset_in_high();
-                        wait_for_int_low(60);
-                    }
-                    if (APOLLO_STATE_UPGRADE_S4 == apollo_state) {
-                        apollo_state = APOLLO_STATE_START_UP;
-                        io_init_wait_int_low_to = 0;
-                        io_init_i2c_rd_err_times = 0;
-                        io_init_rd_fw_err_times = 0;
-                        enter_boot_int_times = 0;
-                        upgrade_times = 0;
-                        io_init_wait_int_low_interrupt = 0;
-                        apollo_init_end_cb = NULL;
-                        reset_in_high();
-                        wait_for_int_low(60);
+                        wait_for_int_low(200);
                     }
                     break;
                 }
@@ -489,13 +569,13 @@ static void apollo_upgrade_handler(MessageId id, Message msg)
 
 static void apollo_common_handler(MessageId id, Message msg)
 {
+    uint32 feedback[2];
     switch (id) {
         case MESSAGE_PIO_CHANGED:
         {
             if (0 == GET_INT) {
                 switch (apollo_state) {
                     case APOLLO_STATE_IDLE: {
-                        uint32 feedback[2];
                         PanicNotZero(apollo_fb((uint8*)feedback, 8));
                         if (APOLLO_ACK_WAKEUP == feedback[0]) {
                             APOLLO_DBG_LOG("apollo wakeup.");
@@ -504,7 +584,7 @@ static void apollo_common_handler(MessageId id, Message msg)
                         break;
                     }
                     case APOLLO_STATE_READING_FW_VER: {
-                        uint32 feedback[2];
+                        MessageCancelAll(apolloTask, APOLLO_MESSAGE_CMD);
                         PanicNotZero(apollo_fb((uint8*)feedback, 8));
 
                         if (APOLLO_ACK_RD_FW_VER == feedback[0]) {
@@ -517,37 +597,27 @@ static void apollo_common_handler(MessageId id, Message msg)
                             APOLLO_DBG_LOG("wakup, read fw again...");
                             if (apollo_wakeup_cb) apollo_wakeup_cb();
                             read_fw_version();
+                            wait_for_int_low(150);
+                        }
+                        else {
+                            if (rd_fwv_err_times < 3) {
+                                /* fw ver read err during boot up, try again. */
+                                APOLLO_DBG_LOG("read fw err, try again");
+                                read_fw_version();
+                                wait_for_int_low(150);
+                                rd_fwv_err_times ++;
+                            }
+                            else
+                                apollo_reinit();
                         }
 
                         break;
                     }
                     case APOLLO_STATE_ENTERING_SLEEP: {
-                        uint32 feedback[2];
+                        MessageCancelAll(apolloTask, APOLLO_MESSAGE_CMD);
                         PanicNotZero(apollo_fb((uint8*)feedback, 8));
 
-                        if (feedback[0] != APOLLO_SLEEP) {
-                            APOLLO_DBG_LOG("get other int, try enter sleep again.");
-                            if (sleep_times < 3)
-                            {
-                                bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
-                                if (0 == apollo_send_cmd(APOLLO_SLEEP, handle)) {
-                                    /* wait for another int. */
-                                    APOLLO_DBG_LOG("apollo enter sleep fail, try again...");
-                                    hwi2cClose(handle);
-                                }
-                                else {
-                                    APOLLO_DBG_LOG("sleep mode fail");
-                                    apollo_state = APOLLO_STATE_ERR;
-                                    IO_LOW(APOLLO_OVERRIDE_IO);
-                                }
-                                hwi2cClose(handle);
-                                sleep_times++;
-                            }else{
-                                APOLLO_DBG_LOG("sleep mode fail");
-                                apollo_state = APOLLO_STATE_ERR;
-                                IO_LOW(APOLLO_OVERRIDE_IO);
-                            }
-                        } else {
+                        if (APOLLO_SLEEP == feedback[0]) {
                             APOLLO_DBG_LOG("enter sleep.");
                             apollo_state = APOLLO_STATE_SLEEP;
 
@@ -559,6 +629,16 @@ static void apollo_common_handler(MessageId id, Message msg)
                             PioSet32Bank(bank, mask, 0);
                             PioSetDir32Bank(bank, mask, mask);
                             IO_LOW(APOLLO_INT_IO);
+                        }
+                        else {
+                            APOLLO_DBG_LOG("get other int, try enter sleep again.");
+                            if (enter_sleep_err_times < 3) {
+                                enter_sleep_err_times++;
+                                enter_sleep();
+                                wait_for_int_low(150);
+                            }
+                            else
+                                apollo_reinit();
                         }
 
                         break;
@@ -574,12 +654,27 @@ static void apollo_common_handler(MessageId id, Message msg)
             APOLLO_COMMAND_T *message = (APOLLO_COMMAND_T*)msg;
 
             switch (message->command) {
-                case APOLLO_CMD_READ_FW_VER: {
-                    read_fw_version();
-                    break;
-                }
-                case APOLLO_CMD_RESET: {
-                    APOLLO_DBG_LOG("dummy reset");
+                case APOLLO_CMD_WAIT_INT_LOW: {
+                    if (APOLLO_STATE_READING_FW_VER == apollo_state) {
+                        if (rd_fwv_wait_int_low < 3) {
+                            APOLLO_DBG_LOG("init wait int low timeout");
+                            rd_fwv_wait_int_low ++;
+                            read_fw_version();
+                            wait_for_int_low(150);
+                        } else {
+                            apollo_reinit();
+                        }
+                    }
+                    else if (APOLLO_STATE_ENTERING_SLEEP == apollo_state) {
+                        if (enter_sleep_wait_int_low < 3) {
+                            APOLLO_DBG_LOG("init wait int low timeout");
+                            enter_sleep_wait_int_low ++;
+                            enter_sleep();
+                            wait_for_int_low(150);
+                        } else {
+                            apollo_reinit();
+                        }
+                    }
                     break;
                 }
                 case APOLLO_CMD_WAIT_TIMEOUT: {
@@ -604,16 +699,36 @@ static void apollo_common_handler(MessageId id, Message msg)
     }
 }
 
+static void apollo_reinit(void) {
+    apollo_state = APOLLO_STATE_INIT_IO;
+    IO_LOW(APOLLO_OVERRIDE_IO);
+    reset_out_low();
+    wait_for_timeout(100);
+}
+
+static void enter_sleep(void) {
+    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+    apollo_send_cmd(APOLLO_SLEEP, handle);
+    hwi2cClose(handle);
+}
+
 static void apollo_init_finish(void) {
     MessageSend(appGetAppTask(), APOLLO_INIT_CFM, NULL);
 }
-
 
 static bool should_upgrade(void) {
     const apollo_image_header_t *header = (const apollo_image_header_t*) map_image();
     apollo_up_img_ver = header->version;
     release_image();
     return (apollo_fw_ver < apollo_up_img_ver);
+}
+
+static int apollo_update_header_and_reset(void)
+{
+    bitserial_handle handle = PanicZero(hwi2cOpen(APOLLO_CHIPADDR, APOLLO_I2C_FREQ));
+    int ret = apollo_send_cmd(APOLLO_RESET_2, handle);
+    hwi2cClose(handle);
+    return ret;
 }
 
 static int apollo_check_and_start_upgrade(void) {
@@ -627,7 +742,7 @@ static int apollo_check_and_start_upgrade(void) {
         APOLLO_DBG_LOG("upgrade img ver: 0x%x", apollo_up_img_ver);
     }
     else if (RUNNING_IN_BOOT == check_fw_ver(apollo_fw_ver)) {
-        APOLLO_DBG_LOG("in boot mode, start upgrading direct.");
+        APOLLO_DBG_LOG("in boot mode, upgrade directly.");
         apollo_start_new_image();
     }
 
@@ -638,7 +753,7 @@ static void start_boot_mode_1(void) {
     /* drive override high during boot up to enter boot mode. */
     IO_HIGH(APOLLO_OVERRIDE_IO);
     reset_out_low();
-    /* keep reset low for 10ms */
+    /* keep reset low for 60ms */
     wait_for_timeout(60);
 }
 
@@ -677,12 +792,14 @@ static int start_new_image_s1(void)
 
 static int check_fw_ver(uint32 fw_ver) {
     /* most significant byte of boot fw version is 0xFF */
+    int ret = 0;
     if (-1 == fw_ver)
-        return RUNNING_FW_NV;
+        ret = RUNNING_FW_NV;
     else if (0xFF == (fw_ver >> 24))
-        return RUNNING_IN_BOOT;
+        ret = RUNNING_IN_BOOT;
     else
-        return RUNNING_IN_APP;
+        ret = RUNNING_IN_APP;
+    return ret;
 }
 
 static int transfer_image(void)
