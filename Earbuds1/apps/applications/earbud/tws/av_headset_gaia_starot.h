@@ -187,7 +187,7 @@ enum {
     GAIA_CONNECT_STAROT_UPDATE_FIRMWARE     = 0X5800,                             //固件升级使用
     GAIA_CONNECT_STAROT_UPDATE_FIRMWARE_MD5 = 0X5801,                             //回复固件的校验码
     GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE     = 0X5802,                             //上传日志文件
-
+    GAIA_CONNECT_STAROT_DELETE_LOG_FILE     = 0X5803,                            //删除日志文件
 };
 /////////////////////////////升级///////////////////////////////
 enum {
@@ -246,6 +246,7 @@ void starotGaiaReset(void);
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);
 bool starotGaiaHandleData(GAIA_STAROT_IND_T *message);
+void starotGaiaHandleDeleteLogFile(GAIA_STAROT_IND_T *message);
 bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message);
 bool starotGaiaHandleDataSumCheck(GAIA_STAROT_IND_T *message);
 void starotGaiaParseMessageMoreSpace(void);

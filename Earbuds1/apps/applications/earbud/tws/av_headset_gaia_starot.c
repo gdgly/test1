@@ -118,6 +118,14 @@ void starotGaiaReset(void) {
 }
 
 /*
+ * 删除日志文件
+ */
+void starotGaiaHandleDeleteLogFile(GAIA_STAROT_IND_T *message)
+{
+    UNUSED(message);
+    FileCancel(FILE_LOG);
+}
+/*
  * 上传日志文件到手机APP
  * @return:
  *    TRUE: 成功
@@ -525,6 +533,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             starotGaiaHandleDataSumCheck(message);
             break;
         case GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE:
+            starotGaiaHandleUploadLogFile(message);
+            break;
+        case GAIA_CONNECT_STAROT_DELETE_LOG_FILE:
             starotGaiaHandleUploadLogFile(message);
             break;
     }
