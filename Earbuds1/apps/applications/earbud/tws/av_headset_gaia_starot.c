@@ -122,44 +122,49 @@ void starotGaiaReset(void) {
  * @return:
  *    TRUE: 成功
  */
+static uint8 buff[256] = {0};
+static int16 sendtemp = 0;
+static uint16 pix = 0;
 bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
 {
     static Source file_source;
     static FILE_INDEX findex;
     uint8 *map_address = NULL;
-    uint16 readSize = 0;
-    uint16 sendtemp = 0;
-    uint8 buff[256] = {0};
+    static uint16 readSize;
 
-    /* 丢包的话就再次发送 */
-//    if (index == message->payload[0])
-//        goto sendData;
-    /* 只会在开始传输的时候执行一次 */
-    if ((message->payload[1] & 0x03) == 0)
+    /* 包内数据发送完成 */
+    if (sendtemp == 0)
     {
-        findex = FindFileIndex(FILE_LOG);
-        if (findex == FILE_NONE)return FALSE;
-        PanicNull((file_source = StreamFileSource(findex)));
-        if ((readSize = SourceSize(file_source)) != 0)
+        DEBUG_LOG("%X", message->payload[1]);
+        /* 只会在开始传输的时候执行一次 */
+        if ((message->payload[1] & 0x03) == 0)
         {
-            map_address = (uint8 *)SourceMap(file_source);
-            memcpy(buff,map_address,readSize);
-            SourceDrop(file_source,readSize);
-            readDelay(readSize);
+            findex = FindFileIndex(FILE_LOG);
+            if (findex == FILE_NONE)return FALSE;
+            PanicNull((file_source = StreamFileSource(findex)));
+            if ((readSize = SourceSize(file_source)) != 0)
+            {
+                map_address = (uint8 *)SourceMap(file_source);
+                memcpy(buff,map_address,readSize);
+                SourceDrop(file_source,readSize);
+                readDelay(readSize);
+            }
         }
-    }
-    else if ((message->payload[1] & 0x03) == 0x03)
-    {
-        if ((readSize = SourceSize(file_source)) != 0)
+        else if ((message->payload[1] & 0x03) == 0x03)/* 数据发送过程中 */
         {
-            map_address = (uint8 *)SourceMap(file_source);
-            memcpy(buff,map_address,readSize);
-            SourceDrop(file_source,readSize);
-            readDelay(readSize);
+            if ((readSize = SourceSize(file_source)) != 0)
+            {
+                map_address = (uint8 *)SourceMap(file_source);
+                memcpy(buff,map_address,readSize);
+                SourceDrop(file_source,readSize);
+                readDelay(readSize);
+            }
         }
+        sendtemp = readSize;
+        pix = 0;
     }
 
-    if (1)
+    if (0)
     for (int i = 0; i < 30; i++)
     {
         DEBUG_LOG("buff[%d]=%X", i, buff[i]);
@@ -167,30 +172,25 @@ bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
 
     /* 把读取的数据包发送走
      * 协议中需要包含发送中和最后一次发送，当readSize == 0就是最后一次发送
-    */
+     */
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
 
-    sendtemp = readSize;
-    uint16 pix = 0;
     if (1)
-    while (sendtemp > 0)
     {
-        head = NULL;
-        attr = NULL;
         if (sendtemp > 40)
         {
-            sendtemp-=40;
+            sendtemp -= 40;
             attr = attrMalloc(&head, 40 + 6);
             attr->payload[5]  = message->payload[1];
-            attr->payload[5] &= ~( 1 << 2);
+            attr->payload[5] &= ~( 1 << 2);/* 数据包内传输 */
             attr->payload[5] &= ~( 1 << 3);
         }
         else
         {
             attr = attrMalloc(&head, sendtemp + 6);
             attr->payload[5]  = message->payload[1];
-            attr->payload[5] &= ~( 1 << 3);
+            attr->payload[5] &= ~( 1 << 3);/* 最后一个数据包内传输 */
             attr->payload[5] |=  ( 1 << 2);
         }
         attr->attr = 0X02;
@@ -199,16 +199,16 @@ bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
         attr->payload[2]  = (GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE >> 8) & 0xFF;
         attr->payload[3]  = GAIA_CONNECT_STAROT_UPLOAD_LOG_FILE & 0xFF;
         attr->payload[4]  = message->payload[0];/* session id */
-        attr->payload[5] |= (1 << 0);
+        attr->payload[5] |= (1 << 0);/* 数据传输中 */
         attr->payload[5] |= (1 << 1);
         DEBUG_LOG("head = %x",attr->payload[5]);
         /* 复制到发送区 */
-        if (((attr->payload[5] >> 2)&0x3) == 0)
+        if (((attr->payload[5] >> 2)&0x3) == 0)/* 数据包内传输 */
         {
             memcpy(&attr->payload[6],&buff[pix],40);
             pix += 40;
         }
-        else if (((attr->payload[5] >> 2)&0x3) == 1)
+        else if (((attr->payload[5] >> 2)&0x3) == 1)/* 最后一个数据包内传输 */
         {
             memcpy(&attr->payload[6],&buff[pix],sendtemp);
             sendtemp = 0;
@@ -220,11 +220,6 @@ bool starotGaiaHandleUploadLogFile(GAIA_STAROT_IND_T *message)
             uint8 *data = attrEncode(head, &len);
             appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
             attrFree(head, data);
-        }
-        uint32 delay = 0xffff;
-        while(delay--)
-        {
-            printf("");
         }
     }
     /* 文件发送完成 */
