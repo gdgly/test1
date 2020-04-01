@@ -24,7 +24,7 @@
 
 
 /* SW版本共4字节： 01.01.23.xx   xx为测试使用*/
-const uint8 SYSTEM_SW_VERSION[DEV_SWVER_LEN] = {0x01,0x02,0x37,0x05};   // 每次发布版本修改这儿的值
+const uint8 SYSTEM_SW_VERSION[DEV_SWVER_LEN] = {0x01,0x02,0x38,0x01};   // 每次发布版本修改这儿的值
 
 // 保存参数，如果length=0,表示擦除当前PSK中的参数
 static int16 ParamSave(uint16 pskey, void *buffer, int length)
@@ -158,8 +158,8 @@ void UserParamDefault(void)
     UserPrmPtr prm = &gUserParam;
 
     memset(prm, 0, sizeof(UserParam));
-    prm->lKeyFunc = 0X03;
-    prm->rKeyFunc = 0X02;
+    prm->lKeyFunc = 0X02;
+    prm->rKeyFunc = 0X03;
     prm->apolloEnable = TRUE;
     prm->sensorEnable = TRUE;
     prm->assistantType = ASSISTANT_TYPE_APP;

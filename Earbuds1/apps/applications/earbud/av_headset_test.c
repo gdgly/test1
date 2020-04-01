@@ -1537,6 +1537,7 @@ bool appTestIsInitialisationCompleted(void)
 }
 
 extern void bdaddr2buffer(bdaddr *addr, uint8* addrbuf);
+extern void ParamPrintBlePair(void);
 
 void appTestPrintAllConnection(void) {
     DEBUG_LOG("######################################################");
@@ -1560,7 +1561,8 @@ void appTestPrintAllConnection(void) {
         }
     }
     DEBUG_LOG("######################################################");
-
+    ParamPrintBlePair();
+    DEBUG_LOG("######################################################");
 }
 
 void testHfpCallWaitingEnableRequest (bool enable) {

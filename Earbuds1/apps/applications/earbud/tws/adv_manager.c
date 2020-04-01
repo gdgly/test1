@@ -142,7 +142,7 @@ void appBleSetSync(bool status) {
 // region 广播码
 
 uint8 advManagerSelectFeature(void) {
-    uint8 nowAdvFeature = ADV_FEATURE_UPGRADE;
+    uint8 nowAdvFeature = 0XFF;
     if (appSmIsPairing()) {
         nowAdvFeature = ADV_FEATURE_PAIR;
     } else if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {

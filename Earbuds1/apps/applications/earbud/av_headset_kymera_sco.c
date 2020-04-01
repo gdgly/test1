@@ -441,6 +441,8 @@ void appKymeraHandleInternalScoMicMute(bool mute)
     switch (appGetKymera()->state)
     {
         case KYMERA_STATE_SCO_ACTIVE:
+        case KYMERA_STATE_SCO_ACTIVE_WITH_FORWARDING:
+        case KYMERA_STATE_SCO_SLAVE_ACTIVE:
         {
             Operator aec_op;
 

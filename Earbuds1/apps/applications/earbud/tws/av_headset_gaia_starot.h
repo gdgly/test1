@@ -11,6 +11,7 @@ typedef struct {
     uint8 callerNumber[32];
     uint16 callerLen;
     uint16 connectLock; // 0:无锁 1:加锁
+    uint8 notifyData[5];  // 防止重复数据，直接避免传输
 } subGaiaTaskData;
 
 void subGaiaTaskInit(void);
@@ -40,6 +41,13 @@ bool subGaiaIsConnectLock(void);
 
 // endregion
 
+// region 校验通知的数据，是否一致
+
+bool subGaiaNotifyDataIsSame(uint8* data);
+void subGaiaNotifyDataClear(void);
+void subGaiaNotifyDataRecord(uint8* data);
+
+// endregion
 
 #define CALL_IN_ACTIVE          (1 << 0)
 #define CALL_OUT_ACTIVE         (1 << 1)
@@ -179,7 +187,8 @@ enum {
     GAIA_COMMAND_STAROT_TEST_PRODUCT_REST = 0X5600,                           // 恢复出厂设置
     GAIA_COMMAND_STAROT_TEST_APOLLO_STATUS = 0X5601,                          // 读取apollo状态
     GAIA_COMMAND_STAROT_TEST_ONLINE_DBG = 0X5602,
-    GAIA_COMMAND_STAROT_TEST_IN_EAR_RDVALUE = 0X5603                          // 读取接近光在耳朵中的值
+    GAIA_COMMAND_STAROT_TEST_IN_EAR_RDVALUE = 0X5603,                         // 读取接近光在耳朵中的值
+    GAIA_COMMAND_STAROT_TEST_PRODUCT = 0X5604,                                // 产测协议
 };
 
 /////////////////////////////固件升级使用///////////////////////////////
@@ -270,6 +279,7 @@ void starotGaiaSetTransportType(gaia_transport_type gaiaTransportType);
 
 enum {
     STAROT_DIALOG_STATUS = AV_GAIA_MESSAGE_BASE + 0X20,   // ui -> gaia 通话状态
+    STAROT_DIALOG_STATUS_ACTIVE,                          // ui -> gaia active状态独立处理，如果有缓存，不重新发送，如果正在通话，并且没有缓存，说明app接收过，但是app退出，之后没有状态数据
     STAROT_DIALOG_TYPE,                                   // ui -> gaia 报告当前通话是电话还是WX其它通话
     STAROT_DIALOG_USER_ACCEPT_RECORD,                     // gaia -> (ui & dsp) 用户请求录音
     STAROT_DIALOG_AUDIO_DATA,                             // dsp -> gaia 请求传输数据
@@ -347,5 +357,17 @@ typedef struct {
     uint16 len;
     uint8 number[2];
 } STAROT_DIALOG_CALL_NUMBER_T;
+
+
+// region 常用条件判断
+
+/*
+ * fun: 判断当前是否在录音转写过程中
+ * return: TRUE/FALSE
+ */
+bool subGaiaIsDialogRecoding(void);
+
+// endregion
+
 
 #endif // AV_HEADSET_GAIA_STAROT_H

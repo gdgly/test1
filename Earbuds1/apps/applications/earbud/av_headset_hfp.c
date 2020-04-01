@@ -2091,7 +2091,9 @@ static void appHfpHandleInternalHfpMuteRequest(const HFP_INTERNAL_HFP_MUTE_REQ_T
             
             /* Set mute flag */
             appGetHfp()->mute_active = req->mute;
-    
+
+            appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_SCO_FORCE_SELECT_MIC);
+
             /* Re-configure audio chain */
             appKymeraScoMicMute(req->mute);
         }

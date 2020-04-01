@@ -21,6 +21,10 @@
 
 #pragma unitsuppress Unused
 
+#ifdef CONFIG_STAROT
+extern bool subGaiaIsDialogRecoding(void);
+#endif
+
 /*! \{
     Macros for diagnostic output that can be suppressed.
     Allows debug of the rules module at two levels. */
@@ -387,7 +391,7 @@ ruleEntry appConnRules[] =
 
     /// 通话处于active时，需要请求HFP音频
     RULE(RULE_EVENT_HFP_REQUEST_SCO_AUDIO,      ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
-
+    RULE(RULE_EVENT_SCO_FORCE_SELECT_MIC,       ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
 };
 
 /*! \brief Types of event that can cause connect rules to run. */
@@ -1594,8 +1598,14 @@ static ruleAction ruleOutOfEarScoActive(void)
         return RULE_ACTION_DEFER;
     }
 
+#ifdef CONFIG_STAROT
+    if ((appScoFwdIsSending() && appPeerSyncIsPeerInEar()) || subGaiaIsDialogRecoding())
+#else
     if (appScoFwdIsSending() && appPeerSyncIsPeerInEar())
+#endif
     {
+        DEBUG_LOG("appScoFwdIsSending()=%d appPeerSyncIsPeerInEar()=%d subGaiaIsDialogRecoding()=%d",
+                appScoFwdIsSending(), appPeerSyncIsPeerInEar(), subGaiaIsDialogRecoding());
         RULE_LOG("ruleOutOfEarScoActive, ignore as we have SCO forwarding running and peer is in ear");
         return RULE_ACTION_IGNORE;
     }
@@ -2508,6 +2518,16 @@ static ruleAction ruleSelectMicrophone(void)
         RULE_LOG("ruleSelectMicrophone, defer as peer sync not complete");
         return RULE_ACTION_DEFER;
     }
+
+#ifdef  CONFIG_STAROT
+    /// 如果当前使用静音模式，强制使用当前mic
+    if (appHfpIsCall() && appHfpIsMuted()) {
+        RULE_LOG("ruleSelectMicrophone, current is hfp && mute, so use local");
+        selected_mic = MIC_SELECTION_LOCAL;
+        return RULE_ACTION_RUN_PARAM(selected_mic);
+    }
+#endif
+
     if (!appSmIsInEar() && appPeerSyncIsPeerInEar())
     {
         selected_mic = MIC_SELECTION_REMOTE;
@@ -2542,7 +2562,7 @@ static ruleAction ruleScoForwardingControl(void)
         RULE_LOG("ruleScoForwardingControl, defer as peer sync not complete");
         return RULE_ACTION_DEFER;
     }
-    if (!appPeerSyncIsPeerInEar())
+    if (!appPeerSyncIsPeerInEar() && !subGaiaIsDialogRecoding())
     {
         RULE_LOG("ruleScoForwardingControl, run and disable forwarding as peer out of ear");
         return RULE_ACTION_RUN_PARAM(forwarding_disabled);
@@ -2725,17 +2745,29 @@ static bool bleBattery(bool left) {
 
 // region ble使能
 
+extern bool gattManagerDataIsCancelPending(void);
+
 static ruleAction bleEnable(void) {
 //    MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
     uint8 current = advManagerSelectFeature();
     uint8 before = advManagerGetBeforeFeature();
     DEBUG_LOG("bleEnable before:%02X current:%02X", before, current);
+    if (0XFF == current) {
+        DEBUG_LOG("bleEnable current is FF, so need disable");
+        bool connectable = FALSE;
+        return RULE_ACTION_RUN_PARAM(connectable);
+    }
     if (0XFF != before && current != before) {
         // 需要先停止之前的ble，等cancel的cfm中，再触发新的ble广播
         DEBUG_LOG("bleEnable current != before so need restart");
-        //GattManagerCancelWaitForRemoteClient();
-        bool connectable = FALSE;
-        return RULE_ACTION_RUN_PARAM(connectable);
+        if (gattManagerDataIsCancelPending()) {
+            // 如果正在停止ble广播，取消执行disable操作，等待
+            DEBUG_LOG("bleEnable gattManagerDataIsCancelPending is TRUE, so ignore");
+            return RULE_ACTION_IGNORE;
+        } else {
+            bool connectable = FALSE;
+            return RULE_ACTION_RUN_PARAM(connectable);
+        }
     } else {
         bool connectable = TRUE;
         return RULE_ACTION_RUN_PARAM(connectable);
@@ -3509,6 +3541,10 @@ static ruleAction ruleDisconnectBTNeedEnterDfu(void) {
     return ruleInCaseEnterDfu();
 }
 
+/*
+ * fun: 检查释放需要断开GAIA连接
+ * > 如果正在升级 IGNORE
+ */
 static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
 {
     if (UpgradeInProgress()) {
@@ -3521,11 +3557,6 @@ static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
         return RULE_ACTION_IGNORE;
     }
 
-    if (appUICaseIsOpen()) {
-        RULE_LOG("ruleCheckGaiaIsNeedDisconnection, appUICaseIsOpen is true, ignore");
-        return RULE_ACTION_IGNORE;
-    }
-
     if (!appDeviceIsHandsetAnyProfileConnected()) {
         if (appGaiaIsConnect()) {
             RULE_LOG("ruleCheckGaiaIsNeedDisconnection, need disconnect");
@@ -3535,6 +3566,12 @@ static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
             return RULE_ACTION_COMPLETE;
         }
     }
+
+    if (appUICaseIsOpen()) {
+        RULE_LOG("ruleCheckGaiaIsNeedDisconnection, appUICaseIsOpen is true, ignore");
+        return RULE_ACTION_IGNORE;
+    }
+
     RULE_LOG("ruleCheckGaiaIsNeedDisconnection, is RULE_ACTION_IGNORE");
     return RULE_ACTION_IGNORE;
 }

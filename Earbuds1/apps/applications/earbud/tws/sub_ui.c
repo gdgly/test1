@@ -321,7 +321,8 @@ static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T*
         MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
         message->status = msg->command;
         DEBUG_LOG("call subUiCallIndicator2Gaia STAROT_DIALOG_STATUS send conditionally");
-        MessageSendConditionally(appGetGaiaTask(), STAROT_DIALOG_STATUS, message, subGaiaGetConnectLock());
+        MessageId mid = (HFP_STATE_CONNECTED_ACTIVE == msg->command ? STAROT_DIALOG_STATUS_ACTIVE : STAROT_DIALOG_STATUS);
+        MessageSendConditionally(appGetGaiaTask(), mid, message, subGaiaGetConnectLock());
     } else {
         disable_audio_forward(TRUE);
 
@@ -1236,6 +1237,8 @@ void appUiAvConnected(unsigned cad)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->bredrconnect = 1;
+    if(appSmIsInEar())
+        apolloWakeupPower(1);
     advManagerInit();
     MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
@@ -1464,6 +1467,7 @@ void appUiPowerSaveSync(void)
 #ifdef CONFIG_BOARD_V2
     ProgRIPtr  progRun = appSubGetProgRun();
 
+    UartPuts1("Pwr mode=", progRun->iPowerSaveMode);
     DEBUG_LOG("PowerSaveSync mode=%d", progRun->iPowerSaveMode);
 
     switch(progRun->iPowerSaveMode) {
@@ -1600,10 +1604,13 @@ void appUiChargerComplete(void)
 
 uint8 appUiGetPower(void)      // 获取当前耳机电量
 {
-    ProgRIPtr  progRun = appSubGetProgRun();
+    chargerTaskData *theCharger = appGetCharger();
+    uint8 value = appSubGetProgRun()->iElectrity;
 
-//    if(CHARGE_ST_FIN == progRun->chargeStat)   // XXX 是否需要考虑当前充电状态 ？
-    return progRun->iElectrity;
+    if(theCharger->is_charging)
+        value |= (1<<7);               // 使用最高位表示是正在充电
+
+    return value;
 }
 
 //static bool deviceRealInCase = TRUE;
@@ -1671,8 +1678,8 @@ void apolloWakeupPower(int enable)        // 开启或停止 APO2
     ProgRIPtr  progRun = appSubGetProgRun();
 
     if(enable) {
-        // 系统配置是否启动APO，与APP是否启动无关系
-        if(1 == gUserParam.apolloEnable /* &&
+        // 系统配置是否启动APO，与APP是否启动无关系。当前只支持主耳机的唤醒
+        if(1 == gUserParam.apolloEnable && appDeviceIsHandsetConnected() && (0 == progRun->apolloWakeup) /* &&
                 (1 == progRun->gaiaStat || gUserParam.assistantType == ASSISTANT_TYPE_SYSTEM) */){
             progRun->apolloWakeup = 1;
             OperatorFrameworkEnable(MAIN_PROCESSOR_ON);    // 前,否则有时电压上不来
@@ -1894,8 +1901,7 @@ void appGetLocalBrEdrAddress(uint8* addrbuf) {
     addrbuf[3] = (progRun->addr.lap >> 16) & 0xFF;
     addrbuf[4] = (progRun->addr.lap >> 8) & 0xFF;
     addrbuf[5] = (progRun->addr.lap & 0xFF);
-    for (int i = 0; i < 6; ++i)
-        DEBUG_LOG("MAC ADDRESS :%d %02X", i, addrbuf[i]);
+    DEBUG_LOG("MAC ADDRESS : %02X%02X%02X%02X%02X%02X", addrbuf[0], addrbuf[1], addrbuf[2], addrbuf[3], addrbuf[4], addrbuf[5],);
 }
 
 

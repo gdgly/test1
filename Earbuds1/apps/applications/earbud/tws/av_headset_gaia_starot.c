@@ -11,7 +11,9 @@
 #include "rwfile.h"
 #include "online_dbg.h"
 
-uint16 bufferSendUnit = 80;
+uint16 bufferSendUnit = 120;
+const uint16 AndroidSendUnit = 120;
+const uint16 IosSendUnit = 80;
 
 #ifdef GAIA_TEST
 
@@ -84,6 +86,7 @@ static void gaiaSendCallNumber(STAROT_DIALOG_CALL_NUMBER_T* message);
 
 static void gaiaTestInEarReadValue(GAIA_STAROT_IND_T *message);
 
+extern int16 gaiaTestProduct(uint8_t *payload);
 
 static void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message);
@@ -111,10 +114,13 @@ void starotGaiaInit(void) {
 }
 
 void starotGaiaReset(void) {
-    memset(&gaiaStarotPrivateData, 0x00, sizeof(struct GaiaStarotPrivateData_T));
+//    memset(&gaiaStarotPrivateData, 0x00, sizeof(struct GaiaStarotPrivateData_T));
     appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
     appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
     appGetGaia()->needCycleSendAudio = 0;
+    /// only test
+    disable_audio_forward(TRUE);
+    subGaiaNotifyDataClear();
 }
 
 /*
@@ -586,6 +592,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
     	case GAIA_COMMAND_STAROT_TEST_IN_EAR_RDVALUE:
         	gaiaTestInEarReadValue(message);
         break;
+        case GAIA_COMMAND_STAROT_TEST_PRODUCT:
+            gaiaTestProduct(message->payload);
+        break;
     }
     return TRUE;
 }
@@ -598,6 +607,7 @@ void starotGaiaDefaultParse(MessageId id, Message message) {
             break;
 // region 通话速记
         case STAROT_DIALOG_STATUS:
+        case STAROT_DIALOG_STATUS_ACTIVE:
             gaiaParseDialogStatus((STAROT_DIALOG_STATUS_T *)message);
             break;
         case STAROT_DIALOG_CALL_NUMBER:
@@ -698,7 +708,8 @@ bool starotGaiaSendAudio(GAIA_STAROT_AUDIO_IND_T *message) {
     UNUSED(message);
 
     /// 不能传输，在source中缓存，如果缓存过多，会丢弃
-    //DEBUG_LOG("transformAudioFlag: %d nowSendAudioPhase is %d", appGetGaia()->transformAudioFlag, appGetGaia()->nowSendAudioPhase);
+    DEBUG_LOG("transformAudioFlag: %d nowSendAudioPhase is %d",
+            appGetGaia()->transformAudioFlag, appGetGaia()->nowSendAudioPhase);
     if (appGetGaia()->transformAudioFlag < TRANSFORM_CANT) {
         return FALSE;
     }
@@ -1013,6 +1024,14 @@ void gaiaGetHeadsetVer(GAIA_STAROT_IND_T *message) {
 
 // ui主动上报电量-位置-连接状态信息
 void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message) {
+    if (subGaiaNotifyDataIsSame(message->payload)) {
+        DEBUG_LOG("gaiaGetNotifyPowPositionConn data same before, so don't need send");
+        return;
+    } else {
+        DEBUG_LOG("gaiaGetNotifyPowPositionConn notify power position connection");
+        subGaiaNotifyDataRecord(message->payload);
+    }
+
     StarotAttr *head = NULL;
     StarotAttr *attr = NULL;
 
@@ -1051,6 +1070,7 @@ void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message) {
 
 // App主动获取电量-位置-连接状态信息
 void gaiaAppGetNotifyPowPositionConncet(GAIA_STAROT_IND_T *message) {
+    subGaiaNotifyDataClear();
     MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
 }
@@ -1548,6 +1568,11 @@ void starotGaiaParseAudioCfm(const GAIA_SEND_PACKET_CFM_T *m) {
 
 void starotGaiaSetTransportType(gaia_transport_type gaiaTransportType) {
     gaiaStarotPrivateData.gaiaTransportType = gaiaTransportType;
+    if (gaia_transport_gatt == gaiaStarotPrivateData.gaiaTransportType) {
+        bufferSendUnit = IosSendUnit;
+    } else {
+        bufferSendUnit = AndroidSendUnit;
+    }
 }
 
 void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T *message) {
@@ -1806,6 +1831,13 @@ void subGaiaSetCaller(uint8* data, uint16 len) {
 
 void subGaiaSetConnectUnlock(void) {
     DEBUG_LOG("subGaiaSetConnectUnlock");
+    if (appHfpIsCall()) {
+        MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_STATUS_ACTIVE);
+        MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
+        message->status = appHfpGetState();
+        MessageSendConditionally(appGetGaiaTask(), STAROT_DIALOG_STATUS_ACTIVE, message, subGaiaGetConnectLock());
+    }
+    subGaiaNotifyDataClear();
     subGaiaTaskData* task = subGaiaGetTaskData();
     task->connectLock = SUB_GAIA_CONNECT_UNLOCK;
     advManagerStopSpecialVol();
@@ -1830,3 +1862,46 @@ bool subGaiaIsConnectLock(void) {
 
 // endregion
 
+// region 校验通知的数据，是否一致
+
+bool subGaiaNotifyDataIsSame(uint8* data) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    int end = sizeof(task->notifyData);
+    for (int i = 0; i < end; ++i) {
+        if (data[i] != task->notifyData[i]) {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+void subGaiaNotifyDataClear(void) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    memset(task->notifyData, 0X00, sizeof(task->notifyData));
+}
+
+void subGaiaNotifyDataRecord(uint8* data) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    memcpy(task->notifyData, data, sizeof(task->notifyData));
+}
+
+// endregion
+
+// region 常用条件判断
+
+bool subGaiaIsDialogRecoding(void) {
+    if (!appHfpIsCall()) {
+        DEBUG_LOG("subGaiaIsDialogRecoding appHfpIsCall == FALSE");
+        return FALSE;
+    }
+
+    if (appGetGaia()->transformAudioFlag != DIALOG_CAN_TRANSFORM) {
+        DEBUG_LOG("subGaiaIsDialogRecoding transformAudioFlag : %04X", appGetGaia()->transformAudioFlag);
+        return FALSE;
+    }
+
+    DEBUG_LOG("subGaiaIsDialogRecoding return TRUE");
+    return TRUE;
+}
+
+// endregion

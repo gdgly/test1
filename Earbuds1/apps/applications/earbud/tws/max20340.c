@@ -832,11 +832,11 @@ bool max20340_GetConnect(void)
     max20340ReadRegister_withlen(handle, MX20340_REG_STA1, &value, 1);
     max20340Disable(handle);
 
-    if(!(value&0x20)) {
-        return FALSE;
+    if( ((value&0x1c) == (5<<2)) ){
+        return TRUE;
     }
 
-    return TRUE;
+    return FALSE;
 }
 
 

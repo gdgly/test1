@@ -1363,6 +1363,7 @@ static void appSmHandleConnRulesDisconnectHfpA2dpAvrcp(void) {
 }
 
 static void appSmHandleConnRulesNotifyAppPosition(void) {
+    MessageCancelAll(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS);
     MessageSendLater(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL, 200);
     appConnRulesSetRuleComplete(CONN_RULES_NOTIFY_APP_POSITION);
 }
@@ -1642,15 +1643,17 @@ static void appSmHandleInternalTimeoutOutOfEarA2dp(void)
     {
         /* request the handset pauses the AV, indicate not a UI initiated
          * request with FALSE */
-        if(gUserParam.sensorEnable == 1)
-            appAvPause(FALSE);
+        if(appAvPlayStatus() != avrcp_play_status_paused){
+            if(gUserParam.sensorEnable == 1)
+                appAvPause(FALSE);
 
-        /* start the timer to autorestart the audio if earbud is placed
-         * back in the ear. */
-        if (appConfigInEarA2dpStartTimeoutSecs())
-        {
-            MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_IN_EAR_A2DP_START,
-                             NULL, D_SEC(appConfigInEarA2dpStartTimeoutSecs()));
+            /* start the timer to autorestart the audio if earbud is placed
+             * back in the ear. */
+            if (appConfigInEarA2dpStartTimeoutSecs())
+            {
+                MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_IN_EAR_A2DP_START,
+                                 NULL, D_SEC(appConfigInEarA2dpStartTimeoutSecs()));
+            }
         }
     }
 }

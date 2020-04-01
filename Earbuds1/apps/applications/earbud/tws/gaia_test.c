@@ -45,7 +45,7 @@ bool sendDataMessage(Source source, enum GAIA_AUDIO_TYPE type,
 //    return TRUE;
 
     /// 正常传输
-    int dropUnit = 10;
+    int dropUnit = 4;
     if (size > (dropUnit * bufferSendUnit)) {
         /// 丢弃过多的数据，防止数据过多，导致source不可以使用
         int drop = size - (dropUnit * bufferSendUnit);

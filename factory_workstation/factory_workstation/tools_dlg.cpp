@@ -38,6 +38,8 @@ BEGIN_MESSAGE_MAP(tools_dlg, CPropertyPage)
 	ON_BN_CLICKED(IDC_BUTTON25, &tools_dlg::OnBnClickedButton25)
 	ON_BN_CLICKED(IDC_BUTTON26, &tools_dlg::OnBnClickedButton26)
 	ON_BN_CLICKED(IDC_BUTTON27, &tools_dlg::OnBnClickedButton27)
+	ON_BN_CLICKED(IDC_BTN_SENSOR_CALC, &tools_dlg::OnBnClickedBtnSensorCalc)
+	ON_BN_CLICKED(IDC_BTN_TAP_CALC, &tools_dlg::OnBnClickedBtnTapCalc)
 END_MESSAGE_MAP()
 
 void tools_dlg::set_param(void *p)
@@ -219,5 +221,21 @@ void tools_dlg::OnBnClickedButton27()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	software_tool_sz_btaddr  Dlg; 
+	Dlg.DoModal();
+}
+
+#include "software_tool_psensor_calc.h"
+void tools_dlg::OnBnClickedBtnSensorCalc()
+{
+	software_tool_psensor_calc  Dlg; 
+	Dlg.get_param( &( (Cfactory_workstationDlg*)glob_param_p )->glob_param_instance ) ;
+	Dlg.DoModal();
+}
+
+#include "software_tool_tap_calc.h"
+void tools_dlg::OnBnClickedBtnTapCalc()
+{
+	software_tool_tap_calc  Dlg; 
+	Dlg.get_param( &( (Cfactory_workstationDlg*)glob_param_p )->glob_param_instance ) ;
 	Dlg.DoModal();
 }
