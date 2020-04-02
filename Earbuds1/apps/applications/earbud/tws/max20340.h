@@ -44,6 +44,7 @@ bool max20340WriteRegister_withlen(bitserial_handle handle, uint8 reg,  uint8 *v
 bitserial_handle max20340Enable(void);
 void max20340Disable(bitserial_handle handle);
 bool max20340_GetConnect(void); // 系统重新启动之后，来检测一下PLC是否连接
+void max20340Power(bool ison);
 void singlebus_itr_handler(Task task, MessageId id, Message msg);
 void singlebus_key_itr_handler(Task task, MessageId id, Message msg);
 void singlebus_itr_process(void);

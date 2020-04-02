@@ -112,6 +112,7 @@ int appChangeCVCProcessMode(void)
     return 0;
 }
 
+extern void max20340_notify_plc_in(void);
 extern void max20340_notify_plc_out(void);
 ///////////////////////////////////////////////////////////////////////////
 //  部分命令需要使用TASK来处理
@@ -553,12 +554,15 @@ static void box_tap_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_buf)
     }
 }
 
+#include "max20340.h"
 // 手机下发命令
 // payload[3]:command, payload[2/1/0]:cmd param
 int16 gaiaTestProduct(uint8_t *payload)
 {
     int16 result = 0;
+    uint8 tmp1 = payload[1], tmp2 = payload[2];
 
+    DEBUG_LOG("payload[3]=%02x %02x %02x %02x", payload[3], payload[2], payload[1], payload[0]);
     switch (payload[3]) {
         case 0x01:      // Select mic
             g_appConfigSocMic1 = NO_MIC;
@@ -567,15 +571,69 @@ int16 gaiaTestProduct(uint8_t *payload)
                 g_appConfigSocMic1 = 0;
             if((payload[2] & 0x02))
                 g_appConfigSocMic2 = 1;
-            if((payload[2] & 0x03))
-                g_appConfigSocMic1 = 0;
-                g_appConfigSocMic2 = 1;
+            break;
+
+        case 0x02:    // 音频音量设置
+            appAvVolumeSet(tmp2, NULL);
+            break;
+
+        case 0x10:    // 开外设电源
+        case 0x11:    // 关外设电源
+            tmp1 = (0x10 == payload[3]) ? 1 : 0;
+    #ifdef HAVE_EM20168
+            if((tmp2 & (1<<0)))
+                EM20168Power((bool)tmp1);
+    #endif
+    #ifdef HAVE_LIS2DW12
+            if((tmp2 & (1<<1)))
+                lis25Power((bool)tmp1);
+    #endif
+    #ifdef HAVE_MAX20340
+            if((tmp2 & (1<<2)))
+                max20340Power((bool)tmp1);
+    #endif
+    #ifdef ENABLE_APOLLO
+            if((tmp2 & (1<<3)))
+                apolloWakeupPower((bool)tmp1);
+    #endif
+    #ifdef CONFIG_BOARD_V2_LIS25
+            if((tmp2 & (1<<4)))
+                lis25Power((bool)tmp1);
+    #endif
+    #ifdef HAVE_UCS146E0
+            if((tmp2 & (1<<5)))
+                Ucs146e0Power((bool)tmp1);
+    #endif
+            break;
+
+        case 0x12:    // 状态
+            if(1 == tmp2)                           // 入盒
+                max20340_notify_plc_in();
+            else if(2 == tmp2)                      // 出盒
+                max20340_notify_plc_out();
+            else if(3 == tmp2)                      // 关盒
+                appUiCaseStatus(0, -1, -1, -1, 0);
+            else if(4 == tmp2)                      // 开盒
+                appUiCaseStatus(1, -1, -1, -1, 0);
+            else if(5 == tmp2) {                  // 入盒并关盒
+                max20340_notify_plc_in();
+                appUiCaseStatus(0, -1, -1, -1, 0);
+            }
+            break;
+
+        case 0x13:       // power
+            if(1 == tmp2)
+                appPowerOffRequest();
+            else if(2 == tmp2)
+                OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
+            else if(3 == tmp2)       // enter dormant
+                MessageSendLater(appGetUiTask(), APP_UI_ENTER_DORMANT, NULL, D_SEC(1));
             break;
 
         default:
-			result = -1;
+            result = -1;
             break;
     }
 
-	return result;
+    return result;
 }

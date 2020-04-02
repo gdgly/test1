@@ -30,6 +30,7 @@ typedef struct {
   uint16 uCRCKEY;
 } CaseImageHead;
 
+static uint8 _ear_en_dormant = 0;    // 盒子发送消息，告诉耳机进入dormant模式
 static uint8 _ear_reseted = 0;       // 检测到系统复位后，不再接收盒子的其它命令了
 // 根据上面的结构体，升级固件的版本是在第四到第十二字节，共8字节
 static uint8 _case_image_ver[DEV_HWSWVER_LEN], _case_need_upgrade = 0;
@@ -465,9 +466,14 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
 
 static void box_send_charge_event(uint8 *get_buf, uint8 *send_buf)
 {
-    if(get_buf[1] & 0x80){//盒子即将关闭充电
+    // get_buf[1];    // 1:电量低   5:盒子没有充电，耳机充电满  6：盒子充电中，耳机充电满
+    DEBUG_LOG("CASE disconnect PLC: ", get_buf[1]);
 
-    }
+    // 允许耳机在PLC断开时（进入dormant模式)
+    // 此消息不发送给给UI，防止UI处理消息在断开PLC消息之后
+    _ear_en_dormant = 1;
+    online_dbg_record(ONLINE_DBG_ENABLE_DORMANT);
+
     send_buf[0] = get_buf[0];
     send_buf[1] = 0;
     send_buf[2] = 0;
@@ -620,7 +626,7 @@ void singlebus_itr_process(void)
         max20340WriteRegister(handle, MX20340_REG_PLC_MASK, 0x0e);
         //max20340WriteRegister(handle, MX20340_REG_PLC_MASK, 0xff);
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x08){//总线接收数据出错，不做回应，master会重发
-        ;
+        DEBUG_LOG("plcErr");
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x06){//总线接收到数据
 #ifdef MESSAGE_MAX30240_SEND_LATER
       max20340Disable(handle);
@@ -839,6 +845,26 @@ bool max20340_GetConnect(void)
     return FALSE;
 }
 
+void max20340Power(bool ison)
+{
+    if(ison) {
+        if(psbfuncTask)
+            free(psbfuncTask), psbfuncTask = NULL;
+#ifdef TIME_READ_MAX20340_REG
+        if(time_funcTask)
+            free(time_funcTask), time_funcTask = NULL;
+#endif
+
+        max20340_init();
+    }
+    else {
+        bitserial_handle handle;
+
+        handle = max20340Enable();
+        max20340WriteRegister(handle, MX20340_REG_CTRL1, 0xE0);
+        max20340Disable(handle);
+    }
+}
 
 void max20340_init(void)
 {
@@ -864,7 +890,7 @@ void max20340_init(void)
     PanicNotZero(PioSetDir32Bank(bank, mask, 0));
     PanicNotZero(PioSet32Bank(bank, mask, mask));
     PioSetWakeupStateBank(bank,  mask,  0);
-    PioSetDeepSleepEitherLevelBank(bank,  mask,  mask);
+    PioSetDeepSleepEitherLevelBank(bank,  mask,  0);
 
 #ifdef CONFIG_BOARD_V1
     bank = PIO2BANK(MAX20340_EN_PIN);
@@ -954,6 +980,10 @@ void max20340_notify_plc_out(void) {
 //    appChargeFromUi(FALSE);
     DEBUG_LOG("max20340_notify_plc_out");
     if (FALSE == appGetCaseIsOpen()) {
+        if(_ear_en_dormant) {
+            _ear_en_dormant = 0;
+            MessageSendLater(appGetUiTask(), APP_UI_ENTER_DORMANT, NULL, D_SEC(1));
+        }
         DEBUG_LOG("max20340_notify_plc_out, now case is close, so don't send message to application");
         return;
     }
