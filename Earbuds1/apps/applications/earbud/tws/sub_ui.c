@@ -76,6 +76,10 @@ static const ringtone_note app_tone_wakeup[] =
     RINGTONE_STOP
 };
 
+//主副耳敲击提示音，在各自的耳朵中播出
+#define APPTONEMASTER()  appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
+#define APPTONESLAVE()  appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
+
 #define USE_TWO_MIC
 
 ProgRunInfo gProgRunInfo;
@@ -113,8 +117,10 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
 
         if (FALSE == isTap) {                           // 主耳机，APO唤醒
             if(prm->assistantType == ASSISTANT_TYPE_APP)  {
-                if(progRun->gaiaStat == 1)              // 已经连接APP
+                if(progRun->gaiaStat == 1) {             // 已经连接APP
                     MessageSend(appGetUiTask(), APP_ASSISTANT_AWAKEN, 0);
+                    APPTONEMASTER();
+                }
                 else {
                     appUiPlayPrompt(PROMPT_CONNECT_APP);        // 请连接手机APP;
                     return;
@@ -122,19 +128,24 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
             }
             else {
                 MessageSend(appGetUiTask(), APP_ASSISTANT_SYSTEM, 0);
+                APPTONEMASTER();
             }
         }
         else {                                     // 主耳机，TAP唤醒
             if(TAP_WACKUP == keyFunc) {
-                if(progRun->gaiaStat == 1)
+                if(progRun->gaiaStat == 1) {
                     MessageSend(appGetUiTask(), APP_ASSISTANT_TAP_AWAKEN, 0);
+                    APPTONEMASTER();
+                }
                 else {
                     appUiPlayPrompt(PROMPT_CONNECT_APP);        // 请连接手机APP;
                     return;
                 }
             }
-            else if(TAP_SYSTEM == keyFunc)
+            else if(TAP_SYSTEM == keyFunc) {
                 MessageSend(appGetUiTask(), APP_ASSISTANT_TAP_SYSTEM, 0);
+                APPTONEMASTER();
+            }
             else {
                 DBCLINK_LOG("tap no set wakeup");
                 return;
@@ -153,6 +164,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
             if(prm->assistantType == ASSISTANT_TYPE_APP) {
                 if(1 == progRun->peerGaiaStat)  {       // 对方已经启动APP
                     appPeerSigTxWakeupApp(1);  // 1为APO
+                    APPTONESLAVE();
                 }
                 else {
                     appUiPlayPrompt(PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
@@ -161,20 +173,24 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
             }
             else {
                 appPeerSigTxWakeupSys(1);      // 1为APO
+                APPTONESLAVE();
             }
         }
         else {                                          // 副耳机，TAP唤醒
             if(TAP_WACKUP == keyFunc) {
                 if(1 == progRun->peerGaiaStat)  {       // 对方已经启动APP
                     appPeerSigTxWakeupApp(0);  // 0为tap
+                    APPTONESLAVE();
                 }
                 else {
                     appUiPlayPrompt(PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
                     return;
                 }
             }
-            else if(TAP_SYSTEM == keyFunc)
+            else if(TAP_SYSTEM == keyFunc) {
                 appPeerSigTxWakeupSys(0);  // 0为tap
+                APPTONESLAVE();
+            }
             else {
                 DBCLINK_LOG("tap no set wakeup");
                 return;
@@ -401,15 +417,12 @@ static void subUiStarttAssistantSystem(bool isTap)
 {
     (void)isTap;
     HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
-    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
 }
 
 static int16 subUiStartAssistant2Gaia(MessageId id, ProgRIPtr  progRun)
 {
     if(1 != progRun->gaiaStat)
         return -1;
-
-    appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
     /* 唤醒系统助手，需要告诉APP是 APO还是TAP */
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
     if(id == APP_ASSISTANT_AWAKEN){
