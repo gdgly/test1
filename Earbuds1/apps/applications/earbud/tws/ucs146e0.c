@@ -333,7 +333,7 @@ void Ucs146e0_init(void)
     PanicNotZero(PioSetDir32Bank(bank, mask, 0));
     PanicNotZero(PioSet32Bank(bank, mask, mask));
     PioSetWakeupStateBank( bank,  mask,  0);
-    PioSetDeepSleepEitherLevelBank( bank,  mask,  mask);
+    PioSetDeepSleepEitherLevelBank( bank,  mask,  0);
 
     Ucs146e0ReadRegister(handle, 0xbd, &value);
     Ucs146e0ReadRegister(handle, 0xbc, &value);
