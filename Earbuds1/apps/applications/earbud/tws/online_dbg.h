@@ -144,7 +144,20 @@
  *      {
  *         "type":"0x2C",
  *         "function":"avdtp delay report"
- *      }
+ *      },
+ *
+ *      {
+ *          "type":"0x30",
+ *          "function":"case disconnect plc"
+ *      },
+ *      {
+ *          "type":"0x31",
+ *          "function":"start enter dormant"
+ *      },
+ *      {
+ *          "type":"0x32",
+ *          "function":"enter dormant"
+ *      },
  *  ],
  *  "version":"0.01.01"
  * }
@@ -181,6 +194,9 @@
 #define ONLINE_DBG_AVDTP_GET_ALLCAP (0x2B)    /* avdtp get all capabilities */
 #define ONLINE_DBG_AVDTP_DEL_REP    (0x2C)    /* avdtp delay report */
 
+#define ONLINE_DBG_ENABLE_DORMANT   (0x30)    /* get enable dormant */
+#define ONLINE_DBG_START_DORMANT    (0x31)    /* start enter dormant */
+#define ONLINE_DBG_ENTER_DORMANT    (0x32)    /* enter dormant */
 
 typedef enum {
     ONLINE_DBG_APP_REQ_RT_ONLINE_DBG_START   = 0x01,    /* app request packet format */

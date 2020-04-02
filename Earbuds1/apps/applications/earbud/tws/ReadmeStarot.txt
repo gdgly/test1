@@ -1,3 +1,55 @@
+
+  PEER_SYNC_STATUS-->appSmHandlePeerSyncStatus-->appSmSetInitialCoreState-->appSmSetCoreState-->appSmSetCoreState
+  ruleInCaseEnterDfu(这儿应该只需要进入一次）
+
+
+Dormant进入方案：
+   1、盒子在关盖的情况下，检测到耳机充电满时，会向耳机发送断开PLC的命令，然后就真的断开PLC并停止通信（耳机会检测到出盒）。
+   2、耳机在检测到出盒时，查看是否接收到停止PLC通信标志，如果检测成功就立即进入dormant。
+   3、如果出盒时，没有检测到PLC停止标志，设置30分钟的定时器，30分钟内没有入耳的情况下，自己进入dormant模式。
+
+退出Dormant:
+   1、用户操作开盒等启动PLC，耳机重新启动,检测到入盒信息。
+   2、需要在启户拿出PLC之前，发送开盒信息。告诉耳机开盒了。实际没发送开盒也可以，耳机默认为开盒。
+
+
+低功耗：
+      appSmCalcCoreState-->not busy-->APP_STATE_OUT_OF_CASE_IDLE
+   -->appEnterOutOfCaseIdle-->(appConfigIdleTimeoutMs)-->SM_INTERNAL_TIMEOUT_IDLE-->appSmHandleInternalTimeoutIdle
+   -->appSetState(APP_STATE_OUT_OF_CASE_SOPORIFIC)-->appSmStateIsSleepy(previous_state) && appSmStateIsSleepy(new_state))
+   -->appPowerClientAllowSleep
+
+DEMO板的几个测试，电压4.0V
+  BT不连接:              : 1.8mA --->1.4mA
+  BT  连接:              : 2.9mA
+  BT+BLE ：              : 3.1mA
+  BT+BLE+关掉外设        ：1.72mA
+  BT+BLE+接近光          ：1.74mA  左右
+  BT+BLE+接近光+敲       ：1.74mA  左右
+  BT+BLE+接近光+敲+APO   ：2.40mA  （刚开始 2.9mA)
+  入盒之后：             : 540uA (修改 PioSetDeepSleepEitherLevelBank( bank,  mask,  0);） （最底200uA 最高6.4mA)
+  Dormant模式            : 39uA
+
+
+BLE发送命令：============================================================================
+ 00000x01   MIC录音选择   01:主 02:副  03:主+副
+ 0000xx02   播放音频音量  00...7F
+
+ 0000xx10   打开外设  bit0:接近光 1:敲击 2:PLC 3:APO    4:骨麦 5:UCS接近光
+ 0000xx11   关闭外设
+
+ 00000112   入盒
+ 00000212   出盒
+ 00000312   关盒
+ 00000412   开盒
+ 00000512   入盒然后关盒
+
+ 00000113   PowerOFF
+ 00000213   关闭DSP
+ 00000313   TEST enter dormant
+
+
+
 20200318
  仪器BT2000连接我们的设备进行音频测试需要注意的问题：
  1、出现不能切换到HFP，需要两个条件
