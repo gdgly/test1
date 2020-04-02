@@ -48,6 +48,8 @@ uint8 get_online_dbg_state(void) {
     return online_dbg_state;
 }
 
+/* 写入日志文件,调试使用 */
+#define WRITE2LOGFILE  0
 /*
  * 写日志到文件里
  * @code:状态码
@@ -111,9 +113,9 @@ void online_dbg_record(online_dbg_t code) {
         MessageSend(onlineDbgTask, ONLINE_DBG_MSG_TRANS_RT_ONLINE_DBG, NULL);
     }
 
-#ifdef WRITE2LOGFILE
-    wirteLog2File(code);
-#endif
+    if (WRITE2LOGFILE)
+        wirteLog2File(code);
+
 }
 
 void online_dbg_cmd_handler(online_dbg_cmd cmd) {
