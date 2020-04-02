@@ -62,7 +62,7 @@ static const lp_power_table powertable_hfp[]=
     /* mode,        min_interval, max_interval, attempt, timeout, duration */
 //    {lp_active,     0,            0,            0,       0,       1},  /* Active mode for 1 second */
 //    {lp_sniff,      48,           800,          2,       1,       0}   /* Enter sniff mode (30-500ms)*/
-        {lp_passive,      0,           0,          0,       0,       0}
+        {lp_active,      0,           0,          0,       0,       0}
 
 };
 
@@ -73,7 +73,7 @@ static const lp_power_table powertable_hfp_sco[]=
     /* mode,        min_interval, max_interval, attempt, timeout, duration */
 //    {lp_passive,    0,            0,            0,       0,       1},  /* Passive mode */
 //    {lp_sniff,      48,           144,          2,       8,       0}   /* Enter sniff mode (30-90ms)*/
-    {lp_passive,      0,           0,          0,       0,       0}
+    {lp_active,      0,           0,          0,       0,       0}
 };
 
 /*! Power table for the peer link when SCO forwarding active
@@ -84,7 +84,7 @@ static const lp_power_table powertable_peer_SCO_fwd[]=
 //    {lp_active,     0,            0,            0,       0,       5},  /* Active mode for 5 seconds */
 //    {lp_passive,    0,            0,            0,       0,       10}, /* Passive mode. 10 seconds... redial ? */
 //    {lp_sniff,      48,           144,          2,       8,       0}   /* Enter sniff mode (30-90ms)*/
-        {lp_passive,      0,           0,          0,       0,       0}
+        {lp_active,      0,           0,          0,       0,       0}
 
 };
 
