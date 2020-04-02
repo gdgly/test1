@@ -653,6 +653,7 @@ void appSetState(appState new_state)
 {
     appState previous_state = appGetSm()->state;
     DEBUG_LOGF("appSetState, state 0x%02x to 0x%02x", previous_state, new_state);
+    UartPuts2("SM state:", previous_state, new_state);
 #ifdef CONFIG_STAROT
     if (APP_STATE_FACTORY_RESET == previous_state) {
         /// reset factory耗时，在这个时间里，出入充电盒、接近光都没有禁用

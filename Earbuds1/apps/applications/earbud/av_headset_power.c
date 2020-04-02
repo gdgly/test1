@@ -51,6 +51,7 @@ static void appPowerSetState(powerState new_state);
 static void appPowerEnterDormantMode(bool extended_wakeup_events)
 {
     DEBUG_LOG("appPowerEnterDormantMode");
+    UartPuts("PWR dormant");
 
 #ifdef INCLUDE_ACCELEROMETER
     if (extended_wakeup_events)
@@ -264,6 +265,7 @@ static void appPowerExitPowerStateOk(void)
 static void appPowerEnterPowerStateTerminatingClientsNotified(void)
 {
     DEBUG_LOG("appPowerEnterPowerStateTerminatingClientsNotified");
+    UartPuts("PWR notified");
     if (appTaskListSize(appPowerGetClients()))
     {
         appTaskListMessageSendId(appPowerGetClients(), APP_POWER_SHUTDOWN_PREPARE_IND);
@@ -301,6 +303,7 @@ static void appPowerEnterPowerStateSoporificClientsNotified(void)
 {
     DEBUG_LOG("appPowerEnterPowerStateSoporificClientsNotified");
 
+    UartPuts("PWR sopor noti");
     appTaskListMessageSendId(appPowerGetClients(), APP_POWER_SLEEP_PREPARE_IND);
     appPowerSetFlagInAllClients(APP_POWER_SLEEP_PREPARE_RESPONSE_PENDING);
 }
@@ -316,6 +319,7 @@ static void appPowerExitPowerStateSoporificClientsNotified(void)
 static void appPowerEnterPowerStateSoporificClientsResponded(void)
 {
     DEBUG_LOG("appPowerEnterPowerStateSoporificClientsResponded");
+    UartPuts("PWR sopor resp");
     if (appPowerCanSleep())
     {
         appUiSleep();

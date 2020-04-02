@@ -916,6 +916,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         GattManagerCancelWaitForRemoteClient();
         break;
 
+    case APP_UI_ENTER_DORMANT:
+        online_dbg_record(ONLINE_DBG_START_DORMANT);
+        appPowerOffRequest();
+        break;
+
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
