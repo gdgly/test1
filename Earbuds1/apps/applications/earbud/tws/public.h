@@ -379,7 +379,7 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
  */
 #define STAROT_EXT_CONNECT_TIMEOUT
 
-/* 写入日志文件 */
+/* 写入日志文件,调试使用 */
 #define WRITE2LOGFILE
 
 #endif // PUBLIC_H
