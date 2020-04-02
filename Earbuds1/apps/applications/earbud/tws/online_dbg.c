@@ -48,22 +48,18 @@ uint8 get_online_dbg_state(void) {
     return online_dbg_state;
 }
 
+/*
+ * 写日志到文件里
+ * @code:状态码
+ */
 uint8 sign = 0;
-void online_dbg_record(online_dbg_t code) {
-    uint16 fileLogIndex = 0;
+static void wirteLog2File(online_dbg_t code)
+{
     rtime_t timeStamp = 0;
-    uint8 buffer[5];
+    uint16 fileLogIndex = 0;
     static int16 fileSize;
+    uint8 buffer[5];
 
-    online_dbg_buf[record_idx++] = code;
-    if (record_idx == trans_idx) trans_idx++;
-
-    UartPuts1("onLINE=", code);
-
-    if ((ONLINE_DBG_STATE_RT_PACKET == online_dbg_state)
-            && (record_idx - trans_idx > SEND_PKT_LENGTH)) {
-        MessageSend(onlineDbgTask, ONLINE_DBG_MSG_TRANS_RT_ONLINE_DBG, NULL);
-    }
     /* 写入日志 */
     if (appInitCompleted())
     {
@@ -100,8 +96,24 @@ void online_dbg_record(online_dbg_t code) {
         buffer[4] = code;
         FileWrite(fileLogIndex, buffer, sizeof (buffer)/sizeof (uint8));
         ONLINE_DBG_LOG("timeStame = %u,code = %d",timeStamp,code);
-
     }
+}
+
+void online_dbg_record(online_dbg_t code) {
+
+    online_dbg_buf[record_idx++] = code;
+    if (record_idx == trans_idx) trans_idx++;
+
+    UartPuts1("onLINE=", code);
+
+    if ((ONLINE_DBG_STATE_RT_PACKET == online_dbg_state)
+            && (record_idx - trans_idx > SEND_PKT_LENGTH)) {
+        MessageSend(onlineDbgTask, ONLINE_DBG_MSG_TRANS_RT_ONLINE_DBG, NULL);
+    }
+
+#ifdef WRITE2LOGFILE
+    wirteLog2File(code);
+#endif
 }
 
 void online_dbg_cmd_handler(online_dbg_cmd cmd) {
