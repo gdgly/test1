@@ -206,7 +206,7 @@ void lis2dw12_init(void)
     PanicNotZero(PioSetDir32Bank(bank, mask, 0));
     PanicNotZero(PioSet32Bank(bank, mask, mask));
     PioSetWakeupStateBank( bank,  mask,  0);
-    PioSetDeepSleepEitherLevelBank( bank,  mask,  0);
+    PioSetDeepSleepEitherLevelBank( bank,  mask,  mask);
 
     lis2dw12ReadRegister(handle, 0xf, &value);
     lis2dw12ReadRegister(handle, 0xf, &value);
