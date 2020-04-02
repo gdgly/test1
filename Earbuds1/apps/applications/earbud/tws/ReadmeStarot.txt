@@ -28,7 +28,7 @@ DEMO板的几个测试，电压4.0V
   BT+BLE+接近光+敲       ：1.74mA  左右
   BT+BLE+接近光+敲+APO   ：2.40mA  （刚开始 2.9mA)
   入盒之后：             : 540uA (修改 PioSetDeepSleepEitherLevelBank( bank,  mask,  0);） （最底200uA 最高6.4mA)
-  Dormant模式            : 39uA
+  Dormant模式            : 3.9uA
 
 
 BLE发送命令：============================================================================

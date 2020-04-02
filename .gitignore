@@ -85,3 +85,9 @@ Earbuds1/apps/applications/earbud/qcc512x_rom_v21/CF376_CG814/dfu/20*
 /Tools/ProductCaseTools/ProductCaseTools/Release
 /Tools/ProductCaseTools/ProductCaseTools/Debug
 /Tools/ProductCaseTools/ProductCaseTools.opensdf
+/factory_workstation/factory_workstation/Debug
+/factory_workstation/factory_workstation/Release
+/factory_workstation/factory_workstation/log
+/factory_workstation/work_start/Debug
+/factory_workstation/work_start/Release
+
