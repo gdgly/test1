@@ -16,6 +16,7 @@ NOTES
 /****************************************************************************
     Header files
 */
+#include <stdio.h>
 #include "hfp.h"
 #include "hfp_private.h"
 #include "hfp_link_manager.h"
@@ -93,12 +94,15 @@ static void hfpHandleCurrentCallsInd(hfp_link_data* link, uint16 call_idx, hfp_c
             message->mode        = mode;
             message->multiparty  = multiparty;
             message->number_type = hfpConvertNumberType(type);
+
             /* Don't include NULL in size */
             message->size_number = (uint16)number_length;
             /* Copy number into message */
             memmove(message->number, number, number_length);
             /* NULL terminate number */
             message->number[number_length] = '\0';
+            printf("fuck call number: [%s]\n", message->number);
+            printf("fuck before type is : %d number type is : %d\n", type, message->number_type);
             MessageSend(theHfp->clientTask, HFP_CURRENT_CALLS_IND, message);
         }
         /* Change state if necessary */

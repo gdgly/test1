@@ -1049,7 +1049,8 @@ static int16 appUiHfpSaveId(uint8 *number, uint16 size_number,
         memcpy(pCall->number, number, size_number);
         pCall->number[size_number] = 0;
         DEBUG_LOG("Call[%d]Number[%d]: %c %c %c %c", progRun->callIndex, size_number,
-            number[7], number[8], number[9], number[10]);
+            number[0], number[1], number[2], number[3]);
+        DEBUG_PRINT("Call:%s", number);
     }
 
     if(name && size_name > 0) {
