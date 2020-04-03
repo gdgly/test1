@@ -2074,7 +2074,8 @@ static void appSmHandleHfpDisconnectedInd(APP_HFP_DISCONNECTED_IND_T *ind)
                     DEBUG_LOG("appSmHandleHfpDisconnectedInd have APP_HFP_NEED_RECONNECT_IND and handset is connect, so reconnect");
                     appHfpConnectHandset();
                 } else if (appDeviceIsHandsetConnected() && !appSmIsInCase() && appSmIsInEar()) {
-                    appHfpConnectHandset();
+                    MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_HFP_DISCONNECT);
+                    MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_HFP_DISCONNECT, NULL, 2000);
                 }
 #endif
 
@@ -2499,6 +2500,11 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             break;
         case APP_HFP_DISCONNECTED_IND:
             appSmHandleHfpDisconnectedInd((APP_HFP_DISCONNECTED_IND_T *)message);
+            break;
+        case SM_INTERNAL_TIMEOUT_HFP_DISCONNECT:
+            MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_HFP_DISCONNECT);
+            if (appDeviceIsHandsetConnected() && !appSmIsInCase() && appSmIsInEar())
+                appHfpConnectHandset();
             break;
         case APP_HFP_SCO_CONNECTED_IND:
             appSmHandleHfpScoConnectedInd();
