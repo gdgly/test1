@@ -374,7 +374,25 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             send_buf[1] = 0x15;//需要返回值的话，给send_buf赋值
             send_buf[2] = EM20168_statcheck();
             break;
-
+        case 0x16: //设置音量
+            appAvVolumeSet(get_buf[2],NULL);
+            send_buf[2] = get_buf[2];
+            break;
+        case 0x17://获取音量只或微调值，get_buf[2]==0x00表示获取音量，get_buf[2]==0x01表示获取微调值
+            if( 0x00 == get_buf[2]){//获取音量值
+                send_buf[2] =appAvVolumeGet();
+            }
+            else if(0x01 == get_buf[2]){
+                ParamLoadFixPrm(NULL);
+                send_buf[2]=gFixParam.aud_adj;
+            }
+            break;
+        case 0x18://设置微调值
+            send_buf[1] =0x18;
+            gFixParam.aud_adj = get_buf[2];
+            ParamSaveFixPrm(NULL);
+            send_buf[2]= get_buf[2];
+            break;
         case 0x60:         // 当前 耳机的 STATE 发给盒子，调试使用
             tmpval = (uint16)appGetState();
             send_buf[2] = (tmpval >> 8) & 0xFF;
