@@ -80,6 +80,8 @@ static const ringtone_note app_tone_wakeup[] =
 #define APPTONEMASTER()  appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
 #define APPTONESLAVE()  appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
 
+static uint8 should_connect_prompt = 1;
+
 #define USE_TWO_MIC
 
 ProgRunInfo gProgRunInfo;
@@ -842,6 +844,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
     case APP_PSENSOR_OUTEAR:
         online_dbg_record(ONLINE_DBG_OUT_EAR);
+        should_connect_prompt = 1;
         subUiEarInOutHandle(progRun, FALSE);
 //        appUiPowerSave(POWER_MODE_OUT_CASE);
         break;
@@ -908,12 +911,13 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         if(appTestIsHandsetA2dpMediaConnected()){
             if(!appDeviceIsHandsetA2dpStreaming() &&
                     ((progRun->dial_stat & (DIAL_IN_ACTIVE|DIAL_OUT_ACTIVE|DIAL_ACTIVE)) == 0) && appDeviceIsHandsetConnected())
-                    appUiPlayPrompt(PROMPT_CONNECTED);
-        }else{
+                if (should_connect_prompt) appUiPlayPrompt(PROMPT_CONNECTED);
+            should_connect_prompt = 0;
+        } else {
             MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
             MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 1000);
         }
-            break;
+        break;
 
     case APP_BLE_SCANABLE_START:
         printf("appSubUiHandleMessage APP_BLE_SCANABLE_START");
