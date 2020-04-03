@@ -573,7 +573,7 @@ static void appHfpSetState(hfpState state)
             appHfpExitConnectedActive();
             if (state < HFP_STATE_CONNECTED_IDLE || state > HFP_STATE_CONNECTED_ACTIVE)
                 appHfpExitConnected();
-            if (HFP_STATE_CONNECTED_IDLE == state) {
+            if ((HFP_STATE_CONNECTED_IDLE == state) && (gUserParam.sensorEnable == 1)) {
                 MessageCancelAll(appGetHfpTask(), APP_HFP_AUDIO_REQUEST_TIMEOUT);
                 appHfpDisconnectInternal();
             }
@@ -907,6 +907,7 @@ static void appHfpHandleHfpSlcDisconnectIndication(const HFP_SLC_DISCONNECT_IND_
 
 /*! \brief Handle SCO Audio connect indication
 */    
+extern bool subGaiaIsDialogRecoding(void);
 static void appHfpHandleHfpAudioConnectIndication(const HFP_AUDIO_CONNECT_IND_T *ind)
 {
     DEBUG_LOG("appHfpHandleHfpAudioConnectIndication");
@@ -945,7 +946,9 @@ static void appHfpHandleHfpAudioConnectIndication(const HFP_AUDIO_CONNECT_IND_T 
             /* accept or not with the rule described above */
             /* We can't reject SCO for TWS+ if we are out of ear as this can cause issues with some phone apps.
              * The TWS+ the phone will also only send the call audio to the earbuds that are 'inEar' */
-            bool accept = (is_tws_plus) || (!is_tws_plus && (local_in_ear || peer_in_ear));
+            bool accept1 = (!local_in_ear && !peer_in_ear && !appSmIsInCase() && !appPeerSyncIsPeerInCase() && (gUserParam.sensorEnable == 0));
+            bool accept2 = subGaiaIsDialogRecoding();
+            bool accept = (is_tws_plus) || (!is_tws_plus && (local_in_ear || peer_in_ear || accept1 || accept2));
 
             if(accept)
             {

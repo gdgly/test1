@@ -1546,6 +1546,7 @@ void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T *message) {
         DEBUG_LOG("call disable_audio_forward(FALSE);");
         gaiaStarotPrivateData.audioTransType = 0;
         gaiaClearDropAudioSize();
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HFP_REQUEST_SCO_AUDIO);
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
                         ((appGetGaia()->transformAudioFlag & DIALOG_CAN_TRANSFORM) > 0 ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE),

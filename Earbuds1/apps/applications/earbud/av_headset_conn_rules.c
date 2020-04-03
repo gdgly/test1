@@ -1666,7 +1666,7 @@ static ruleAction ruleInEarScoTransferToEarbud(void)
 
     /* For TWS+ transfer the audio the local earbud is in Ear.
      * For TWS Standard, transfer the audio if local earbud or peer is in Ear. */
-    if (appSmIsInEar() || (!appDeviceIsTwsPlusHandset(appHfpGetAgBdAddr()) && appPeerSyncIsPeerInEar()))
+    if (appSmIsInEar() || (!appDeviceIsTwsPlusHandset(appHfpGetAgBdAddr()) && appPeerSyncIsPeerInEar()) || subGaiaIsDialogRecoding() || (gUserParam.sensorEnable == 0))
     {
         RULE_LOG("ruleInEarScoTransferToEarbud, run as call is active and an earbud is in ear");
         return RULE_ACTION_RUN;
