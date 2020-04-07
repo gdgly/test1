@@ -314,6 +314,9 @@ int Cfactory_workstationDlg::LoadCheckConf()
 	glob_param_instance.checkbox_sz_option_instance.g_if_check_plc_commu_right =	ini.GetUInt("SZ_CHECKBOX", "g_if_check_plc_commu_right", 0x11, 10);
 
 	glob_param_instance.burnsn_sz_option_instance.g_burn_sn_len =	ini.GetUInt("SZ_BURNSN", "g_burn_sn_len", 0x11, 10);
+	glob_param_instance.burnsn_sz_option_instance.g_l_sn_prompt =					ini.GetString("SZ_BURNSN", "g_l_sn_prompt");
+	glob_param_instance.burnsn_sz_option_instance.g_r_sn_prompt =					ini.GetString("SZ_BURNSN", "g_r_sn_prompt");
+	glob_param_instance.burnsn_sz_option_instance.g_c_sn_prompt =					ini.GetString("SZ_BURNSN", "g_c_sn_prompt");
 	
 	glob_param_instance.last_sel_soft = ini.GetString("GLOBLE", "last_sel_soft");
 	if(glob_param_instance.last_sel_soft == ""){//ini中没找到last_sel_soft配置说明是第一次打开软件

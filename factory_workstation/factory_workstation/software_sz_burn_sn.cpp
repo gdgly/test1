@@ -304,13 +304,18 @@ void software_sz_burn_sn::OnEnChangeEdit2()
 	CString stmp;
 	m_EditSn_l.GetWindowTextA(sText);
 	if(sText.GetLength() == burnsn_sz_option_instance.g_burn_sn_len){//v3
-		if(WorkerThreadProc_in_flag == 0){
-			burn_flag = 1;
-			CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_sz_burn_sn::WorkerThreadProc, this, 0, NULL);
-			stmp = "sn号输入成功" + sText;
-			AddEvent2List(stmp);
+		if(sText.Find(burnsn_sz_option_instance.g_l_sn_prompt) >= 0){
+			if(WorkerThreadProc_in_flag == 0){
+				burn_flag = 1;
+				CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_sz_burn_sn::WorkerThreadProc, this, 0, NULL);
+				stmp = "sn号输入成功" + sText;
+				AddEvent2List(stmp);
+			}else{
+				AddEvent2List("烧写进程尚未退出，请稍后！");
+			}
 		}else{
-			AddEvent2List("烧写进程尚未退出，请稍后！");
+			AddEvent2List("左耳sn与配置不符！");
+			AfxMessageBox("左耳sn与配置不符！");
 		}
 	}
 	// TODO:  在此添加控件通知处理程序代码
@@ -327,13 +332,18 @@ void software_sz_burn_sn::OnEnChangeEdit15()
 	CString stmp;
 	m_EditSn_r.GetWindowTextA(sText);
 	if(sText.GetLength() == burnsn_sz_option_instance.g_burn_sn_len){//v3
-		if(WorkerThreadProc_in_flag == 0){
-			burn_flag = 2;
-			CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_sz_burn_sn::WorkerThreadProc, this, 0, NULL);
-			stmp = "sn号输入成功" + sText;
-			AddEvent2List(stmp);
+		if(sText.Find(burnsn_sz_option_instance.g_r_sn_prompt) >= 0){
+			if(WorkerThreadProc_in_flag == 0){
+				burn_flag = 2;
+				CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_sz_burn_sn::WorkerThreadProc, this, 0, NULL);
+				stmp = "sn号输入成功" + sText;
+				AddEvent2List(stmp);
+			}else{
+				AddEvent2List("烧写进程尚未退出，请稍后！");
+			}
 		}else{
-			AddEvent2List("烧写进程尚未退出，请稍后！");
+			AddEvent2List("右耳sn与配置不符！");
+			AfxMessageBox("右耳sn与配置不符！");
 		}
 	}
 	// TODO:  在此添加控件通知处理程序代码
@@ -350,13 +360,18 @@ void software_sz_burn_sn::OnEnChangeEdit3()
 	CString stmp;
 	m_EditSn_c.GetWindowTextA(sText);
 	if(sText.GetLength() == burnsn_sz_option_instance.g_burn_sn_len){//v3
-		if(WorkerThreadProc_in_flag == 0){
-			burn_flag = 3;
-			CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_sz_burn_sn::WorkerThreadProc, this, 0, NULL);
-			stmp = "sn号输入成功" + sText;
-			AddEvent2List(stmp);
+		if(sText.Find(burnsn_sz_option_instance.g_c_sn_prompt) >= 0){
+			if(WorkerThreadProc_in_flag == 0){
+				burn_flag = 3;
+				CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_sz_burn_sn::WorkerThreadProc, this, 0, NULL);
+				stmp = "sn号输入成功" + sText;
+				AddEvent2List(stmp);
+			}else{
+				AddEvent2List("烧写进程尚未退出，请稍后！");
+			}
 		}else{
-			AddEvent2List("烧写进程尚未退出，请稍后！");
+			AddEvent2List("盒子sn与配置不符！");
+			AfxMessageBox("盒子sn与配置不符！");
 		}
 	}
 	// TODO:  在此添加控件通知处理程序代码

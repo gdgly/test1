@@ -2,8 +2,8 @@
 #include "afxcmn.h"
 #include "Ini.h"
 
-#define	SOFT_VERSION	" V0.74.5"
-//#define	SOFT_VERSION	" VT.74.5"
+#define	SOFT_VERSION	" V0.74.6"
+//#define	SOFT_VERSION	" VT.74.6"
 #define DEVICE_CHECK_CONF "config.ini"
 
 #define CHILD_DLG_NAME_FZ_BURN "∑Ω÷€ …’–¥"
@@ -316,6 +316,9 @@ struct checkbox_sz_option_str{
 
 struct burnsn_sz_option_str{
 	UINT g_burn_sn_len;
+	CString g_l_sn_prompt;
+	CString g_r_sn_prompt;
+	CString g_c_sn_prompt;
 };
 
 struct glob_param{

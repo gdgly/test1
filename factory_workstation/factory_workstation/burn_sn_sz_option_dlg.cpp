@@ -52,9 +52,15 @@ void burn_sn_sz_option_dlg::OnBnClickedOk()
 	CString sText;
 	GetDlgItem(IDC_EDIT8)->GetWindowTextA(sText);
 	StrToIntEx(sText, STIF_SUPPORT_HEX, (int*)&burnsn_sz_option_instance.g_burn_sn_len);
+	GetDlgItem(IDC_EDIT7)->GetWindowTextA(burnsn_sz_option_instance.g_l_sn_prompt);
+	GetDlgItem(IDC_EDIT9)->GetWindowTextA(burnsn_sz_option_instance.g_r_sn_prompt);
+	GetDlgItem(IDC_EDIT10)->GetWindowTextA(burnsn_sz_option_instance.g_c_sn_prompt);
 
 	ini.SetPathName(ini_path);
 	ini.WriteUInt("SZ_BURNSN" ,"g_burn_sn_len",burnsn_sz_option_instance.g_burn_sn_len,10);
+	ini.WriteString("SZ_BURNSN" ,"g_l_sn_prompt",burnsn_sz_option_instance.g_l_sn_prompt);
+	ini.WriteString("SZ_BURNSN" ,"g_r_sn_prompt",burnsn_sz_option_instance.g_r_sn_prompt);
+	ini.WriteString("SZ_BURNSN" ,"g_c_sn_prompt",burnsn_sz_option_instance.g_c_sn_prompt);
 
 	CDialogEx::OnOK();
 }
@@ -76,6 +82,10 @@ BOOL burn_sn_sz_option_dlg::OnInitDialog()
 
 	sText.Format("%d", burnsn_sz_option_instance.g_burn_sn_len);
 	GetDlgItem(IDC_EDIT8)->SetWindowTextA(sText);
+
+	GetDlgItem(IDC_EDIT7)->SetWindowTextA(burnsn_sz_option_instance.g_l_sn_prompt);
+	GetDlgItem(IDC_EDIT9)->SetWindowTextA(burnsn_sz_option_instance.g_r_sn_prompt);
+	GetDlgItem(IDC_EDIT10)->SetWindowTextA(burnsn_sz_option_instance.g_c_sn_prompt);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
 }
