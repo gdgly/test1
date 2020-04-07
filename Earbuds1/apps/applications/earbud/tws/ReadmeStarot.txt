@@ -17,7 +17,13 @@ Dormant进入方案：
       appSmCalcCoreState-->not busy-->APP_STATE_OUT_OF_CASE_IDLE
    -->appEnterOutOfCaseIdle-->(appConfigIdleTimeoutMs)-->SM_INTERNAL_TIMEOUT_IDLE-->appSmHandleInternalTimeoutIdle
    -->appSetState(APP_STATE_OUT_OF_CASE_SOPORIFIC)-->appSmStateIsSleepy(previous_state) && appSmStateIsSleepy(new_state))
-   -->appPowerClientAllowSleep
+   -->appPowerClientAllowSleep-->appPowerSetState(POWER_STATE_SOPORIFIC_CLIENTS_NOTIFIED)-->SM(APP_POWER_SLEEP_PREPARE_IND)
+   -->SM(APP_STATE_OUT_OF_CASE_SOPORIFIC_TERMINATING)-->appEnterSubStateTerminating()
+   -->appSmInitiateLinkDisconnection()-->SM_INTERNAL_LINK_DISCONNECTION_COMPLETE/SM_INTERNAL_TIMEOUT_LINK_DISCONNECTION
+         这个函数是断开当前的HANDSET&PEER，断开完成之后，才会去执行DISCONNECTION_COMPLETE。
+  ...
+  -->appPowerSleepPrepareResponse()-->appPowerSetState(POWER_STATE_SOPORIFIC_CLIENTS_RESPONDED)-->appPowerEnterPowerStateSoporificClientsResponded()-->Dormant
+
 
 DEMO板的几个测试，电压4.0V
   BT不连接:              : 1.8mA --->1.4mA
@@ -27,13 +33,16 @@ DEMO板的几个测试，电压4.0V
   BT+BLE+接近光          ：1.74mA  左右
   BT+BLE+接近光+敲       ：1.74mA  左右
   BT+BLE+接近光+敲+APO   ：2.40mA  （刚开始 2.9mA)
-  入盒之后：             : 540uA (修改 PioSetDeepSleepEitherLevelBank( bank,  mask,  0);） （最底200uA 最高6.4mA)
+  入盒之后：             : 540uA （最底200uA 最高6.4mA)
+
+  出盒连接手机(无BLE)    ：670uA（打开了一下BLE,反而变成500uA，加上BLE为什么反而变少？好象是经典蓝牙的心跳间隔更大了）
   Dormant模式            : 3.9uA
 
 
 BLE发送命令：============================================================================
  00000x01   MIC录音选择   01:主 02:副  03:主+副
  0000xx02   播放音频音量  00...7F
+ 0000xx03   播放提示音频  xx表示提示音频序号
 
  0000xx10   打开外设  bit0:接近光 1:敲击 2:PLC 3:APO    4:骨麦 5:UCS接近光
  0000xx11   关闭外设

@@ -594,6 +594,9 @@ int16 gaiaTestProduct(uint8_t *payload)
         case 0x02:    // 音频音量设置
             appAvVolumeSet(tmp2, NULL);
             break;
+        case 0x03:    // 播放提示音
+            ProductPlayAudio(tmp2);
+            break;
 
         case 0x10:    // 开外设电源
         case 0x11:    // 关外设电源
