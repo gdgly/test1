@@ -253,6 +253,7 @@ void Ucs146e0_get_crosstalk_init(void)//260ms后读取crosstalk值
     uint8 i;
     bitserial_handle handle;
     handle = Ucs146e0Enable();
+    Ucs146e0WriteRegister(handle, 0x28, 0);
     for(i=0; i<ARRAY_DIM(ucs146e0_get_auto_calvalue_init_array); i++){
         Ucs146e0WriteRegister(handle,
                 ucs146e0_get_auto_calvalue_init_array[i].reg,
