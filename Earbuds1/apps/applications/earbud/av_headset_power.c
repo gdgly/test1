@@ -51,7 +51,6 @@ static void appPowerSetState(powerState new_state);
 static void appPowerEnterDormantMode(bool extended_wakeup_events)
 {
     DEBUG_LOG("appPowerEnterDormantMode");
-    UartPuts("PWR dormant");
 
 #ifdef INCLUDE_ACCELEROMETER
     if (extended_wakeup_events)
@@ -319,10 +318,13 @@ static void appPowerExitPowerStateSoporificClientsNotified(void)
 static void appPowerEnterPowerStateSoporificClientsResponded(void)
 {
     DEBUG_LOG("appPowerEnterPowerStateSoporificClientsResponded");
-    UartPuts("PWR sopor resp");
+
     if (appPowerCanSleep())
     {
         appUiSleep();
+#ifdef CONFIG_STAROT  /* 此处为outofcase_idle, 需要进入dormant模式，我们不使用dormant而直接关机 */
+        PsuConfigure(PSU_ALL, PSU_ENABLE, FALSE);
+#endif
         appPowerEnterDormantMode(TRUE);
     }
     else
@@ -549,6 +551,7 @@ void appPowerClientUnregister(Task task)
 void appPowerClientAllowSleep(Task task)
 {
     DEBUG_LOGF("appPowerClientAllowSleep %p", task);
+    UartPuts1("PWR allowslp,clis=", appTaskListSize(appPowerGetClients()));
 
     if (appPowerSetFlagInClient(task, APP_POWER_ALLOW_SLEEP))
     {
