@@ -19,6 +19,7 @@ void Ucs146e0_get_crosstalk_init(void);//260ms后读取crosstalk值
 unsigned short Ucs146e0_get_crosstalk_calvalue(void);
 void Ucs146e0_get_ps_cal_init(unsigned short cal_value);//初始化完需200ms延时后读取ps值
 unsigned short Ucs146e0_get_ps_calvalue(void);
+bool Ucs146e0_get_inout_ear(void);//返回true表示入耳，false出耳
 
 #define UCS146E0_I2C_ADDR 0x38
 #define UCS146E0_I2C_FREQ 400
