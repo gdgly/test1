@@ -231,6 +231,22 @@ int Ucs146e0_GetStatus(void)
     }
 }
 
+bool Ucs146e0_get_inout_ear(void)//返回true表示入耳，false出耳
+{
+    uint8 value;
+    bitserial_handle handle;
+
+    handle = Ucs146e0Enable();
+    Ucs146e0ReadRegister(handle, 2, &value);
+    Ucs146e0Disable(handle);
+
+    if( (value & 0x20) ){
+        return TRUE;//表示入耳
+    }else{
+        return FALSE;//表示出耳
+    }
+}
+
 int Ucs146e0Power(bool isOn)
 {
     int ret;
