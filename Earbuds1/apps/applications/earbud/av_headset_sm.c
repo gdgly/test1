@@ -86,6 +86,7 @@ static appState appSmCalcCoreState(void)
 {
     bool busy = appAvIsStreaming() || appHfpIsScoActive();
 
+    UartPuts2("Calc busy=", busy, appSmGetPhyState());
     switch (appSmGetPhyState())
     {
         case PHY_STATE_IN_CASE:
@@ -217,6 +218,7 @@ static void appSmInitiateLinkDisconnection(smDisconnectBits links_to_disconnect,
     {
         appSmDisconnectLockSetLinks(disconnecting_links);
     }
+    UartPuts1("CON dis bef b=", appSmDisconnectLockGet());
     msg->post_disconnect_action = post_disconnect_action;
     MessageSendConditionally(appGetSmTask(), SM_INTERNAL_LINK_DISCONNECTION_COMPLETE,
                              msg, &appSmDisconnectLockGet());
@@ -442,6 +444,7 @@ static void appEnterOutOfCaseIdle(void)
     /* Show idle on LEDs */
     appUiIdleActive();
 
+    UartPuts1("IDLE ms=", appConfigIdleTimeoutMs());
     if (appConfigIdleTimeoutMs())
     {
         MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_IDLE, NULL, appConfigIdleTimeoutMs());
@@ -653,7 +656,7 @@ void appSetState(appState new_state)
 {
     appState previous_state = appGetSm()->state;
     DEBUG_LOGF("appSetState, state 0x%02x to 0x%02x", previous_state, new_state);
-    UartPuts2("SM state:", previous_state, new_state);
+    UartPuts2x("SM state:", previous_state, new_state);
 #ifdef CONFIG_STAROT
     if (APP_STATE_FACTORY_RESET == previous_state) {
         /// reset factory耗时，在这个时间里，出入充电盒、接近光都没有禁用
@@ -994,6 +997,7 @@ static void appSmHandleConManagerConnectionInd(CON_MANAGER_CONNECTION_IND_T* ind
     }
 
     appSmUpdateDisconnectingLinks();
+    UartPuts1("CON ind b=", appSmDisconnectLockGet());
 
     if (ind->ble)
     {
@@ -2182,6 +2186,7 @@ static void appSmHandleInternalLinkDisconnectionTimeout(void)
 {
     bdaddr addr;
 
+    UartPuts2("CONN dis tout:", appSmDisconnectLockPeerIsDisconnecting(), appSmDisconnectLockHandsetIsDisconnecting());
     DEBUG_LOG("appSmHandleInternalLinkDisconnectionTimeout");
     if (appSmDisconnectLockPeerIsDisconnecting())
     {
@@ -2216,6 +2221,7 @@ static void appSmHandleInternalLinkDisconnectionTimeout(void)
             appSmDisconnectLockClearLinks(SM_DISCONNECT_HANDSET);
         }
     }
+    UartPuts1("CONN distout b:", appSmDisconnectLockGet());
 }
 
 #ifdef INCLUDE_DFU
@@ -2354,6 +2360,7 @@ static void appSmHandleInternalAllRequestedLinksDisconnected(SM_INTERNAL_LINK_DI
         break;
     }
 
+    UartPuts2x("Link disconn s=", appGetState(), 0);
     switch (appGetState())
     {
         case APP_STATE_OUT_OF_CASE_SOPORIFIC_TERMINATING:
