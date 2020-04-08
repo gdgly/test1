@@ -218,6 +218,18 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 MessageSendLater(task, COMMU_INTERVAL_RECORD, NULL, 10);
 
                 CummuhandleSendData(task, (uint8*)"checkresp STARTRECORD", 22);
+
+                { /* 生产中，在测试录音的时候，将耳机设置为单耳模式，后续的生产中才能正确进入底功耗 */
+                    BtAddrPrmPtr prm = &gBtAddrParam;
+                    if(FALSE == prm->single_era) {
+                        prm->single_era = TRUE;
+                        prm->peer_addr.addr.nap = 0xFFFF;
+                        prm->peer_addr.addr.uap = 0xFF;
+                        prm->peer_addr.addr.lap = 0xFFFFFF;
+                        ParamSaveBtAddrPrm(prm);
+                    }
+                }
+
             }
             if(strstr((char *)payload, "check STARTRECORD1")){
 #ifdef ENABLE_APOLLO
