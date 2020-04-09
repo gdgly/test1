@@ -383,6 +383,24 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
  */
 #define STAROT_EXT_CONNECT_TIMEOUT
 
+/*
+场景：
+    hfp从active转好到idle模式
+结果：
+    重新建立hfp连接
+ */
+#define STAROT_ENFORCE_RESTART_HFP
+
+/*
+场景：
+    通话中，取下耳机，没有放入充电盒中，不释放音频的audio通道
+ */
+#define STAROT_NOT_RELEASE_HFP_AUDIO
+
+#ifdef STAROT_NOT_RELEASE_HFP_AUDIO
+#undef appConfigOutOfEarScoTimeoutSecs()
+#define appConfigOutOfEarScoTimeoutSecs()      (0)
+#endif
 
 
 #endif // PUBLIC_H

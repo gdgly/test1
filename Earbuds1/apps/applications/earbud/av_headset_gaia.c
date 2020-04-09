@@ -433,5 +433,9 @@ void appGaiaAllowNewConnections(bool allow) {
     appGetGaia()->connections_allowed = allow;
 }
 
+bool appGaiaIsConnect(void) {
+    return NULL != (appGetGaia()->transport);
+}
+
 #endif /* INCLUDE_DFU */
 

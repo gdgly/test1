@@ -2090,10 +2090,13 @@ static void appSmHandleHfpDisconnectedInd(APP_HFP_DISCONNECTED_IND_T *ind)
                 if (MessageCancelAll(appGetHfpTask(), APP_HFP_NEED_RECONNECT_IND) > 0 && appDeviceIsHandsetConnected() && !appSmIsInCase()) {
                     DEBUG_LOG("appSmHandleHfpDisconnectedInd have APP_HFP_NEED_RECONNECT_IND and handset is connect, so reconnect");
                     appHfpConnectHandset();
-                } else if (appDeviceIsHandsetConnected() && !appSmIsInCase() && appSmIsInEar()) {
+                }
+#ifdef STAROT_ENFORCE_RESTART_HFP
+                else if (appDeviceIsHandsetConnected() && !appSmIsInCase() && appSmIsInEar()) {
                     MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_HFP_DISCONNECT);
                     MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_HFP_DISCONNECT, NULL, 2000);
                 }
+#endif
 #endif
 
 //#ifdef CONFIG_STAROT

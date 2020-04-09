@@ -573,10 +573,12 @@ static void appHfpSetState(hfpState state)
             appHfpExitConnectedActive();
             if (state < HFP_STATE_CONNECTED_IDLE || state > HFP_STATE_CONNECTED_ACTIVE)
                 appHfpExitConnected();
+#ifdef STAROT_ENFORCE_RESTART_HFP
             if ((HFP_STATE_CONNECTED_IDLE == state) && (gUserParam.sensorEnable == 1)) {
                 MessageCancelAll(appGetHfpTask(), APP_HFP_AUDIO_REQUEST_TIMEOUT);
                 appHfpDisconnectInternal();
             }
+#endif
             break;
         case HFP_STATE_CONNECTED_INCOMING:
             appHfpExitConnectedIncoming(state);
@@ -949,6 +951,9 @@ static void appHfpHandleHfpAudioConnectIndication(const HFP_AUDIO_CONNECT_IND_T 
             bool accept1 = (!local_in_ear && !peer_in_ear && !appSmIsInCase() && !appPeerSyncIsPeerInCase() && (gUserParam.sensorEnable == 0));
             bool accept2 = subGaiaIsDialogRecoding();
             bool accept = (is_tws_plus) || (!is_tws_plus && (local_in_ear || peer_in_ear || accept1 || accept2));
+#ifdef STAROT_NOT_RELEASE_HFP_AUDIO
+            accept = TRUE;
+#endif
 
             if(accept)
             {
