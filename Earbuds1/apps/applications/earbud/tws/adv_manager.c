@@ -121,6 +121,9 @@ uint8 *advManagerAddManufacturerSpecificData(uint8 *ad_data, uint8 *space) {
 
 // endregion
 
+
+// region ble配对信息
+
 bool appBleIsBond(void) {
     BlePairInfo blePairInfo;
     ParamLoadBlePair(&blePairInfo);
@@ -132,6 +135,23 @@ uint32 appBleGetBondCode(void) {
     ParamLoadBlePair(&blePairInfo);
     return blePairInfo.bondCode;
 }
+
+bool appBleFindBondCode(uint32 bindCode) {
+    if (0X0000 == bindCode) {
+        return FALSE;
+    }
+
+    BtAddrPrmPtr prm = &gBtAddrParam;
+    for (int i = 0; i < BLEPAIR_COUNT; ++i) {
+        if (prm->ble_pair[i].bondCode == bindCode) {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+// endregion
 
 
 void appBleSetSync(bool status) {
@@ -214,6 +234,41 @@ void advManagerSaveCurrentFeature(uint8 feature) {
 
 uint8 advManagerGetBeforeFeature(void) {
     return bleFeature;
+}
+
+// endregion
+
+// region 设置BLE地址
+
+bool advManagerSetBleAddress(void) {
+    DEBUG_LOG("advManagerSetBleAddress");
+
+    bdaddr* bleAddress = NULL;
+    bdaddr tempAddress;
+    if (appConfigIsLeft()) {
+        bleAddress = &gProgRunInfo.addr;
+    } else {
+        if (appDeviceGetPeerBdAddr(&tempAddress)) {
+            bleAddress = &tempAddress;
+        }
+    }
+
+    if (NULL == bleAddress) {
+        DEBUG_LOG("advManagerSetBleAddress ble address is null, return false");
+        return FALSE;
+    }
+
+    typed_bdaddr taddr;
+    taddr.type = TYPED_BDADDR_RANDOM;
+    taddr.addr.lap = bleAddress->lap;
+    taddr.addr.uap = bleAddress->uap;
+    taddr.addr.nap = bleAddress->nap;
+    taddr.addr.nap = taddr.addr.nap | 0XC000;
+
+    ConnectionDmBleConfigureLocalAddressAutoReq(ble_local_addr_write_static, &taddr, appConfigBleAddressChangeTime());
+
+    DEBUG_LOG("advManagerSetBleAddress return true");
+    return TRUE;
 }
 
 // endregion

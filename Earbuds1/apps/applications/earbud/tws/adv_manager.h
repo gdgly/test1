@@ -10,10 +10,15 @@ uint8* advManagerAddManufacturerSpecificData(uint8 *ad_data, uint8* space);
 
 // endregion
 
-/// ble当前是否配对成功
+// region ble配对信息
+
 bool appBleIsBond(void);
 
 uint32 appBleGetBondCode(void);
+
+bool appBleFindBondCode(uint32 bindCode);
+
+// endregion
 
 struct BlePairInfo_T {
     uint8 btAddr[6];               // 手机经典蓝牙地址，需要与广播绑定码对应
@@ -104,6 +109,16 @@ uint8 advManagerGetBeforeFeature(void);
  * return: 保存成功为TRUE，否则为FALSE
  */
 bool advManagerSaveBleAdvInfo(uint16 adv, uint32 bond, uint32 timestamp);
+
+// endregion
+
+// region 设置BLE地址
+
+/*
+ * fun: 设置BLE地址，一般在INIT_CFM之后调用
+ * return: true-设置成功， false-设置失败
+ */
+bool advManagerSetBleAddress(void);
 
 // endregion
 

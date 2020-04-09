@@ -313,8 +313,8 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 #define appConfigBleAllowedOutOfCase()          (TRUE)
 #undef  appConfigBleNewConnectionsWhenBusy()
 #define appConfigBleNewConnectionsWhenBusy()    (TRUE)
-#undef  appConfigBleUseResolvablePrivateAddress()
-#define appConfigBleUseResolvablePrivateAddress() (FALSE)
+//#undef  appConfigBleUseResolvablePrivateAddress()
+//#define appConfigBleUseResolvablePrivateAddress() (FALSE)
 #undef  appConfigBleGattMtuMin()
 #define appConfigBleGattMtuMin()                (168)     // 加上协议头每次可传输80个字节
 

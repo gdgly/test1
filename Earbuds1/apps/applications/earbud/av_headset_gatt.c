@@ -95,7 +95,14 @@ static void appGattHandleGattManRegisterWithGattCfm(GATT_MANAGER_REGISTER_WITH_G
 
     if (appConfigBleUseResolvablePrivateAddress())
     {
+#ifdef CONFIG_STAROT
+        /// 自定义的BLE地址设置失败，则使用系统默认信息
+        if (!advManagerSetBleAddress()) {
+            ConnectionDmBleConfigureLocalAddressAutoReq(ble_local_addr_generate_resolvable,NULL,appConfigBleAddressChangeTime());
+        }
+#else
         ConnectionDmBleConfigureLocalAddressAutoReq(ble_local_addr_generate_resolvable,NULL,appConfigBleAddressChangeTime());
+#endif
     }
     else
     {
@@ -142,7 +149,7 @@ bool appGattGoConnectable(void)
     advert = appAdvManagerNewAdvert();
     appGetGatt()->advert_settings = advert;
 
-    appAdvManagerUseLocalName(advert);
+//    appAdvManagerUseLocalName(advert);
     appAdvManagerSetDiscoverableMode(advert, avHeadsetBleDiscoverableModeGeneral);
     appAdvManagerSetReadNameReason(advert, avHeadsetBleGapReadNameGapServer);
 #ifdef INCLUDE_GATT_BATTERY_SERVER
@@ -159,7 +166,17 @@ bool appGattGoConnectable(void)
     appAdvManagerSetAdvertisingChannels(advert, BLE_ADV_CHANNEL_ALL);
 
     /* Select random address - this uses Resolvable Private Address if configured */
+#ifdef CONFIG_STAROT
+    /// 单耳模式，使用当前蓝牙地址；双耳则使用左耳的蓝牙地址
+    if (ParamUsingSingle()) {
+        appAdvManagerSetUseOwnRandomAddress(advert, FALSE);
+    } else {
+        appAdvManagerSetUseOwnRandomAddress(advert, appConfigBleUseResolvablePrivateAddress());
+    }
+#else
     appAdvManagerSetUseOwnRandomAddress(advert, appConfigBleUseResolvablePrivateAddress());
+#endif
+//    appAdvManagerSetUseOwnRandomAddress(advert, FALSE);
 
     appAdvManagerSetAdvertData(advert,appGetGattTask());
 

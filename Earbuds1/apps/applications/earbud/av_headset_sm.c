@@ -1071,6 +1071,7 @@ static void appSmHandlePairingPeerPairConfirm(PAIRING_PEER_PAIR_CFM_T *cfm)
      * still consider this task outstanding and request a retry */
     if (cfm->status == pairingSuccess)
     {
+        advManagerSetBleAddress();
         appConnRulesSetRuleComplete(CONN_RULES_PEER_PAIR);
     }
 

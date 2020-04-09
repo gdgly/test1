@@ -31,7 +31,7 @@ void HfpDialNumberRequest(hfp_link_priority priority, uint16 length, const uint8
 void appUiBatteryStat(int16 lbatt, int16 rbatt, int16 cbatt);
 void appSubUISetMicbias(int set);
 
-static uint8 appUIGetMasterSlave(void);
+static uint8 appUIGetLeftRight(void);
 static uint8 appUIGetPeerPosition(void);
 static uint8 appUIGetCurrentPosition(void);
 
@@ -940,6 +940,10 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appPowerOffRequest();
         break;
 
+    case APP_CHECK_GAIA_CONNECTION:
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CHECK_GAIA_CONNECTION);
+        break;
+
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
@@ -1764,15 +1768,14 @@ uint8 appUIGetPeerPosition(void) {
     return 0X00;
 }
 
-uint8 appUIGetMasterSlave(void) {
-    /// 暂时不实现
-    return 0X00;
+uint8 appUIGetLeftRight(void) {
+    return appConfigIsLeft() ? (1 << 1) : (1 << 0);
 }
 
 uint8 appUIGetPositionInfo(void) {
     uint8 current = appUIGetCurrentPosition();
     uint8 peer = appUIGetPeerPosition();
-    uint8 ms = appUIGetMasterSlave();
+    uint8 ms = appUIGetLeftRight();
 
     uint8 res = 0;
     if (appConfigIsLeft()) {

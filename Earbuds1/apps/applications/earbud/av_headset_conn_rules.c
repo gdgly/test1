@@ -3547,6 +3547,11 @@ static ruleAction ruleDisconnectBTNeedEnterDfu(void) {
  */
 static ruleAction ruleCheckGaiaIsNeedDisconnection(void)
 {
+    if (!appGaiaIsConnect()) {
+        RULE_LOG("ruleCheckGaiaIsNeedDisconnection, gaia is not connect");
+        return RULE_ACTION_COMPLETE;
+    }
+
     if (UpgradeInProgress()) {
         RULE_LOG("ruleCheckGaiaIsNeedDisconnection, UpgradeInProgress is true, ignore");
         return RULE_ACTION_IGNORE;

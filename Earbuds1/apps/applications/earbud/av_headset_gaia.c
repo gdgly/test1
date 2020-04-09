@@ -166,7 +166,8 @@ static void appGaiaHandleConnectInd(const GAIA_CONNECT_IND_T *ind) {
     appGaiaNotifyGaiaConnected();
 
     /// 检查gaia连接规则，是否需要断开
-    appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CHECK_GAIA_CONNECTION);
+    MessageSendLater(appGetUiTask(), APP_CHECK_GAIA_CONNECTION, NULL, D_SEC(5));
+//    appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CHECK_GAIA_CONNECTION);
 }
 
 

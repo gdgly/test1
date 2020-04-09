@@ -1442,19 +1442,27 @@ static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {
 
 static void gaiaCheckBondCode(GAIA_STAROT_IND_T *message) {
     do {
-        if (appBleIsBond()) {
-            uint8 *data = message->payload;
-            uint32 bindCode = (((uint32) data[0]) << 24) | (((uint32) data[1]) << 16) | (((uint32) data[2]) << 8) | data[3];
+        uint8 *data = message->payload;
+        uint32 bindCode = (((uint32) data[0]) << 24) | (((uint32) data[1]) << 16) | (((uint32) data[2]) << 8) | data[3];
+
+        uint8 bleFeature = advManagerSelectFeature();
+
+        if (appBleIsBond() &&  ADV_FEATURE_PAIR != bleFeature && 0XFF != bleFeature) {
             if (bindCode == appBleGetBondCode()) {
                 subGaiaSetConnectUnlock();
                 appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
                 MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
                 /// 取消超时如果没有发送bondCode断开连接的定时器
+                MessageCancelAll(appGetUiTask(), APP_CHECK_GAIA_CONNECTION);
                 break;
             }
         }
 
-        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_NOT_SUPPORTED, 0, NULL);
+        bool isInBondList = appBleFindBondCode(bindCode);
+        const uint8 notInBondList = 1, btNotThisCode = 2;
+        uint8 rejectReason = (isInBondList ? btNotThisCode : notInBondList);
+
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_NOT_SUPPORTED, 1, &rejectReason);
     } while (0);
 }
 
