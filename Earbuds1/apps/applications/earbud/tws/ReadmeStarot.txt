@@ -14,15 +14,21 @@ Dormant进入方案：
 
 
 低功耗：
-      appSmCalcCoreState-->not busy-->APP_STATE_OUT_OF_CASE_IDLE
+
+      appSmHandlePeerSyncStatus-->appSmSetInitialCoreState-->appSmSetCoreState
+   -->appSmCalcCoreState-->not busy-->APP_STATE_OUT_OF_CASE_IDLE
    -->appEnterOutOfCaseIdle-->(appConfigIdleTimeoutMs)-->SM_INTERNAL_TIMEOUT_IDLE-->appSmHandleInternalTimeoutIdle
    -->appSetState(APP_STATE_OUT_OF_CASE_SOPORIFIC)-->appSmStateIsSleepy(previous_state) && appSmStateIsSleepy(new_state))
    -->appPowerClientAllowSleep-->appPowerSetState(POWER_STATE_SOPORIFIC_CLIENTS_NOTIFIED)-->SM(APP_POWER_SLEEP_PREPARE_IND)
    -->SM(APP_STATE_OUT_OF_CASE_SOPORIFIC_TERMINATING)-->appEnterSubStateTerminating()
    -->appSmInitiateLinkDisconnection()-->SM_INTERNAL_LINK_DISCONNECTION_COMPLETE/SM_INTERNAL_TIMEOUT_LINK_DISCONNECTION
          这个函数是断开当前的HANDSET&PEER，断开完成之后，才会去执行DISCONNECTION_COMPLETE。
-  ...
-  -->appPowerSleepPrepareResponse()-->appPowerSetState(POWER_STATE_SOPORIFIC_CLIENTS_RESPONDED)-->appPowerEnterPowerStateSoporificClientsResponded()-->Dormant
+
+    COMPLETE会执行appSmHandleInternalAllRequestedLinksDisconnected，此时会检测当前状态
+      ->APP_STATE_OUT_OF_CASE_SOPORIFIC_TERMINATING 执行appPowerSleepPrepareResponse
+      ->APP_SUBSTATE_TERMINATING-->appPowerShutdownPrepareResponse       这个为主动调用appPowerOffRequest
+
+   -->appPowerSleepPrepareResponse()-->appPowerSetState(POWER_STATE_SOPORIFIC_CLIENTS_RESPONDED)-->appPowerEnterPowerStateSoporificClientsResponded()-->Dormant
 
 
 DEMO板的几个测试，电压4.0V
@@ -34,9 +40,12 @@ DEMO板的几个测试，电压4.0V
   BT+BLE+接近光+敲       ：1.74mA  左右
   BT+BLE+接近光+敲+APO   ：2.40mA  （刚开始 2.9mA)
   入盒之后：             : 540uA （最底200uA 最高6.4mA)
+  入耳状态下不连接手机   : 800uA
 
+  左右耳的配对中功耗很大 : 6mA左右（非常大)
   出盒连接手机(无BLE)    ：670uA（打开了一下BLE,反而变成500uA，加上BLE为什么反而变少？好象是经典蓝牙的心跳间隔更大了）
-  Dormant模式            : 3.9uA
+  PowerOFF模式           : 3.9uA
+  Dormant模式            : 270uA (如果打开接近光及敲击则为420uA，仅撕开接近光350uA）
 
 
 BLE发送命令：============================================================================
