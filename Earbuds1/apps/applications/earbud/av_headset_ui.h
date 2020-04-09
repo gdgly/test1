@@ -33,7 +33,7 @@
 #define APP_UI_TONE_VOLUME                      (-20)
 
 /*! \brief Fixed prompt volume in dB */
-#define APP_UI_PROMPT_VOLUME                    (-10)
+#define APP_UI_PROMPT_VOLUME                    (-30)
 
 
 /*! A list of prompts supported by the application.
