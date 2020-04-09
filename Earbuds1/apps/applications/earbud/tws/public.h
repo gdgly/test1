@@ -390,6 +390,7 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
     重新建立hfp连接
  */
 #define STAROT_ENFORCE_RESTART_HFP
+#undef STAROT_ENFORCE_RESTART_HFP
 
 /*
 场景：
@@ -402,5 +403,11 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 #define appConfigOutOfEarScoTimeoutSecs()      (0)
 #endif
 
+/// 关闭建立连接自动接听电话功能
+/*
+场景:
+    两只耳机都在充电盒中，取出耳机，连接建立成功之后，自动接听电话
+ */
+#undef HFP_CONNECT_AUTO_ANSWER
 
 #endif // PUBLIC_H

@@ -1992,8 +1992,10 @@ static void appScoFwdHandlePhyStateChangedInd(const PHY_STATE_CHANGED_IND_T *ind
 
     switch (ind->new_state)
     {
+#ifndef STAROT_NOT_RELEASE_HFP_AUDIO
         case PHY_STATE_OUT_OF_EAR:
         case PHY_STATE_OUT_OF_EAR_AT_REST:
+#endif
         case PHY_STATE_IN_CASE:
         {
             /* Mute local audio if we're streaming and earbud no longer
@@ -2008,7 +2010,11 @@ static void appScoFwdHandlePhyStateChangedInd(const PHY_STATE_CHANGED_IND_T *ind
             theScoFwd->vol_muted = TRUE;
         }
         break;
-        
+
+#ifdef STAROT_NOT_RELEASE_HFP_AUDIO
+        case PHY_STATE_OUT_OF_EAR:
+        case PHY_STATE_OUT_OF_EAR_AT_REST:
+#endif
         case PHY_STATE_IN_EAR:
         {
             if ((appScoFwdGetState() == SFWD_STATE_CONNECTED_ACTIVE_SEND) ||

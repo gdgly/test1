@@ -633,16 +633,17 @@ static void appEnterInEar(void)
     }
 
     /* \todo this should move to a rule at some point */
-    if (appHfpIsCallIncoming()) /// 佩戴上，直接接听
-    {
-        DEBUG_LOG("appEnterInEar accepting call HFP");
-        appHfpCallAccept();
-    }
-    else if(appScoFwdIsCallIncoming())
-    {
-        DEBUG_LOG("appEnterInEar accepting call SCOFWD");
-        appScoFwdCallAccept();
-    }
+    /// 关闭佩戴自动接通电话
+//    if (appHfpIsCallIncoming()) /// 佩戴上，直接接听
+//    {
+//        DEBUG_LOG("appEnterInEar accepting call HFP");
+//        appHfpCallAccept();
+//    }
+//    else if(appScoFwdIsCallIncoming())
+//    {
+//        DEBUG_LOG("appEnterInEar accepting call SCOFWD");
+//        appScoFwdCallAccept();
+//    }
 }
 
 /*****************************************************************************

@@ -349,12 +349,18 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleScoForwardingControl,           CONN_RULES_SCO_FORWARDING_CONTROL),
 
+
     RULE_WITH_FLAGS(RULE_EVENT_PEER_IN_CASE,    ruleSyncConnectHandset,             CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseScoTransferToHandset,     CONN_RULES_SCO_TRANSFER_TO_HANDSET),
 #ifdef CONFIG_STAROT
     // 考虑另一只耳机进出充电盒，对当前耳机dfu的影响
     RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
     RULE(RULE_EVENT_PEER_OUT_CASE,              ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
+#endif
+
+#ifdef STAROT_NOT_RELEASE_HFP_AUDIO
+    /// 取出充电盒，声音就过去了
+    RULE(RULE_EVENT_PEER_OUT_CASE,               ruleScoForwardingControl,           CONN_RULES_SCO_FORWARDING_CONTROL),
 #endif
 
     RULE_WITH_FLAGS(RULE_EVENT_PEER_HANDSET_DISCONNECTED,  ruleSyncConnectHandset,  CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
@@ -2561,6 +2567,13 @@ static ruleAction ruleScoForwardingControl(void)
         RULE_LOG("ruleScoForwardingControl, defer as peer sync not complete");
         return RULE_ACTION_DEFER;
     }
+#ifdef STAROT_NOT_RELEASE_HFP_AUDIO
+    if (!appPeerSyncIsPeerInCase())
+    {
+        RULE_LOG("ruleScoForwardingControl, run and enable forwarding as peer not in case");
+        return RULE_ACTION_RUN_PARAM(forwarding_enabled);
+    }
+#else
     if (!appPeerSyncIsPeerInEar() && !subGaiaIsDialogRecoding())
     {
         RULE_LOG("ruleScoForwardingControl, run and disable forwarding as peer out of ear");
@@ -2571,6 +2584,7 @@ static ruleAction ruleScoForwardingControl(void)
         RULE_LOG("ruleScoForwardingControl, run and enable forwarding as peer in ear");
         return RULE_ACTION_RUN_PARAM(forwarding_enabled);
     }
+#endif
 
     RULE_LOG("ruleScoForwardingControl, ignore");
     return RULE_ACTION_IGNORE;
