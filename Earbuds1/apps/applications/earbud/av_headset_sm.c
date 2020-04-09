@@ -1854,6 +1854,18 @@ static void appSmHandleInternalTimeoutIdle(void)
 {
     DEBUG_LOG("appSmHandleInternalTimeoutIdle");
     PanicFalse(APP_STATE_OUT_OF_CASE_IDLE == appGetState());
+#ifdef CONFIG_STAROT
+    // 如果 当前耳机与手机正常连接（主耳机）或当前耳机与另一只耳机连接，而另一只耳机与手机连接（副耳机），不休眠
+    UartPuts2("ToutIdle:", appDeviceIsHandsetConnected(), appPeerSyncIsPeerHandsetHfpConnected());
+    if((TRUE == appDeviceIsHandsetConnected()) ||
+            ((TRUE == appDeviceIsPeerConnected()) && (TRUE == appPeerSyncIsPeerHandsetHfpConnected()))) {
+        uint32_t msec = appConfigIdleTimeoutMs() / 5;       // 再次检测是否连接手机的时间不要太长
+        if(msec < D_SEC(5)) msec = D_SEC(60);
+
+        MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_IDLE, NULL, msec);
+        return;
+    }
+#endif
     appSetState(APP_STATE_OUT_OF_CASE_SOPORIFIC);
 }
 

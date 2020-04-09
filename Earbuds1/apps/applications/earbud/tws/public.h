@@ -357,7 +357,7 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 #define DOWNLOAD_G722_ENCODER                // G722压缩将取数据
 
 #undef appConfigIdleTimeoutMs()
-#define appConfigIdleTimeoutMs()   D_SEC(0)
+#define appConfigIdleTimeoutMs()   D_SEC(3000)   // outofcase状态下超时进入低功耗，需要入盒唤醒
 
 #define MAKE_OBJECT(TYPE) TYPE *message = (TYPE*) PanicUnlessMalloc(sizeof(TYPE));
 #define MAKE_OBJECT_LEN(TYPE, LEN) TYPE *message = (TYPE*) PanicUnlessMalloc(sizeof(TYPE) + LEN);
