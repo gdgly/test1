@@ -624,5 +624,7 @@ bool appTestIsInitialisationCompleted(void);
 
 void appTestPrintAllConnection(void);
 void testHfpCallWaitingEnableRequest (bool enable);
+void appTestCaseClose(void);
+void appTestCaseOpen(void);
 
 #endif // AV_HEADSET_TEST_H

@@ -1390,6 +1390,12 @@ static void appSmHandleConnRulesEnterDfu(void)
         return;
     }
 
+    if (!appGetCaseIsOpen()) {
+        DEBUG_LOG("appSmHandleConnRulesEnterDfu now case is close, so ignore");
+        appConnRulesSetRuleComplete(CONN_RULES_ENTER_DFU);
+        return;
+    }
+
     switch (appGetState())
     {
         case APP_STATE_IN_CASE_IDLE:

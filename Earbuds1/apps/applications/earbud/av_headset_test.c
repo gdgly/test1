@@ -1283,6 +1283,8 @@ uint16 DC_FILTER_SHIFT = 7;
 #include <cap_id_prim.h>
 #include <opmsg_prim.h>
 #include "av_headset_kymera.h"
+#include "av_headset_test.h"
+
 
 extern void appKymeraExternalAmpSetup(void);
 extern void appKymeraExternalAmpControl(bool enable);
@@ -1569,4 +1571,12 @@ void testHfpCallWaitingEnableRequest (bool enable) {
     UNUSED(enable);
     HfpSubscriberNumbersRequest(hfp_primary_link);
 //    HfpCallWaitingEnableRequest(hfp_primary_link, enable);
+}
+
+extern void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectrity, uint16 bitEars);
+void appTestCaseClose(void) {
+    appUiCaseStatus(0, -1, -1, -1, -1);
+}
+void appTestCaseOpen(void) {
+    appUiCaseStatus(1, -1, -1, -1, -1);
 }

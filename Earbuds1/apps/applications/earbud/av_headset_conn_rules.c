@@ -2048,7 +2048,7 @@ static ruleAction ruleInCaseEnterDfu(void)
     }
 
     static int firstStartUp = 1;
-    if (!appGetCaseIsOpen() && firstStartUp > 0) {
+    if (!appGetCaseIsOpen() && firstStartUp < 1) {
         /// 从dfu退出的时候，重新计算state，会发生重新incase规则
         RULE_LOG("ruleInCaseEnterDfu, !appGetCaseIsOpen() && APP_STATE_STARTUP != appGetState(), so don't enter dfu");
         return RULE_ACTION_IGNORE;
