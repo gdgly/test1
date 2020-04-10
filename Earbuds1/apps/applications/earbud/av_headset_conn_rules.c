@@ -195,6 +195,9 @@ DEFINE_RULE(ruleDisconnectHfpA2dpAvrcp);
 #endif
 DEFINE_RULE(ruleCheckGaiaIsNeedDisconnection);
 DEFINE_RULE(ruleDisconnectBTNeedEnterDfu);
+#ifdef STAROT_SOME_MIN_AFTER_IN_EAR_CONNECT_PHONE
+DEFINE_RULE(ruleInEarConnectPhone);
+#endif
 /*! \} */
 
 /*! \brief Set of rules to run on Earbud startup. */
@@ -336,7 +339,9 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_IN_EAR,                     ruleInEarLedsDisable,               CONN_RULES_LED_DISABLE),
     RULE(RULE_EVENT_IN_EAR,                     ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
     RULE(RULE_EVENT_IN_EAR,                     ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
-
+#ifdef STAROT_SOME_MIN_AFTER_IN_EAR_CONNECT_PHONE
+    RULE_WITH_FLAGS(RULE_EVENT_IN_EAR,  ruleInEarConnectPhone,        CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
+#endif
 
     /*! \} */
 
@@ -994,7 +999,7 @@ static ruleAction ruleSyncConnectHandset(void)
 static ruleAction ruleUserConnectHandset(void)
 {
     RULE_LOG("ruleUserConnectHandset");
-    return ruleConnectHandset(RULE_CONNECT_USER, RULE_POST_HANDSET_CONNECT_ACTION_PLAY_MEDIA);
+    return ruleConnectHandset(RULE_CONNECT_USER, RULE_POST_HANDSET_CONNECT_ACTION_NONE);
 }
 
 /*! @brief Wrapper around ruleConnectHandset() that calls it with 'Out of case' connect reason
@@ -3687,3 +3692,17 @@ static ruleAction ruleDisconnectHfpA2dpAvrcp(void) {
     }
     return RULE_ACTION_COMPLETE;
 }
+
+#ifdef STAROT_SOME_MIN_AFTER_IN_EAR_CONNECT_PHONE
+
+static ruleAction ruleInEarConnectPhone(void) {
+    DEBUG_LOG("ruleInEarConnectPhone next call ruleConnectHandset");
+    DEBUG_LOG( "ruleInEarConnectPhone appPeerSyncIsPeerHandsetA2dpConnected(%d) "
+               "appPeerSyncIsPeerHandsetAvrcpConnected(%d) || "
+               "appPeerSyncIsPeerHandsetHfpConnected(%d) || appDeviceIsHandsetConnected(%d)",
+            appPeerSyncIsPeerHandsetA2dpConnected(), appPeerSyncIsPeerHandsetAvrcpConnected(),
+            appPeerSyncIsPeerHandsetHfpConnected(), appDeviceIsHandsetConnected());
+    return ruleConnectHandset(RULE_CONNECT_USER, RULE_POST_HANDSET_CONNECT_ACTION_NONE);
+}
+
+#endif

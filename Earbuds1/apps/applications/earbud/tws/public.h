@@ -417,4 +417,10 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
  */
 #define STAROT_ONLY_ONE_CAN_ACTIVE_CONNECT_PHONE
 
+/*
+ * 场景：
+ *     耳机与手机断开连接5min之后，再佩戴，主动连接手机
+ */
+#define STAROT_SOME_MIN_AFTER_IN_EAR_CONNECT_PHONE
+
 #endif // PUBLIC_H
