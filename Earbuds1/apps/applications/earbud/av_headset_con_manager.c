@@ -221,7 +221,9 @@ static uint16 *appConManagerCreateAclImpl(const bdaddr *addr, bool is_ble)
             DEBUG_LOGF("appConManagerCreateAclImpl, link-loss device, increasing page timeout to %u ms", page_timeout * 625UL / 1000UL);
 
 #ifdef CONFIG_STAROT
-            device->residual_page_timeout = staortConfigDefaultPageTimeout();
+            if (appDeviceIsHandset(addr)) {
+                device->residual_page_timeout = staortConfigDefaultPageTimeout();
+            }
 #endif
 
             /* Reset device state */

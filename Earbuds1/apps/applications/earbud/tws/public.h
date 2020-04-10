@@ -410,4 +410,11 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
  */
 #undef HFP_CONNECT_AUTO_ANSWER
 
+
+/*
+ * 场景：
+ *     A耳机在寻找B耳机时，没有成功建立通讯，同步失败时，允许主动连接手机
+ */
+#define STAROT_ONLY_ONE_CAN_ACTIVE_CONNECT_PHONE
+
 #endif // PUBLIC_H

@@ -702,6 +702,13 @@ static ruleAction ruleConnectHandsetStandard(ruleConnectReason reason)
             }
             else
             {
+#ifdef STAROT_ONLY_ONE_CAN_ACTIVE_CONNECT_PHONE
+                if (PEER_SIG_STATE_DISCONNECTED == appPeerSigGetState()) {
+                    RULE_LOG("ruleConnectHandsetStandard, run as standard handset and can't connect peer");
+                    return RULE_ACTION_RUN;
+                }
+#endif
+
 #ifdef CONFIG_STAROT_SINGLE
                 if (appPeerSyncPeerRulesInProgress() && (1 != ParamUsingSingle()))
 #else
@@ -827,12 +834,18 @@ static ruleAction ruleConnectHandset(ruleConnectReason reason,
         return RULE_ACTION_IGNORE;
     }
 
+    DEBUG_LOG("ruleConnectHandset appPeerSyncIsComplete()=%d appPeerSyncIsInProgress()=%d appPeerSigGetState()=%02X",
+            appPeerSyncIsComplete(), appPeerSyncIsInProgress(), appPeerSigGetState());
+
     /* Check we have sync'ed with peer */
+    if (appPeerSyncIsComplete()
 #ifdef CONFIG_STAROT_SINGLE
-    if (appPeerSyncIsComplete() || (ParamUsingSingle() == 1))
-#else
-    if (appPeerSyncIsComplete())
+        || (ParamUsingSingle() == 1)
 #endif
+#ifdef STAROT_ONLY_ONE_CAN_ACTIVE_CONNECT_PHONE
+        || (appPeerSigGetState() == PEER_SIG_STATE_DISCONNECTED)
+#endif
+    )
     {
         if (appPeerSyncPeerDfuInProgress())
         {

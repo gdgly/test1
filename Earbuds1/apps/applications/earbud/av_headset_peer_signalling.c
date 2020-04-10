@@ -660,6 +660,9 @@ static void appPeerSigHandleInternalStartupRequest(PEER_SIG_INTERNAL_STARTUP_REQ
 
                     /* ACL failed to open, move to 'Disconnected' state */
                     appPeerSigSetState(PEER_SIG_STATE_DISCONNECTED);
+
+                    /// 触发规则，重新校验defer的规则，当前主要目的是为了connect headset
+                    appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
                 }
             }
         }
