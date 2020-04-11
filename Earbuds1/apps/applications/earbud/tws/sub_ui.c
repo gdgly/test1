@@ -416,12 +416,14 @@ static void subUiStopReport2Gaia(MessageId id)
 static void subUiStarttAssistantSystem(bool isTap)
 {
     (void)isTap;
+    if(appGetKymera()->state == KYMERA_STATE_SCO_ACTIVE)
+        return;
     HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
 }
 
 static int16 subUiStartAssistant2Gaia(MessageId id, ProgRIPtr  progRun)
 {
-    if(1 != progRun->gaiaStat)
+    if((1 != progRun->gaiaStat) || (appGetKymera()->state == KYMERA_STATE_SCO_ACTIVE))
         return -1;
     /* 唤醒系统助手，需要告诉APP是 APO还是TAP */
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 4);
