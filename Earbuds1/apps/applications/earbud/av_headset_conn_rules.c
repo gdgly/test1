@@ -331,13 +331,13 @@ ruleEntry appConnRules[] =
 
     RULE(RULE_EVENT_OUT_EAR,                    rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_OUT_EAR,                    ruleOutOfEarA2dpActive,             CONN_RULES_A2DP_TIMEOUT),
-    RULE(RULE_EVENT_OUT_EAR,                    ruleOutOfEarScoActive,              CONN_RULES_SCO_TIMEOUT),
+//    RULE(RULE_EVENT_OUT_EAR,                    ruleOutOfEarScoActive,              CONN_RULES_SCO_TIMEOUT),
     RULE(RULE_EVENT_OUT_EAR,                    ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
     RULE(RULE_EVENT_OUT_EAR,                    ruleOutOfEarLedsEnable,             CONN_RULES_LED_ENABLE),
 
     RULE(RULE_EVENT_IN_EAR,                     rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_IN_EAR,                     ruleInEarLedsDisable,               CONN_RULES_LED_DISABLE),
-    RULE(RULE_EVENT_IN_EAR,                     ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
+//    RULE(RULE_EVENT_IN_EAR,                     ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
     RULE(RULE_EVENT_IN_EAR,                     ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
 #ifdef STAROT_SOME_MIN_AFTER_IN_EAR_CONNECT_PHONE
     RULE_WITH_FLAGS(RULE_EVENT_IN_EAR,  ruleInEarConnectPhone,        CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
@@ -347,10 +347,10 @@ ruleEntry appConnRules[] =
 
     /*! \{
         Rules that are run on peer state changes */
-    RULE(RULE_EVENT_PEER_IN_EAR,                ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
+//    RULE(RULE_EVENT_PEER_IN_EAR,                ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
     RULE(RULE_EVENT_PEER_IN_EAR,                ruleScoForwardingControl,           CONN_RULES_SCO_FORWARDING_CONTROL),
-    RULE(RULE_EVENT_PEER_OUT_EAR,               ruleOutOfEarScoActive,              CONN_RULES_SCO_TIMEOUT),
+//    RULE(RULE_EVENT_PEER_OUT_EAR,               ruleOutOfEarScoActive,              CONN_RULES_SCO_TIMEOUT),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleSelectMicrophone,               CONN_RULES_SELECT_MIC),
     RULE(RULE_EVENT_PEER_OUT_EAR,               ruleScoForwardingControl,           CONN_RULES_SCO_FORWARDING_CONTROL),
 

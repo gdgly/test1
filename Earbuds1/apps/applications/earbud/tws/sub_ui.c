@@ -743,7 +743,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT:
         DEBUG_LOG("appSubUiHandleMessage APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT");
         // 暂时不启用，在appHfpHandleHfpAudioConnectIndication中添加了两种临时状态也可以接受audio
-        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HFP_REQUEST_SCO_AUDIO);
+//        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HFP_REQUEST_SCO_AUDIO);
         break;
 
     case APP_CASE_SET_BLEINFO:              // 设置BLE信息
