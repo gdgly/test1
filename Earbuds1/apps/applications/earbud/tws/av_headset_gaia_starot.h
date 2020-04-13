@@ -189,6 +189,7 @@ enum {
     GAIA_COMMAND_STAROT_TEST_ONLINE_DBG = 0X5602,
     GAIA_COMMAND_STAROT_TEST_IN_EAR_RDVALUE = 0X5603,                         // 读取接近光在耳朵中的值
     GAIA_COMMAND_STAROT_TEST_PRODUCT = 0X5604,                                // 产测协议
+    GAIA_COMMAND_STAROT_TEST_PACKET_DATA = 0X5605,                            // app下发数据
 };
 
 /////////////////////////////固件升级和日志使用///////////////////////////////
@@ -369,5 +370,16 @@ bool subGaiaIsDialogRecoding(void);
 
 // endregion
 
+///////////////////////////////////////////////////////
+typedef struct
+{
+    uint32 pskid;
+    uint16 type;
+    uint16 allsize;
+    uint16 offset;
+    uint16 datasize;
 
+    uint8 data[1];
+} GAIA_STAROT_ID_T;
+///////////////////////////////////////////////////////
 #endif // AV_HEADSET_GAIA_STAROT_H

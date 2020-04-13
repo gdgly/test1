@@ -10,6 +10,7 @@
 #include "apollo.h"
 #include "rwfile.h"
 #include "online_dbg.h"
+#include <ps.h>
 
 uint16 bufferSendUnit = 120;
 const uint16 AndroidSendUnit = 120;
@@ -85,6 +86,8 @@ static void gaiaTestProductRest(GAIA_STAROT_IND_T *message);
 static void gaiaSendCallNumber(STAROT_DIALOG_CALL_NUMBER_T* message);
 
 static void gaiaTestInEarReadValue(GAIA_STAROT_IND_T *message);
+
+static void gaiaAppTestPacketData(GAIA_STAROT_IND_T *mess);
 
 extern int16 gaiaTestProduct(uint8_t *payload);
 
@@ -557,6 +560,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         break;
         case GAIA_COMMAND_STAROT_TEST_PRODUCT:
             gaiaTestProduct(message->payload);
+        break;
+        case GAIA_COMMAND_STAROT_TEST_PACKET_DATA:
+            gaiaAppTestPacketData(message);
         break;
     }
     return TRUE;
@@ -1602,6 +1608,93 @@ static void gaiaTestInEarReadValue(GAIA_STAROT_IND_T *message)
     } else {
         appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
     }
+}
+
+// type: 0:write;
+//       1:read size;
+//       2:read;
+static void gaiaAppTestPacketData(GAIA_STAROT_IND_T *mess)
+{
+    GAIA_STAROT_ID_T *message = (GAIA_STAROT_ID_T *)
+            PanicUnlessMalloc(sizeof(GAIA_STAROT_ID_T) + (mess->payloadLen > 1 ? (mess->payloadLen - 1) : 0));
+
+    StarotAttr *head = NULL;
+    StarotAttr *attr = NULL;
+    uint16* ptr = (uint16 *)mess->payload;
+
+    message->pskid = (mess->payload[0] << 24) | (mess->payload[1] << 16) | (mess->payload[2] << 8) | mess->payload[3];
+    message->type = (mess->payload[4] << 8) | mess->payload[5];
+    message->allsize = ((mess->payload[6] << 8) | mess->payload[7])/2;
+    message->offset = ((mess->payload[8] << 8) | mess->payload[9])/2;
+    message->datasize = ((mess->payload[10] << 8) | mess->payload[11])/2;
+
+    if(message->type == 0){//write
+
+        for(int i = 0; i<message->datasize; i++)
+        {
+             ptr[6+i] = ((ptr[6+i] >> 8) & 0xFF) | (ptr[6+i] << 8);
+        }
+
+        /* 调用写函数 */
+        uint16 words_write = PsUpdateAudioKey(message->pskid, &ptr[6], message->datasize, message->offset, message->allsize);
+
+        /* 消息回馈app */
+        attr = attrMalloc(&head, 7);
+        attr->attr = 0X01;
+        attr->payload[0] = (message->pskid >> 24) & 0xFF;
+        attr->payload[1] = (message->pskid >> 16) & 0xFF;
+        attr->payload[2] = (message->pskid >> 8) & 0xFF;
+        attr->payload[3] = (message->pskid >> 0) & 0xFF;
+        attr->payload[4] = (uint8)words_write*2;
+        attr->payload[5] = (message->offset >> 8) & 0xFF;
+        attr->payload[6] = (message->offset >> 0) & 0xFF;
+    }
+    else if(message->type == 1){//read size
+        uint16 key_len = 0;
+        PsReadAudioKey(message->pskid, NULL, 0, 0, &key_len);
+
+        attr = attrMalloc(&head, 6);
+        attr->attr = 0X02;
+        attr->payload[0] = (message->pskid >> 24) & 0xFF;
+        attr->payload[1] = (message->pskid >> 16) & 0xFF;
+        attr->payload[2] = (message->pskid >> 8) & 0xFF;
+        attr->payload[3] = (message->pskid >> 0) & 0xFF;
+        attr->payload[4] = (key_len*2 >> 8) & 0xFF;
+        attr->payload[5] = key_len*2 & 0xFF;
+    }
+    else if(message->type == 2){
+        uint16 key_length_addr;
+        uint16 psKeyBuffer16[message->datasize];
+        uint16 all_len = 0;
+        PsReadAudioKey(message->pskid, NULL, 0, 0, &all_len);
+        uint16 sub = all_len - message->offset;
+        uint16 count = (sub > message->datasize) ? message->datasize : sub;
+        /* 读取偏移值之后的数据 */
+        uint16 key_len = PsReadAudioKey(message->pskid, psKeyBuffer16, count, message->offset, &key_length_addr);
+
+        attr = attrMalloc(&head, 9+key_len*2);
+        attr->attr = 0X03;
+        attr->payload[0] = (message->pskid >> 24) & 0xFF;
+        attr->payload[1] = (message->pskid >> 16) & 0xFF;
+        attr->payload[2] = (message->pskid >> 8) & 0xFF;
+        attr->payload[3] = (message->pskid >> 0) & 0xFF;
+        attr->payload[4] = (uint8)key_len*2;
+        attr->payload[5] = (all_len*2 >> 8) & 0xFF;
+        attr->payload[6] = (all_len*2 >> 0) & 0xFF;
+        attr->payload[7] = (message->offset*2 >> 8) & 0xFF;
+        attr->payload[8] = (message->offset*2 >> 0) & 0xFF;
+        //此时psKeyBuffer16缓冲区值由于memcpy又使大小端字节交换（顺序正确）
+        memcpy(&attr->payload[9], psKeyBuffer16, key_len*2);
+    }
+
+    if (NULL != head)
+    {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, mess->command, GAIA_STATUS_SUCCESS, len, data);
+        attrFree(head, data);
+    }
+    pfree(message);
 }
 
 #if 0
