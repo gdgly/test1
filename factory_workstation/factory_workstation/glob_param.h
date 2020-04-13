@@ -2,8 +2,8 @@
 #include "afxcmn.h"
 #include "Ini.h"
 
-#define	SOFT_VERSION	" V0.74.6"
-//#define	SOFT_VERSION	" VT.74.6"
+#define	SOFT_VERSION	" V0.74.7"
+//#define	SOFT_VERSION	" VT.74.7"
 #define DEVICE_CHECK_CONF "config.ini"
 
 #define CHILD_DLG_NAME_FZ_BURN "方舟 烧写"
@@ -62,11 +62,12 @@
 
 #define WM_USERMSG_MASSPRODUCT         (WM_USER+33)
 
+#define SANNUO_MES_LOG_PATH "C:\\log\\"
 struct general_option_str{
 	UINT g_quit_config_dilog;
 
 	UINT g_check_mes;
-	UINT g_check_mes_type;//1海派，2长虹,3立讯
+	UINT g_check_mes_type;//1海派,2长虹,3立讯,4三诺
 	CString g_mes_ip;
 	UINT	g_mes_port;
 	CString	g_station_name;

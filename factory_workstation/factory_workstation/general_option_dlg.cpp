@@ -124,6 +124,7 @@ BOOL general_option_dlg::OnInitDialog()
 	m_mes_type.AddString("1");
 	m_mes_type.AddString("2");
 	m_mes_type.AddString("3");
+	m_mes_type.AddString("4");
 
 	comb_ttybaud.AddString("1000000");
 	comb_ttybaud.AddString("921600");

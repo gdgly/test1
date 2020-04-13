@@ -36,6 +36,8 @@ public:
 
 	CString sn_no;
 	CCurlCtrl     mesInfo;
+	CFile m_mes_file;
+	int software_burn_sz::mes_sannuo_write_logfile(CString SN, CString MAC);
 
 	void software_burn_sz::all_init();
 	void software_burn_sz::AddEvent2List(CString sText);

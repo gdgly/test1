@@ -660,6 +660,47 @@ int software_check_sz::check_reboot(void *param)
 	return 0;
 }
 
+int software_check_sz::mes_sannuo_write_logfile(CString SN, CString MAC)
+{
+	CString sFname;
+	CreateDirectory(SANNUO_MES_LOG_PATH, 0);
+	sFname = SN + "_PASS.txt";
+	sFname = SANNUO_MES_LOG_PATH + sFname;
+	if(m_mes_file.Open(sFname, CFile::modeCreate | CFile::modeNoTruncate | CFile::modeReadWrite) == TRUE) {
+		sFname.Format("********************************\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("Function   :  smt板测\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("Device SN:     ");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname = SN + "\r\n";
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("Device MAC:     ");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname = MAC + "\r\n";
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("Test Result:     PASS\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("Cycle Time:      0 s\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("ErrorCode:\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("********************************\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		CTime tNow = CTime::GetCurrentTime();
+		sFname.Format("%04d%02d%02d_%02d%02d%02d\r\n", 
+			tNow.GetYear(), tNow.GetMonth(), tNow.GetDay(), 
+			tNow.GetHour(), tNow.GetMinute(), tNow.GetSecond());
+		sFname = "Start Time :     " + sFname;
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("********************************\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		m_mes_file.Flush();
+		m_mes_file.Close();
+	}
+	return 0;
+}
+
 LRESULT software_check_sz::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 {
 	CString sText;
@@ -727,27 +768,40 @@ LRESULT software_check_sz::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 				if(check_sz_option_instance.g_glob_if_check_reboot){
 					CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_check_sz::check_reboot, this, 0, NULL);
 				}else{
-					if( general_option_instance.g_check_mes && 
-						(general_option_instance.g_check_mes_type == 3) ){//mes代码
-						if( (sText = mesInfo.sz_post_passfail(sn_no, 
-									general_option_instance.g_station_name,
-									1, 1) ) == "OK"){
-							AddEvent2List("mes 通信成功！");
+					if( general_option_instance.g_check_mes ){ 
+						if( (general_option_instance.g_check_mes_type == 3) ){//mes代码
+							if( (sText = mesInfo.sz_post_passfail(sn_no, 
+										general_option_instance.g_station_name,
+										1, 1) ) == "OK"){
+								AddEvent2List("mes 通信成功！");
+								pass_green_color = 1;
+								m_Epass.SetWindowTextA("PASS");
+								Invalidate();
+							}else{
+								AddEvent2List("mes 通信失败！错误消息：");
+								AddEvent2List(sText);
+								pass_green_color = 0;
+								m_Epass.SetWindowTextA("FAIL");
+								Invalidate();
+							}
+						}else if( (general_option_instance.g_check_mes_type == 4) ){
+							m_btaddr.GetWindowText(sText);
+							mes_sannuo_write_logfile(sn_no,sText);
+							AddEvent2List("mes log文件生成成功！");
 							pass_green_color = 1;
 							m_Epass.SetWindowTextA("PASS");
-							Invalidate();
+							Invalidate();						
 						}else{
-							AddEvent2List("mes 通信失败！错误消息：");
-							AddEvent2List(sText);
+							AddEvent2List("不支持的mes类型，请重新配置！");
 							pass_green_color = 0;
 							m_Epass.SetWindowTextA("FAIL");
-							Invalidate();
+							Invalidate();								
 						}
 					}else{
 						pass_green_color = 1;
 						m_Epass.SetWindowTextA("PASS");
 						Invalidate();
-					}				
+					}
 				}
 			}else{
 				pass_green_color = 0;

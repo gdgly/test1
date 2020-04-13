@@ -38,6 +38,8 @@ public:
 
 	CString sn_no;
 	CCurlCtrl     mesInfo;
+	CFile m_mes_file;
+	int software_check_sz::mes_sannuo_write_logfile(CString SN, CString MAC);
 
 	void software_check_sz::get_param(struct glob_param *g_p);
 	void software_check_sz::AddEvent2List(CString sText);
