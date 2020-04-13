@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "factory_workstation", "fact
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "work_start", "work_start\work_start.vcxproj", "{1EBB3A4E-8E06-4E4A-A093-B2D17DDD3827}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caseapp_add_headlen", "caseapp_add_headlen\caseapp_add_headlen.vcxproj", "{7563BD8C-3A7E-42B9-A6C3-6AAEB9BBAA52}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{1EBB3A4E-8E06-4E4A-A093-B2D17DDD3827}.Debug|Win32.Build.0 = Debug|Win32
 		{1EBB3A4E-8E06-4E4A-A093-B2D17DDD3827}.Release|Win32.ActiveCfg = Release|Win32
 		{1EBB3A4E-8E06-4E4A-A093-B2D17DDD3827}.Release|Win32.Build.0 = Release|Win32
+		{7563BD8C-3A7E-42B9-A6C3-6AAEB9BBAA52}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7563BD8C-3A7E-42B9-A6C3-6AAEB9BBAA52}.Debug|Win32.Build.0 = Debug|Win32
+		{7563BD8C-3A7E-42B9-A6C3-6AAEB9BBAA52}.Release|Win32.ActiveCfg = Release|Win32
+		{7563BD8C-3A7E-42B9-A6C3-6AAEB9BBAA52}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
