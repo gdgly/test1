@@ -933,7 +933,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case APP_UI_ENTER_DORMANT:
         online_dbg_record(ONLINE_DBG_START_DORMANT);
-        if(UpgradeInProgress())       // 如果正在升级，则不进入底功耗模式
+        // 如果正在升级，则不进入底功耗模式，需要充电盒配合，耳机从dfu退出，由30秒的超时
+        // appSmIsInDfuMode 进入DFU模式，可以进入升级状态，但是在指定的时间内，由用户选择，是否升级
+        // appUICanContinueUpgrade 用户进入升级，但是没有进行文件传输
+        // UpgradeInProgress文件开始传输，已经处于正式升级状态
+        if(appSmIsInDfuMode() || appUICanContinueUpgrade() || UpgradeInProgress())
 			break;
         appPowerOffRequest();
         break;
