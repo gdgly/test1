@@ -1,8 +1,13 @@
 #include "max20340.h"
 #ifdef HAVE_MAX20340
 
-#include "AP.h"
 #include "online_dbg.h"
+
+#define CONFIG_CASE_IMAGE_FILE    /* 盒子固件使用文件保存 */
+
+#ifndef CONFIG_CASE_IMAGE_FILE
+#include "AP.h"
+#endif
 
 #define TIME_READ_MAX20340_REG
 // max20340 正常为低电平中断，部分时间出现IO为常低，而不能拉回到常高而不能再次产生中断
@@ -34,6 +39,86 @@ static uint8 _ear_en_dormant = 0;    // 盒子发送消息，告诉耳机进入d
 static uint8 _ear_reseted = 0;       // 检测到系统复位后，不再接收盒子的其它命令了
 // 根据上面的结构体，升级固件的版本是在第四到第十二字节，共8字节
 static uint8 _case_image_ver[DEV_HWSWVER_LEN], _case_need_upgrade = 0;
+
+#ifdef CONFIG_CASE_IMAGE_FILE
+static uint8* _case_img_fptr = NULL;
+static uint16 _case_img_size = 0;
+static uint16 _case_upg_offset = 0;        // 当前升级到哪个1K块，以1K为单位
+#define CASE_IMG_FILE_NAME          "AP.bin"
+
+static const uint8* imagecase_map(void)
+{
+    FILE_INDEX idx = FileFind(FILE_ROOT, CASE_IMG_FILE_NAME, strlen(CASE_IMG_FILE_NAME));
+
+    _case_img_fptr = NULL;
+    if(FILE_NONE != idx)
+        _case_img_fptr = (uint8*)FileMap(idx, 0, FILE_MAP_SIZE_ALL);
+
+    return _case_img_fptr;
+}
+
+static void imagecase_release(void)
+{
+    if(_case_img_fptr) {
+        FileUnmap(_case_img_fptr);
+        _case_img_fptr = NULL;
+    }
+}
+
+static int imagecase_getver(uint8 *ver)
+{
+    if(0 == ver[4] && 0 == ver[5] && 0 == ver[6]) {
+         if(imagecase_map()) {
+             memcpy(ver, &_case_img_fptr[16+4], DEV_HWSWVER_LEN);
+             imagecase_release();
+         }
+         else
+             return -1;
+    }
+
+    return 0;
+}
+
+// 如果调用getsize，说明当前需要升级了
+static int imagecase_getsize(void)
+{
+    uint8 *psize;
+    if(imagecase_map() == NULL)
+        return 0;
+
+    psize =  &_case_img_fptr[16+12+2];     // 只取低16位(APLEN字段)
+    _case_img_size = (psize[0]<<8) | psize[1];
+    DEBUG_LOG("casesize: %x %x-->%d", psize[0], psize[1], _case_img_size);
+    if(0xFFFF == _case_img_size) {
+        DEBUG_LOG("Error sizeFFFF,pls set case size");
+        _case_img_size = 0;
+    }
+
+    return _case_img_size;
+}
+
+int imagecase_checkver(uint8 *recv_ver)      // return 1 is upgrade then set _case_need_upgrade
+{
+    BtAddrPrmPtr prm = &gBtAddrParam;
+
+    if(memcmp(prm->caseVer, recv_ver, DEV_HWSWVER_LEN) != 0) {
+        memcpy(prm->caseVer, recv_ver, DEV_HWSWVER_LEN);
+        ParamSaveBtAddrPrm(prm);
+    }
+
+    // 读取版本号失败，不升级
+    if(imagecase_getver(_case_image_ver) < 0) {
+        DEBUG_LOG("Fail get case version");
+        return 0;
+    }
+
+    // only compile SW ver, >0比较版本更新
+    _case_need_upgrade = (memcmp(&_case_image_ver[4], &recv_ver[4], DEV_SWVER_LEN) > 0) ? 1 : 0;
+
+    return _case_need_upgrade;
+}
+
+#else
 int imagecase_checkver(uint8 *recv_ver)      // return 1 is upgrade
 {
     BtAddrPrmPtr prm = &gBtAddrParam;
@@ -50,6 +135,7 @@ int imagecase_checkver(uint8 *recv_ver)      // return 1 is upgrade
 
     return _case_need_upgrade;
 }
+#endif
 
 /*! \brief Read a register from the proximity sensor */
 bool max20340ReadRegister(bitserial_handle handle, uint8 reg,  uint8 *value)
@@ -363,7 +449,9 @@ static void box_send_boxevent(uint8 *get_buf, uint8 *send_buf)
 static void box_update(uint8 *get_buf, uint8 *send_buf)
 {
     uint8 num_k;
+    #ifndef CONFIG_CASE_IMAGE_FILE
     static uint8 buffer_1k[1024];
+    #endif
     uint8 type,start_flag;
     uint16 checksum=0,i,data_num;
     type = (get_buf[0] & 0x3);
@@ -373,27 +461,48 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
         if(start_flag == 1){//开始包1 回复总共需要多少个1k字节
 //            send_buf[1] = 10;//先假设是10个之后计算出确认值
 //            send_buf[2] = 0;
+    #ifdef CONFIG_CASE_IMAGE_FILE
+            send_buf[1] = (imagecase_getsize() + 1023)/1024;//先计算出确总共有多少个1K
+    #else
             send_buf[1] = (sizeof(AP) + 1023)/1024;//先假设是10个之后计算出确认值
+    #endif
             send_buf[2] = 0;
         }else if(start_flag == 2){//开始包2 表示接下来要开始发送第几个1k
             //u8 num_k = get_buf[2];
             //memcpy(buffer_1k, buf, 1024);
             num_k = get_buf[2];
+    #ifdef CONFIG_CASE_IMAGE_FILE
+            _case_upg_offset = (num_k << 10);
+    #else
             if( (num_k+1)*1024 > sizeof(AP) ){
                 memset(buffer_1k, 0, 1024);
                 memcpy(buffer_1k, AP+num_k*1024, sizeof(AP)-num_k*1024);
             }else{
                 memcpy(buffer_1k, AP+num_k*1024, 1024);
             }
+    #endif
         }else if(start_flag == 3){//开始包3 耳机需回复1k字节的校验码
+    #ifdef CONFIG_CASE_IMAGE_FILE
+            data_num = _case_img_size - _case_upg_offset;
+            if(data_num > 1024)
+                data_num = 1024;
+
+            data_num += _case_upg_offset;
+            for(i = _case_upg_offset; i < data_num; i++)
+                checksum += _case_img_fptr[i];
+    #else
             for(i=0; i<1024; i++){
                 checksum += buffer_1k[i];
             }
+    #endif
             send_buf[1] = ((checksum>>8) & 0xff);
             send_buf[2] = (checksum & 0xff);
-            DEBUG_LOG("checksum buf1=%d, buf2=%d\n", send_buf[1], send_buf[2]);
+            DEBUG_LOG("checksum buf1=%d, buf2=%d", send_buf[1], send_buf[2]);
         }else if(start_flag == 4){//开始包4 表示升级成功
             _case_need_upgrade = 0;        // 升级完成，将这个标记置回
+    #ifdef CONFIG_CASE_IMAGE_FILE
+            imagecase_release();
+    #endif
             send_buf[1] = 0;
             send_buf[2] = 0;
             DEBUG_LOG("update sucucess\n");
@@ -409,8 +518,21 @@ static void box_update(uint8 *get_buf, uint8 *send_buf)
             DEBUG_LOG("update request data_num=%d buf1=%d buf2=%d error\n",
                       data_num, get_buf[1], get_buf[2]);
         }
+    #ifdef CONFIG_CASE_IMAGE_FILE
+        data_num *= 2;
+        if((_case_upg_offset+data_num) >= _case_img_size)
+            send_buf[1] = send_buf[2] = 0;
+        else {
+            send_buf[1] = _case_img_fptr[_case_upg_offset + data_num];
+            if((_case_upg_offset+data_num+1) >= _case_img_size)
+                send_buf[2] = 0;
+            send_buf[2] = _case_img_fptr[_case_upg_offset + data_num + 1];
+
+        }
+    #else
         send_buf[1]=buffer_1k[0+(data_num)*2];
         send_buf[2]=buffer_1k[1+(data_num)*2];
+    #endif
         break;
     case 2://结束包
 
@@ -945,6 +1067,11 @@ void max20340_init(void)
     max20340Disable(handle);
 
     online_dbg_record(ONLINE_DBG_PLC_INIT_SUCC);
+
+#ifdef CONFIG_CASE_IMAGE_FILE
+    _case_img_fptr = NULL;
+    memset(_case_image_ver, 0, sizeof(_case_image_ver));
+#endif
 
     return;
 }
