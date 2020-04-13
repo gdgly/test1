@@ -598,6 +598,12 @@ int16 gaiaTestProduct(uint8_t *payload)
             ProductPlayAudio(tmp2);
             break;
 
+        case 0x04:
+            if(1 == tmp2)       g_cvcMode = CVC_PROCESSING_MODE_PASS_THRU_LEFT;
+            else if(2 == tmp2)  g_cvcMode = CVC_PROCESSING_MODE_PASS_THRU_RIGHT;
+            else                g_cvcMode = CVC_PROCESSING_MODE_FULL;
+            break;
+
         case 0x10:    // 开外设电源
         case 0x11:    // 关外设电源
             tmp1 = (0x10 == payload[3]) ? 1 : 0;
