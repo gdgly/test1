@@ -62,6 +62,119 @@ static void appBatteryClientRemove(batteryTaskData *battery, Task task)
     }
 }
 
+#ifdef CONFIG_STAROT
+/*
+#define VOL_CHARGE_LEN 70
+#define SEC_CHARGE_LEN 31
+#define VOL_DISCHARGE 100
+const uint16 vol_charge[VOL_CHARGE_LEN] = {
+        3454 ,3684 ,3772 ,3881 ,3916 ,3941 ,3956 ,3964 ,3968 ,3977 ,3982 ,3989 ,3995 ,4001 ,4008 ,4014 ,
+        4027 ,4033 ,4039 ,4045 ,4051 ,4055 ,4065 ,4070 ,4074 ,4078 ,4082 ,4090 ,4094 ,4098 ,4102 ,4106 ,
+        4110 ,4118 ,4122 ,4127 ,4132 ,4137 ,4141 ,4152 ,4157 ,4162 ,4168 ,4174 ,4179 ,4191 ,4197 ,4202 ,
+        4209 ,4215 ,4222 ,4235 ,4241 ,4248 ,4255 ,4263 ,4270 ,4285 ,4293 ,4301 ,4309 ,4317 ,4325 ,4342 ,
+        4350 ,4359 ,4368 ,4377 ,4380 ,4390
+};
+const uint8 sec_charge[SEC_CHARGE_LEN] = {2,4,6,10,12,16,18,22,24,28,32,38,42,46,
+                              50,56,62,68,74,82,90,98,108,118,130,144,162,182,208,
+                              242};
+static uint16 vol_discharge[VOL_DISCHARGE] = {
+        4300 ,4270 ,4255 ,4242 ,4229 ,4215 ,4203 ,4192 ,4179 ,4168 ,4157 ,4146 ,4134 ,4123 ,4112 ,4100 ,
+        4090 ,4080 ,4067 ,4057 ,4047 ,4036 ,4025 ,4015 ,4005 ,3994 ,3983 ,3973 ,3961 ,3948 ,3937 ,3926 ,
+        3915 ,3906 ,3898 ,3889 ,3881 ,3874 ,3867 ,3859 ,3852 ,3845 ,3837 ,3831 ,3825 ,3818 ,3812 ,3806 ,
+        3800 ,3793 ,3788 ,3783 ,3778 ,3772 ,3767 ,3762 ,3757 ,3752 ,3748 ,3743 ,3738 ,3734 ,3730 ,3726 ,
+        3722 ,3718 ,3714 ,3710 ,3706 ,3703 ,3699 ,3694 ,3690 ,3686 ,3680 ,3675 ,3670 ,3665 ,3658 ,3652 ,
+        3645 ,3638 ,3631 ,3624 ,3617 ,3608 ,3599 ,3589 ,3579 ,3564 ,3549 ,3532 ,3508 ,3484 ,3453 ,3414 ,
+        3355 ,3286 ,3192 ,3019
+};*/
+#define VOL_CHARGE_LEN 35
+#define SEC_CHARGE_LEN 15
+#define VOL_DISCHARGE 50
+const uint16 vol_charge[VOL_CHARGE_LEN] = {
+        3454 ,3772 ,3916 ,3956 ,3968 ,3982 ,3995 ,4008 ,
+        4027 ,4039 ,4051 ,4065 ,4074 ,4082 ,4094 ,4102 ,
+        4110 ,4122 ,4132 ,4141 ,4157 ,4168 ,4179 ,4197 ,
+        4209 ,4222 ,4241 ,4255 ,4270 ,4293 ,4309 ,4325 ,
+        4350 ,4368 ,4380
+};
+const uint8 sec_charge[SEC_CHARGE_LEN] = {2,6,12,18,24,32,42,
+                              50,62,74,90,108,130,162,208};
+static uint16 vol_discharge[VOL_DISCHARGE] = {
+        4270 ,4242 ,4215 ,4192 ,4168 ,4146 ,4123 ,4100 ,
+        4080 ,4057 ,4036 ,4015 ,3994 ,3973 ,3948 ,3926 ,
+        3906 ,3889 ,3874 ,3859 ,3845 ,3831 ,3818 ,3806 ,
+        3793 ,3783 ,3772 ,3762 ,3752 ,3743 ,3734 ,3726 ,
+        3718 ,3710 ,3703 ,3694 ,3686 ,3675 ,3665 ,3652 ,
+        3638 ,3624 ,3608 ,3589 ,3564 ,3532 ,3484 ,3414 ,
+        3286 ,3019
+};
+static int8  g_last_percent = -1;
+static uint32 g_charge_calc_ticks = 0;
+
+static uint8 toPercentage(uint16 voltage)
+{
+    int i;
+    uint8 iPercent;
+    uint32 diff;
+    chargerTaskData *theCharger = appGetCharger();
+
+    if(theCharger->is_charging)
+    {
+        //充电
+        for(i = 0; i < VOL_CHARGE_LEN; i++) {
+            if(voltage <= vol_charge[i])
+                break;
+        }
+
+        if(i >= VOL_CHARGE_LEN)  {
+            if(g_last_percent < VOL_CHARGE_LEN)
+                g_last_percent = VOL_CHARGE_LEN;
+
+            if(g_charge_calc_ticks == 0) {
+                g_charge_calc_ticks = VmGetClock();
+                if(g_last_percent > VOL_CHARGE_LEN) {
+                    diff = g_last_percent - VOL_CHARGE_LEN -1;
+                    diff = sec_charge[diff]*10000;
+                    g_charge_calc_ticks = VmGetClock() - diff;
+                }
+            }
+
+            diff = (VmGetClock()-g_charge_calc_ticks) / 10000;      // 单位换算为10SEC
+            for(i = 0; i < SEC_CHARGE_LEN; i++) {
+              if(diff < sec_charge[i])
+                break;
+            }
+
+            if(g_last_percent == -1){//防止充电中重启，当充电没满继续充电直到充电完成，当充电没满被拿出会出现突然掉电现象。
+                iPercent = 100;
+                g_last_percent = 100;
+            }else{
+                iPercent = VOL_CHARGE_LEN*2 + i*2;
+            }
+
+        }else{
+            iPercent = i*2;
+            g_charge_calc_ticks = 0;
+        }
+        if(iPercent < g_last_percent && g_last_percent != -1)
+            iPercent = g_last_percent;
+
+    }
+    else {
+        //放电
+        if(g_charge_calc_ticks)
+            g_charge_calc_ticks = 0;
+        for(i = 0; i < VOL_DISCHARGE; i++) {
+                if(voltage > vol_discharge[i])
+                        break;
+        }
+        iPercent = 100 - i*2;
+        if(iPercent > g_last_percent && g_last_percent != -1)
+            iPercent = g_last_percent;
+   }
+    g_last_percent = iPercent;
+    return g_last_percent;
+}
+#else
 static uint8 toPercentage(uint16 voltage)
 {
     uint16 critical = appConfigBatteryVoltageCritical();
@@ -74,6 +187,7 @@ static uint8 toPercentage(uint16 voltage)
 
     return (100UL * (uint32)(voltage - critical)) / (uint32)(charged - critical);
 }
+#endif
 
 static battery_level_state toState(uint16 voltage)
 {
