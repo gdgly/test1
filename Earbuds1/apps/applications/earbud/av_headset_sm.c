@@ -1391,7 +1391,7 @@ static void appSmHandleConnRulesEnterDfu(void)
         return;
     }
 
-    if (!appGetCaseIsOpen()) {
+    if (!appGetCaseIsOpen() && MessageCancelAll(appGetUiTask(), APP_UPGRADE_RESTART_FLAG) <= 0) {
         DEBUG_LOG("appSmHandleConnRulesEnterDfu now case is close, so ignore");
         appConnRulesSetRuleComplete(CONN_RULES_ENTER_DFU);
         return;
@@ -2784,10 +2784,16 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             break;
 
         case SM_INTERNAL_ENTER_DFU_UPGRADED:
+#ifdef CONFIG_STAROT
+            MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, appConfigDfuTimeoutToStartAfterRestartMs());
+#endif
             appSmHandleEnterDfuWithTimeout(appConfigDfuTimeoutToStartAfterRestartMs());
             break;
 
         case SM_INTERNAL_ENTER_DFU_STARTUP:
+#ifdef CONFIG_STAROT
+            MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, appConfigDfuTimeoutToStartAfterRebootMs());
+#endif
             appSmHandleEnterDfuWithTimeout(appConfigDfuTimeoutToStartAfterRebootMs());
             break;
 
@@ -2952,12 +2958,6 @@ void appSmEnterDfuModeInCase(bool enable)
 */
 static void appSmEnterDfuOnStartup(bool upgrade_reboot)
 {
-//#ifdef CONFIG_STAROT
-//    /// 强制关闭音频
-//    appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
-//                                   appConfigLinkDisconnectionTimeoutTerminatingMs(),
-//                                   POST_DISCONNECT_ACTION_NONE);
-//#endif
     MessageSend(appGetSmTask(),
                 upgrade_reboot ? SM_INTERNAL_ENTER_DFU_UPGRADED
                                : SM_INTERNAL_ENTER_DFU_STARTUP,

@@ -2052,14 +2052,18 @@ static ruleAction ruleInCaseEnterDfu(void)
         return RULE_STATUS_IGNORED;
     }
 
-    static int firstStartUp = 1;
-    if (!appGetCaseIsOpen() && firstStartUp < 1) {
+    /// 升级 重启 dfu -> startup -> incase -> dfu  在这里等着进入dfu状态
+    bool haveUpgradeRestartFlag = MessageCancelAll(appGetUiTask(), APP_UPGRADE_RESTART_FLAG) > 0;
+
+    if (!appGetCaseIsOpen() && !haveUpgradeRestartFlag) {
         /// 从dfu退出的时候，重新计算state，会发生重新incase规则
         RULE_LOG("ruleInCaseEnterDfu, !appGetCaseIsOpen() && APP_STATE_STARTUP != appGetState(), so don't enter dfu");
         return RULE_ACTION_IGNORE;
     }
-    firstStartUp = 0;
 
+    if (haveUpgradeRestartFlag) {
+        MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, D_SEC(10));
+    }
 
     if (!appSmIsInCase()) {
         RULE_LOG("ruleInCaseEnterDfu, appSmIsInCase is false, so don't enter dfu");

@@ -65,6 +65,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_BLE_SCANABLE_START        2122  // ble start adv
 #define APP_BLE_SCANABLE_TIMEOUT      2123  // ble adv timeout
 #define APP_CHECK_GAIA_CONNECTION     2124 // 校验gaia是否需要断开
+#define APP_UPGRADE_RESTART_FLAG      2125 // 升级重启标识，在重启的指定时间内，都是dfu模式。从startup->idle->dfu
 
 struct UI_APP_UPGRADE_COMMIT_STATUS_T {
     bool status;   // true:commit ;false:revert
