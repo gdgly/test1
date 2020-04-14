@@ -1992,11 +1992,11 @@ void appPeerVersionSyncStatusClean(uint8 status) {
     gProgRunInfo.peerVerSyncStatus ^= status;
 }
 
-void appPeerVersionSyncSent(void) {
+void appPeerVersionSyncSent(bool needFocusReplayVersion) {
     if (ParamUsingSingle()) {
         appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent | PeerVersionSyncStatusRecv);
     } else {
-        appPeerSigTxSyncVersionReq(appGetUiTask());
+        appPeerSigTxSyncVersionReq(appGetUiTask(), needFocusReplayVersion);
         appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
     }
 }
@@ -2032,7 +2032,6 @@ static void appUIUpgradeApplyInd(void) {
         // 同步版本到另一只耳机
         gProgRunInfo.upgradeNeedReboot = TRUE;
         appPeerVersionSyncStatusSet(0);
-        appPeerVersionSyncSent();
         const int versionSame = 2;
         if (versionSame != SystemCheckMemoryVersion()) {
             DEBUG_LOG("SystemCheckVersionWithPeer is not same, so need exit dfu mode");
@@ -2091,12 +2090,12 @@ void appUITempSetVersionToMemory(uint8* ptr) {
     for (int i = 0; i < DEV_SWVER_LEN; ++i) {
         gProgRunInfo.currVer[DEV_HWVER_LEN + 1 + i] = ptr[i];
     }
-    appPeerVersionSyncSent();
+    appPeerVersionSyncSent(FALSE);
 }
 
 void appUIConvertTempVersionToMemory(void) {
     memcpy(gProgRunInfo.currVer + DEV_HWVER_LEN, SystemGetCurrentSoftware(), DEV_SWVER_LEN);
-    appPeerVersionSyncSent();
+    appPeerVersionSyncSent(FALSE);
 }
 
 static void appUIUpgradeCommit(void) {

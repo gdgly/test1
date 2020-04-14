@@ -2883,7 +2883,7 @@ static ruleAction ruleBleConnectionUpdate(void)
                         /// Peer ? 0 | Peer > Current 1 | Peer = Current 2 | Peer < Current 3
                         int st = SystemCheckMemoryVersion();
                         if (0 == st) { /// Peer版本未知，暂缓处理
-                            DEBUG_LOG("ruleBleConnectionUpdate now is all ear in case, but version not know, so defer");
+                            DEBUG_LOG("ruleBleConnectionUpdate now is all ear in case, but version not know, so ignore");
                             return RULE_ACTION_IGNORE;
                         } else if (1 == st) {
                             DEBUG_LOG(

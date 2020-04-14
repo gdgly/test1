@@ -194,9 +194,11 @@ void appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm(Task task, peerSigStatus
 
 typedef struct {
     uint8 version[DEV_HWSWVER_LEN];
+    bool needFocusReplayVersion;
+    uint8 resv;
 } SyncVersionReq;
 
-void appPeerSigTxSyncVersionReq(Task task);
+void appPeerSigTxSyncVersionReq(Task task, bool needFocusReplayVersion);
 bool appPeerSigTxSyncVersionParse(uint8* payload);
 void appPeerSigTxSyncVersionConfirm(Task task, peerSigStatus status);
 

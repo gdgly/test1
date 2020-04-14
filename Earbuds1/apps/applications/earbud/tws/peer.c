@@ -684,13 +684,14 @@ void appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm(Task task, peerSigStatus
 
 // region 同步左右耳机版本  AVRCP_PEER_CMD_SYNC_VERSION
 
-void appPeerSigTxSyncVersionReq(Task task) {
+void appPeerSigTxSyncVersionReq(Task task, bool needFocusReplayVersion) {
     DEBUG_LOG("appPeerSigTxSyncVersionReq");
     if (ParamUsingSingle()) {
         return;
     } else {
         SyncVersionReq syncVersionReq;
         SystemGetCurrentVersion(syncVersionReq.version);
+        syncVersionReq.needFocusReplayVersion = needFocusReplayVersion;
         AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *req =
                 PEER_MALLOC_UNITY_REQ(AVRCP_PEER_CMD_SYNC_VERSION, SyncVersionReq, (&syncVersionReq));
         req->client_task = task;
@@ -703,8 +704,8 @@ bool appPeerSigTxSyncVersionParse(uint8* payload) {
     SyncVersionReq* syncVersionReq = (SyncVersionReq*)payload;
     appPeerVersionSet(syncVersionReq->version);
     appPeerVersionSyncStatusSet(PeerVersionSyncStatusRecv);
-    if (!appPeerVersionSyncStatusIsComplete()) {
-        appPeerVersionSyncSent();
+    if (!appPeerVersionSyncStatusIsComplete() || syncVersionReq->needFocusReplayVersion) {
+        appPeerVersionSyncSent(FALSE);
     }
     MessageSendLater(appGetUiTask(), APP_CHECK_VERSION, NULL, 500);
     return TRUE;
@@ -715,6 +716,7 @@ void appPeerSigTxSyncVersionConfirm(Task task, peerSigStatus status) {
     if (peerSigStatusSuccess == status) {
         MessageSend(task, APP_CHECK_VERSION, NULL);
         appPeerVersionSyncStatusSet(PeerVersionSyncStatusSent);
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
     } else {
         appPeerVersionSyncStatusClean(PeerVersionSyncStatusSent);
     }

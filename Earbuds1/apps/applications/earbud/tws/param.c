@@ -451,11 +451,14 @@ int16 SystemGetCurrentVersion(uint8 *buffer)             // Get Current Earbuds 
 
 /// 比较当前耳机版本，与另一只耳机版本，当前耳机版本是否更低
 
+extern void appPeerSigTxSyncVersionReq(Task task, bool needFocusReplayVersion);
+
 int SystemCheckMemoryVersion(void) {
     int unkonw = 0;
 
     if (appPeerVersionIsEmpty()) {
         ///没有对方地址信息，情况不明，认为对方版本更低(保守策略)
+        appPeerSigTxSyncVersionReq(appGetUiTask(), TRUE);
         return unkonw;
     }
 

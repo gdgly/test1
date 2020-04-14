@@ -263,7 +263,7 @@ bool appPeerVersionSyncStatusIsComplete(void);
 bool appPeerVersionSyncStatusHaveSent(void);
 void appPeerVersionSyncStatusSet(uint8 status);  ///如果发生disconnect peer，重置状态
 void appPeerVersionSyncStatusClean(uint8 status); /// 清楚指定状态的同步信息
-void appPeerVersionSyncSent(void);
+void appPeerVersionSyncSent(bool needFocusReplayVersion);
 void appPeerVersionClearCache(void);
 
 bool appPeerVersionIsEmpty(void);
