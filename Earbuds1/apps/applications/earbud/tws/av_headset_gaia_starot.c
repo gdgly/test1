@@ -126,6 +126,7 @@ void starotGaiaReset(void) {
     /// only test
     disable_audio_forward(TRUE);
     subGaiaNotifyDataClear();
+    subGaiaClearCaller();
 }
 
 /*
@@ -1581,7 +1582,7 @@ void starotGaiaDialogStartTransport(GAIA_STAROT_IND_T *message) {
         DEBUG_LOG("call disable_audio_forward(FALSE);");
         gaiaStarotPrivateData.audioTransType = 0;
         gaiaClearDropAudioSize();
-        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HFP_REQUEST_SCO_AUDIO);
+//        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HFP_REQUEST_SCO_AUDIO);
     }
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command,
                         ((appGetGaia()->transformAudioFlag & DIALOG_CAN_TRANSFORM) > 0 ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE),
@@ -1891,18 +1892,21 @@ subGaiaTaskData* subGaiaGetTaskData(void) {
 // region 联系人信息
 
 const uint8* subGaiaGetCaller(uint16* len) {
+    DEBUG_LOG("subGaiaGetCaller");
     subGaiaTaskData* task = subGaiaGetTaskData();
     *len = task->callerLen;
     return task->callerNumber;
 }
 
 void subGaiaClearCaller(void) {
+    DEBUG_LOG("subGaiaClearCaller");
     subGaiaTaskData* task = subGaiaGetTaskData();
     task->callerLen = 0;
     memset(task->callerNumber, 0X00, sizeof(task->callerNumber));
 }
 
 void subGaiaSetCaller(uint8* data, uint16 len) {
+    DEBUG_LOG("subGaiaSetCaller");
     subGaiaTaskData* task = subGaiaGetTaskData();
     uint16 s = (len > sizeof(task->callerNumber) ? sizeof(task->callerNumber) : len);
     task->callerLen = s;
