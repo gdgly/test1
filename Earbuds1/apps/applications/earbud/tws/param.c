@@ -576,7 +576,9 @@ void ParamInitHandleClDmLocalBdAddrCfm(Message message)
 }
 
 void UserParamResetFactory(void) {
+    uint8 electric_quantity = gUserParam.electricQuantity;
     UserParamDefault();
+    gUserParam.electricQuantity = electric_quantity;
     ParamSaveUserPrm(NULL);
 }
 

@@ -109,13 +109,16 @@ static uint16 vol_discharge[VOL_DISCHARGE] = {
 };
 static int8  g_last_percent = -1;
 static uint32 g_charge_calc_ticks = 0;
-
+#include "param.h"
+extern UserPrmPtr GetUserParam(void);
 static uint8 toPercentage(uint16 voltage)
 {
     int i;
     uint8 iPercent;
     uint32 diff;
     chargerTaskData *theCharger = appGetCharger();
+
+    UserPrmPtr prm = GetUserParam();
 
     if(theCharger->is_charging)
     {
@@ -126,6 +129,9 @@ static uint8 toPercentage(uint16 voltage)
         }
 
         if(i >= VOL_CHARGE_LEN)  {
+            if(prm->electricQuantity >= 70)
+               g_last_percent = prm->electricQuantity;
+
             if(g_last_percent < VOL_CHARGE_LEN)
                 g_last_percent = VOL_CHARGE_LEN;
 
@@ -172,6 +178,12 @@ static uint8 toPercentage(uint16 voltage)
             iPercent = g_last_percent;
    }
     g_last_percent = iPercent;
+
+    if(g_last_percent>=70)
+        prm->electricQuantity = g_last_percent;
+    else
+        prm->electricQuantity = 0;
+
     return g_last_percent;
 }
 #else

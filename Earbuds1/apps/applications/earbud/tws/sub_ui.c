@@ -939,6 +939,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         // UpgradeInProgress文件开始传输，已经处于正式升级状态
         if(appSmIsInDfuMode() || appUICanContinueUpgrade() || UpgradeInProgress())
 			break;
+        ParamSaveUserPrm(&gUserParam);
         appPowerOffRequest();
         break;
 
