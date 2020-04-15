@@ -27,5 +27,6 @@
     <file path="A2DP_parameters_20200113_2nd_final.htf"/>
     <file path="NB_parameters_20200312_1st.htf"/>
     <file path="WB_parameters_20200310_3rd.htf"/>
+    <file path="assistant_eq.htf"/>
     <file path="subsys7_psflash.htf"/>
 </project>

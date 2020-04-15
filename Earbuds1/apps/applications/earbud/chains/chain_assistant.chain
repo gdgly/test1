@@ -11,6 +11,11 @@
         <source name="OUT" terminal="0"/>
     </operator>
 
+    <operator name="OPR_MIC_PEQ" id="CAP_ID_PEQ">
+        <sink name="IN" terminal="0"/>
+        <source name="OUT" terminal="0"/>
+    </operator>
+
     <operator name="OPR_CUSTOM_MIC_PASSTHROUGH" id="CAP_ID_DOWNLOAD_G722CODEC">
         <sink name="IN" terminal="0"/>
         <source name="OUT" terminal="0"/>
@@ -19,7 +24,8 @@
     <input sink="OPR_SWITCHED_PASSTHROUGH_CONSUMER.IN" role="EPR_VOLUME_AUX"/>
     <output source="OPR_CUSTOM_MIC_PASSTHROUGH.OUT" role="EPR_AUDIO_MICFWD_OUT"/>
 
-    <!--connection source="OPR_VOLUME_CONTROL.OUT" sink="OPR_CUSTOM_MIC_PASSTHROUGH.IN"/-->
-    <connection source="OPR_SWITCHED_PASSTHROUGH_CONSUMER.OUT" sink="OPR_CUSTOM_MIC_PASSTHROUGH.IN"/>
+    <!--connection source="OPR_SWITCHED_PASSTHROUGH_CONSUMER.OUT" sink="OPR_CUSTOM_MIC_PASSTHROUGH.IN"/-->
+    <connection source="OPR_SWITCHED_PASSTHROUGH_CONSUMER.OUT" sink="OPR_MIC_PEQ.IN"/>
+    <connection source="OPR_MIC_PEQ.OUT" sink="OPR_CUSTOM_MIC_PASSTHROUGH.IN"/>
 </chain>
 

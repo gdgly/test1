@@ -80,6 +80,12 @@ void appKymeraHandleInternalRecordStart(const KYMERA_INTERNAL_RECORD_T *msg)
             uint16 set_gain[] = { OPMSG_COMMON_ID_SET_PARAMS, 1, 1, 1, UINT32_MSW(initial_gain), UINT32_LSW(initial_gain) };
             PanicFalse(VmalOperatorMessage(passthrough, set_gain, sizeof(set_gain)/sizeof(set_gain[0]), NULL, 0));
 
+            Operator op = ChainGetOperatorByRole(theKymera->chain_record_handle, OPR_MIC_PEQ);
+            if (INVALID_OPERATOR != op) {
+                OperatorsStandardSetSampleRate(op, 16000);
+                OperatorsStandardSetUCID(op, 0x21);
+            }
+
             forwardAudioAndMic(theKymera->chain_record_handle);
 
             ChainStart(theKymera->chain_record_handle);
