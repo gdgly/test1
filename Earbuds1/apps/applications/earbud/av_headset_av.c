@@ -21,6 +21,7 @@ Main AV task.
 #include <transform.h>
 #include <feature.h>
 #include <string.h>
+#include <tws/online_dbg.h>
 
 #include "av_headset.h"
 #include "av_headset_av.h"
@@ -1163,7 +1164,7 @@ bool appAvA2dpConnectRequest(const bdaddr *bd_addr, appAvA2dpConnectFlags a2dp_f
                          (void *)theInst, bd_addr->nap, bd_addr->uap, bd_addr->lap);
 
             /* Send message to newly created AV instance to connect A2DP */
-            message->num_retries = 2;
+            message->num_retries = 5;
             message->flags = (unsigned)a2dp_flags;
             MessageCancelFirst(&theInst->av_task, AV_INTERNAL_A2DP_CONNECT_REQ);
             MessageSendConditionally(&theInst->av_task, AV_INTERNAL_A2DP_CONNECT_REQ, message,
@@ -1424,6 +1425,7 @@ bool appAvConnectHandset(bool play)
         {
             flags |= A2DP_START_MEDIA_PLAYBACK;
         }
+        online_dbg_record(ONLINE_DEBUG_AV_CONNECT_IND);
         return appAvA2dpConnectRequest(&bd_addr, flags);
     }
 

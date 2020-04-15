@@ -198,6 +198,15 @@
 #define ONLINE_DBG_START_DORMANT    (0x31)    /* start enter dormant */
 #define ONLINE_DBG_ENTER_DORMANT    (0x32)    /* enter dormant */
 
+#define ONLINE_DEBUG_HFP_CONNECT    (0x40)    /* hfp connect */
+#define ONLINE_DEBUG_HFP_DISCONNECT (0x41)    /* hfp disconnect */
+#define ONLINE_DEBUG_AVRCP_CONNECT  (0x42)    /* avrcp connect */
+#define ONLINE_DEBUG_AVRCP_DISCONNECT (0x43)  /* avrcp disconnect */
+#define ONLINE_DEBUG_A2DP_CONNECT     (0x44)  /* a2dp connect */
+#define ONLINE_DEBUG_A2DP_DISCONNECT  (0x45)  /* a2dp disconnect */
+#define ONLINE_DEBUG_HFP_CONNECT_IND  (0x46)  /* hfp connect ind */
+#define ONLINE_DEBUG_AV_CONNECT_IND   (0x47)  /* av connect ind */
+
 typedef enum {
     ONLINE_DBG_APP_REQ_RT_ONLINE_DBG_START   = 0x01,    /* app request packet format */
     ONLINE_DBG_DEV_RSP_RT_ONLINE_DBG_START   = 0x01,    /* dev response packet format */

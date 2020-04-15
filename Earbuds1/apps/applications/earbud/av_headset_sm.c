@@ -25,6 +25,7 @@
 #include <ps.h>
 #include <boot.h>
 #include <message.h>
+#include <tws/online_dbg.h>
 #include "tws/av_headset_gaia_starot.h"
 
 static void appSmHandleInternalDeleteHandsets(void);
@@ -1934,6 +1935,7 @@ static void appSmHandleAvA2dpConnectedInd(const AV_A2DP_CONNECTED_IND_T *ind)
         appConnRulesSetRuleComplete(CONN_RULES_CONNECT_HANDSET);
         appConnRulesResetEvent(RULE_EVENT_HANDSET_A2DP_DISCONNECTED);
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDSET_A2DP_CONNECTED);
+        online_dbg_record(ONLINE_DEBUG_A2DP_CONNECT);
 
         /* Record that we're connected with A2DP to handset */
         appDeviceSetA2dpWasConnected(&ind->bd_addr, TRUE);
@@ -1953,6 +1955,7 @@ static void appSmHandleAvA2dpDisconnectedInd(const AV_A2DP_DISCONNECTED_IND_T *i
                 /* Clear connected and set disconnected events */
                 appConnRulesResetEvent(RULE_EVENT_HANDSET_A2DP_CONNECTED);
                 appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDSET_A2DP_DISCONNECTED);
+                online_dbg_record(ONLINE_DEBUG_A2DP_DISCONNECT);
 
                 /* If it was a normal disconnect and we're intentionally disconnecting
                    links, record that we're not connected with A2DP to handset */
@@ -1972,6 +1975,7 @@ static void appSmHandleAvAvrcpConnectedInd(const AV_AVRCP_CONNECTED_IND_T *ind)
     {
         appConnRulesResetEvent(RULE_EVENT_HANDSET_AVRCP_DISCONNECTED);
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDSET_AVRCP_CONNECTED);
+        online_dbg_record(ONLINE_DEBUG_AVRCP_CONNECT);
     }
 
     /* Check if connected to TWS+ device (handset or earbud) */
@@ -2004,6 +2008,7 @@ static void appSmHandleAvAvrcpDisconnectedInd(const AV_AVRCP_DISCONNECTED_IND_T 
             {
                 appConnRulesResetEvent(RULE_EVENT_HANDSET_AVRCP_CONNECTED);
                 appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDSET_AVRCP_DISCONNECTED);
+                online_dbg_record(ONLINE_DEBUG_AVRCP_DISCONNECT);
             }
 
             /* Check if disconnected from TWS+ device (handset or earbud) */
@@ -2064,6 +2069,7 @@ static void appSmHandleHfpConnectedInd(APP_HFP_CONNECTED_IND_T *ind)
         appConnRulesSetRuleComplete(CONN_RULES_CONNECT_HANDSET);
         appConnRulesResetEvent(RULE_EVENT_HANDSET_HFP_DISCONNECTED);
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDSET_HFP_CONNECTED);
+        online_dbg_record(ONLINE_DEBUG_HFP_CONNECT);
 
         /* Record that we're connected with HFP to handset */
         appDeviceSetHfpWasConnected(&ind->bd_addr, TRUE);
@@ -2086,6 +2092,7 @@ static void appSmHandleHfpDisconnectedInd(APP_HFP_DISCONNECTED_IND_T *ind)
             {
                 appConnRulesResetEvent(RULE_EVENT_HANDSET_HFP_CONNECTED);
                 appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDSET_HFP_DISCONNECTED);
+                online_dbg_record(ONLINE_DEBUG_HFP_DISCONNECT);
 
                 /* If it was a normal disconnect and we're intentionally disconnecting
                    links, record that we're not connected with HFP to handset */

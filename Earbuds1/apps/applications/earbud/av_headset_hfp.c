@@ -10,6 +10,7 @@
 
 #include <panic.h>
 #include <ps.h>
+#include <tws/online_dbg.h>
 
 #ifdef INCLUDE_HFP
 
@@ -2334,6 +2335,7 @@ bool appHfpConnectWithBdAddr(const bdaddr *bd_addr, hfp_profile profile)
         message->flags = 0;
         MessageSendConditionally(appGetHfpTask(), HFP_INTERNAL_HFP_CONNECT_REQ, message,
                                  appConManagerCreateAcl(bd_addr));
+        online_dbg_record(ONLINE_DEBUG_HFP_CONNECT_IND);
             
         /* Connect will now be handled by HFP task */
         return TRUE;
