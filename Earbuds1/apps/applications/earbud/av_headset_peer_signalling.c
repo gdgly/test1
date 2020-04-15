@@ -651,12 +651,16 @@ static void appPeerSigHandleInternalStartupRequest(PEER_SIG_INTERNAL_STARTUP_REQ
                     MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_STARTUP_REQ, message, appConManagerCreateAcl(&req->peer_addr));
 
                     /* Wait in 'Connecting ACL' state for ACL to open */
+                    MessageCancelAll(appGetUiTask(), APP_PEER_CONNECT_FAIL_FLAG);
                     appPeerSigSetState(PEER_SIG_STATE_CONNECTING_ACL);
                     return;
                 }
                 else
                 {
                     DEBUG_LOG("appPeerSigHandleInternalStartupRequest, ACL failed to open, giving up");
+#ifdef STAROT_ONLY_ONE_CAN_ACTIVE_CONNECT_PHONE
+                    MessageSendLater(appGetUiTask(), APP_PEER_CONNECT_FAIL_FLAG, NULL, D_SEC(10));
+#endif
 
                     /* ACL failed to open, move to 'Disconnected' state */
                     appPeerSigSetState(PEER_SIG_STATE_DISCONNECTED);

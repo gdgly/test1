@@ -838,9 +838,13 @@ static ruleAction ruleConnectHandset(ruleConnectReason reason,
         RULE_LOG("ruleConnectHandset, ignore as pairing");
         return RULE_ACTION_IGNORE;
     }
+#ifdef STAROT_ONLY_ONE_CAN_ACTIVE_CONNECT_PHONE
+    bool havePeerConnectFailFlag = (MessageCancelAll(appGetUiTask(), APP_PEER_CONNECT_FAIL_FLAG) > 0);
+#endif
 
-    DEBUG_LOG("ruleConnectHandset appPeerSyncIsComplete()=%d appPeerSyncIsInProgress()=%d appPeerSigGetState()=%02X",
-            appPeerSyncIsComplete(), appPeerSyncIsInProgress(), appPeerSigGetState());
+    DEBUG_LOG("ruleConnectHandset appPeerSyncIsComplete()=%d appPeerSyncIsInProgress()=%d "
+              "appPeerSigGetState()=%02X havePeerConnectFailFlag=%d",
+            appPeerSyncIsComplete(), appPeerSyncIsInProgress(), appPeerSigGetState(), havePeerConnectFailFlag);
 
     /* Check we have sync'ed with peer */
     if (appPeerSyncIsComplete()
@@ -848,7 +852,7 @@ static ruleAction ruleConnectHandset(ruleConnectReason reason,
         || (ParamUsingSingle() == 1)
 #endif
 #ifdef STAROT_ONLY_ONE_CAN_ACTIVE_CONNECT_PHONE
-        || (appPeerSigGetState() == PEER_SIG_STATE_DISCONNECTED)
+        || havePeerConnectFailFlag
 #endif
     )
     {
@@ -2054,16 +2058,19 @@ static ruleAction ruleInCaseEnterDfu(void)
 
     /// 升级 重启 dfu -> startup -> incase -> dfu  在这里等着进入dfu状态
     bool haveUpgradeRestartFlag = MessageCancelAll(appGetUiTask(), APP_UPGRADE_RESTART_FLAG) > 0;
+    if (haveUpgradeRestartFlag) {
+        MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, D_SEC(30));
+        RULE_LOG("ruleInCaseEnterDfu, have upgrade restart flag, so run");
+        return RULE_ACTION_RUN;
+    }
 
-    if (!appGetCaseIsOpen() && !haveUpgradeRestartFlag) {
+    if (!appGetCaseIsOpen()) {
         /// 从dfu退出的时候，重新计算state，会发生重新incase规则
-        RULE_LOG("ruleInCaseEnterDfu, !appGetCaseIsOpen() && APP_STATE_STARTUP != appGetState(), so don't enter dfu");
+        RULE_LOG("ruleInCaseEnterDfu, !appGetCaseIsOpen(), so don't enter dfu");
         return RULE_ACTION_IGNORE;
     }
 
-    if (haveUpgradeRestartFlag) {
-        MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, D_SEC(10));
-    }
+
 
     if (!appSmIsInCase()) {
         RULE_LOG("ruleInCaseEnterDfu, appSmIsInCase is false, so don't enter dfu");
@@ -3573,6 +3580,7 @@ static ruleAction ruleDisconnectBTNeedEnterDfu(void) {
         DEBUG_LOG("ruleDisconnectBTNeedEnterDfu hfp:%d avrcp:%d a2dp:%d so don't enter dfu", hfp, avrcp, a2dp);
         return RULE_ACTION_IGNORE;
     }
+    MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
     return ruleInCaseEnterDfu();
 }
 
@@ -3706,6 +3714,10 @@ static ruleAction ruleInEarConnectPhone(void) {
                "appPeerSyncIsPeerHandsetHfpConnected(%d) || appDeviceIsHandsetConnected(%d)",
             appPeerSyncIsPeerHandsetA2dpConnected(), appPeerSyncIsPeerHandsetAvrcpConnected(),
             appPeerSyncIsPeerHandsetHfpConnected(), appDeviceIsHandsetConnected());
+    if (MessageCancelAll(appGetUiTask(), APP_INIT_CFM_FLAG) > 0) {
+        DEBUG_LOG("ruleInEarConnectPhone have APP_INIT_CFM_FLAG, so ignore");
+        return RULE_ACTION_IGNORE;
+    }
     return ruleConnectHandset(RULE_CONNECT_USER, RULE_POST_HANDSET_CONNECT_ACTION_NONE);
 }
 

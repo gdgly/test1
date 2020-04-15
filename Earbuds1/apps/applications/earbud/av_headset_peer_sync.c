@@ -209,6 +209,18 @@ static void appPeerSyncUpdateA2dpConnected(bool connected)
     /* update the state with latest from peer */
     ps->peer_a2dp_connected = connected;
 
+#ifdef CONFIG_STAROT
+    if (current_a2dp_state != connected) {
+        DEBUG_LOGF("appPeerSyncUpdateA2dpConnected Prev %u New %u", current_a2dp_state, connected);
+        if (TRUE == connected) {
+            appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_HANDSET_CONNECTED);
+        } else {
+           if ((!ps->peer_hfp_connected && !ps->peer_avrcp_connected)) {
+               appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_HANDSET_DISCONNECTED);
+           }
+        }
+    }
+#else
     /* first profile connected or last profile disconnected then inform rules
      * that peer handset has connected/disconnected */
     if ((current_a2dp_state != connected) &&
@@ -219,6 +231,7 @@ static void appPeerSyncUpdateA2dpConnected(bool connected)
                              connected ? RULE_EVENT_PEER_HANDSET_CONNECTED
                                        : RULE_EVENT_PEER_HANDSET_DISCONNECTED);
     }
+#endif
 #ifdef PEER_SYNC_PROFILE_EVENTS
     /* generate per profile connected/disconnected events for peer-handset link */
     if (!current_a2dp_state && connected)
@@ -238,7 +251,18 @@ static void appPeerSyncUpdateAvrcpConnected(bool connected)
     bool current_avrcp_state = ps->peer_avrcp_connected;
 
     ps->peer_avrcp_connected = connected;
-
+#ifdef CONFIG_STAROT
+    if (current_avrcp_state != connected) {
+        DEBUG_LOGF("appPeerSyncUpdateAvrcpConnected Prev %u New %u", current_avrcp_state, connected);
+        if (TRUE == connected) {
+            appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_HANDSET_CONNECTED);
+        } else {
+            if ((!ps->peer_hfp_connected && !ps->peer_a2dp_connected)) {
+                appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_HANDSET_DISCONNECTED);
+            }
+        }
+    }
+#else
     /* first profile connected or last profile disconnected then inform rules
      * that peer handset has connected/disconnected */
     if ((current_avrcp_state != connected) &&
@@ -249,6 +273,7 @@ static void appPeerSyncUpdateAvrcpConnected(bool connected)
                              connected ? RULE_EVENT_PEER_HANDSET_CONNECTED
                                        : RULE_EVENT_PEER_HANDSET_DISCONNECTED);
     }
+#endif
 #ifdef PEER_SYNC_PROFILE_EVENTS
     /* generate per profile connected/disconnected events for peer-handset link */
     if (!current_avrcp_state && connected)
@@ -271,6 +296,18 @@ static void appPeerSyncUpdateHfpConnected(bool connected)
      * may check this state */
     ps->peer_hfp_connected = connected;
 
+#ifdef CONFIG_STAROT
+    if (current_hfp_state != connected) {
+        DEBUG_LOGF("appPeerSyncUpdateHfpConnected Prev %u New %u", current_hfp_state, connected);
+        if (TRUE == connected) {
+            appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_HANDSET_CONNECTED);
+        } else {
+            if ((!ps->peer_a2dp_connected && !ps->peer_avrcp_connected)) {
+                appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_HANDSET_DISCONNECTED);
+            }
+        }
+    }
+#else
     /* first profile connected or last profile disconnected then inform rules
      * that peer handset has connected/disconnected */
     if ((current_hfp_state != connected) &&
@@ -281,6 +318,7 @@ static void appPeerSyncUpdateHfpConnected(bool connected)
                              connected ? RULE_EVENT_PEER_HANDSET_CONNECTED
                                        : RULE_EVENT_PEER_HANDSET_DISCONNECTED);
     }
+#endif
 #ifdef PEER_SYNC_PROFILE_EVENTS
     /* generate per profile connected/disconnected events for peer-handset link */
     if (!current_hfp_state && connected)

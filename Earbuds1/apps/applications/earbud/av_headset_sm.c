@@ -137,7 +137,6 @@ static void appSmSetInitialCoreState(void)
     switch (sm->phy_state)
     {
         case PHY_STATE_IN_CASE:
-            appConnRulesResetEvent(RULE_EVENT_IN_CASE);
             appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_IN_CASE);
             break;
 

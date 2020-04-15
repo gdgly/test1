@@ -66,6 +66,10 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_BLE_SCANABLE_TIMEOUT      2123  // ble adv timeout
 #define APP_CHECK_GAIA_CONNECTION     2124 // 校验gaia是否需要断开
 #define APP_UPGRADE_RESTART_FLAG      2125 // 升级重启标识，在重启的指定时间内，都是dfu模式。从startup->idle->dfu
+#ifdef STAROT_ONLY_ONE_CAN_ACTIVE_CONNECT_PHONE
+#define APP_PEER_CONNECT_FAIL_FLAG    2126 // 耳机从充电盒子中取出，需要现尝试连接另一只耳机，如果失败，自己才能直接连接手机
+#define APP_INIT_CFM_FLAG             2127 // 启动的时候，自动连接手机，此时，还处于耳朵中，与outcase->connect phone冲突
+#endif
 
 struct UI_APP_UPGRADE_COMMIT_STATUS_T {
     bool status;   // true:commit ;false:revert

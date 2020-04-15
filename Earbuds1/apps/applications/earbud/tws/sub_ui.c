@@ -641,6 +641,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 #ifndef TWS_DEBUG
         MessageSendLater(task, APP_INTERNAL_HANDSET_PAIR, NULL, 500);  // 启动广播(没有手机连接时)
 #endif
+#ifdef STAROT_SOME_MIN_AFTER_IN_EAR_CONNECT_PHONE
+        MessageSendLater(appGetUiTask(), APP_INIT_CFM_FLAG, NULL, D_SEC(5));
+#endif
         break;
     case APP_INTERNAL_HANDSET_PAIR:
         if(ConnectionTrustedDeviceListSize() > 0)
