@@ -1580,3 +1580,8 @@ void appTestCaseClose(void) {
 void appTestCaseOpen(void) {
     appUiCaseStatus(1, -1, -1, -1, -1);
 }
+
+extern void HfpWbsSetSupportedCodecs(hfp_wbs_codec_mask codec_mask, bool send_notification);
+void testHfpWbsSetSupportedCodecs(uint8 code) {
+    HfpWbsSetSupportedCodecs(code, TRUE);
+}
