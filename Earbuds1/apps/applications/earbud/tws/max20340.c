@@ -14,6 +14,7 @@
 // 每次来中断之后，启动一个100ms的定时器，定时器到的时候检查IO状态，如果为低就再次读取一次
 // 产生原因很可能 发送给对方耳机及对方耳机快速响应，导致本耳机中断没响应过来
 void max20340_timer_restart(int timeout);
+void max20340_chipstatus_timer_restart(int timeout);
 
 /// 应用层可以处理多次plcin消息，但是在关盖的情况下，不处理plc out消息
 void max20340_notify_plc_in(void);
@@ -740,9 +741,9 @@ void singlebus_itr_process(void)
             if(0 == g_commuType) {       // 非测试模式下去改变实际状态
                 max20340_notify_plc_out();
             }
-        }
-        else
+        }else{
             DEBUG_LOG("plc unknown in/out 0x%x", value_a[MX20340_REG_PLC_IRQ]);
+        }
         //max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x2);
         max20340WriteRegister(handle, MX20340_REG_CTRL1, 0xe1);
         max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x7f);
@@ -752,16 +753,18 @@ void singlebus_itr_process(void)
         DEBUG_LOG("plcErr");
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x06){//总线接收到数据
 #ifdef MESSAGE_MAX30240_SEND_LATER
-      max20340Disable(handle);
-      handle = BITSERIAL_HANDLE_ERROR;
+        max20340Disable(handle);
+        handle = BITSERIAL_HANDLE_ERROR;
 #endif
-        if(appInitCompleted())                    //没有初始化完成时，忽略接收到的数据处理
+        if(appInitCompleted()){                    //没有初始化完成时，忽略接收到的数据处理
             recv_data_process_ear(handle, value_a);
+        }
     }
 #endif
 
-    if(BITSERIAL_HANDLE_ERROR != handle)
+    if(BITSERIAL_HANDLE_ERROR != handle){
        max20340Disable(handle);
+    }
 }
 
 void singlebus_itr_handler(Task task, MessageId id, Message msg)
@@ -783,6 +786,7 @@ void singlebus_itr_handler(Task task, MessageId id, Message msg)
                 }
                 singlebus_itr_process();
                 max20340_timer_restart(15);     // 20ms后，查看中断是否拉回来了
+                max20340_chipstatus_timer_restart(60000);//来中断了就表示芯片不在init状态，一分钟后再检测芯片是否异常
             }
             break;
 #ifdef MESSAGE_MAX30240_SEND_LATER
@@ -859,8 +863,21 @@ void max20340_timer_send(int timeout)
 }
 #endif
 
+static void max20340_rstchip_if_errstatus(void)
+{
+    bitserial_handle handle;
+    uint8 value;
+    handle = max20340Enable();
+    max20340ReadRegister(handle, MX20340_REG_STA1, &value);
+    if( (value&0x1c) == 0 ){//slave端出错时保持在了init状态
+        max20340WriteRegister(handle, MX20340_REG_CTRL1, 0xe3);
+    }
+    max20340Disable(handle);
+}
+
 #ifdef TIME_READ_MAX20340_REG
 #define MESSAGE_MAX20340_TIME_TRIGGER 1
+#define MESSAGE_MAX20340_TIME_CHIP_STATUS 2
 static void max20340_time_handle_msg(Task task, MessageId id, Message message)
 {
     (void)message;(void)task;
@@ -872,7 +889,11 @@ static void max20340_time_handle_msg(Task task, MessageId id, Message message)
                 DEBUG_LOG("max23040 timer READ");
                 max20340_timer_restart(15);     // 连续数据发送时，其周期可能接近20ms,我们减少这儿的值
             }
-        break;
+            break;
+        case MESSAGE_MAX20340_TIME_CHIP_STATUS:
+            max20340_rstchip_if_errstatus();
+            max20340_chipstatus_timer_restart(60000);//每一分钟检测一次芯片状态，看是否有异常
+            break;
     }
 }
 
@@ -882,8 +903,16 @@ void max20340_timer_restart(int timeout)
     if(timeout >= 0)
         MessageSendLater(&time_funcTask->task, MESSAGE_MAX20340_TIME_TRIGGER, 0, timeout);
 }
+
+void max20340_chipstatus_timer_restart(int timeout)
+{
+    MessageCancelAll(&time_funcTask->task, MESSAGE_MAX20340_TIME_CHIP_STATUS);
+    if(timeout >= 0)
+        MessageSendLater(&time_funcTask->task, MESSAGE_MAX20340_TIME_CHIP_STATUS, 0, timeout);
+}
 #else
 void max20340_timer_restart(int timeout) { (void)timeout;}
+void max20340_chipstatus_timer_restart(int timeout) { (void)timeout;}
 #endif
 
 int max20340_get_left_or_right(void)
@@ -989,6 +1018,18 @@ void max20340Power(bool ison)
     }
 }
 
+static void delay_ms(int time_ms)
+{
+    uint32 time_now = VmGetTimerTime();
+    uint32 time_end = time_now + time_ms*1000;
+    while(1){
+        time_now = VmGetTimerTime();
+        if(time_now > time_end){
+            break;
+        }
+    }
+}
+
 void max20340_init(void)
 {
     uint16 bank;
@@ -1035,6 +1076,7 @@ void max20340_init(void)
     max20340ReadRegister(handle, 0x00, &value);
     DEBUG_LOG("max20340 id = 0x%x\n", value);
 
+    max20340WriteRegister(handle, MX20340_REG_CTRL1, 0xe3); delay_ms(2);//开始时先复位一下
     for(i=0; i<ARRAY_DIM(max20340_init_array); i++){
         max20340WriteRegister(handle, max20340_init_array[i].reg, max20340_init_array[i].value);
     }
@@ -1062,6 +1104,7 @@ void max20340_init(void)
     memset(time_funcTask, 0, sizeof(singlebus_funcInfoTask));
     time_funcTask->task.handler = max20340_time_handle_msg;
     max20340_timer_restart(6000);
+    max20340_chipstatus_timer_restart(6000);
 #endif
 
     max20340Disable(handle);
