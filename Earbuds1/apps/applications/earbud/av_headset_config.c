@@ -131,7 +131,22 @@ const promptConfig prompt_config[] =
         .filename = "connect_app.sbc",
         .rate = 16000,
         .format = PROMPT_FORMAT_SBC,
-    },    
+    },
+    [PROMPT_MIC_MUTE] = {
+        .filename = "mic_mute.sbc",
+        .rate = 16000,
+        .format = PROMPT_FORMAT_SBC,
+    },
+    [PROMPT_MIC_UNMUTE] = {
+        .filename = "mic_unmute.sbc",
+        .rate = 16000,
+        .format = PROMPT_FORMAT_SBC,
+    },
+    [PROMPT_ENGLISH_APP] = {
+        .filename = "connect_english_app.sbc",
+        .rate = 16000,
+        .format = PROMPT_FORMAT_SBC,
+    },
     [PROMPT_SPK_20000HZ] = {
         .filename = "spk100_20000.sbc",
         .rate = 16000,
