@@ -706,6 +706,15 @@ static void appPeerSyncHandlePeerSigMsgChannelTxInd(const PEER_SIG_MSG_CHANNEL_R
     ps->peer_sco_active          = PEER_SYNC_STATE_IS_SCO_ACTIVE(ind->msg);
     ps->peer_dfu_in_progress     = PEER_SYNC_STATE_IS_DFU_IN_PROGRESS(ind->msg);
 
+    // 调整与appPeerSyncUpdate的先后关系，来了RX消息，就可以执行Update的规则
+    /* RX sequence number from peer indicates it has seen our peer sync TX
+     * this is a response sync matching the latest TX we have sent */
+    if (PEER_SYNC_GET_RX_SEQNUM(ind->msg) == ps->peer_sync_tx_seqnum)
+    {
+        /* Update peer sync RX state */
+        PEER_SYNC_STATE_SET_RECEIVED(ps->peer_sync_state);
+    }
+
     /* remember and possibly generate local events for some peer state changes */
     appPeerSyncUpdatePeerInCase(PEER_SYNC_STATE_IS_IN_CASE(ind->msg));
     appPeerSyncUpdatePeerInEar(PEER_SYNC_STATE_IS_IN_EAR(ind->msg));
@@ -715,13 +724,7 @@ static void appPeerSyncHandlePeerSigMsgChannelTxInd(const PEER_SIG_MSG_CHANNEL_R
     appPeerSyncUpdateAdvertising(PEER_SYNC_STATE_IS_ADVERTISING(ind->msg));
     appPeerSyncUpdateBleConnection(PEER_SYNC_STATE_IS_BLE_CONNECTED(ind->msg));
     appPeerSyncUpdateAncState(PEER_SYNC_STATE_IS_ANC_ENABLED(ind->msg));
-    /* RX sequence number from peer indicates it has seen our peer sync TX 
-     * this is a response sync matching the latest TX we have sent */
-    if (PEER_SYNC_GET_RX_SEQNUM(ind->msg) == ps->peer_sync_tx_seqnum)
-    {
-        /* Update peer sync RX state */
-        PEER_SYNC_STATE_SET_RECEIVED(ps->peer_sync_state);
-    }
+
 
     was_supported = appDeviceSetProfileConnectedAndSupportedFlagsFromPeer(
                         &ps->peer_handset_addr,

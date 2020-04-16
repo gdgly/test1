@@ -3413,12 +3413,14 @@ bool appConnRulesInProgress(void)
         if ((rule->flags == RULE_FLAG_PROGRESS_MATTERS) &&
             (rule->status == RULE_STATUS_IN_PROGRESS))
         {
+            DEBUG_LOG("appConnRulesInProgress rule %02d in progress", rule_index);
             CONNRULES_LOGF("appConnRulesInProgress rule %u in progress", rule_index);
             rc = TRUE;
         }
     }
     return rc;
 }
+
 
  /*! \brief Register a task to receive notifications that no rules are in progress. */
 void appConnRulesNopClientRegister(Task task)
