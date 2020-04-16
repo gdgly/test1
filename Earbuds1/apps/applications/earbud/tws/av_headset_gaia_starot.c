@@ -71,6 +71,8 @@ static void gaiaControlVolumeSet(GAIA_STAROT_IND_T *message);
 
 static void gaiaControlHfpMute(bool isMute);
 
+static void gaiaControlGetHfpMute(void);
+
 static void gaiaSetBondCode(GAIA_STAROT_IND_T *message);
 
 static void gaiaCheckBondCode(GAIA_STAROT_IND_T *message);
@@ -476,6 +478,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_CONTROL_HFP_UNMUTE:
             gaiaControlHfpMute(FALSE);
+            break;
+        case GAIA_COMMAND_STAROT_CONTROL_GET_HFP_MUTE:
+            gaiaControlGetHfpMute();
             break;
     }
     /// 助手52NN
@@ -1421,6 +1426,22 @@ static void gaiaControlHfpMute(bool isMute) {
     if(isMute == FALSE){
         appTestHandsetHfpUnMute();
         appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CONTROL_HFP_UNMUTE, GAIA_STATUS_SUCCESS, 0, NULL);
+    }
+}
+
+static void gaiaControlGetHfpMute(void) {
+    StarotAttr *head = NULL;
+    StarotAttr *attr = NULL;
+
+    attr = attrMalloc(&head, 1);
+    attr->attr = 0X01;
+    attr->payload[0] = appHfpIsMuted();
+
+    if (NULL != head) {
+        uint16 len = 0;
+        uint8 *data = attrEncode(head, &len);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CONTROL_GET_HFP_MUTE, 0xfe, len, data);
+        attrFree(head, data);
     }
 }
 

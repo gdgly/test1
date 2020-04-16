@@ -154,6 +154,7 @@ enum {
     GAIA_COMMAND_STAROT_CONTROL_VOLUME_SET= 0X5405,                           // 音量设置
     GAIA_COMMAND_STAROT_CONTROL_HFP_MUTE= 0X5406,                             // 静音
     GAIA_COMMAND_STAROT_CONTROL_HFP_UNMUTE= 0X5407,                           // 非静音
+    GAIA_COMMAND_STAROT_CONTROL_GET_HFP_MUTE= 0X5408,                         // 获取静音状态
 };
 ///////////////////////////base info///////////////////////////////
 enum {
