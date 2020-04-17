@@ -120,6 +120,7 @@ static uint8 toPercentage(uint16 voltage)
 
     UserPrmPtr prm = GetUserParam();
 
+    g_last_percent = prm->electricQuantity;
     if(theCharger->is_charging)
     {
         //充电
@@ -129,8 +130,6 @@ static uint8 toPercentage(uint16 voltage)
         }
 
         if(i >= VOL_CHARGE_LEN)  {
-            if(prm->electricQuantity >= 70)
-               g_last_percent = prm->electricQuantity;
 
             if(g_last_percent < VOL_CHARGE_LEN)
                 g_last_percent = VOL_CHARGE_LEN;
@@ -161,7 +160,7 @@ static uint8 toPercentage(uint16 voltage)
             iPercent = i*2;
             g_charge_calc_ticks = 0;
         }
-        if(iPercent < g_last_percent && g_last_percent != -1)
+        if(iPercent < g_last_percent)
             iPercent = g_last_percent;
 
     }
@@ -174,15 +173,12 @@ static uint8 toPercentage(uint16 voltage)
                         break;
         }
         iPercent = 100 - i*2;
-        if(iPercent > g_last_percent && g_last_percent != -1)
+        if(iPercent > g_last_percent)
             iPercent = g_last_percent;
    }
     g_last_percent = iPercent;
 
-    if(g_last_percent>=70)
-        prm->electricQuantity = g_last_percent;
-    else
-        prm->electricQuantity = 0;
+    prm->electricQuantity = g_last_percent;
 
     return g_last_percent;
 }
