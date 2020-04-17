@@ -3716,6 +3716,7 @@ static ruleAction ruleInEarConnectPhone(void) {
                "appPeerSyncIsPeerHandsetHfpConnected(%d) || appDeviceIsHandsetConnected(%d)",
             appPeerSyncIsPeerHandsetA2dpConnected(), appPeerSyncIsPeerHandsetAvrcpConnected(),
             appPeerSyncIsPeerHandsetHfpConnected(), appDeviceIsHandsetConnected());
+    
     if (appConnRulesInProgress()) {
         DEBUG_LOG("ruleInEarConnectPhone appConnRulesInProgress is run/true");
         return RULE_ACTION_IGNORE;
@@ -3725,7 +3726,8 @@ static ruleAction ruleInEarConnectPhone(void) {
         DEBUG_LOG("ruleInEarConnectPhone have APP_INIT_CFM_FLAG, so ignore");
         return RULE_ACTION_IGNORE;
     }
-    return ruleConnectHandset(RULE_CONNECT_USER, RULE_POST_HANDSET_CONNECT_ACTION_NONE);
+
+    return ruleConnectHandset(RULE_CONNECT_OUT_OF_CASE, RULE_POST_HANDSET_CONNECT_ACTION_NONE);
 }
 
 #endif

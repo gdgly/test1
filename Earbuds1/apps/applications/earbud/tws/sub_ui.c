@@ -341,6 +341,7 @@ static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T*
         MessageSendConditionally(appGetGaiaTask(), mid, message, subGaiaGetConnectLock());
     } else {
         disable_audio_forward(TRUE);
+        subGaiaClearCaller();
 
         MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER);
         MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_STATUS);

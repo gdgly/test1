@@ -593,6 +593,7 @@ static void appEnterInCase(void)
     /* Run rules for in case event */
     appConnRulesResetEvent(RULE_EVENT_OUT_CASE);
     appConnRulesResetEvent(RULE_EVENT_IN_CASE);
+    appConnRulesResetEvent(RULE_EVENT_PEER_HANDSET_DISCONNECTED);
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_IN_CASE);
 #ifdef CONFIG_STAROT
     /// 理由：从耳中取出耳机，5min之后，如果之前再播放音乐，会设置定时器
