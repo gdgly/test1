@@ -1441,7 +1441,7 @@ static void gaiaControlGetHfpMute(void) {
     if (NULL != head) {
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
-        appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CONTROL_GET_HFP_MUTE, 0xfe, len, data);
+        appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CONTROL_GET_HFP_MUTE, GAIA_STATUS_SUCCESS, len, data);
         attrFree(head, data);
     }
 }
