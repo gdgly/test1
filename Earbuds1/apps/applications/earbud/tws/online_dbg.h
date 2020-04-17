@@ -179,6 +179,8 @@
 #define ONLINE_DBG_DOUBLE_TAP_INV   (0x0E)    /* invalid double tap */
 #define ONLINE_DBG_CASE_OPEN        (0x0F)    /* case open */
 #define ONLINE_DBG_CASE_CLOSE       (0x10)    /* case close */
+#define ONLINE_DBG_APO_EVOKE        (0x11)    /* apollo evoke */
+#define ONLINE_DBG_APO_SLEEP        (0x12)    /* apollo sleep */
 
 #define ONLINE_DBG_AVDTP_DISCOVER   (0x20)    /* avdtp discover */
 #define ONLINE_DBG_AVDTP_GET_CAPS   (0x21)    /* avdtp get capabilities */
