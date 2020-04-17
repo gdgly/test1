@@ -1398,7 +1398,12 @@ static void appHfpHandleHfpCallerIdIndication(const HFP_CALLER_ID_IND_T *ind)
             return;
                    
         default:
+#ifdef CONFIG_STAROT
+            /// 关闭理由：双卡，导致hfp连接断开重连
+            DEBUG_LOGF("appHfpError, state=%u, id=%x but can't do appHfpError", appGetHfp()->state, HFP_CALLER_ID_IND);
+#else
             appHfpError(HFP_CALLER_ID_IND, ind);
+#endif
             return;
     }
 }
