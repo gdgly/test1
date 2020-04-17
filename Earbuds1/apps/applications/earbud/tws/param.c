@@ -160,7 +160,7 @@ void UserParamDefault(void)
     memset(prm, 0, sizeof(UserParam));
     prm->lKeyFunc = 0X02;
     prm->rKeyFunc = 0X03;
-    prm->apolloEnable = TRUE;
+    prm->apolloEnable = FALSE;
     prm->sensorEnable = TRUE;
     prm->assistantType = ASSISTANT_TYPE_APP;
 }
