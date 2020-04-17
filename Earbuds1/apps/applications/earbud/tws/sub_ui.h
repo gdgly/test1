@@ -21,6 +21,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_PSENSOR_INEAR          (2012)           // 入耳
 #define APP_PSENSOR_OUTEAR         (2013)           // 出耳机
 #define APP_CONNECTED_HOST         (2014)           // App延时连接主耳机
+#define APP_INEAR_TONE             (2017)           // 入耳延时判断消息
 #define APP_UI_HFP_STATUS_CHANGE    2015            // hfp -> ui 通知hfp状态发生变化
 #define APP_UI_ENTER_DORMANT       (2016)           // 进入 DORMANT模式
 
@@ -146,6 +147,7 @@ typedef struct tagPROGRUNINFO {
 
     PowerSaveMode  iPowerSaveMode;          // 当前模式
 
+    uint8          bt_count;                // 从盒子拿出连接蓝牙,不播入耳提示音
     uint8          dial_stat;               // 当前拨号情况
     uint8          dial_type:1;             // 1: 电话， 0：微信等其它
     //保存手机拨入的信息

@@ -323,8 +323,8 @@ extern const ringtone_note app_tone_av_link_loss[];
 #define appUiHfpVolumeUp()                          /* 播放HFP音量调高 */
 #define appUiHfpVolumeDown()                        /* 播放HFP音量调底 */
 #define appUiHfpTransfer()                          /* 播放HFP转接呼叫音 */
-#define appUiHfpMuteActive()          appUiPlayToneCore(app_tone_hfp_mute_active, FALSE, TRUE, NULL, 0) /* 播放HFP静音主动音 */
-#define appUiHfpMuteInactive()        appUiPlayToneCore(app_tone_hfp_mute_inactive, FALSE, TRUE, NULL, 0) /* 播放HFP静音无效音 */
+#define appUiHfpMuteActive()          appUiPlayPrompt(PROMPT_MIC_MUTE) /* 播放HFP静音主动音 */
+#define appUiHfpMuteInactive()        appUiPlayPrompt(PROMPT_MIC_UNMUTE) /* 播放HFP静音无效音 */
 #define appUiHfpMuteReminder()                      /* 播放HFP静音提示音 */
 #define appUiHfpScoUnencryptedReminder()            /* 播放HFP SCO未加密的声音 */
 #define appUiHfpState(state)                        /* 处理HFP状态更改的UI更改 */

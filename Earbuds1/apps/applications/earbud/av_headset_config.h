@@ -643,7 +643,7 @@
 /*! When a voice prompt is played, for this period of time, any repeated prompt
     will not be played. Set to zero to play all prompts, regardless of whether
     the prompt was recently played. */
-#define appConfigPromptNoRepeatDelay() D_SEC(5)
+#define appConfigPromptNoRepeatDelay() D_SEC(1)
 
 /*! When the earbuds handover when A2DP audio is streaming, the new master earbud
     sends an AVRCP media play command to the handset when both AVRCP and A2DP media

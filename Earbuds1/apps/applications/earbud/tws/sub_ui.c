@@ -61,12 +61,12 @@ static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T*
 /*! At the end of every tone, add a short rest to make sure tone mxing in the DSP doens't truncate the tone */
 #define RINGTONE_STOP  RINGTONE_NOTE(REST, HEMIDEMISEMIQUAVER), RINGTONE_END
 
-static const ringtone_note app_tone_music[] =
-{
-    RINGTONE_TIMBRE(sine), RINGTONE_DECAY(16),
-    RINGTONE_NOTE(A7, SEMIQUAVER),
-    RINGTONE_STOP
-};
+//static const ringtone_note app_tone_music[] =
+//{
+//    RINGTONE_TIMBRE(sine), RINGTONE_DECAY(16),
+//    RINGTONE_NOTE(A7, SEMIQUAVER),
+//    RINGTONE_STOP
+//};
 static const ringtone_note app_tone_wakeup[] =
 {
     RINGTONE_TIMBRE(sine), RINGTONE_DECAY(16),
@@ -135,7 +135,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
             if(TAP_WACKUP == keyFunc) {
                 if(progRun->gaiaStat == 1) {
                     MessageSend(appGetUiTask(), APP_ASSISTANT_TAP_AWAKEN, 0);
-                    APPTONEMASTER();
+                    appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
                 }
                 else {
                     appUiPlayPrompt(PROMPT_CONNECT_APP);        // 请连接手机APP;
@@ -144,7 +144,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
             }
             else if(TAP_SYSTEM == keyFunc) {
                 MessageSend(appGetUiTask(), APP_ASSISTANT_TAP_SYSTEM, 0);
-                APPTONEMASTER();
+                appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
             }
             else {
                 DBCLINK_LOG("tap no set wakeup");
@@ -180,7 +180,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
             if(TAP_WACKUP == keyFunc) {
                 if(1 == progRun->peerGaiaStat)  {       // 对方已经启动APP
                     appPeerSigTxWakeupApp(0);  // 0为tap
-                    APPTONESLAVE();
+                    appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
                 }
                 else {
                     appUiPlayPrompt(PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
@@ -189,7 +189,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
             }
             else if(TAP_SYSTEM == keyFunc) {
                 appPeerSigTxWakeupSys(0);  // 0为tap
-                APPTONESLAVE();
+                appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
             }
             else {
                 DBCLINK_LOG("tap no set wakeup");
@@ -269,12 +269,12 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
         (appDeviceIsPeerAvrcpConnectedForAv() && appPeerSyncIsComplete() && appPeerSyncIsPeerHandsetAvrcpConnected()))
     {
         if( keyFunc == TAP_PREVIOUS_TRACK){          /*音乐播放中 -->音乐前一首 */
-            appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
+            appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
             appAvBackward();
             goto key_done;
         }
         else if(keyFunc == TAP_NEXT_TRACK){          /*音乐播放中 -->音乐后一首 */
-            appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
+            appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
             appAvForward();
             goto key_done;
         }
@@ -546,11 +546,11 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     }
         break;
     case STAROT_APP_CONTROL_PREVIOUS_TRACK:      ///App控制上一首
-        appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
+        appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
         appAvBackward();
         break;
     case STAROT_APP_CONTROL_NEXT_TRACK:          ///App控制下一首
-        appUiPlayToneCore(app_tone_music, FALSE, TRUE, NULL, 0);
+        appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
         appAvForward();
         break;
     }
@@ -572,9 +572,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         if(progRun->powerflag15 == TRUE && progRun->iElectrity < 15 && (1 == progRun->bredrconnect) &&
                 (appSubGetProgRun()->chargeStat == CHARGE_ST_NONE))
         {
-            if(progRun->iElectrity == 1){
-                appUiPlayPrompt(PROMPT_POWER_OFF);
-            }
+//            if(progRun->iElectrity == 1){
+//                appUiPlayPrompt(PROMPT_POWER_OFF);
+//            }
             appUiPlayPrompt(PROMPT_LOW_BATTERY);
             progRun->powerflag15 = FALSE;
         }
@@ -603,6 +603,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
     case APP_GAIA_DISCONNECTED:
         DEBUG_LOG("GAIA disconnect from phone");
+        appTestHandsetHfpUnMute();
         progRun->gaiaStat  = 0;
 #ifdef CONFIG_REC_ASSISTANT
         if (appKymeraRecordIsRun() == TRUE){
@@ -835,13 +836,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
         DEBUG_LOG("progRun->bredrconnect =%d",progRun->bredrconnect);
 
-        if(appDeviceIsHandsetConnected() && (appDeviceIsPeerConnected()) && (appHfpGetState() == HFP_STATE_CONNECTED_IDLE))
+        if((progRun->bt_count == 2) && !appPeerSyncIsPeerInEar())
         {
-            if((!appPeerSyncIsPeerInCase() && !appPeerSyncIsPeerInEar()) || appPeerSyncIsPeerInCase())
-            {
-                MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
-                MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 500);
-            }
+            MessageSendLater(&appGetUi()->task, APP_INEAR_TONE, NULL, 500);
         }
 //        appUiPowerSave(POWER_MODE_IN_EAR);
         break;
@@ -910,15 +907,23 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
 
     case APP_CONNECTED_HOST:
-        if(appTestIsHandsetA2dpMediaConnected()){
-            if(!appDeviceIsHandsetA2dpStreaming() &&
-                    ((progRun->dial_stat & (DIAL_IN_ACTIVE|DIAL_OUT_ACTIVE|DIAL_ACTIVE)) == 0) && appDeviceIsHandsetConnected())
-                    appUiPlayPrompt(PROMPT_CONNECTED);
-        }else{
-            MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
-            MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 1000);
+        if(appTestIsHandsetA2dpMediaConnected() || appHfpIsConnected()){
+            if(appDeviceIsHandsetConnected() && !appDeviceIsHandsetA2dpStreaming() && !appHfpIsCallActive()){
+                appUiPlayPrompt(PROMPT_CONNECTED);
+                progRun->bt_count = 2;
+                appPeerSigTxDataCommandUi(PEERTX_CMD_BT_COUNT, progRun->bt_count);
+            }
+    }
+        break;
+
+    case APP_INEAR_TONE:
+        if ((TRUE == appDeviceIsHandsetConnected()) && !appHfpIsCallActive() && !appDeviceIsHandsetA2dpStreaming()){
+            appUiPlayPrompt(PROMPT_CONNECTED);
         }
-            break;
+        else if ((TRUE == appPeerSyncIsPeerHandsetHfpConnected()) && !appPeerSyncIsPeerScoActive() && !appPeerSyncIsPeerHandsetA2dpStreaming()) {
+            appUiPlayPrompt(PROMPT_CONNECTED);
+        }
+        break;
 
     case APP_BLE_SCANABLE_START:
         printf("appSubUiHandleMessage APP_BLE_SCANABLE_START");
@@ -1259,10 +1264,8 @@ void appUiHfpCallInactive(void)
 void appUiHfpConnected(unsigned cad)
 {
     (void)cad;
-    //当HFP连接之后，耳机在耳朵中，并且还是主耳，延时检测
-    if(appSmIsInEar() && appDeviceIsHandsetConnected()){
-        MessageSend(appGetUiTask(), APP_CONNECTED_HOST, NULL);
-    }
+    MessageCancelAll(&appGetUi()->task, APP_INEAR_TONE);
+    return;
 }
 
 /*EDR connect state*/
@@ -1282,6 +1285,8 @@ void appUiAvConnected(unsigned cad)
 void appUiAvDisconnected(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
+    progRun->bt_count = 0;
+    appPeerSigTxDataCommandUi(PEERTX_CMD_BT_COUNT, progRun->bt_count);
 
     progRun->bredrconnect = 0;
     apolloWakeupPower(0);               // 经典蓝牙断开，关闭APO
