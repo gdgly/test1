@@ -1466,6 +1466,7 @@ bool appAvDisconnectHandset(void)
     if (appDeviceGetHandsetBdAddr(&bd_addr))
     {
         avInstanceTaskData *av_inst = appAvInstanceFindFromBdAddr(&bd_addr);
+        online_dbg_record(ONLINE_DEBUG_AV_DISCONNECT_IND);
         return appAvA2dpDisconnectRequest(av_inst) || appAvAvrcpDisconnectRequest(&av_inst->av_task, av_inst);
     }
     else

@@ -123,7 +123,6 @@ void starotGaiaReset(void) {
     appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
     appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
     appGetGaia()->needCycleSendAudio = 0;
-    /// only test
     disable_audio_forward(TRUE);
     subGaiaNotifyDataClear();
     subGaiaClearCaller();
@@ -785,6 +784,9 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
             StarotAttr *attr = PanicNull(attrMalloc(&head, numberLen));
             attr->attr = callerAttr;
             memcpy(attr->payload, numberInfo, numberLen);
+        } else {
+            /// 主动获取当前通话信息
+            HfpCurrentCallsRequest(hfp_primary_link);
         }
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
