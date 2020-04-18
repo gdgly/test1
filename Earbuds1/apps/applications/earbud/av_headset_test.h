@@ -627,5 +627,6 @@ void testHfpCallWaitingEnableRequest (bool enable);
 void appTestCaseClose(void);
 void appTestCaseOpen(void);
 void testHfpWbsSetSupportedCodecs(uint8 code);
+void appTestPlayPrompt(uint8 prompt);
 
 #endif // AV_HEADSET_TEST_H

@@ -1585,3 +1585,7 @@ extern void HfpWbsSetSupportedCodecs(hfp_wbs_codec_mask codec_mask, bool send_no
 void testHfpWbsSetSupportedCodecs(uint8 code) {
     HfpWbsSetSupportedCodecs(code, TRUE);
 }
+
+void appTestPlayPrompt(uint8 prompt) {
+    appUiPlayPrompt(prompt);
+}
