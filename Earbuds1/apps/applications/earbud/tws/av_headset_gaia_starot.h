@@ -4,12 +4,14 @@
 
 #include <gaia.h>
 #include <../av_headset.h>
+#include "tws/attr.h"
 
 // region task数据
 
 typedef struct {
     uint8 callerNumber[32];
     uint16 callerLen;
+    uint16 sampleRate;
     uint16 connectLock; // 0:无锁 1:加锁
     uint8 notifyData[5];  // 防止重复数据，直接避免传输
 } subGaiaTaskData;
@@ -18,11 +20,15 @@ void subGaiaTaskInit(void);
 subGaiaTaskData* subGaiaGetTaskData(void);
 // endregion
 
-// region 联系人信息
+// region 通话信息
+
+void subGaiaClearCurrentDialog(void);
 
 const uint8* subGaiaGetCaller(uint16* len);
-void subGaiaClearCaller(void);
 void subGaiaSetCaller(uint8* data, uint16 len);
+
+void subGaiaSetSampleRate(uint16 sampleRate);
+uint16 subGaiaGetSampleRate(void);
 
 // endregion
 
@@ -133,7 +139,22 @@ enum {
     GAIA_COMMAND_STAROT_CALL_INACTIVE = 0X5011,                         // 电话结束
 };
 
-
+/*
+ * fun:创建采样率属性
+ */
+StarotAttr *subGaiaCreateDialogSampleRate(StarotAttr** parent, uint16 sampleRate);
+/*
+ * fun:创建电话号码属性
+ */
+StarotAttr *subGaiaCreateDialogNumber(StarotAttr** parent);
+/*
+ * fun:创建通话方向属性
+ */
+StarotAttr *subGaiaCreateDialogDirect(StarotAttr** parent, hfpState state);
+/*
+ * fun:创建丢弃音频数量属性
+ */
+StarotAttr *subGaiaCreateDialogDropAudio(StarotAttr** parent);
 
 // endregion
 
@@ -296,6 +317,7 @@ enum {
     STAROT_DIALOG_CASE_STAT,                              // ui -> gaia 盒子当前信息
     STAROT_DIALOG_CASE_VER,                               // ui -> gaia 盒子当前版本
     STAROT_DIALOG_CALL_NUMBER,							  // ui -> gaia 当前通话的电话号码
+    STAROT_DIALOG_SAMPLE_RATE,                            // ui -> gaia 当前通话的采样率
     STAROT_AI_USER_START_RECORD,                          // ui -> (ui & dsp) AI请求录音
     STAROT_AI_USER_STOP_RECORD,                           // ui -> (ui & dsp) AI停止录音
     STAROT_RECORD_STOP_STATUS_REPORT,                     // dsp -> ui 上报停止录音状态
@@ -356,6 +378,10 @@ typedef struct {
 } STAROT_DIALOG_STATUS_T ;
 
 typedef struct {
+    uint16 rate;
+} STAROT_DIALOG_SAMPLE_RATE_T;
+
+typedef struct {
     uint16 len;
     uint8 number[2];
 } STAROT_DIALOG_CALL_NUMBER_T;
@@ -383,4 +409,17 @@ typedef struct
     uint8 data[1];
 } GAIA_STAROT_ID_T;
 ///////////////////////////////////////////////////////
+
+// region 小工具
+
+/*
+ * 发送请求至APP
+ */
+void requestGaiaMessageWithAttrHelper(uint16 command, StarotAttr* head);
+/*
+ * 响应APP发送的请求
+ */
+void responseGaiaMessageWithAttrHelper(uint16 command, uint16 status, StarotAttr* head);
+
+// endregion
 #endif // AV_HEADSET_GAIA_STAROT_H

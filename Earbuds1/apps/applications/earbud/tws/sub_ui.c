@@ -314,42 +314,41 @@ void appSubUISetMicbias(int set)
 static int16 subUiCallNumber2Gaia(ProgRIPtr progRun, const CALL_NUMBER_T* msg)
 {
     UNUSED(progRun);
-    MAKE_OBJECT_LEN(STAROT_DIALOG_CALL_NUMBER_T, msg->length);
-    message->len = msg->length;
-    memcpy(message->number, msg->number, msg->length);
-    MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER);
-    DEBUG_LOG("call subUiCallNumber2Gaia STAROT_DIALOG_CALL_NUMBER send conditionally");
-    MessageSendConditionally(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER, message, subGaiaGetConnectLock());
 
     DEBUG_LOG("subUiCallNumber2Gaia Call Number: ");
-    int i = 0;
-    for (; i < msg->length; i++) printf("%c", msg->number[i]);
+    for (int i = 0; i < msg->length; i++) printf("%c", msg->number[i]);
     printf("\n");
+
+    if (subGaiaIsConnectLock()) {
+        DEBUG_LOG("subUiCallNumber2Gaia Call Number, but gaia not connect");
+    } else {
+        MAKE_OBJECT_LEN(STAROT_DIALOG_CALL_NUMBER_T, msg->length);
+        message->len = msg->length;
+        memcpy(message->number, msg->number, msg->length);
+        MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER);
+        DEBUG_LOG("call subUiCallNumber2Gaia STAROT_DIALOG_CALL_NUMBER send conditionally");
+        MessageSend(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER, message);
+    }
 
     return 0;
 }
 
 static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T* msg)
 {
-    /// 1.如果电话接通时，没有和APP成功建立连接，缓存电话抵达、拨号等属性消息
-    /// 2.如果电话挂断，清理缓存的通话相关属性消息
+    DEBUG_LOG("subUiCallIndicator2Gaia lock:%d, message command:%d", subGaiaIsConnectLock(), msg->command);
     if (HFP_STATE_CONNECTED_IDLE != msg->command) {
-        MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
-        message->status = msg->command;
-        DEBUG_LOG("call subUiCallIndicator2Gaia STAROT_DIALOG_STATUS send conditionally");
-        MessageId mid = (HFP_STATE_CONNECTED_ACTIVE == msg->command ? STAROT_DIALOG_STATUS_ACTIVE : STAROT_DIALOG_STATUS);
-        MessageSendConditionally(appGetGaiaTask(), mid, message, subGaiaGetConnectLock());
-    } else {
-        disable_audio_forward(TRUE);
-        subGaiaClearCaller();
-
-        MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_CALL_NUMBER);
-        MessageCancelAll(appGetGaiaTask(), STAROT_DIALOG_STATUS);
         if (!subGaiaIsConnectLock()) {
             MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
             message->status = msg->command;
             MessageSend(appGetGaiaTask(), STAROT_DIALOG_STATUS, message);
         }
+    } else {
+        disable_audio_forward(TRUE);
+        subGaiaClearCurrentDialog();
+
+        MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
+        message->status = msg->command;
+        MessageSend(appGetGaiaTask(), STAROT_DIALOG_STATUS, message);
     }
 
     DEBUG_LOG("subUiCallIndicator2Gaia Status=0x%x, call indicator: 0x%02x",
@@ -1325,14 +1324,13 @@ void appUiNotifyHtpStateChange(void) {
 /* SCO chain建立的时候，通知上层应用当前sample,rate*/
 void appUiNotifyAudioSampleRate(uint16 rate, uint16 mode)
 {
-    ProgRIPtr  progRun = appSubGetProgRun();
-    if(progRun->gaiaStat != 1) return;
-
-    MAKE_OBJECT(STAROT_DIALOG_STATUS_T);
-    message->status = rate;
-    MessageSend(appGetGaiaTask(), STAROT_DIALOG_STATUS, message);
-
-    DEBUG_LOG("appUiNotifyAudioSampleRate rate=%d %d", rate, mode);
+    DEBUG_LOG("appUiNotifyAudioSampleRate rate=%d mode %d gaia is lock", rate, mode, subGaiaIsConnectLock());
+    if (subGaiaIsConnectLock()) {
+        return;
+    }
+    MAKE_OBJECT(STAROT_DIALOG_SAMPLE_RATE_T);
+    message->rate= rate;
+    MessageSend(appGetGaiaTask(), STAROT_DIALOG_SAMPLE_RATE, message);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

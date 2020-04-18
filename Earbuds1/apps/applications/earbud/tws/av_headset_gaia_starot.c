@@ -32,6 +32,7 @@ extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status
                               uint16 payload_length, uint8 *payload);
 
 static void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T* message);
+static void gaiaParseDialogSampleRate(STAROT_DIALOG_SAMPLE_RATE_T* message);
 
 static void starotGaiaDialogStopTransport(GAIA_STAROT_IND_T *message);
 
@@ -93,12 +94,16 @@ static void gaiaAppTestPacketData(GAIA_STAROT_IND_T *mess);
 
 extern int16 gaiaTestProduct(uint8_t *payload);
 
+// region 升级
+
 static void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerPeerExitCfm(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerGetVersionDetail(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerNotifyCommitStatus(GAIA_STAROT_IND_T *message);
+
+// endregion
 
 struct GaiaStarotPrivateData_T {
     Source dialogSpeaker;
@@ -125,7 +130,7 @@ void starotGaiaReset(void) {
     appGetGaia()->needCycleSendAudio = 0;
     disable_audio_forward(TRUE);
     subGaiaNotifyDataClear();
-    subGaiaClearCaller();
+    subGaiaClearCurrentDialog();
 }
 
 /*
@@ -584,6 +589,11 @@ void starotGaiaDefaultParse(MessageId id, Message message) {
         case STAROT_DIALOG_STATUS_ACTIVE:
             gaiaParseDialogStatus((STAROT_DIALOG_STATUS_T *)message);
             break;
+
+        case STAROT_DIALOG_SAMPLE_RATE:
+            gaiaParseDialogSampleRate((STAROT_DIALOG_SAMPLE_RATE_T*)message);
+            break;
+
         case STAROT_DIALOG_CALL_NUMBER:
             gaiaSendCallNumber((STAROT_DIALOG_CALL_NUMBER_T*)message);
             break;
@@ -746,6 +756,13 @@ uint8 starotGaiaTransGetAudioType(void) {
     return gaiaStarotPrivateData.audioTransType;
 }
 
+void gaiaParseDialogSampleRate(STAROT_DIALOG_SAMPLE_RATE_T* message) {
+    DEBUG_LOG("sample rate=%d", message->rate);
+    StarotAttr *head = NULL;
+    subGaiaCreateDialogSampleRate(&head, message->rate);
+    requestGaiaMessageWithAttrHelper(GAIA_COMMAND_STAROT_CALL_ATTR, head);
+}
+
 void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
     if (NULL == message) return;
     hfpState hstate = message->status;
@@ -753,23 +770,9 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
 
     if(HFP_STATE_CONNECTED_OUTGOING == hstate || HFP_STATE_CONNECTED_INCOMING == hstate) {
         appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, 0xfe, 0, NULL);
-        if (HFP_STATE_CONNECTED_OUTGOING == hstate)
-            DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, Appending Attr: CALL OUT");
-        else
-            DEBUG_LOG("GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, Appending Attr: CALL IN");
-
         StarotAttr *head = NULL;
-        { /// 拨入/拨出
-            const uint8 directAttr = 0X02;
-            StarotAttr *attr = PanicNull(attrMalloc(&head, 1));
-            attr->attr = directAttr;
-            attr->payload[0] = (HFP_STATE_CONNECTED_INCOMING == hstate) ? 0X01 : 0x02;
-        }
-        uint16 len = 0;
-        uint8 *data = attrEncode(head, &len);
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
-        attrFree(head, data);
-
+        subGaiaCreateDialogDirect(&head, hstate); /// 通话方向
+        requestGaiaMessageWithAttrHelper(GAIA_COMMAND_STAROT_CALL_ATTR, head);
         appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
     } else if (HFP_STATE_CONNECTED_ACTIVE == hstate) {
         DEBUG_LOG("HFP_STATE_CONNECTED_ACTIVE");
@@ -777,55 +780,20 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
             appGetGaia()->transformAudioFlag = TRANSFORM_COMING;
         }
         StarotAttr *head = NULL;
-        uint16 numberLen = 0;
-        const uint8* numberInfo = subGaiaGetCaller(&numberLen);
-        if (numberLen > 0){ /// 电话号码
-            const uint8 callerAttr = 0X01;
-            StarotAttr *attr = PanicNull(attrMalloc(&head, numberLen));
-            attr->attr = callerAttr;
-            memcpy(attr->payload, numberInfo, numberLen);
-        } else {
-            /// 主动获取当前通话信息
-            HfpCurrentCallsRequest(hfp_primary_link);
+        subGaiaCreateDialogNumber(&head);/// 电话号码
+        if (!subGaiaGetSampleRate()) { /// 通话采样率
+            uint16 rate = appKymeraScoGetRate();
+            subGaiaCreateDialogSampleRate(&head, rate);
         }
-        uint16 len = 0;
-        uint8 *data = attrEncode(head, &len);
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ACTIVE, 0xfe, len, data);
-        attrFree(head, data);
-    }else if((8000 == message->status) || (16000 == message->status)) {
-        StarotAttr *head = NULL;
-        StarotAttr *attr = PanicNull(attrMalloc(&head, 1));
-        attr->attr = 0X07;
-        if(8000 == message->status)
-            attr->payload[0] = 0X01;
-        if(16000 == message->status)
-            attr->payload[0] = 0X02;
-
-        DEBUG_LOG("sample rate=%d", message->status);
-        uint16 len = 0;
-        uint8 *data = attrEncode(head, &len);
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
-        attrFree(head, data);
+        requestGaiaMessageWithAttrHelper(GAIA_COMMAND_STAROT_CALL_ACTIVE, head);
     } else if (HFP_STATE_CONNECTED_IDLE == hstate) {
         DEBUG_LOG("HFP_STATE_CONNECTED_IDLE");
 
         StarotAttr *head = NULL;
-        { /// 丢失的字节数
-            const uint8 dismissAudioSize = 0X06;
-            int num = gaiaGetDropAudioSize();
-            StarotAttr *attr = PanicNull(attrMalloc(&head, 4));
-            attr->attr = dismissAudioSize;
-            attr->payload[0] = (uint8)((num >> 0) & 0X00FF);
-            attr->payload[1] = (uint8)((num >> 8) & 0X00FF);
-            attr->payload[2] = (uint8)((num >> 16) & 0X00FF);
-            attr->payload[3] = (uint8)((num >> 24) & 0X00FF);
-        }
-        uint16 len = 0;
-        uint8 *data = attrEncode(head, &len);
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_INACTIVE, 0xfe, len, data);
-        attrFree(head, data);
-
-        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_END, 0xfe, len, data);
+        subGaiaCreateDialogDropAudio(&head);/// 丢失的字节数
+        requestGaiaMessageWithAttrHelper(GAIA_COMMAND_STAROT_CALL_ATTR, head);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_INACTIVE, 0xfe, 0, NULL);
+        appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_SETUP_END, 0xfe, 0, NULL);
 
         if (appGetGaia()->transformAudioFlag > TRANSFORM_CANT) {
             /// todo 建议放到知道电话彻底结束的地方调用，需要考虑多方会话的情况
@@ -834,29 +802,19 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
         }
         appGetGaia()->transformAudioFlag = TRANSFORM_NONE;
 
-        subGaiaClearCaller();
+        subGaiaClearCurrentDialog();
     }
 }
 
 static void gaiaSendCallNumber(STAROT_DIALOG_CALL_NUMBER_T* message) {
-    StarotAttr *head = NULL;
-    uint16 len = 0;
-
-    DEBUG_LOG("gaiaSendCallNumber");
-
-    // make call number attribute
-    StarotAttr *attr = PanicNull(attrMalloc(&head, message->len));
-    attr->attr = 0X01;
-    if (message->len > 0) {
-        memcpy(attr->payload, message->number, message->len);
-        /// 缓存电话号码
-        subGaiaSetCaller(message->number, message->len);
+    DEBUG_LOG("gaiaSendCallNumber number len:%d", message->len);
+    if (message->len <= 0) {
+        return;
     }
-
-    // send call number attribute
-    uint8 *data = attrEncode(head, &len);
-    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CALL_ATTR, 0xfe, len, data);
-    attrFree(head, data);
+    subGaiaSetCaller(message->number, message->len); /// 缓存电话号码
+    StarotAttr *head = NULL;
+    subGaiaCreateDialogNumber(&head);/// 电话号码
+    requestGaiaMessageWithAttrHelper(GAIA_COMMAND_STAROT_CALL_ATTR, head);
 }
 
 void gaiaNotifyAudioAcceptStatus(Task task, int command) {
@@ -1721,28 +1679,7 @@ static void gaiaAppTestPacketData(GAIA_STAROT_IND_T *mess)
     pfree(message);
 }
 
-#if 0
-void gaiaSendDialogActiveStatus(int command, uint8* phone, int len) {
-    const uint8 CallerAttr = 0X01;
-    StarotAttr *starotAttr = NULL;
-    if ((NULL != phone) && (len > 0)) {
-        StarotAttr *attr = attrMalloc(&starotAttr, len);
-        attr->attr = CallerAttr;
-        memcpy(attr->payload, phone, len);
-    }
-    uint16 attrLen = 0;
-    uint8 *attrData = attrEncode(starotAttr, &attrLen);
-    appGaiaSendPacket(GAIA_VENDOR_STAROT, command, 0xfe, attrLen, attrData);
-    attrFree(starotAttr, attrData);
-}
-#endif
-
-bool appGaiaIsConnectBySpp(void)
-{
-    return  ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_rfcomm) ||
-             ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_spp)));
-}
-
+// region 升级
 
 static bool appGaiaIsCanEnterDfu(void) {
     /// todo 加多点规则
@@ -1845,11 +1782,7 @@ static void appGaiaHandlerGetVersionDetail(GAIA_STAROT_IND_T *message) {
         attr->attr = UPGRADE_STATUS_ATTR;
         attr->payload[0] = UpgradeGetState();
     }
-
-    uint16 len = 0;
-    uint8 *data = attrEncode(head, &len);
-    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, len, data);
-    attrFree(head, data);
+    responseGaiaMessageWithAttrHelper(message->command, GAIA_STATUS_SUCCESS, head);
 }
 
 
@@ -1866,15 +1799,12 @@ static void appGaiaHandlerNotifyCommitStatus(GAIA_STAROT_IND_T *message) {
         attr->attr = COMMIT_STATUS_ATTR;
         attr->payload[0] = message->payload[0]; // 1:commit 0 revert
     }
-    uint16 len = 0;
-    uint8 *data = attrEncode(head, &len);
-    appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_UPGRADE_NOTIFY_COMMIT_STATUS, 0xfe, len, data);
-    attrFree(head, data);
+    requestGaiaMessageWithAttrHelper(GAIA_COMMAND_STAROT_UPGRADE_NOTIFY_COMMIT_STATUS, head);
 }
 
+//endregion
 
 #endif
-
 
 // region task数据
 
@@ -1893,18 +1823,19 @@ subGaiaTaskData* subGaiaGetTaskData(void) {
 
 // region 联系人信息
 
+void subGaiaClearCurrentDialog(void) {
+    DEBUG_LOG("subGaiaClearCurrentDialog");
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    task->callerLen = 0;
+    memset(task->callerNumber, 0X00, sizeof(task->callerNumber));
+    task->sampleRate = 0;
+}
+
 const uint8* subGaiaGetCaller(uint16* len) {
     DEBUG_LOG("subGaiaGetCaller");
     subGaiaTaskData* task = subGaiaGetTaskData();
     *len = task->callerLen;
     return task->callerNumber;
-}
-
-void subGaiaClearCaller(void) {
-    DEBUG_LOG("subGaiaClearCaller");
-    subGaiaTaskData* task = subGaiaGetTaskData();
-    task->callerLen = 0;
-    memset(task->callerNumber, 0X00, sizeof(task->callerNumber));
 }
 
 void subGaiaSetCaller(uint8* data, uint16 len) {
@@ -1913,6 +1844,18 @@ void subGaiaSetCaller(uint8* data, uint16 len) {
     uint16 s = (len > sizeof(task->callerNumber) ? sizeof(task->callerNumber) : len);
     task->callerLen = s;
     memcpy(task->callerNumber, data, s);
+}
+
+void subGaiaSetSampleRate(uint16 sampleRate) {
+    DEBUG_LOG("subGaiaSetSampleRate");
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    task->sampleRate = sampleRate;
+}
+
+uint16 subGaiaGetSampleRate(void) {
+    DEBUG_LOG("subGaiaGetSampleRate");
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    return task->sampleRate;
 }
 
 // endregion
@@ -1992,6 +1935,105 @@ bool subGaiaIsDialogRecoding(void) {
 
     DEBUG_LOG("subGaiaIsDialogRecoding return TRUE");
     return TRUE;
+}
+
+// endregion
+
+// region 通话速记
+
+//// 通话速记相关属性
+enum {
+    DIALOG_ATTR_CALLER_NUMBER = 0x01, // 通讯号码
+    DIALOG_ATTR_DIRECT = 0x02, // 拨出/呼入
+    DIALOG_ATTR_DROP_AUDIO_SIZE = 0X06, // 丢弃的音频大小
+    DIALOG_ATTR_SAMPLE_RATE = 0X07, //采样率
+};
+
+//// 呼入/呼出
+enum {
+    DIALOG_DIRECT_IN  = 1,  /// 呼入
+    DIALOG_DIRECT_OUT = 2,  /// 拨出
+};
+
+StarotAttr *subGaiaCreateDialogSampleRate(StarotAttr** parent, uint16 sampleRate) {
+    DEBUG_LOG("subGaiaCreateDialogSampleRate sampleRate:%d", sampleRate);
+    subGaiaSetSampleRate(sampleRate);
+
+    StarotAttr *attr = PanicNull(attrMalloc(parent, 1));
+    attr->attr = DIALOG_ATTR_SAMPLE_RATE;
+    if(8000 == sampleRate) {
+        attr->payload[0] = 0X01;
+    } else if(16000 == sampleRate) {
+        attr->payload[0] = 0X02;
+    }
+    return attr;
+}
+
+StarotAttr *subGaiaCreateDialogNumber(StarotAttr** parent) {
+    DEBUG_LOG("subGaiaCreateDialogNumber");
+
+    StarotAttr *attr = NULL;
+    uint16 numberLen = 0;
+    const uint8* numberInfo = subGaiaGetCaller(&numberLen);
+    if (numberLen > 0){ /// 电话号码
+        attr = PanicNull(attrMalloc(parent, numberLen));
+        attr->attr = DIALOG_ATTR_CALLER_NUMBER;
+        memcpy(attr->payload, numberInfo, numberLen);
+    } else {
+        /// 主动获取当前通话信息
+        DEBUG_LOG("subGaiaCreateDialogNumber don't have dialog number, so request to phone");
+        HfpCurrentCallsRequest(hfp_primary_link);
+    }
+
+    return attr;
+}
+
+StarotAttr *subGaiaCreateDialogDirect(StarotAttr** parent, hfpState state) {
+    if (HFP_STATE_CONNECTED_OUTGOING == state)
+        DEBUG_LOG("subGaiaCreateDialogDirect GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, Appending Attr: CALL OUT");
+    else
+        DEBUG_LOG("subGaiaCreateDialogDirect GAIA_COMMAND_STAROT_CALL_SETUP_BEGIN, Appending Attr: CALL IN");
+    StarotAttr *attr = PanicNull(attrMalloc(parent, 1));
+    attr->attr = DIALOG_ATTR_DIRECT;
+    attr->payload[0] = (HFP_STATE_CONNECTED_INCOMING == state) ? DIALOG_DIRECT_IN : DIALOG_DIRECT_OUT;
+    return attr;
+}
+
+StarotAttr *subGaiaCreateDialogDropAudio(StarotAttr** parent) {
+    int num = gaiaGetDropAudioSize();
+    DEBUG_LOG("subGaiaCreateDialogNumber:%d", num);
+    StarotAttr *attr = PanicNull(attrMalloc(parent, 4));
+    attr->attr = DIALOG_ATTR_DROP_AUDIO_SIZE;
+    attr->payload[0] = (uint8)((num >> 0) & 0X00FF);
+    attr->payload[1] = (uint8)((num >> 8) & 0X00FF);
+    attr->payload[2] = (uint8)((num >> 16) & 0X00FF);
+    attr->payload[3] = (uint8)((num >> 24) & 0X00FF);
+    return attr;
+}
+
+// endregion
+
+// region 小工具
+
+void requestGaiaMessageWithAttrHelper(uint16 command, StarotAttr* head) {
+    DEBUG_LOG("send message[%04X] to GAIA", command);
+    uint16 len = 0;
+    uint8 *data = attrEncode(head, &len);
+    appGaiaSendPacket(GAIA_VENDOR_STAROT, command, 0xfe, len, data);
+    attrFree(head, data);
+}
+
+void responseGaiaMessageWithAttrHelper(uint16 command, uint16 status, StarotAttr* head) {
+    uint16 len = 0;
+    uint8 *data = attrEncode(head, &len);
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, command, status, len, data);
+    attrFree(head, data);
+}
+
+bool appGaiaIsConnectBySpp(void)
+{
+    return  ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_rfcomm) ||
+             ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_spp)));
 }
 
 // endregion

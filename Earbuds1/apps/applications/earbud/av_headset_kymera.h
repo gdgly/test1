@@ -388,4 +388,11 @@ void appKymeraAncDelayedEnable(uint16 anc_delay);
 */
 void appKymeraAncDelayedDisable(uint16 anc_delay);
 
+#ifdef CONFIG_STAROT
+/*
+ * fun: 如果启用了sco，返回当前sco的sampte rate
+ */
+uint16 appKymeraScoGetRate(void);
+#endif
+
 #endif // AV_HEADSET_KYMERA_H

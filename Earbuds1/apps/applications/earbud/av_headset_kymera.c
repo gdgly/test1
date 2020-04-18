@@ -684,3 +684,19 @@ void appKymeraInit(void)
     appKymeraMicInit();
     appKymeraAncInit();
 }
+
+#ifdef CONFIG_STAROT
+
+uint16 appKymeraScoGetRate(void) {
+    DEBUG_LOG("appKymeraScoGetRate state:%d", appKymeraGetState());
+    if (KYMERA_STATE_SCO_ACTIVE != appKymeraGetState()) {
+        return 0;
+    }
+    const appKymeraScoChainInfo *info = appGetKymera()->sco_info;
+    uint16 rate = (uint16) (NULL != info ? info->rate : 0X00);
+    DEBUG_LOG("appKymeraScoGetRate sco rate:%d", rate);
+    return rate;
+}
+
+#endif
+
