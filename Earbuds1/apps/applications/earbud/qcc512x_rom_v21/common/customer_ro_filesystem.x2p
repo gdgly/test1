@@ -29,10 +29,13 @@
     <file path="../../../../../images/apollo/apollo2_blue.bin"/>
     <file path="../../../../../images/case/AP.bin"/>
     <file path="../../prompts/connect_app.sbc"/>
+    <file path="../../prompts/connect_english_app.sbc"/>
     <file path="../../prompts/connected.sbc"/>
     <file path="../../prompts/disconnected.sbc"/>
     <file path="../../prompts/double_click.sbc"/>
     <file path="../../prompts/low_battery.sbc"/>
+    <file path="../../prompts/mic_mute.sbc"/>
+    <file path="../../prompts/mic_unmute.sbc"/>
     <file path="../../prompts/pairing.sbc"/>
     <file path="../../prompts/pairing_failed.sbc"/>
     <file path="../../prompts/pairing_successful.sbc"/>
