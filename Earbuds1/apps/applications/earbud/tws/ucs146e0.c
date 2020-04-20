@@ -1,6 +1,6 @@
 #include "ucs146e0.h"
 #ifdef HAVE_UCS146E0
-
+#include "online_dbg.h"
 static uint8  _ucs146e0Runing = 0;              // poweroff后，设置为 0, 启动运行为1
 static uint8  _ucs146e0StatInOut = 0xFF;           // 0xFF unknown, 0:in ear, 1:out ear
 
@@ -359,6 +359,7 @@ void Ucs146e0_init(void)
     else{
         Ucs146e0Disable(handle);
         DEBUG_LOG("Ucs146e0 read id error!value = %d\n", value);
+        online_dbg_record(ONLINE_DBG_PROX_UCS_INIT_FAIL);
         return;
     }
     delay_ms(1);
@@ -412,6 +413,7 @@ void Ucs146e0_init(void)
 #endif
 
     Ucs146e0Disable(handle);
+    online_dbg_record(ONLINE_DBG_PROX_USC_INIT_SUCC);
 }
 
 #if defined(INCLUDE_PROXIMITY) && !defined(HAVE_EM20168)

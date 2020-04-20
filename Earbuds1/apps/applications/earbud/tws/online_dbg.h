@@ -158,6 +158,18 @@
  *          "type":"0x32",
  *          "function":"enter dormant"
  *      },
+ *      {
+ *          "type":"0x33",
+ *          "function":"plc in itr"
+ *      },
+ *      {
+ *          "type":"0x34",
+ *          "function":"plc out itr"
+ *      },
+ *      {
+ *          "type":"0x35",
+ *          "function":"plc err itr"
+ *      },
  *  ],
  *  "version":"0.01.01"
  * }
@@ -181,6 +193,8 @@
 #define ONLINE_DBG_CASE_CLOSE       (0x10)    /* case close */
 #define ONLINE_DBG_APO_EVOKE        (0x11)    /* apollo evoke */
 #define ONLINE_DBG_APO_SLEEP        (0x12)    /* apollo sleep */
+#define ONLINE_DBG_PROX_USC_INIT_SUCC   (0x13)    /* proximity ucs146e0 init success */
+#define ONLINE_DBG_PROX_UCS_INIT_FAIL   (0x14)    /* proximity ucs146e0 init fail */
 
 #define ONLINE_DBG_AVDTP_DISCOVER   (0x20)    /* avdtp discover */
 #define ONLINE_DBG_AVDTP_GET_CAPS   (0x21)    /* avdtp get capabilities */
@@ -199,6 +213,9 @@
 #define ONLINE_DBG_ENABLE_DORMANT   (0x30)    /* get enable dormant */
 #define ONLINE_DBG_START_DORMANT    (0x31)    /* start enter dormant */
 #define ONLINE_DBG_ENTER_DORMANT    (0x32)    /* enter dormant */
+#define ONLINE_DBG_INCASE_ITR       (0x33)    /* in case itr */
+#define ONLINE_DBG_OUTCASE_ITR      (0x34)    /* out case itr */
+#define ONLINE_DBG_ERR_STATUS_ITR   (0x35)    /* inout case err itr */
 
 #define ONLINE_DEBUG_HFP_CONNECT    (0x40)    /* hfp connect */
 #define ONLINE_DEBUG_HFP_DISCONNECT (0x41)    /* hfp disconnect */
