@@ -227,6 +227,7 @@
 #define ONLINE_DEBUG_AV_CONNECT_IND   (0x47)  /* av connect ind */
 #define ONLINE_DEBUG_AV_DISCONNECT_IND    (0x48)  /* av disconnect ind */
 #define ONLINE_DEBUG_HFP_DISCONNECT_IND   (0x49)  /* hfp connect ind */
+#define ONLINE_DEBUG_HANDSET_PAIR_IND     (0x4a)  /* pair handset ind */
 
 typedef enum {
     ONLINE_DBG_APP_REQ_RT_ONLINE_DBG_START   = 0x01,    /* app request packet format */

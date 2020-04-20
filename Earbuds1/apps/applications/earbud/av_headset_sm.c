@@ -2156,6 +2156,7 @@ static void appSmHandleInternalPairHandset(void)
 #endif
     {
         appSmSetUserPairing();
+        online_dbg_record(ONLINE_DEBUG_HANDSET_PAIR_IND);
         appSetState(APP_STATE_HANDSET_PAIRING);
     }
 //    else if (ParamUsingSingle()) {
