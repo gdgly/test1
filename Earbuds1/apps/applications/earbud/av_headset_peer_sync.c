@@ -882,7 +882,11 @@ void appPeerSyncGetPeerBatteryLevel(uint16 *battery_level, uint16 *peer_battery_
 
 #ifdef CONFIG_STAROT
     /// 添加充电状态在首位
-    *battery_level = (ps->sync_battery_level & 0X7FFF);
+    if (ParamUsingSingle())  {
+        *battery_level = appBatteryGetVoltage();
+    } else {
+        *battery_level = (ps->sync_battery_level & 0X7FFF);
+    }
     *peer_battery_level = (ps->peer_battery_level & 0X7FFF);
 #else
     *battery_level = ps->sync_battery_level;

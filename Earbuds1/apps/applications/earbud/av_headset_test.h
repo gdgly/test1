@@ -628,5 +628,9 @@ void appTestCaseClose(void);
 void appTestCaseOpen(void);
 void testHfpWbsSetSupportedCodecs(uint8 code);
 void appTestPlayPrompt(uint8 prompt);
+/*
+ * 测试：进入单耳模式
+ */
+void appTestEnterSingleMode(void);
 
 #endif // AV_HEADSET_TEST_H

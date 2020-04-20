@@ -1805,7 +1805,7 @@ void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
     // 0:left 1:right 2:case
     uint8 chargerFlag = 0X80, illegalBattery = 0XFF;
     if (appConfigIsLeft()) {
-        arr[0] = (appUICurrentIsCharger() ? chargerFlag : 0X00) | (uint8)progRun->iElectrity;
+        arr[0] = (appUICurrentIsCharger() ? chargerFlag : 0X00) | appBatteryGetPercent();
         arr[1] = illegalBattery;
         if (appDeviceIsPeerConnected()) {
             arr[1] = (appUIPeerIsCharger() ? chargerFlag : 0X00) | (uint8)progRun->peerElectrity;//对方电量
@@ -1815,7 +1815,7 @@ void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
         if (appDeviceIsPeerConnected()) {
             arr[0] = (appUIPeerIsCharger() ? chargerFlag : 0X00) | (uint8)progRun->peerElectrity;//对方电量
         }
-        arr[1] = ((appUICurrentIsCharger() ? chargerFlag : 0X00)) | (uint8)progRun->iElectrity;
+        arr[1] = ((appUICurrentIsCharger() ? chargerFlag : 0X00)) | appBatteryGetPercent();
     }
 
     if (appPeerSyncIsPeerInCase() || appSmIsInCase()) {

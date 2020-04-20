@@ -1589,3 +1589,12 @@ void testHfpWbsSetSupportedCodecs(uint8 code) {
 void appTestPlayPrompt(uint8 prompt) {
     appUiPlayPrompt(prompt);
 }
+
+void appTestEnterSingleMode(void) {
+    BtAddrPrmPtr prm = &gBtAddrParam;
+    prm->single_era = TRUE;
+    prm->peer_addr.addr.nap = 0xFFFF;
+    prm->peer_addr.addr.uap = 0xFF;
+    prm->peer_addr.addr.lap = 0xFFFFFF;
+    ParamSaveBtAddrPrm(prm);
+}
