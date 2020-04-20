@@ -421,5 +421,12 @@ void requestGaiaMessageWithAttrHelper(uint16 command, StarotAttr* head);
  */
 void responseGaiaMessageWithAttrHelper(uint16 command, uint16 status, StarotAttr* head);
 
+/*
+ * 获取连接信息
+ *      Hfp是否连接 A2dp是否连接 Avrcp是否连接 经典蓝牙连接地址 电池模式 内部状态
+ */
+void subGaiaGetBTInfo(uint8* data);
+
 // endregion
+
 #endif // AV_HEADSET_GAIA_STAROT_H

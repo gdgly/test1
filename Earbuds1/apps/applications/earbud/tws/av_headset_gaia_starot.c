@@ -993,6 +993,11 @@ void gaiaGetNotifyPowPositionConn(GAIA_STAROT_IND_T *message) {
         attr->attr = 0X05;
         attr->payload[0] = message->payload[4];
     }
+    {
+        attr = attrMalloc(&head, 12);
+        attr->attr = 0X06;
+        subGaiaGetBTInfo(attr->payload);
+    }
     if (NULL != head) {
         uint16 len = 0;
         uint8 *data = attrEncode(head, &len);
@@ -2034,6 +2039,30 @@ bool appGaiaIsConnectBySpp(void)
 {
     return  ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_rfcomm) ||
              ((gaiaStarotPrivateData.gaiaTransportType == gaia_transport_spp)));
+}
+
+
+void subGaiaGetBTInfo(uint8* data) {
+//    长度	描述
+//    1	Hfp是否连接
+//    1	A2dp是否连接
+//    1	Avrcp是否连接
+//    6	经典蓝牙连接地址
+//    1	电池模式
+//    2	内部状态
+    uint8 pos = 0;
+    data[pos++] = appDeviceIsHandsetHfpConnected();
+    data[pos++] = appDeviceIsHandsetA2dpConnected();
+    data[pos++] = appDeviceIsHandsetAvrcpConnected();
+    bdaddr bd_addr;
+    if (appDeviceGetHandsetBdAddr(&bd_addr)) {
+        memset(data + pos, 0x00, 6);
+        bdaddr2buffer(&bd_addr, data + pos);
+    }
+    pos += 6;
+    data[pos++] = appSubGetProgRun()->iPowerSaveMode;
+    data[pos++] = (appGetState() & 0XFF00) >> 8;
+    data[pos++] = (appGetState() & 0X00FF);
 }
 
 // endregion
