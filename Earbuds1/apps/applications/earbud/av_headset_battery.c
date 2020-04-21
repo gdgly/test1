@@ -149,12 +149,7 @@ static uint8 toPercentage(uint16 voltage)
                 break;
             }
 
-            if(g_last_percent == -1){//防止充电中重启，当充电没满继续充电直到充电完成，当充电没满被拿出会出现突然掉电现象。
-                iPercent = 100;
-                g_last_percent = 100;
-            }else{
                 iPercent = VOL_CHARGE_LEN*2 + i*2;
-            }
 
         }else{
             iPercent = i*2;
@@ -173,6 +168,10 @@ static uint8 toPercentage(uint16 voltage)
                         break;
         }
         iPercent = 100 - i*2;
+
+        if(iPercent == 100)
+            g_last_percent = 100;
+
         if(iPercent > g_last_percent)
             iPercent = g_last_percent;
    }
