@@ -445,9 +445,10 @@ static int16 subUiStat2Gaia(MessageId id, ProgRIPtr  progRun)
         return -1;
 
     (void)id;
-    uint16 battery_level, peer_battery_level;
-    appPeerSyncGetPeerBatteryLevel(&battery_level, &peer_battery_level);
-    progRun->peerElectrity = appBatteryConvertLevelToPercentage(peer_battery_level);
+ //   uint16 battery_level, peer_battery_level;
+    peerSyncTaskData* ps = appGetPeerSync();
+   // appPeerSyncGetPeerBatteryLevel(&battery_level, &peer_battery_level);
+    progRun->peerElectrity = ps->sync_battery_level & 0X7FFF;//appBatteryConvertLevelToPercentage(peer_battery_level);
 
     MAKE_GAIA_MESSAGE_WITH_LEN(GAIA_STAROT_MESSAGE, 5);
     message->command = STAROT_NOTIFY_STATUS;

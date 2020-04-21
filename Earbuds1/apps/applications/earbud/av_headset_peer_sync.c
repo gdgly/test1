@@ -576,7 +576,7 @@ void appPeerSyncSend(bool response)
          * for the peer */
         ps->sent_in_progress = appConnRulesInProgress();
         /* Store battery level we sent, so we can compare with peer */
-        ps->sync_battery_level = appBatteryGetVoltage();
+        ps->sync_battery_level = appBatteryGetPercent();
 #ifdef CONFIG_STAROT
         /// 同步充电状态到对方耳机
         if (appUICurrentIsCharger()) {

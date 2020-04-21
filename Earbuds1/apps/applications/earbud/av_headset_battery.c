@@ -93,8 +93,8 @@ const uint16 vol_charge[VOL_CHARGE_LEN] = {
         3454 ,3772 ,3916 ,3956 ,3968 ,3982 ,3995 ,4008 ,
         4027 ,4039 ,4051 ,4065 ,4074 ,4082 ,4094 ,4102 ,
         4110 ,4122 ,4132 ,4141 ,4157 ,4168 ,4179 ,4197 ,
-        4209 ,4222 ,4241 ,4255 ,4270 ,4293 ,4309 ,4325 ,
-        4350 ,4368 ,4380
+        4209 ,4222 ,4241 ,4255 ,4270 ,4293 ,4309 ,4315 ,
+        4330 ,4340 ,4350
 };
 const uint8 sec_charge[SEC_CHARGE_LEN] = {2,6,12,18,24,32,42,
                               50,62,74,90,108,130,162,208};
@@ -131,13 +131,13 @@ static uint8 toPercentage(uint16 voltage)
 
         if(i >= VOL_CHARGE_LEN)  {
 
-            if(g_last_percent < VOL_CHARGE_LEN)
-                g_last_percent = VOL_CHARGE_LEN;
+            if(g_last_percent < VOL_CHARGE_LEN*2)
+                g_last_percent = VOL_CHARGE_LEN*2;
 
             if(g_charge_calc_ticks == 0) {
                 g_charge_calc_ticks = VmGetClock();
-                if(g_last_percent > VOL_CHARGE_LEN) {
-                    diff = g_last_percent - VOL_CHARGE_LEN -1;
+                if(g_last_percent > VOL_CHARGE_LEN*2) {
+                    diff = (g_last_percent - VOL_CHARGE_LEN*2)/2 -1;
                     diff = sec_charge[diff]*10000;
                     g_charge_calc_ticks = VmGetClock() - diff;
                 }
