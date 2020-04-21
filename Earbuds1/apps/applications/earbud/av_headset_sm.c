@@ -599,6 +599,8 @@ static void appEnterInCase(void)
     /// 理由：从耳中取出耳机，5min之后，如果之前再播放音乐，会设置定时器
     /// 5分钟之后，取出耳机，再播放音乐，继续了之前的定时器，需要清理
     MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_IN_EAR_A2DP_START);
+    DEBUG_LOG("appEnterInCase cancel APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT");
+    MessageCancelAll(appGetUiTask(), APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT);
 #endif
 }
 

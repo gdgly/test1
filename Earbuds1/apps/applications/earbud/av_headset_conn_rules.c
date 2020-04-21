@@ -1931,6 +1931,8 @@ static ruleAction ruleBothConnectedDisconnect(void)
       bdaddr handset_addr;
       bdaddr peer_handset_addr;
 
+      DEBUG_LOG("ruleBothConnectedDisconnect cancel APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT");
+      MessageCancelAll(appGetUiTask(), APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT);
     /* need to access peer state, so peer sync must be complete */
     if (!appPeerSyncIsComplete())
     {
@@ -3716,6 +3718,13 @@ static ruleAction ruleInEarConnectPhone(void) {
                "appPeerSyncIsPeerHandsetHfpConnected(%d) || appDeviceIsHandsetConnected(%d)",
             appPeerSyncIsPeerHandsetA2dpConnected(), appPeerSyncIsPeerHandsetAvrcpConnected(),
             appPeerSyncIsPeerHandsetHfpConnected(), appDeviceIsHandsetConnected());
+    /// 直接从充电盒中取出，不会触发该规则
+    DEBUG_LOG("ruleInEarConnectPhone cancel APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT");
+
+    if (MessageCancelAll(appGetUiTask(), APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT) <= 0) {
+       DEBUG_LOG("ruleInEarConnectPhone, APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT don't exist");
+       return RULE_ACTION_IGNORE;
+    }
 
     if (appConnRulesInProgress()) {
         DEBUG_LOG("ruleInEarConnectPhone appConnRulesInProgress is run/true");

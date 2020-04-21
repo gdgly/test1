@@ -463,6 +463,13 @@ static void appConManagerHandleClDmAclOpenedIndication(const CL_DM_ACL_OPENED_IN
 #endif
         /* Remove this device from list of connected devices */
         appConManagerRemoveDevice(&ind->bd_addr.addr);
+
+#ifdef CONFIG_STAROT
+        if (appDeviceIsHandset(&ind->bd_addr.addr)) {
+            DEBUG_LOG("appConManagerHandleClDmAclOpenedIndication add APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT timeout");
+            MessageSendLater(appGetUiTask(), APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT, 0, D_SEC(3000 - 300));
+        }
+#endif
     }
 }
 
