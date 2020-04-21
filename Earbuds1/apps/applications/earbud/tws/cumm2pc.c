@@ -303,6 +303,9 @@ static void CummuHandler(Task task, MessageId id, Message message)
 
             if(strstr((char *)payload, "check TAP")){
                 g_commuType = 4;
+#ifdef HAVE_LIS2DW12
+                Lis2dw12_reinit_setsens();
+#endif
                 CummuhandleSendData(task, (uint8*)"checkresp TAP", 14);
             }
 

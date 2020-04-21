@@ -185,6 +185,15 @@ int Lis2dw12Power(bool isOn)
     return ret;
 }
 
+void Lis2dw12_reinit_setsens(void)
+{
+    bitserial_handle handle;
+    handle = lis2dw12Enable();
+    lis2dw12WriteRegister(handle, 0x32, 0x25);
+    lis2dw12WriteRegister(handle, 0x33, 0x47);
+    lis2dw12Disable(handle);
+}
+
 extern FixParam gFixParam;
 void lis2dw12_init(void)
 {

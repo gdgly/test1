@@ -264,6 +264,7 @@ int max20340_GetStatus(void);//0 表示初始化ok, -1 wrong
 void lis2dw12_init(void);
 int lis2dw12_GetStatus(void);//0 表示初始化ok, -1 wrong
 int Lis2dw12Power(bool isOn);//1 打开，0关闭
+void Lis2dw12_reinit_setsens(void);
 
 #undef PSRAM_POWER_PIO
 #define PSRAM_POWER_PIO     3
