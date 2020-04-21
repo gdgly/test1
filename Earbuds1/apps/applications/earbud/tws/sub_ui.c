@@ -308,6 +308,24 @@ void appSubUISetMicbias(int set)
     MicbiasConfigure(MIC_BIAS_0, MIC_BIAS_ENABLE, value);
 }
 
+// 如果REC不是正在运行，直接退出
+static void appUiKymeraRecordStop(void)
+{
+#ifdef CONFIG_REC_ASSISTANT
+    // 停止录音通道
+    if (appKymeraRecordIsRun()) {
+        appKymeraRecordStop();
+
+    	// 设置为双MIC
+	#ifdef USE_TWO_MIC
+	    g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
+	#else
+	    g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
+	#endif
+	}
+#endif
+}
+
 /////////////////////////////////////////////////////////////////////////
 ///     向GAIA发送信息
 /////////////////////////////////////////////////////////////////////////
@@ -416,6 +434,11 @@ static void subUiStopReport2Gaia(MessageId id)
 static void subUiStarttAssistantSystem(bool isTap)
 {
     (void)isTap;
+
+    // 系统助手启动前，停止APP助手
+    appUiKymeraRecordStop();
+
+    // 电话中禁止系统助手
     if(appGetKymera()->state == KYMERA_STATE_SCO_ACTIVE)
         return;
     HfpVoiceRecognitionEnableRequest(hfp_primary_link, appGetHfp()->voice_recognition_request = TRUE);
@@ -494,14 +517,7 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
 
     case STAROT_AI_USER_STOP_RECORD:               ///设备停止录音
         progRun->recStat  = 0;
-#ifdef CONFIG_REC_ASSISTANT
-        appKymeraRecordStop();
-#ifdef USE_TWO_MIC
-        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
-#else
-        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
-#endif
-#endif
+        appUiKymeraRecordStop();
         break;
 
     case STAROT_DIALOG_USER_ACCEPT_RECORD:
@@ -606,17 +622,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("GAIA disconnect from phone");
         appTestHandsetHfpUnMute();
         progRun->gaiaStat  = 0;
-#ifdef CONFIG_REC_ASSISTANT
-        if (appKymeraRecordIsRun() == TRUE){
-            appKymeraRecordStop();
-#ifdef USE_TWO_MIC
-            g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
-#else
-            g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
-#endif
-        }
-        ///todo 添加通话录音停止操作
-#endif
+        appUiKymeraRecordStop();
         // 退出APP时，如果设置的为唤醒APP，是停止它
         //if(gUserParam.assistantType != ASSISTANT_TYPE_SYSTEM)
         //    apolloWakeupPower(0);
@@ -1141,16 +1147,7 @@ void appUiHfpCallIncomingActive(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     //如果此时有录音
-#ifdef CONFIG_REC_ASSISTANT
-    if (appKymeraRecordIsRun()){
-        appKymeraRecordStop();
-#ifdef USE_TWO_MIC
-        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
-#else
-        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
-#endif
-    }
-#endif
+    appUiKymeraRecordStop();
 
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
 
@@ -1174,16 +1171,7 @@ void appUiHfpCallOutcomingActive(void)
     DEBUG_LOG("appUiHfpCallOutcomingActive");
 
     //如果此时有录音
-#ifdef CONFIG_REC_ASSISTANT
-    if (appKymeraRecordIsRun()){
-        appKymeraRecordStop();
-#ifdef USE_TWO_MIC
-        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = 1;
-#else
-        g_appConfigSocMic1 = 0, g_appConfigSocMic2 = NO_MIC;
-#endif
-    }
-#endif
+    appUiKymeraRecordStop();
 
     progRun->callIndex = MAX_CALLIN_INFO;  // 设置为无效值
     progRun->dial_stat = DIAL_OUT_ACTIVE;
