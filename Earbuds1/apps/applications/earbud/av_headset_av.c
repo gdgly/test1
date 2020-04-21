@@ -1169,6 +1169,7 @@ bool appAvA2dpConnectRequest(const bdaddr *bd_addr, appAvA2dpConnectFlags a2dp_f
             MessageCancelFirst(&theInst->av_task, AV_INTERNAL_A2DP_CONNECT_REQ);
             MessageSendConditionally(&theInst->av_task, AV_INTERNAL_A2DP_CONNECT_REQ, message,
                                      appConManagerCreateAcl(&theInst->bd_addr));
+            online_dbg_record(ONLINE_DEBUG_AV_CONNECT_IND);
 
             return TRUE;
         }
@@ -1425,7 +1426,6 @@ bool appAvConnectHandset(bool play)
         {
             flags |= A2DP_START_MEDIA_PLAYBACK;
         }
-        online_dbg_record(ONLINE_DEBUG_AV_CONNECT_IND);
         return appAvA2dpConnectRequest(&bd_addr, flags);
     }
 
