@@ -1513,15 +1513,23 @@ void appUiPowerSaveSync(void)
     switch(progRun->iPowerSaveMode) {
     case POWER_MODE_IN_CASE_OPEN:
     case POWER_MODE_IN_CASE:
-        EM20168Power(0);             // 接近光
-        Ucs146e0Power(0);
+        if(EM20168_GetStatus() == 0){
+            EM20168Power(0);
+        }
+        if(Ucs146e0_GetStatus() == 0){
+            Ucs146e0Power(0);
+        }
         Lis2dw12Power(0);            // TAP
         lis25Power(0);               // 骨麦
         apolloWakeupPower(0);        // APO2
         break;
     case POWER_MODE_OUT_CASE:
-        EM20168Power(1);             // 接近光
-        Ucs146e0Power(1);
+        if(EM20168_GetStatus() == 0){
+            EM20168Power(1);
+        }
+        if(Ucs146e0_GetStatus() == 0){
+            Ucs146e0Power(1);
+        }
 #ifdef TWS_DEBUG
         Lis2dw12Power(0);            // TAP
 #else
@@ -1531,8 +1539,6 @@ void appUiPowerSaveSync(void)
         apolloWakeupPower(0);        // APO2
         break;
     case POWER_MODE_IN_EAR:
-        EM20168Power(1);             // 接近光
-        Ucs146e0Power(1);
         Lis2dw12Power(1);            // TAP
         lis25Power(1);               // 骨麦
         apolloWakeupPower(1);        // APO2
