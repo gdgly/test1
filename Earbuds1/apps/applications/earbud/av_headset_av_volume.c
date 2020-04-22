@@ -18,6 +18,7 @@
 #include "av_headset_log.h"
 #ifdef CONFIG_STAROT
 #include "tws/adv_manager.h"
+#include "tws/online_dbg.h"
 #include "av_headset_sm_private.h"
 #endif
 
@@ -191,6 +192,7 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
             DEBUG_LOG("focus stop ble for use volume adv code");
             GattManagerCancelWaitForRemoteClient();
             MessageSendLater(appGetUiTask(), APP_BLE_SCANABLE_TIMEOUT, NULL, 30000);
+            online_dbg_record(ONLINE_DEBUG_SPECIAL_VOL_IND);
         }
     }
 #endif
