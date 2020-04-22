@@ -167,7 +167,6 @@ static void appGaiaHandleConnectInd(const GAIA_CONNECT_IND_T *ind) {
 
     /// 检查gaia连接规则，是否需要断开
     MessageSendLater(appGetUiTask(), APP_CHECK_GAIA_CONNECTION, NULL, D_SEC(5));
-//    appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CHECK_GAIA_CONNECTION);
 }
 
 
@@ -423,11 +422,8 @@ void appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status, uint1
  */
 void appGaiaDisconnect(void) {
     DEBUG_LOG("call appGaiaDisconnect");
-    /// 如果不加延迟，disconnect会导致设备之前的消息没有发送出去
-//    MessageSendLater(appGetGaiaTask(), APP_GAIA_INTERNAL_DISCONNECT, NULL, 500);
     MessageSend(appGetGaiaTask(), APP_GAIA_INTERNAL_DISCONNECT, NULL);
 }
-
 
 void appGaiaAllowNewConnections(bool allow) {
     appGetGaia()->connections_allowed = allow;

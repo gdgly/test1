@@ -959,7 +959,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
 
     case APP_CHECK_GAIA_CONNECTION:
-        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CHECK_GAIA_CONNECTION);
+        if (subGaiaIsConnectLock()) {
+            appGaiaDisconnect();
+        } else {
+            appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CHECK_GAIA_CONNECTION);
+        }
         break;
 
     default:
