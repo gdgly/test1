@@ -225,6 +225,8 @@ ruleEntry appConnRules[] =
 #ifdef CONFIG_STAROT
     RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleNotifyStatus,           CONN_RULES_NOTIFY_APP_POSITION),
     RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleAllRun,                 CONN_RULES_CLEAR_PEER_MEMORY_CACHE),
+    /// 取出两只耳机，佩戴Slave，与手机远离Master，Slave再检测到Linkloss时，可以主动连接手机
+    RULE(RULE_EVENT_PEER_LINK_LOSS,             ruleOutOfCaseConnectHandset,CONN_RULES_CONNECT_HANDSET),
 #endif
     /*! \} */
 
