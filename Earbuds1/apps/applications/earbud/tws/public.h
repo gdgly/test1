@@ -424,4 +424,11 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
  */
 #define STAROT_SOME_MIN_AFTER_IN_EAR_CONNECT_PHONE
 
+/*
+ * 场景：
+ *      hfp参数协商的时候，强制8k
+ */
+#define STAROT_HFP_FORCE_8K
+#undef STAROT_HFP_FORCE_8K
+
 #endif // PUBLIC_H

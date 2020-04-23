@@ -107,6 +107,9 @@ static void appHfpEnterInitialisingHfp(void)
                             HFP_ENHANCED_CALL_STATUS  |     //获取拨出手机号
 #endif
                             HFP_ESCO_S4_SUPPORTED);
+#ifdef STAROT_HFP_FORCE_8K
+    supp_features ^= HFP_CODEC_NEGOTIATION;
+#endif
 
     /* Initialise an HFP profile instance */
     hfp_params.supported_profile = hfp_handsfree_107_profile;
@@ -119,6 +122,9 @@ static void appHfpEnterInitialisingHfp(void)
     hfp_params.optional_indicators.battery_charge = hfp_indicator_off;
     hfp_params.multipoint = FALSE;
     hfp_params.supported_wbs_codecs = hfp_wbs_codec_mask_cvsd | hfp_wbs_codec_mask_msbc;
+#ifdef STAROT_HFP_FORCE_8K
+    hfp_params.supported_wbs_codecs = hfp_wbs_codec_mask_none;
+#endif
     hfp_params.link_loss_time = 1;
     hfp_params.link_loss_interval = 5;
     if (appConfigHfpBatteryIndicatorEnabled())
