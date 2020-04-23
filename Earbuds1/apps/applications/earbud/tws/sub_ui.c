@@ -1526,6 +1526,12 @@ void appUiPowerSaveSync(void)
         apolloWakeupPower(0);        // APO2
         break;
     case POWER_MODE_IN_EAR:
+        if(EM20168_GetStatus() == 0){
+            EM20168Power(1);
+        }
+        if (Ucs146e0_GetStatus() == 0) {
+            Ucs146e0Power(1);
+        }
         Lis2dw12Power(1);            // TAP
         lis25Power(1);               // 骨麦
         apolloWakeupPower(1);        // APO2
