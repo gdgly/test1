@@ -1456,13 +1456,6 @@ static void appSmHandleConnRulesPeerSync(void)
 
     /* Send peer sync */
     appPeerSyncSend(FALSE);
-#ifdef CONFIG_STAROT
-    if(appDeviceIsHandsetA2dpConnected() && appSmIsInEar()){
-        MessageCancelAll(appGetUiTask(), APP_UI_HFP_DISCONN_TONE);
-        MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
-        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
-    }
-#endif
 
     /* In all cases mark rule as done */
     appConnRulesSetRuleComplete(CONN_RULES_SEND_PEER_SYNC);
