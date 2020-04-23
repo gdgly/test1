@@ -279,6 +279,7 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
             goto key_done;
         }
         else if(keyFunc == TAP_PLAY_PAUSE){          /*音乐播放中 -->暂停或播放 */
+            appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
             appAvPlayToggle(TRUE);
             goto key_done;
         }
@@ -563,11 +564,9 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
     }
         break;
     case STAROT_APP_CONTROL_PREVIOUS_TRACK:      ///App控制上一首
-        appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
         appAvBackward();
         break;
     case STAROT_APP_CONTROL_NEXT_TRACK:          ///App控制下一首
-        appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
         appAvForward();
         break;
     }
@@ -843,15 +842,21 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
         DEBUG_LOG("progRun->bredrconnect =%d",progRun->bredrconnect);
 
-        if((progRun->bt_count == 2) && !appPeerSyncIsPeerInEar())
+        if((appPeerSyncIsPeerInEar() != TRUE) && (appPeerSyncIsPeerHandsetA2dpConnected() || appDeviceIsHandsetA2dpConnected()))
         {
-            MessageSendLater(&appGetUi()->task, APP_INEAR_TONE, NULL, 500);
+            MessageCancelAll(&appGetUi()->task, APP_UI_HFP_DISCONN_TONE);
+            MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
+            MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 1000);
         }
+
 //        appUiPowerSave(POWER_MODE_IN_EAR);
         break;
     case APP_PSENSOR_OUTEAR:
         online_dbg_record(ONLINE_DBG_OUT_EAR);
         subUiEarInOutHandle(progRun, FALSE);
+
+        MessageCancelAll(&appGetUi()->task, APP_UI_HFP_DISCONN_TONE);
+        MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
 //        appUiPowerSave(POWER_MODE_OUT_CASE);
         break;
 
@@ -914,22 +919,15 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         break;
 
     case APP_CONNECTED_HOST:
-        if(appTestIsHandsetA2dpMediaConnected() || appHfpIsConnected()){
-            if(appDeviceIsHandsetConnected() && !appDeviceIsHandsetA2dpStreaming() && !appHfpIsCallActive()){
-                appUiPlayPrompt(PROMPT_CONNECTED);
-                progRun->bt_count = 2;
-                appPeerSigTxDataCommandUi(PEERTX_CMD_BT_COUNT, progRun->bt_count);
-            }
-    }
+        if(appDeviceIsHandsetConnected() && !appDeviceIsHandsetA2dpStreaming() && !appHfpIsCallActive()){
+            appUiPlayPrompt(PROMPT_CONNECTED);
+        }
+        if((TRUE == appPeerSyncIsPeerHandsetHfpConnected()) && !appPeerSyncIsPeerScoActive() && !appPeerSyncIsPeerHandsetA2dpStreaming()) {
+            appUiPlayPrompt(PROMPT_CONNECTED);
+        }
         break;
-
-    case APP_INEAR_TONE:
-        if ((TRUE == appDeviceIsHandsetConnected()) && !appHfpIsCallActive() && !appDeviceIsHandsetA2dpStreaming()){
-            appUiPlayPrompt(PROMPT_CONNECTED);
-        }
-        else if ((TRUE == appPeerSyncIsPeerHandsetHfpConnected()) && !appPeerSyncIsPeerScoActive() && !appPeerSyncIsPeerHandsetA2dpStreaming()) {
-            appUiPlayPrompt(PROMPT_CONNECTED);
-        }
+    case APP_UI_HFP_DISCONN_TONE:
+        appUiHfpDisconnected();
         break;
 
     case APP_BLE_SCANABLE_START:
@@ -1257,7 +1255,6 @@ void appUiHfpCallInactive(void)
 void appUiHfpConnected(unsigned cad)
 {
     (void)cad;
-    MessageCancelAll(&appGetUi()->task, APP_INEAR_TONE);
     return;
 }
 
@@ -1278,8 +1275,6 @@ void appUiAvConnected(unsigned cad)
 void appUiAvDisconnected(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
-    progRun->bt_count = 0;
-    appPeerSigTxDataCommandUi(PEERTX_CMD_BT_COUNT, progRun->bt_count);
 
     progRun->bredrconnect = 0;
     apolloWakeupPower(0);               // 经典蓝牙断开，关闭APO

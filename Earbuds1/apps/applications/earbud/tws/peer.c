@@ -153,9 +153,6 @@ bool appUiRecvPeerCommand(PEER_SIG_INTERNAL_TXDATA_REQ_T *req) {              //
         ParamSaveUserPrm(&gUserParam);
         break;
 
-    case PEERTX_CMD_BT_COUNT:
-        progRun->bt_count = req->data[0];
-        break;
     default:
         DEBUG_LOG("Unknown command:%d", req->command);
         ret = FALSE;

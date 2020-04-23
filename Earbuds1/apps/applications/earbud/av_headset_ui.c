@@ -931,7 +931,7 @@ void appUiPowerOn(void)
 void appUiPowerOff(uint16 *lock, uint16 lock_mask)
 {
     appLedSetPattern(app_led_pattern_power_off, LED_PRI_EVENT);
-    appUiPlayPromptClearLock(PROMPT_POWER_OFF, lock, lock_mask);
+    appUiPlayPromptClearLock(PROMPT_DISCONNECTED, lock, lock_mask);
 
     /* Disable LEDs */
     appLedEnable(FALSE);

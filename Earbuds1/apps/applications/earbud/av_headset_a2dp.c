@@ -545,7 +545,6 @@ static void appA2dpExitConnectingMediaRemoteSync(avInstanceTaskData *theInst)
 static void appA2dpEnterConnectedMedia(avInstanceTaskData *theInst)
 {    
     DEBUG_LOGF("appA2dpEnterConnectedMedia(%p)", (void *)theInst);
-    MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 500);
     
     appLinkPolicyUpdateRoleFromSink(A2dpMediaGetSink(theInst->a2dp.device_id, theInst->a2dp.stream_id));
 }

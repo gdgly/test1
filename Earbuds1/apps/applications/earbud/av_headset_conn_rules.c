@@ -3586,7 +3586,6 @@ static ruleAction ruleDisconnectBTNeedEnterDfu(void) {
         DEBUG_LOG("ruleDisconnectBTNeedEnterDfu hfp:%d avrcp:%d a2dp:%d so don't enter dfu", hfp, avrcp, a2dp);
         return RULE_ACTION_IGNORE;
     }
-    MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
     return ruleInCaseEnterDfu();
 }
 

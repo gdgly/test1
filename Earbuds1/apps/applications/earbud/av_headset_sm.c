@@ -1456,6 +1456,13 @@ static void appSmHandleConnRulesPeerSync(void)
 
     /* Send peer sync */
     appPeerSyncSend(FALSE);
+#ifdef CONFIG_STAROT
+    if(appDeviceIsHandsetA2dpConnected() && appSmIsInEar()){
+        MessageCancelAll(appGetUiTask(), APP_UI_HFP_DISCONN_TONE);
+        MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
+        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
+    }
+#endif
 
     /* In all cases mark rule as done */
     appConnRulesSetRuleComplete(CONN_RULES_SEND_PEER_SYNC);
@@ -1957,6 +1964,7 @@ static void appSmHandleAvA2dpDisconnectedInd(const AV_A2DP_DISCONNECTED_IND_T *i
                 /* Clear connected and set disconnected events */
                 appConnRulesResetEvent(RULE_EVENT_HANDSET_A2DP_CONNECTED);
                 appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDSET_A2DP_DISCONNECTED);
+                MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
                 online_dbg_record(ONLINE_DEBUG_A2DP_DISCONNECT);
 
                 /* If it was a normal disconnect and we're intentionally disconnecting
