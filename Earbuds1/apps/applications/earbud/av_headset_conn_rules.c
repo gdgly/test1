@@ -821,6 +821,11 @@ static ruleAction ruleConnectHandsetStandard(ruleConnectReason reason)
 static ruleAction ruleConnectHandset(ruleConnectReason reason,
                                      rulePostHandsetConnectAction post_connect_action)
 {
+    if (appConnRulesInProgress()) {
+        RULE_LOG("ruleConnectHandset, now rule in progress so defer");
+        return RULE_ACTION_DEFER;
+    }
+
     bdaddr handset_addr;
     connRulesTaskData *conn_rules = appGetConnRules();
     CONN_RULES_CONNECT_HANDSET_T action = {0, post_connect_action};
