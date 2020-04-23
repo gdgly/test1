@@ -1169,7 +1169,11 @@ bool appAvA2dpConnectRequest(const bdaddr *bd_addr, appAvA2dpConnectFlags a2dp_f
             MessageCancelFirst(&theInst->av_task, AV_INTERNAL_A2DP_CONNECT_REQ);
             MessageSendConditionally(&theInst->av_task, AV_INTERNAL_A2DP_CONNECT_REQ, message,
                                      appConManagerCreateAcl(&theInst->bd_addr));
-            online_dbg_record(ONLINE_DEBUG_AV_CONNECT_IND);
+            if (appDeviceIsPeer(&theInst->bd_addr)) {
+                online_dbg_record(ONLINE_DEBUG_PEER_AV_CONNECT);
+            } else {
+                online_dbg_record(ONLINE_DEBUG_AV_CONNECT_IND);
+            }
 
             return TRUE;
         }
