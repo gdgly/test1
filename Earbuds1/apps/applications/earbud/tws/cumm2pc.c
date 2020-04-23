@@ -192,6 +192,12 @@ static void CummuHandler(Task task, MessageId id, Message message)
                 g_commuType == 0xFF;
                 progRun->iPowerSaveMode = POWER_MODE_IN_EAR;
                 appUiPowerSaveSync();
+                if(EM20168_GetStatus() == 0){
+                    EM20168Power(1);
+                }
+                if(Ucs146e0_GetStatus() == 0){
+                    Ucs146e0Power(1);
+                }
             }
 
             /* Handle the message from the host here*/

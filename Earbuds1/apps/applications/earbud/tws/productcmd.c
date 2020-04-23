@@ -367,8 +367,7 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
             break;
 
         case 0x14:   //接近光验证打开
-            appSubGetProgRun()->iPowerSaveMode = POWER_MODE_IN_EAR;
-            appUiPowerSaveSync();
+            EM20168Power(1);
             break;
         case 0x15:   //接近光验证状态
             send_buf[1] = 0x15;//需要返回值的话，给send_buf赋值

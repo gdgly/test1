@@ -106,7 +106,7 @@ void online_dbg_record(online_dbg_t code) {
     online_dbg_buf[record_idx++] = code;
     if (record_idx == trans_idx) trans_idx++;
 
-    UartPuts1("onLINE=", code);
+    UartPuts2x("onLINE=", code, 0);
 
     if ((ONLINE_DBG_STATE_RT_PACKET == online_dbg_state)
             && (record_idx - trans_idx > SEND_PKT_LENGTH)) {
