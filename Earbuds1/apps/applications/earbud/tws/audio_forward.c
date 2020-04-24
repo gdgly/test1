@@ -36,7 +36,7 @@ static void initSetSpeechDataSource(Source src);
 static void sendMessageMoreData(Task task, Source src, uint32 delay);
 static void indicateFwdDataSource(Source src, source_type_t type);
 static bool __disable_audio_forward(void);
-static bool __resample_audio_forward(void);
+static bool __resample_audio_forward(bool);
 
 static bool audio_forward = FALSE;
 
@@ -102,10 +102,7 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain,uint16 mode)
     __disable_audio_forward();
 
     /* 发送G722是否需要把16K转换为8K */
-    if (mode == SCO_WB)
-    {
-        __resample_audio_forward();
-    }
+    __resample_audio_forward((mode == SCO_WB)? TRUE : FALSE);
 
 #endif
     audioFwdTaskData.data_client = DATA_CLIENT_GAIA;
@@ -288,11 +285,11 @@ static bool __disable_audio_forward(void)
 /*
  * 设置dsp音频16K转8K
  */
-static bool __resample_audio_forward(void)
+static bool __resample_audio_forward(bool value)
 {
 #if (FORWARD_AUDIO_TYPE & (FORWARD_AUDIO_MIC | FORWARD_AUDIO_SCO))
     kymeraTaskData *theKymera = appGetKymera();
-    uint16 set_data_resample[] = { OPMSG_PASSTHROUGH_ID_RESAMPLE_AUDIO_FORWARD, TRUE };
+    uint16 set_data_resample[] = { OPMSG_PASSTHROUGH_ID_RESAMPLE_AUDIO_FORWARD, value };
     Operator passthrough = INVALID_OPERATOR;
     kymera_chain_handle_t sco_chain = NULL;
     switch(appKymeraGetState()) {
