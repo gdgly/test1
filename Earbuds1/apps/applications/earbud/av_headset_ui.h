@@ -308,8 +308,8 @@ extern const ringtone_note app_tone_av_link_loss[];
     appUiPlayTone(app_tone_hfp_talk_long_press)
 #define appUiHfpConnected(silent)                   /* HFP连接完之后 */
 #else
-#define appUiHfpDisconnected()        appUiPlayPrompt(PROMPT_DISCONNECTED) /* HFP断开连接之后 */
-#define appUiHfpLinkLoss()            appUiPlayPrompt(PROMPT_DISCONNECTED) /* 距离较远断开蓝牙提示音 */
+#define appUiHfpDisconnected()                      /* HFP断开连接之后 */
+#define appUiHfpLinkLoss()                          /* 距离较远断开蓝牙提示音 */
 #define appUiHfpRing(caller_id)       appUiPlayToneCore(app_tone_hfp_ring, FALSE, TRUE, NULL, 0) /* HFP电话响铃 */
 #define appUiHfpScoConnected()
 #define appUiHfpScoDisconnected()
@@ -323,8 +323,8 @@ extern const ringtone_note app_tone_av_link_loss[];
 #define appUiHfpVolumeUp()                          /* 播放HFP音量调高 */
 #define appUiHfpVolumeDown()                        /* 播放HFP音量调底 */
 #define appUiHfpTransfer()                          /* 播放HFP转接呼叫音 */
-#define appUiHfpMuteActive()          appUiPlayPrompt(PROMPT_MIC_MUTE) /* 播放HFP静音主动音 */
-#define appUiHfpMuteInactive()        appUiPlayPrompt(PROMPT_MIC_UNMUTE) /* 播放HFP静音无效音 */
+#define appUiHfpMuteActive()          appScoFwdTone(1000, PROMPT_MIC_MUTE) /* 播放HFP静音主动音 */
+#define appUiHfpMuteInactive()        appScoFwdTone(1000, PROMPT_MIC_UNMUTE) /* 播放HFP静音无效音 */
 #define appUiHfpMuteReminder()                      /* 播放HFP静音提示音 */
 #define appUiHfpScoUnencryptedReminder()            /* 播放HFP SCO未加密的声音 */
 #define appUiHfpState(state)                        /* 处理HFP状态更改的UI更改 */
@@ -454,7 +454,7 @@ do \
 #define appUiAvVolumeLimit()                        /* 播放AV音量限制达到音质 */
 #define appUiAvRemoteControl()                      /* 播放AVRCP遥控音 */
 #define appUiAvPeerConnected(silent)                /* 播放AV连接指示 */
-#define appUiAvLinkLoss()                           /* 播放AV连接丢失音调 */
+#define appUiAvLinkLoss()                           appScoFwdTone(1000, PROMPT_DISCONNECTED) /* 播放AV连接丢失音调 */
 //关于SBC.或AAC的方面
 #define appUiAvStreamingActive()                    /* 显示AV流激活LED模式 */
 #define appUiAvStreamingActiveAptx()                /* 显示AV APIX流积极的LED模式 */
@@ -482,7 +482,7 @@ do \
 #define appUiPairingActive(is_user_initiated) \
 do \
 {  \
-    appUiPlayPrompt(PROMPT_PAIRING); \
+    appScoFwdTone(1000, PROMPT_PAIRING); \
     appLedSetPattern(app_led_pattern_pairing, LED_PRI_MED); \
 } while(0)
 #define appUiPairingInactive(is_user_initiated)     /* 取消配对积极的LED模式*/

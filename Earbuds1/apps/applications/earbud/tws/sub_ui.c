@@ -67,18 +67,18 @@ static int16 subUiCallIndicator2Gaia(ProgRIPtr  progRun, const CALL_INDICATOR_T*
 //    RINGTONE_NOTE(A7, SEMIQUAVER),
 //    RINGTONE_STOP
 //};
-static const ringtone_note app_tone_wakeup[] =
-{
-    RINGTONE_TIMBRE(sine), RINGTONE_DECAY(16),
-    RINGTONE_NOTE(A7, SEMIQUAVER),
-    RINGTONE_NOTE(B7, SEMIQUAVER),
-    RINGTONE_NOTE(C7, SEMIQUAVER),
-    RINGTONE_STOP
-};
+//static const ringtone_note app_tone_wakeup[] =
+//{
+//    RINGTONE_TIMBRE(sine), RINGTONE_DECAY(16),
+//    RINGTONE_NOTE(A7, SEMIQUAVER),
+//    RINGTONE_NOTE(B7, SEMIQUAVER),
+//    RINGTONE_NOTE(C7, SEMIQUAVER),
+//    RINGTONE_STOP
+//};
 
 //主副耳敲击提示音，在各自的耳朵中播出
-#define APPTONEMASTER()  appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
-#define APPTONESLAVE()  appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
+#define APPTONEMASTER()  //appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
+#define APPTONESLAVE()  //appUiPlayToneCore(app_tone_wakeup, FALSE, TRUE, NULL, 0);
 
 #define USE_TWO_MIC
 
@@ -122,7 +122,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
                     APPTONEMASTER();
                 }
                 else {
-                    appUiPlayPrompt(PROMPT_CONNECT_APP);        // 请连接手机APP;
+                    appScoFwdTone(1000,PROMPT_CONNECT_APP);        // 请连接手机APP;
                     return;
                 }
             }
@@ -138,7 +138,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
                     appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
                 }
                 else {
-                    appUiPlayPrompt(PROMPT_CONNECT_APP);        // 请连接手机APP;
+                    appScoFwdTone(1000,PROMPT_CONNECT_APP);        // 请连接手机APP;
                     return;
                 }
             }
@@ -156,7 +156,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
         DBCLINK_LOG("wakeapp,isTap=%d gaia=%d peerGaia=%d", isTap, progRun->gaiaStat, progRun->peerGaiaStat);
 
         if(!appDeviceIsPeerAvrcpConnectedForAv() || !appPeerSyncIsComplete() || !appPeerSyncIsPeerHandsetAvrcpConnected()) {
-            appUiPlayPrompt(PROMPT_PAIRING_FAILED);        // 没有与对方连接或对方没有连接手机,联接失败;
+            appScoFwdTone(1000,PROMPT_PAIRING_FAILED);        // 没有与对方连接或对方没有连接手机,联接失败;
             return;
         }
 
@@ -167,7 +167,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
                     APPTONESLAVE();
                 }
                 else {
-                    appUiPlayPrompt(PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
+                    appScoFwdTone(1000,PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
                     return;
                 }
             }
@@ -183,7 +183,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
                     appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
                 }
                 else {
-                    appUiPlayPrompt(PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
+                    appScoFwdTone(1000,PROMPT_CONNECT_APP);        // 没有与对方连接或对方没有连接手机,提示请连接手机APP;
                     return;
                 }
             }
@@ -591,7 +591,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 //            if(progRun->iElectrity == 1){
 //                appUiPlayPrompt(PROMPT_POWER_OFF);
 //            }
-            appUiPlayPrompt(PROMPT_LOW_BATTERY);
+            appScoFwdTone(1000, PROMPT_LOW_BATTERY);
             progRun->powerflag15 = FALSE;
         }
 
@@ -842,11 +842,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
         DEBUG_LOG("progRun->bredrconnect =%d",progRun->bredrconnect);
 
-        if((appPeerSyncIsPeerInEar() != TRUE) && (appPeerSyncIsPeerHandsetA2dpConnected() || appDeviceIsHandsetA2dpConnected()))
+        if(appPeerSyncIsPeerInEar() != TRUE)
         {
             MessageCancelAll(&appGetUi()->task, APP_UI_HFP_DISCONN_TONE);
             MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
-            MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 1000);
+            MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 500);
         }
 
 //        appUiPowerSave(POWER_MODE_IN_EAR);
@@ -920,14 +920,14 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case APP_CONNECTED_HOST:
         if(appDeviceIsHandsetConnected() && !appDeviceIsHandsetA2dpStreaming() && !appHfpIsCallActive()){
-            appUiPlayPrompt(PROMPT_CONNECTED);
+            appScoFwdTone(1000, PROMPT_CONNECTED);
         }
         if((TRUE == appPeerSyncIsPeerHandsetHfpConnected()) && !appPeerSyncIsPeerScoActive() && !appPeerSyncIsPeerHandsetA2dpStreaming()) {
-            appUiPlayPrompt(PROMPT_CONNECTED);
+            appScoFwdTone(1000, PROMPT_CONNECTED);
         }
         break;
     case APP_UI_HFP_DISCONN_TONE:
-        appUiHfpDisconnected();
+        appScoFwdTone(1000, PROMPT_DISCONNECTED);
         break;
 
     case APP_BLE_SCANABLE_START:
@@ -951,7 +951,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         // appUICanContinueUpgrade 用户进入升级，但是没有进行文件传输
         // UpgradeInProgress文件开始传输，已经处于正式升级状态
         if(appSmIsInDfuMode() || appUICanContinueUpgrade() || UpgradeInProgress())
-			break;
+            break;
         ParamSaveUserPrm(&gUserParam);
         appPowerOffRequest();
         break;
@@ -1288,7 +1288,7 @@ void appUiPairingComplete(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->handsetPair = 1;
-    appUiPlayPrompt(PROMPT_PAIRING_SUCCESSFUL);
+    appScoFwdTone(1000,PROMPT_PAIRING_SUCCESSFUL);
 }
 
 
@@ -1298,7 +1298,7 @@ void appUiPairingFailed(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->handsetPair = 2;
-    appUiPlayPrompt(PROMPT_PAIRING_FAILED);
+    appScoFwdTone(1000,PROMPT_PAIRING_FAILED);
 }
 
 

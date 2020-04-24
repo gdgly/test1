@@ -167,6 +167,7 @@ extern void appScoFwdCallReject(void);
 extern void appScoFwdCallHangup(void);
 extern void appScoFwdCallVoice(void);
 extern void appScoFwdRing(void);
+extern void appScoFwdTone(uint32 time, uint8 tone);
 extern void appScoFwdRingCancel(void);
 extern void appScoFwdVolumeStart(int16 step);
 extern void appScoFwdVolumeStop(int16 step);
@@ -346,7 +347,11 @@ enum av_headset_scofwd_ota_messages
     /*! Notify the earbud to start MIC forwarding */
     SFWD_OTA_MSG_MICFWD_START,
     /*! Notify the earbud to stop MIC forwarding */
-    SFWD_OTA_MSG_MICFWD_STOP
+    SFWD_OTA_MSG_MICFWD_STOP,
+#ifdef CONFIG_STAROT
+    /*! Tone Sync */
+    SFWD_OTA_MSG_CON,
+#endif
 };
 
 extern void appScoFwdHandleHfpAudioConnectConfirmation(const HFP_AUDIO_CONNECT_CFM_T *cfm);

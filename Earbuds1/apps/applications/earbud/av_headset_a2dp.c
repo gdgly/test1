@@ -433,14 +433,6 @@ static void appA2dpEnterConnectedSignalling(avInstanceTaskData *theInst)
 
     /* Update AV instance now that A2DP is connected */
     appAvInstanceA2dpConnected(theInst);
-
-#ifdef CONFIG_STAROT
-    if(appSmIsInEar()){
-        MessageCancelAll(appGetUiTask(), APP_UI_HFP_DISCONN_TONE);
-        MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
-        MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
-    }
-#endif
 }
 
 /*! \brief Exit A2DP_STATE_CONNECTED_SIGNALLING

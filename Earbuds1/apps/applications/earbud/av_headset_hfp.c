@@ -880,12 +880,7 @@ static void appHfpHandleHfpSlcDisconnectIndication(const HFP_SLC_DISCONNECT_IND_
             else
             {
                 /* Play disconnected tone */
-#ifdef CONFIG_STAROT
-                MessageCancelAll(appGetUiTask(), APP_UI_HFP_DISCONN_TONE);
-                MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
-                MessageSendLater(appGetUiTask(), APP_UI_HFP_DISCONN_TONE, NULL, 300);
-//                appUiHfpDisconnected();
-#endif
+                appUiHfpDisconnected();
 
                 /* Set disconnect reason */
                 appGetHfp()->disconnect_reason = APP_HFP_DISCONNECT_NORMAL;
@@ -903,12 +898,7 @@ static void appHfpHandleHfpSlcDisconnectIndication(const HFP_SLC_DISCONNECT_IND_
         case HFP_STATE_DISCONNECTED:
         {
             /* Play disconnected tone */
-#ifdef CONFIG_STAROT
-            MessageCancelAll(appGetUiTask(), APP_UI_HFP_DISCONN_TONE);
-            MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
-            MessageSendLater(appGetUiTask(), APP_UI_HFP_DISCONN_TONE, NULL, 300);
-//            appUiHfpDisconnected();
-#endif
+            appUiHfpDisconnected();
 
             /* Set disconnect reason */
             appGetHfp()->disconnect_reason = APP_HFP_DISCONNECT_NORMAL;

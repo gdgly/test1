@@ -213,21 +213,13 @@ static void appPeerSyncUpdateA2dpConnected(bool connected)
     if (current_a2dp_state != connected) {
         DEBUG_LOGF("appPeerSyncUpdateA2dpConnected Prev %u New %u", current_a2dp_state, connected);
         if (TRUE == connected) {
-            if((appPeerSyncIsPeerInEar() != TRUE)){
-                appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_HANDSET_CONNECTED);
-                MessageCancelAll(appGetUiTask(), APP_UI_HFP_DISCONN_TONE);
-                MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
-                MessageSendLater(&appGetUi()->task, APP_CONNECTED_HOST, NULL, 2000);
+            appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_HANDSET_CONNECTED);
             }
         } else {
            if ((!ps->peer_hfp_connected && !ps->peer_avrcp_connected)) {
                appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_PEER_HANDSET_DISCONNECTED);
-               MessageCancelAll(appGetUiTask(), APP_UI_HFP_DISCONN_TONE);
-               MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
-               MessageSendLater(appGetUiTask(), APP_UI_HFP_DISCONN_TONE, NULL, 300);
            }
         }
-    }
 #else
     /* first profile connected or last profile disconnected then inform rules
      * that peer handset has connected/disconnected */
