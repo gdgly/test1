@@ -16,7 +16,7 @@
 #define AUDIO_CORE_0             (0)
 #define AUDIO_DATA_FORMAT_16_BIT (0)
 #define OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD (0x000C)
-#define OPMSG_PASSTHROUGH_ID_CONFIG_AUDIO_FORWARD (0x000D)
+#define OPMSG_PASSTHROUGH_ID_RESAMPLE_AUDIO_FORWARD (0x000D)
 
 #define MAKE_FWD_MESSAGE(TYPE) TYPE##_T *message = PanicUnlessNew(TYPE##_T)
 
@@ -36,7 +36,7 @@ static void initSetSpeechDataSource(Source src);
 static void sendMessageMoreData(Task task, Source src, uint32 delay);
 static void indicateFwdDataSource(Source src, source_type_t type);
 static bool __disable_audio_forward(void);
-static bool __config_audio_forward(void);
+static bool __resample_audio_forward(void);
 
 static bool audio_forward = FALSE;
 
@@ -104,7 +104,7 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain,uint16 mode)
     /* 发送G722是否需要把16K转换为8K */
     if (mode == SCO_WB)
     {
-        __config_audio_forward();
+        __resample_audio_forward();
     }
 
 #endif
@@ -285,11 +285,14 @@ static bool __disable_audio_forward(void)
 
     return TRUE;
 }
-static bool __config_audio_forward(void)
+/*
+ * 设置dsp音频16K转8K
+ */
+static bool __resample_audio_forward(void)
 {
 #if (FORWARD_AUDIO_TYPE & (FORWARD_AUDIO_MIC | FORWARD_AUDIO_SCO))
     kymeraTaskData *theKymera = appGetKymera();
-    uint16 set_data_config[] = { OPMSG_PASSTHROUGH_ID_CONFIG_AUDIO_FORWARD, TRUE };
+    uint16 set_data_resample[] = { OPMSG_PASSTHROUGH_ID_RESAMPLE_AUDIO_FORWARD, TRUE };
     Operator passthrough = INVALID_OPERATOR;
     kymera_chain_handle_t sco_chain = NULL;
     switch(appKymeraGetState()) {
@@ -312,16 +315,16 @@ static bool __config_audio_forward(void)
 #if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_SCO)
     passthrough = ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH);
     if(INVALID_OPERATOR != passthrough) {
-        PanicZero(VmalOperatorMessage(passthrough, set_data_config,
-                                      sizeof(set_data_config)/sizeof(set_data_config[0]), NULL, 0));
+        PanicZero(VmalOperatorMessage(passthrough, set_data_resample,
+                                      sizeof(set_data_resample)/sizeof(set_data_resample[0]), NULL, 0));
     }
 #endif
 
 #if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_MIC)
     passthrough = ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH);
     if(INVALID_OPERATOR != passthrough) {
-        PanicZero(VmalOperatorMessage(passthrough, set_data_config,
-                                      sizeof(set_data_config)/sizeof(set_data_config[0]), NULL, 0));
+        PanicZero(VmalOperatorMessage(passthrough, set_data_resample,
+                                      sizeof(set_data_resample)/sizeof(set_data_resample[0]), NULL, 0));
     }
 #endif
     return TRUE;

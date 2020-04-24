@@ -53,7 +53,7 @@ typedef struct G722CODEC_OP_DATA{
     unsigned sample_rate;
     ttp_context *time_to_play;
     unsigned disable_audforward;   // 0:enable, 1:disable
-    unsigned config_audforward;   // 0:neednot, 1:need
+    unsigned resample_audforward;   // 0:do not need resample , 1:need resample
 
     unsigned *in_buffer;
     unsigned *out_buffer;

@@ -955,7 +955,7 @@ typedef enum
     OPMSG_PASSTHROUGH_ID_CHANGE_INPUT_DATA_TYPE = 0x000A,
     OPMSG_PASSTHROUGH_ID_CHANGE_OUTPUT_DATA_TYPE = 0x000B,
     OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD = 0x000C,
-    OPMSG_PASSTHROUGH_ID_CONFIG_AUDIO_FORWARD = 0x000D
+    OPMSG_PASSTHROUGH_ID_RESAMPLE_AUDIO_FORWARD = 0x000D
 } OPMSG_PASSTHROUGH_ID;
 /*******************************************************************************
 
@@ -5596,10 +5596,10 @@ typedef struct
 /*******************************************************************************
 
 	  NAME
-		Opmsg_Passthrough_Config_Audio_Forward
+		Opmsg_Passthrough_Resample_Audio_Forward
 	
 	  DESCRIPTION
-		Basic Passthrough operator message for CONFIG_AUDIO_FORWARD.
+		Basic Passthrough operator message for RESAMPLE_AUDIO_FORWARD.
 	
 	  MEMBERS
 		message_id - message id
@@ -5609,24 +5609,24 @@ typedef struct
 typedef struct
 {
 	uint16 _data[2];
-} OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD;
+} OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD;
 	
 	/* The following macros take OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD *opmsg_passthrough_disable_audio_forward_ptr */
-#define OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD_MESSAGE_ID_WORD_OFFSET (0)
-#define OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD_MESSAGE_ID_GET(opmsg_passthrough_config_audio_forward_ptr) ((OPMSG_PASSTHROUGH_ID)(opmsg_passthrough_config_audio_forward_ptr)->_data[0])
-#define OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD_MESSAGE_ID_SET(opmsg_passthrough_config_audio_forward_ptr, message_id) ((opmsg_passthrough_config_audio_forward_ptr)->_data[0] = (uint16)(message_id))
-#define OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD_CONFIG_WORD_OFFSET (1)
-#define OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD_CONFIG_GET(opmsg_passthrough_config_audio_forward_ptr) ((opmsg_passthrough_config_audio_forward_ptr)->_data[1])
-#define OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD_CONFIG_SET(opmsg_passthrough_config_audio_forward_ptr, config) ((opmsg_passthrough_config_audio_forward_ptr)->_data[1] = (uint16)(config))
-#define OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD_WORD_SIZE (2)
+#define OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD_MESSAGE_ID_WORD_OFFSET (0)
+#define OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD_MESSAGE_ID_GET(opmsg_passthrough_resample_audio_forward_ptr) ((OPMSG_PASSTHROUGH_ID)(opmsg_passthrough_resample_audio_forward_ptr)->_data[0])
+#define OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD_MESSAGE_ID_SET(opmsg_passthrough_resample_audio_forward_ptr, message_id) ((opmsg_passthrough_resample_audio_forward_ptr)->_data[0] = (uint16)(message_id))
+#define OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD_RESAMPLE_WORD_OFFSET (1)
+#define OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD_RESAMPLE_GET(opmsg_passthrough_resample_audio_forward_ptr) ((opmsg_passthrough_resample_audio_forward_ptr)->_data[1])
+#define OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD_RESAMPLE_SET(opmsg_passthrough_resample_audio_forward_ptr, resample) ((opmsg_passthrough_resample_audio_forward_ptr)->_data[1] = (uint16)(resample))
+#define OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD_WORD_SIZE (2)
 	/*lint -e(773) allow unparenthesized*/
-#define OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD_CREATE(message_id, config) \
+#define OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD_CREATE(message_id, resample) \
 		(uint16)(message_id), \
-		(uint16)(config)
-#define OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD_PACK(opmsg_passthrough_config_audio_forward_ptr, message_id, config) \
+		(uint16)(resample)
+#define OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD_PACK(opmsg_passthrough_config_audio_forward_ptr, message_id, resample) \
 		do { \
 			(opmsg_passthrough_config_audio_forward_ptr)->_data[0] = (uint16)((uint16)(message_id)); \
-			(opmsg_passthrough_config_audio_forward_ptr)->_data[1] = (uint16)((uint16)(config)); \
+			(opmsg_passthrough_config_audio_forward_ptr)->_data[1] = (uint16)((uint16)(resample)); \
 		} while (0)
 
 /*******************************************************************************

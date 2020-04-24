@@ -70,7 +70,7 @@ const opmsg_handler_lookup_table_entry G722Codec_opmsg_handler_table[] =
     {OPMSG_COMMON_ID_GET_PARAMS,                   G722Codec_opmsg_get_params},
     {OPMSG_COMMON_ID_SET_PARAMS,                   G722Codec_opmsg_set_params},
     {OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD,   G722Codec_opmsg_disable_audio_forward},
-    {OPMSG_PASSTHROUGH_ID_CONFIG_AUDIO_FORWARD,    G722Codec_opmsg_config_audio_forward},
+    {OPMSG_PASSTHROUGH_ID_RESAMPLE_AUDIO_FORWARD,    G722Codec_opmsg_config_audio_forward},
     {0, NULL}
 };
 
@@ -176,23 +176,21 @@ static void G722Codec_processing_encode(G722CODEC_OP_DATA *opx_data, unsigned oc
            ptr[i] = ptr[i*2+1]; // 在前端为SPLITER 时我们是取 ptr[i*2+1]
     }
     /* 判断是否需要将16k转换为8k数据 */
-    if (opx_data->config_audforward == TRUE)
+    if (opx_data->resample_audforward == TRUE)
     {
         for (i = 0;i < (octets/2); i++)
         {
             ptr[i] = ptr[2*i];
         }
-    }
-   // G722_DEBUG1("encode intime=%d", time_get_time());
-
-    G722_DEBUG("G722Codec_process 6: acodec_encoder");
-    if (opx_data->config_audforward == TRUE)
-    {
         sample = (short)(opx_data->in_samples/2);
     }
     else{
         sample = opx_data->in_samples;
     }
+   // G722_DEBUG1("encode intime=%d", time_get_time());
+
+    G722_DEBUG("G722Codec_process 6: acodec_encoder");
+
     acodec_encoder(opx_data->g722Handle, (unsigned char*)opx_data->in_buffer, (short)(sample *G722_BYTE_PER_SAMPLE),
                    (unsigned char*)opx_data->out_buffer, (unsigned short*)&outsize);
 
@@ -289,7 +287,7 @@ static void G722Codec_Init(G722CODEC_OP_DATA *opx_data)
     opx_data->num_active_chans = 0;
     opx_data->active_chans     = 0;
     opx_data->disable_audforward=TRUE;
-    opx_data->config_audforward = FALSE;
+    opx_data->resample_audforward = FALSE;
 
     opx_data->sample_cnt       = 0;
     opx_data->timestamp        = 0; // time_get_time();
@@ -605,14 +603,15 @@ bool G722Codec_opmsg_disable_audio_forward(OPERATOR_DATA *op_data, void *message
 }
 /*
  * basic_passthrough_config_audio_forward
+ * 接受16K转8K的命令
  */
 bool G722Codec_opmsg_config_audio_forward(OPERATOR_DATA *op_data, void *message_data,
                                              unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data)
 {
     G722CODEC_OP_DATA *opx_data = get_instance_data(op_data);
 
-    opx_data->config_audforward = (bool)OPMSG_FIELD_GET(message_data, OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD, CONFIG);
-    if (opx_data->config_audforward == TRUE)
+    opx_data->resample_audforward = (bool)OPMSG_FIELD_GET(message_data, OPMSG_PASSTHROUGH_RESAMPLE_AUDIO_FORWARD, RESAMPLE);
+    if (opx_data->resample_audforward == TRUE)
     {
         opx_data->in_samples = G722_ENCODE_IN_SAMPLES*2;
     }else{
