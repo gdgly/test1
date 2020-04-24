@@ -169,7 +169,7 @@ static uint8 toPercentage(uint16 voltage)
         }
         iPercent = 100 - i*2;
 
-        if(iPercent == 100)
+        if(iPercent == 100 && g_last_percent == 0)
             g_last_percent = 100;
 
         if(iPercent > g_last_percent)
