@@ -230,6 +230,14 @@
 #define ONLINE_DEBUG_HANDSET_PAIR_IND     (0x4a)  /* pair handset ind */
 #define ONLINE_DEBUG_SPECIAL_VOL_IND      (0x4b)  /* special vol for ble bind */
 #define ONLINE_DEBUG_PEER_AV_CONNECT      (0x4c)  /* peer av connect */
+#define ONLINE_DEBUG_A2DP_CONNECT_FAILED   (0x4d)  /* a2dp connect error */
+#define ONLINE_DEBUG_A2DP_DISCONNECT_ERROR (0x4f)  /* a2dp disconnect error */
+
+#define ONLINE_DEBUG_AV_A2DP_BASE 0x50
+#define ONLINE_DEBUG_AV_A2DP_CONNECT_FAILED (ONLINE_DEBUG_AV_A2DP_BASE | AV_A2DP_CONNECT_FAILED) /*!< A connection attempt failed */
+#define ONLINE_DEBUG_AV_A2DP_DISCONNECT_LINKLOSS (ONLINE_DEBUG_AV_A2DP_BASE | AV_A2DP_DISCONNECT_LINKLOSS)  /*!< Link dropped */
+#define ONLINE_DEBUG_AV_A2DP_DISCONNECT_NORMAL (ONLINE_DEBUG_AV_A2DP_BASE | AV_A2DP_DISCONNECT_NORMAL) /*!< A requested disconnect completed */
+#define ONLINE_DEBUG_AV_A2DP_DISCONNECT_ERROR (ONLINE_DEBUG_AV_A2DP_BASE | AV_A2DP_DISCONNECT_ERROR) /*!< Disconnect due to some error */
 
 typedef enum {
     ONLINE_DBG_APP_REQ_RT_ONLINE_DBG_START   = 0x01,    /* app request packet format */

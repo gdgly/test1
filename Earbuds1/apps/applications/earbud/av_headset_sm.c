@@ -1978,6 +1978,14 @@ static void appSmHandleAvA2dpDisconnectedInd(const AV_A2DP_DISCONNECTED_IND_T *i
                    links, record that we're not connected with A2DP to handset */
                 if (ind->reason == AV_A2DP_DISCONNECT_NORMAL && !appSmIsDisconnectingLinks())
                     appDeviceSetA2dpWasConnected(&ind->bd_addr, FALSE);
+
+                online_dbg_record(ONLINE_DEBUG_AV_A2DP_BASE | ind->reason);
+                if (ind->reason == AV_A2DP_DISCONNECT_ERROR) {
+                    online_dbg_record(ONLINE_DEBUG_A2DP_DISCONNECT_ERROR);
+                } else if (ind->reason == AV_A2DP_CONNECT_FAILED) {
+                    online_dbg_record(ONLINE_DEBUG_A2DP_CONNECT_FAILED);
+                    appConnRulesSetEvent(appGetSmTask(),RULE_EVENT_HANDOVER_RECONNECT);
+                }
             }
         }
         break;
@@ -2026,6 +2034,7 @@ static void appSmHandleAvAvrcpDisconnectedInd(const AV_AVRCP_DISCONNECTED_IND_T 
                 appConnRulesResetEvent(RULE_EVENT_HANDSET_AVRCP_CONNECTED);
                 appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDSET_AVRCP_DISCONNECTED);
                 online_dbg_record(ONLINE_DEBUG_AVRCP_DISCONNECT);
+
             }
 
             /* Check if disconnected from TWS+ device (handset or earbud) */
