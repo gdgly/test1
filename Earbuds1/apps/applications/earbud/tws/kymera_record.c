@@ -86,7 +86,7 @@ void appKymeraHandleInternalRecordStart(const KYMERA_INTERNAL_RECORD_T *msg)
                 OperatorsStandardSetUCID(op, 0x21);
             }
 
-            forwardAudioAndMic(theKymera->chain_record_handle);
+            forwardAudioAndMic(theKymera->chain_record_handle,0);
 
             ChainStart(theKymera->chain_record_handle);
 

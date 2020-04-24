@@ -34,7 +34,7 @@ typedef struct
 }AudioForwardTaskData;
 
 void forwardSetDataClient(uint16 data_client);
-void forwardAudioAndMic(kymera_chain_handle_t sco_chain);
+void forwardAudioAndMic(kymera_chain_handle_t sco_chain,uint16 mode);
 void disconnectAudioForward(kymera_chain_handle_t sco_chain);
 Task getAudioForwardTask(void);
 void disable_audio_forward(bool disable);

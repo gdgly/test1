@@ -16,7 +16,7 @@
 #define AUDIO_CORE_0             (0)
 #define AUDIO_DATA_FORMAT_16_BIT (0)
 #define OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD (0x000C)
-
+#define OPMSG_PASSTHROUGH_ID_CONFIG_AUDIO_FORWARD (0x000D)
 
 #define MAKE_FWD_MESSAGE(TYPE) TYPE##_T *message = PanicUnlessNew(TYPE##_T)
 
@@ -36,6 +36,7 @@ static void initSetSpeechDataSource(Source src);
 static void sendMessageMoreData(Task task, Source src, uint32 delay);
 static void indicateFwdDataSource(Source src, source_type_t type);
 static bool __disable_audio_forward(void);
+static bool __config_audio_forward(void);
 
 static bool audio_forward = FALSE;
 
@@ -53,7 +54,7 @@ static AudioForwardTaskData audioFwdTaskData =
 
 static Task audioForwardTask = &(audioFwdTaskData.data);
 
-void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
+void forwardAudioAndMic(kymera_chain_handle_t sco_chain,uint16 mode)
 {
     uint16 set_data_format[] = { OPMSG_PASSTHROUGH_ID_CHANGE_OUTPUT_DATA_TYPE, AUDIO_DATA_FORMAT_16_BIT };
 
@@ -99,6 +100,13 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain)
     /* 5. notify gaia dialog have start 现在在hfp和ui层处理开始消息*/
 //    gaiaStartNotify();
     __disable_audio_forward();
+
+    /* 发送G722是否需要把16K转换为8K */
+    if (mode == SCO_WB)
+    {
+        __config_audio_forward();
+    }
+
 #endif
     audioFwdTaskData.data_client = DATA_CLIENT_GAIA;
 }
@@ -277,7 +285,47 @@ static bool __disable_audio_forward(void)
 
     return TRUE;
 }
+static bool __config_audio_forward(void)
+{
+#if (FORWARD_AUDIO_TYPE & (FORWARD_AUDIO_MIC | FORWARD_AUDIO_SCO))
+    kymeraTaskData *theKymera = appGetKymera();
+    uint16 set_data_config[] = { OPMSG_PASSTHROUGH_ID_CONFIG_AUDIO_FORWARD, TRUE };
+    Operator passthrough = INVALID_OPERATOR;
+    kymera_chain_handle_t sco_chain = NULL;
+    switch(appKymeraGetState()) {
+    case KYMERA_STATE_A2DP_STREAMING:
+        sco_chain = theKymera->chain_record_handle;
+        if(!sco_chain) return FALSE;
+        break;
+    case KYMERA_STATE_SCO_ACTIVE:
+    case KYMERA_STATE_SCO_ACTIVE_WITH_FORWARDING:
+        sco_chain = appKymeraGetScoChain();
+        if(!sco_chain) return FALSE;
+        break;
+    default:
+        if(appKymeraRecordIsRun() == TRUE)
+            sco_chain = theKymera->chain_record_handle;
+        break;
+    }
+#endif
 
+#if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_SCO)
+    passthrough = ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_SCO_PASSTHROUGH);
+    if(INVALID_OPERATOR != passthrough) {
+        PanicZero(VmalOperatorMessage(passthrough, set_data_config,
+                                      sizeof(set_data_config)/sizeof(set_data_config[0]), NULL, 0));
+    }
+#endif
+
+#if (FORWARD_AUDIO_TYPE & FORWARD_AUDIO_MIC)
+    passthrough = ChainGetOperatorByRole(sco_chain, OPR_CUSTOM_MIC_PASSTHROUGH);
+    if(INVALID_OPERATOR != passthrough) {
+        PanicZero(VmalOperatorMessage(passthrough, set_data_config,
+                                      sizeof(set_data_config)/sizeof(set_data_config[0]), NULL, 0));
+    }
+#endif
+    return TRUE;
+}
 #ifndef GAIA_TEST
 
 static void show_msg(Source source, int source_type)

@@ -53,6 +53,7 @@ typedef struct G722CODEC_OP_DATA{
     unsigned sample_rate;
     ttp_context *time_to_play;
     unsigned disable_audforward;   // 0:enable, 1:disable
+    unsigned config_audforward;   // 0:neednot, 1:need
 
     unsigned *in_buffer;
     unsigned *out_buffer;
@@ -79,5 +80,7 @@ bool G722Codec_opmsg_input_data_type(OPERATOR_DATA *op_data, void *message_data,
 bool G722Codec_opmsg_output_data_type(OPERATOR_DATA *op_data, void *message_data, unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data);
 bool G722Codec_opmsg_set_buffer_size(OPERATOR_DATA *op_data, void *message_data, unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data);
 bool G722Codec_opmsg_disable_audio_forward(OPERATOR_DATA *op_data, void *message_data, unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data);
+bool G722Codec_opmsg_config_audio_forward(OPERATOR_DATA *op_data, void *message_data,unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data);
+
 
 #endif /* G722CODEC_H */

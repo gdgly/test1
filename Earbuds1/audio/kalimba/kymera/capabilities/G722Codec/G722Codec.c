@@ -70,6 +70,7 @@ const opmsg_handler_lookup_table_entry G722Codec_opmsg_handler_table[] =
     {OPMSG_COMMON_ID_GET_PARAMS,                   G722Codec_opmsg_get_params},
     {OPMSG_COMMON_ID_SET_PARAMS,                   G722Codec_opmsg_set_params},
     {OPMSG_PASSTHROUGH_ID_DISABLE_AUDIO_FORWARD,   G722Codec_opmsg_disable_audio_forward},
+    {OPMSG_PASSTHROUGH_ID_CONFIG_AUDIO_FORWARD,    G722Codec_opmsg_config_audio_forward},
     {0, NULL}
 };
 
@@ -172,9 +173,17 @@ static void G722Codec_processing_encode(G722CODEC_OP_DATA *opx_data, unsigned oc
      //  ptr[i] = ptr[i*2];   // 在前端为模拟音频时我们是取 ptr[i*2]
            ptr[i] = ptr[i*2+1]; // 在前端为SPLITER 时我们是取 ptr[i*2+1]
     }
+    /* 判断是否需要将16k转换为8k数据 */
+    if (opx_data->config_audforward == TRUE)
+    {
+        for (i = 0;i < (octets/2); i++)
+        {
+            ptr[i] = ptr[2*i];
+        }
+    }
     G722_DEBUG1("encode intime=%d", time_get_time());
 
-    acodec_encoder(opx_data->g722Handle, (unsigned char*)opx_data->in_buffer, (short)(opx_data->in_samples*G722_BYTE_PER_SAMPLE),
+    acodec_encoder(opx_data->g722Handle, (unsigned char*)opx_data->in_buffer, (short)(opx_data->in_samples/2 *G722_BYTE_PER_SAMPLE),
                    (unsigned char*)opx_data->out_buffer, (unsigned short*)&outsize);
 
     // 将每个SAMPLE为2个字节转换为4个字节
@@ -196,6 +205,10 @@ static void G722Codec_process_data(OPERATOR_DATA *op_data, TOUCHED_TERMINALS *to
     unsigned in_data, output_space, max_read;
 
     // 本次最多读取数据量
+    if (opx_data->config_audforward == TRUE)
+    {
+        opx_data->in_samples *= 2;
+    }
     max_read = opx_data->in_samples - opx_data->rd_samples;
 
     in_data = cbuffer_calc_amount_data_in_words(opx_data->ip_buffer);
@@ -258,6 +271,7 @@ static void G722Codec_Init(G722CODEC_OP_DATA *opx_data)
     opx_data->num_active_chans = 0;
     opx_data->active_chans     = 0;
     opx_data->disable_audforward=TRUE;
+    opx_data->config_audforward = FALSE;
 
     opx_data->sample_cnt       = 0;
     opx_data->timestamp        = 0; // time_get_time();
@@ -569,8 +583,18 @@ bool G722Codec_opmsg_disable_audio_forward(OPERATOR_DATA *op_data, void *message
     G722CODEC_OP_DATA *opx_data = get_instance_data(op_data);
 
     opx_data->disable_audforward = (bool)OPMSG_FIELD_GET(message_data, OPMSG_PASSTHROUGH_DISABLE_AUDIO_FORWARD, DISABLE);
+   return TRUE;
+}
+/*
+ * basic_passthrough_config_audio_forward
+ */
+bool G722Codec_opmsg_config_audio_forward(OPERATOR_DATA *op_data, void *message_data,
+                                             unsigned *resp_length, OP_OPMSG_RSP_PAYLOAD **resp_data)
+{
+    G722CODEC_OP_DATA *opx_data = get_instance_data(op_data);
+
+    opx_data->config_audforward = (bool)OPMSG_FIELD_GET(message_data, OPMSG_PASSTHROUGH_CONFIG_AUDIO_FORWARD, CONFIG);
 
    return TRUE;
 }
-
 
