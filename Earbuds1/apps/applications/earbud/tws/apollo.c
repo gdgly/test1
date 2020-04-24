@@ -229,7 +229,6 @@ int apollo_read_fw_version(void) {
 }
 
 int apollo_sleep(void) {
-    online_dbg_record(apollo_state);
     if (APOLLO_STATE_IDLE != apollo_state || INT_IS_HIGH) return -1;
 
     apollo_state = APOLLO_STATE_ENTERING_SLEEP;
@@ -246,8 +245,14 @@ int apollo_sleep(void) {
 }
 
 int apollo_evoke(void) {
-    online_dbg_record(apollo_state);
-    if (APOLLO_STATE_SLEEP != apollo_state) return -1;
+    if (APOLLO_STATE_SLEEP != apollo_state)
+    {
+        if(apollo_state == APOLLO_STATE_ERR)
+        {
+            apollo_reinit();
+        }
+        return -1;
+    }
 
     apollo_state = APOLLO_STATE_AWAKING;
     IO_HIGH(APOLLO_INT_IO);
