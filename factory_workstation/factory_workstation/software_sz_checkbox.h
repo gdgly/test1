@@ -28,6 +28,10 @@ public:
 
 	void software_sz_checkbox::get_param(struct glob_param *g_p);
 
+	CFile m_mes_file;
+	CString vol_value_sav;
+	int software_sz_checkbox::mes_sannuo_write_logfile(CString SN);
+
 	CFile m_hLogFile;
 	CFont m_editFont;
 	CColorStatic m_reboot;

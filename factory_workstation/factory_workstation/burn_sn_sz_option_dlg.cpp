@@ -55,12 +55,14 @@ void burn_sn_sz_option_dlg::OnBnClickedOk()
 	GetDlgItem(IDC_EDIT7)->GetWindowTextA(burnsn_sz_option_instance.g_l_sn_prompt);
 	GetDlgItem(IDC_EDIT9)->GetWindowTextA(burnsn_sz_option_instance.g_r_sn_prompt);
 	GetDlgItem(IDC_EDIT10)->GetWindowTextA(burnsn_sz_option_instance.g_c_sn_prompt);
+	burnsn_sz_option_instance.g_if_repair_all = ((CButton*)GetDlgItem(IDC_CHECK14))->GetCheck();
 
 	ini.SetPathName(ini_path);
 	ini.WriteUInt("SZ_BURNSN" ,"g_burn_sn_len",burnsn_sz_option_instance.g_burn_sn_len,10);
 	ini.WriteString("SZ_BURNSN" ,"g_l_sn_prompt",burnsn_sz_option_instance.g_l_sn_prompt);
 	ini.WriteString("SZ_BURNSN" ,"g_r_sn_prompt",burnsn_sz_option_instance.g_r_sn_prompt);
 	ini.WriteString("SZ_BURNSN" ,"g_c_sn_prompt",burnsn_sz_option_instance.g_c_sn_prompt);
+	ini.WriteUInt("SZ_BURNSN" ,"g_if_repair_all",burnsn_sz_option_instance.g_if_repair_all,10);
 
 	CDialogEx::OnOK();
 }
@@ -86,6 +88,8 @@ BOOL burn_sn_sz_option_dlg::OnInitDialog()
 	GetDlgItem(IDC_EDIT7)->SetWindowTextA(burnsn_sz_option_instance.g_l_sn_prompt);
 	GetDlgItem(IDC_EDIT9)->SetWindowTextA(burnsn_sz_option_instance.g_r_sn_prompt);
 	GetDlgItem(IDC_EDIT10)->SetWindowTextA(burnsn_sz_option_instance.g_c_sn_prompt);
+
+	((CButton*)GetDlgItem(IDC_CHECK14))->SetCheck(burnsn_sz_option_instance.g_if_repair_all);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
 }

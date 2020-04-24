@@ -58,7 +58,7 @@
 #define LOG_PATH_CHECK_sz "log\\check_sz\\"
 #define LOG_PATH_BTADDR_sz "log\\btaddr_sz\\"
 #define LOG_PATH_CHECKBOX_sz "log\\checkbox_sz\\"
-#define LOG_PATH_BURNSN_sz "log\\BURNSN_sz\\"
+#define LOG_PATH_BURNSN_sz "log\\burnsn_sz\\"
 
 #define WM_USERMSG_MASSPRODUCT         (WM_USER+33)
 
@@ -320,6 +320,7 @@ struct burnsn_sz_option_str{
 	CString g_l_sn_prompt;
 	CString g_r_sn_prompt;
 	CString g_c_sn_prompt;
+	UINT g_if_repair_all;
 };
 
 struct glob_param{

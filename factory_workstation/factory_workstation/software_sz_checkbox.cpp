@@ -218,6 +218,7 @@ int software_sz_checkbox::ParseLine(void *param, BYTE *buf, int len)
 		memcpy(vbuf,&buf[sText.Find("check VolRef ") + 13],4);
 		CString vol_value(vbuf);
 		p->m_cal_value.SetWindowTextA(vol_value);
+		p->vol_value_sav = vol_value;
 
 		if(sText.Find("succ") >= 0){
 			p->m_cal_value.SetColor(STATIC_WND_SUCCESS);
@@ -314,6 +315,47 @@ int software_sz_checkbox::Process(Com_callback_type com_cb_ins)
 	return rdlen;
 }
 
+int software_sz_checkbox::mes_sannuo_write_logfile(CString SN)
+{
+	CString sFname;
+	CreateDirectory(SANNUO_MES_LOG_PATH, 0);
+	sFname = SN + "_PASS.txt";
+	sFname = SANNUO_MES_LOG_PATH + sFname;
+	if(m_mes_file.Open(sFname, CFile::modeCreate | CFile::modeNoTruncate | CFile::modeReadWrite) == TRUE) {
+		sFname.Format("********************************\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("Function   :  盒子测试\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("Device SN:     ");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname = SN + "\r\n";
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("CAL VOL VALUE:     ");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname = vol_value_sav + "\r\n";
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("Test Result:     PASS\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("Cycle Time:      0 s\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("ErrorCode:\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("********************************\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		CTime tNow = CTime::GetCurrentTime();
+		sFname.Format("%04d%02d%02d_%02d%02d%02d\r\n", 
+			tNow.GetYear(), tNow.GetMonth(), tNow.GetDay(), 
+			tNow.GetHour(), tNow.GetMinute(), tNow.GetSecond());
+		sFname = "Start Time :     " + sFname;
+		m_mes_file.Write(sFname, sFname.GetLength());
+		sFname.Format("********************************\r\n");
+		m_mes_file.Write(sFname, sFname.GetLength());
+		m_mes_file.Flush();
+		m_mes_file.Close();
+	}
+	return 0;
+}
+
 int software_sz_checkbox::process_com()
 {
 	unsigned int pass_flag,pass_init_flag;
@@ -340,9 +382,24 @@ int software_sz_checkbox::process_com()
 	while(process_com_exit != 1){
 		Process(com_cb_ins);
 		if(right_flag == pass_flag){
-			pass_green_color = 1;
-			m_Epass.SetWindowTextA("PASS");
-			Invalidate();
+			if(general_option_instance.g_check_mes){
+				if(general_option_instance.g_check_mes_type == 4){
+					mes_sannuo_write_logfile(sn_no);
+					AddEvent2List("mes log文件已生成！");
+					pass_green_color = 1;
+					m_Epass.SetWindowTextA("PASS");
+					Invalidate();	
+				}else{
+					AddEvent2List("不支持的mes类型，请重新配置");
+					pass_green_color = 0;
+					m_Epass.SetWindowTextA("FAIL");
+					Invalidate();
+				}
+			}else{
+				pass_green_color = 1;
+				m_Epass.SetWindowTextA("PASS");
+				Invalidate();			
+			}
 			break;
 		}
 		if(error_flag != 0){

@@ -207,9 +207,15 @@ int software_sz_burn_sn::ParseLine(void *param, BYTE *buf, int len)
 		}
 
 		if( p->left_suc_flag == 1&&p->right_suc_flag == 1&&p->case_suc_flag == 1 ){
-			p->pass_green_color = 1;
-			p->m_Epass.SetWindowTextA("PASS");
-			p->Invalidate();			
+			if(p->burnsn_sz_option_instance.g_if_repair_all){
+				p->burn_flag = 4;
+				CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_sz_burn_sn::WorkerThreadProc, p, 0, NULL);
+				p->AddEvent2List("开始重新匹配耳机与充电盒！");
+			}else{
+				p->pass_green_color = 1;
+				p->m_Epass.SetWindowTextA("PASS");
+				p->Invalidate();					
+			}
 		}
 		p->com_get_recv = 1;
 
@@ -218,6 +224,20 @@ int software_sz_burn_sn::ParseLine(void *param, BYTE *buf, int len)
 		}else if(p->burn_flag == 2){
 			::PostMessage(p->m_hWnd, WM_USERMSG_MASSPRODUCT, 2, NULL);
 		}
+	}
+	if(sText.Find("fake longkey") >= 0){
+		if(sText.Find("succ") >= 0){
+			p->AddEvent2List("耳机充电盒重新匹配成功！");
+			p->pass_green_color = 1;
+			p->m_Epass.SetWindowTextA("PASS");
+			p->Invalidate();					
+		}else{
+			p->AddEvent2List("耳机充电盒重新匹配失败！");
+			p->pass_green_color = 0;
+			p->m_Epass.SetWindowTextA("FAIL");
+			p->Invalidate();	
+		}
+		p->com_get_recv = 1;
 	}
 	return 0;
 }
@@ -241,6 +261,8 @@ int software_sz_burn_sn::process_com()
 		sText = "check wrsn case=";
 		m_EditSn_c.GetWindowTextA(sTemp);
 		sText += sTemp;	
+	}else if(burn_flag == 4){
+		sText = "fake longkey";
 	}
 	sText += "\r\n";
 	Commkey = sText;
@@ -268,6 +290,9 @@ int software_sz_burn_sn::WorkerThreadProc(void *param)
 {
 	software_sz_burn_sn *p = (software_sz_burn_sn*)param;
 	CString sTemp;
+	while(p->WorkerThreadProc_in_flag == 1){//防止线程同时操作同一个串口
+		Sleep(200);
+	}
 	p->WorkerThreadProc_in_flag = 1;
 	if(FALSE == p->com_board.InitComm(p->general_option_instance.g_ttycom_port, DEIGHT, SONE, PNONE, 
 		p->general_option_instance.g_ttycom_baud)) {

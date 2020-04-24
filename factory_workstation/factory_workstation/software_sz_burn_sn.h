@@ -44,6 +44,8 @@ public:
 	int pass_green_color;
 	void software_sz_burn_sn::SetAllItemRestart(void);
 
+	int software_sz_burn_sn::send_fake_longkey_cmd();
+
 	CMyComm com_board;
 	UINT          bufReaded;
 #define COM_BUF_SIZE            (2048)
