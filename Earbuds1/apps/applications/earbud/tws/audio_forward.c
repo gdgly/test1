@@ -101,9 +101,10 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain,uint16 mode)
 //    gaiaStartNotify();
     __disable_audio_forward();
 
-    /* 发送G722是否需要把16K转换为8K */
-    __resample_audio_forward((mode == SCO_WB)? TRUE : FALSE);
-
+    /* 发送G722是否需要把16K转换为8K: 这个需要设置成可选项，目前状态不能前置8k */
+    //__resample_audio_forward((mode == SCO_WB)? TRUE : FALSE);
+    UNUSED(mode);
+    __resample_audio_forward(FALSE);
 #endif
     audioFwdTaskData.data_client = DATA_CLIENT_GAIA;
 }
