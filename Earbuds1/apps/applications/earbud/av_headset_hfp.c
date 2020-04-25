@@ -471,7 +471,8 @@ static void appHfpExitConnectedActive(void)
     DEBUG_LOG("appHfpExitConnectedActive");
 
     /* Clear any mute reminders and clear mute active flag */
-    MessageCancelFirst(appGetHfpTask(), HFP_INTERNAL_MUTE_IND);
+    if(MessageCancelFirst(appGetHfpTask(), HFP_INTERNAL_MUTE_IND))
+        appUiHfpMuteInactive();
     appGetHfp()->mute_active = FALSE;
 
     /* Stop SCO status on LEDs */

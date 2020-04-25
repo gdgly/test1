@@ -788,8 +788,6 @@ void gaiaParseDialogStatus(STAROT_DIALOG_STATUS_T *message) {
         requestGaiaMessageWithAttrHelper(GAIA_COMMAND_STAROT_CALL_ACTIVE, head);
     } else if (HFP_STATE_CONNECTED_IDLE == hstate) {
         DEBUG_LOG("HFP_STATE_CONNECTED_IDLE");
-        if (appHfpIsMuted())
-            appUiHfpMuteInactive();
 
         StarotAttr *head = NULL;
         subGaiaCreateDialogDropAudio(&head);/// 丢失的字节数
