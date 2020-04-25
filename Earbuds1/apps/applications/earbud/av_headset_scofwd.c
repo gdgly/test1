@@ -877,6 +877,7 @@ static void appScoFwdPlayToneAtWcTime(rtime_t sync_time, uint8 tone)
 
 void appScoFwdTone(uint32 time, uint8 tone)
 {
+    BtAddrPrmPtr prm = &gBtAddrParam;
     scoFwdTaskData *theScoFwd = appGetScoFwd();
     rtime_t wallclock, sync_time;
     wallclock_state_t wc_state;
@@ -902,11 +903,9 @@ void appScoFwdTone(uint32 time, uint8 tone)
            be called on the peer to handle the msg SFWD_OTA_MSG_RING */
         appScoFwdPlayToneAtWcTime(sync_time, tone);
     }
-}
-
-void testtone(void);
-void testtone(void){
-    appScoFwdTone(1000,5);
+    else if(prm->single_era == TRUE) {
+        appUiPlayPrompt(tone);
+    }
 }
 
 static void appScoFwdHandleOTATone(const uint8* msg, int msg_size)

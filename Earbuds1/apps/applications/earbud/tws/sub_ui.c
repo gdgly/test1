@@ -222,6 +222,7 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
             appSmPairHandset();
 #endif
 
+        appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
         appSmConnectHandset();
 //        appUiAvConnect();
 
@@ -231,16 +232,26 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
 
     handled = 1;  /* 设置为已经处理 */
     /* 电话操作时的控制，不能自己定义 */
-    if (appHfpIsCallActive())   /* If voice call active, hangup */
+    if (appHfpIsCallActive()){                                      /* If voice call active, hangup */
+        appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
         appHfpCallHangup();
-    else if (appScoFwdIsReceiving() && !appScoFwdIsCallIncoming()) /* Sco Forward can be streaming a ring tone */
+    }
+    else if (appScoFwdIsReceiving() && !appScoFwdIsCallIncoming()){ /* Sco Forward can be streaming a ring tone */
+        appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
         appScoFwdCallHangup();
-    else if (appHfpIsCallOutgoing()) /* If outgoing voice call, hangup */
+    }
+    else if (appHfpIsCallOutgoing()){                               /* If outgoing voice call, hangup */
+        appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
         appHfpCallHangup();
-    else if (appHfpIsCallIncoming())    /* If incoming voice call, accept */
+    }
+    else if (appHfpIsCallIncoming()){                               /* If incoming voice call, accept */
+        appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
         appHfpCallAccept();
-    else if (appScoFwdIsCallIncoming())
+    }
+    else if (appScoFwdIsCallIncoming()){
+        appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
         appScoFwdCallAccept();
+    }
     else {     /* 非通话状态时的按键处理 */
         handled = 0;   /* 设置为未处理 */
     }
@@ -255,10 +266,12 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
     if((keyFunc == TAP_PREVIOUS_TRACK)||(keyFunc == TAP_NEXT_TRACK)||(keyFunc == TAP_PLAY_PAUSE)){
         bool pause_stop = (appAvPlayStatus() == avrcp_play_status_paused) || (appAvPlayStatus() == avrcp_play_status_stopped);
         if(appDeviceIsHandsetConnected() && ((!appDeviceIsHandsetA2dpStreaming()) || pause_stop)){
+            appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
             appAvPlay(FALSE);
             goto key_done;
         }
         if(!appDeviceIsHandsetConnected() && ((!appPeerSyncIsPeerHandsetA2dpStreaming()) || pause_stop)){
+            appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
             appAvPlay(FALSE);
             goto key_done;
         }
