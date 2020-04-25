@@ -1119,6 +1119,7 @@ static void appSmHandlePairingHandsetPairConfirm(PAIRING_HANDSET_PAIR_CFM_T *cfm
         /// 尝试连接手机，如果连接成功，会在连接成功的地方，校验是否可以连接
         DEBUG_LOG("appSmHandlePairingHandsetPairConfirm pair success allow connect");
         appConManagerAllowHandsetConnect(TRUE);
+        MessageSendLater(appGetUiTask(), APP_PAIR_HANDSET_SUCCESS_TIMEOUT, NULL, D_SEC(30));
     }
 
     switch (appGetState())

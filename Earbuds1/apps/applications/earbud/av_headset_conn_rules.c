@@ -821,10 +821,10 @@ static ruleAction ruleConnectHandsetStandard(ruleConnectReason reason)
 static ruleAction ruleConnectHandset(ruleConnectReason reason,
                                      rulePostHandsetConnectAction post_connect_action)
 {
-    if (appConnRulesInProgress()) {
-        RULE_LOG("ruleConnectHandset, now rule in progress so defer");
-        return RULE_ACTION_DEFER;
-    }
+//    if (appConnRulesInProgress()) {
+//        RULE_LOG("ruleConnectHandset, now rule in progress so defer");
+//        return RULE_ACTION_DEFER;
+//    }
 
     bdaddr handset_addr;
     connRulesTaskData *conn_rules = appGetConnRules();
@@ -1913,6 +1913,10 @@ static ruleAction ruleConnectBTHappenInDfu(void) {
     if (appSmIsInDfuMode() && appDeviceIsHandsetAvrcpConnected()
        && appDeviceIsHandsetA2dpConnected() && appDeviceIsHandsetHfpConnected()) {
         DEBUG_LOG("ruleConnectBTHappenInDfu in dfu mode, so need disconnect");
+        if (MessageCancelAll(appGetUiTask(), APP_PAIR_HANDSET_SUCCESS_TIMEOUT) > 0) {
+            DEBUG_LOG("ruleConnectBTHappenInDfu in dfu mode, but have APP_PAIR_HANDSET_SUCCESS_TIMEOUT flag");
+            return RULE_ACTION_IGNORE;
+        }
         appConnRulesResetEvent(CONN_RULES_DISCONNECT_HANDSET);
         return RULE_ACTION_RUN;
     }

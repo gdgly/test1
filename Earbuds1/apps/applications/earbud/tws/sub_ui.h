@@ -72,6 +72,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_INIT_CFM_FLAG             2127 // 启动的时候，自动连接手机，此时，还处于耳朵中，与outcase->connect phone冲突
 #endif
 #define APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT 2128 // 空中连接超时，佩戴上，需要出发连接手机
+#define APP_PAIR_HANDSET_SUCCESS_TIMEOUT 2129 // 蓝牙配对成功，运行连接，2020状态下，运行连接，并不断开
 
 struct UI_APP_UPGRADE_COMMIT_STATUS_T {
     bool status;   // true:commit ;false:revert
