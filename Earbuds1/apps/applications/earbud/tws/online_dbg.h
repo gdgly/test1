@@ -217,6 +217,7 @@
 #define ONLINE_DBG_OUTCASE_ITR      (0x34)    /* out case itr */
 #define ONLINE_DBG_ERR_STATUS_ITR   (0x35)    /* inout case err itr */
 
+#define ONLINE_DEBUG_ACTIVE_DISCONNECT (0x3f)  /* active disconnect */
 #define ONLINE_DEBUG_HFP_CONNECT    (0x40)    /* hfp connect */
 #define ONLINE_DEBUG_HFP_DISCONNECT (0x41)    /* hfp disconnect */
 #define ONLINE_DEBUG_AVRCP_CONNECT  (0x42)    /* avrcp connect */

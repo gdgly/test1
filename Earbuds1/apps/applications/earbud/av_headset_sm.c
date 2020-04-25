@@ -208,6 +208,7 @@ static void appSmInitiateLinkDisconnection(smDisconnectBits links_to_disconnect,
 #endif
     }
 
+    online_dbg_record(ONLINE_DEBUG_ACTIVE_DISCONNECT);
 
     MESSAGE_MAKE(msg, SM_INTERNAL_LINK_DISCONNECTION_COMPLETE_T);
     if (!disconnecting_links)
