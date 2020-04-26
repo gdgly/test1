@@ -431,4 +431,11 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 #define STAROT_HFP_FORCE_8K
 #undef STAROT_HFP_FORCE_8K
 
+/*
+ * 场景：
+ *    将hfp的音频，强制转换成8k
+ */
+#define STAROT_HFP_AUDIO_G722_FORCE_8K
+#undef STAROT_HFP_AUDIO_G722_FORCE_8K
+
 #endif // PUBLIC_H

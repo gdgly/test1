@@ -1330,7 +1330,11 @@ void appUiNotifyAudioSampleRate(uint16 rate, uint16 mode)
         return;
     }
     MAKE_OBJECT(STAROT_DIALOG_SAMPLE_RATE_T);
+#ifdef STAROT_HFP_AUDIO_G722_FORCE_8K
+    message->rate= 8000;
+#else
     message->rate= rate;
+#endif
     MessageSend(appGetGaiaTask(), STAROT_DIALOG_SAMPLE_RATE, message);
 }
 

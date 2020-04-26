@@ -101,10 +101,13 @@ void forwardAudioAndMic(kymera_chain_handle_t sco_chain,uint16 mode)
 //    gaiaStartNotify();
     __disable_audio_forward();
 
+#ifdef STAROT_HFP_AUDIO_G722_FORCE_8K
     /* 发送G722是否需要把16K转换为8K: 这个需要设置成可选项，目前状态不能前置8k */
-    //__resample_audio_forward((mode == SCO_WB)? TRUE : FALSE);
+    __resample_audio_forward((mode == SCO_WB)? TRUE : FALSE);
+#else
     UNUSED(mode);
     __resample_audio_forward(FALSE);
+#endif
 #endif
     audioFwdTaskData.data_client = DATA_CLIENT_GAIA;
 }
