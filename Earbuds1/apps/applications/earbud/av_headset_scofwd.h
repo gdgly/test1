@@ -167,7 +167,13 @@ extern void appScoFwdCallReject(void);
 extern void appScoFwdCallHangup(void);
 extern void appScoFwdCallVoice(void);
 extern void appScoFwdRing(void);
+#ifdef CONFIG_STAROT
 extern void appScoFwdTone(uint32 time, uint8 tone);
+#endif
+#ifdef CONFIG_STAROT_VOLSYNC
+extern void appUiAvApplyVolume(uint8 volume);
+extern void appScoFwdSetVolume(uint32 utime, uint8 volume);      // 同步延时设置左右音量
+#endif
 extern void appScoFwdRingCancel(void);
 extern void appScoFwdVolumeStart(int16 step);
 extern void appScoFwdVolumeStop(int16 step);

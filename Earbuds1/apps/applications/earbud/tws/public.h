@@ -280,6 +280,8 @@ void Lis2dw12_reinit_setsens(void);
 #define CONFIG_STAROT_PEERPAIR              // 左右耳相互保存BT地址用于配对
 #define CONFIG_STAROT_SINGLE                // 独立使用
 
+#define CONFIG_STAROT_VOLSYNC               // 左右音量同步调节
+
 // 打电话时的双MIC使用
 #define CONFIG_MIC_SELECT          // 动态选择使用MIC1 或 MIC2 或两个都使用
 extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;

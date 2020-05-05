@@ -174,9 +174,12 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
 {
     DEBUG_LOGF("appAvVolumeSet, volume %u", volume);
 
-
+#ifdef CONFIG_STAROT_VOLSYNC
+    bool peer_vol = FALSE;
+#else
     /* Set local volume, never set a unset volume. */
     PanicFalse(appAvApplyVolume(volume));
+#endif
 
 #ifdef CONFIG_STAROT
     /*
@@ -215,6 +218,10 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
                 }
                 else if (appDeviceIsPeer(bd_addr))
                 {
+#ifdef CONFIG_STAROT_VOLSYNC
+                    peer_vol = TRUE;
+                    appScoFwdSetVolume(150, volume);
+#else
                     /* Send new volume to peer, which could be master or slave */
                     if (appDeviceIsHandsetAvrcpConnected())
                     {
@@ -226,6 +233,7 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
                         DEBUG_LOGF("appAvVolumeSet, notify volume %u to master %p", volume, theInst);
                         appAvAvrcpVolumeNotification(theInst, volume);
                     }
+#endif
                 }
                 theInst->avrcp.volume = volume;
             }
@@ -235,7 +243,21 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
             }
         }
     }
+
+#ifdef CONFIG_STAROT_VOLSYNC
+    // 延时调节本地音量
+    if(FALSE == peer_vol)
+        PanicFalse(appAvApplyVolume(volume));
+#endif
 }
+
+#ifdef CONFIG_STAROT_VOLSYNC
+void appUiAvApplyVolume(uint8 volume)
+{
+    DEBUG_LOG("UiAvApplyVolume:%d", volume);
+    PanicFalse(appAvApplyVolume(volume));
+}
+#endif
 
 /*! \brief Make volume change
 

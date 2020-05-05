@@ -171,7 +171,7 @@ enum
     SFWD_TIMER_BASE = SFWD_INTERNAL_BASE + 0x80,
     SFWD_TIMER_LATE_PACKET = SFWD_TIMER_BASE,
 #ifdef CONFIG_STAROT
-    SFWD_INTERNAL_PLAY_TONE,
+    SFWD_INTERNAL_OTA_COMMAND,
 #endif
 };
 
@@ -833,89 +833,129 @@ static void appScoFwdHandleOTARing(const uint8* msg, int msg_size)
 }
 
 #ifdef CONFIG_STAROT
+enum {OTACMD_PLAYTONE=0, OTACMD_SETVOL,
+     OTACMD_LAST,};
 typedef struct{
-    uint8 tone;
-} OTATONE_T;
+    uint8 command;    // OTACMD_XXX
+    uint8 param;      // param from command
+} OTACMD_T;
 
-static void appScoFwdPlayToneAtWcTime(rtime_t sync_time, uint8 tone)
+// recv from peer or locate set it
+static void appScoFwdCommandAtWcTime(rtime_t sync_time, uint8 command, uint8 param)
 {
-    scoFwdTaskData *theScoFwd = appGetScoFwd();
-
-    DEBUG_LOG("appScoFwdHandleOTARing");
-
     wallclock_state_t wc_state;
+    scoFwdTaskData *theScoFwd = appGetScoFwd();
+    OTACMD_T *ota_msg = NULL;
 
-    OTATONE_T *new_msg = malloc(sizeof(OTATONE_T));
-    new_msg->tone = tone;
-
-    if (RtimeWallClockGetStateForSink(&wc_state, theScoFwd->wallclock_sink))
-    {
+    DEBUG_LOG("appScoFwdCommandAtWcTime");
+    if (RtimeWallClockGetStateForSink(&wc_state, theScoFwd->wallclock_sink)) {
         rtime_t local;
 
-        if (RtimeWallClock24ToLocal(&wc_state, sync_time, &local))
-        {
+        if (RtimeWallClock24ToLocal(&wc_state, sync_time, &local))  {
             /* Convert to milliseconds in the future */
             int32_t delay = rtime_sub(local, VmGetTimerTime()) / 1000;
 
             /* If value is negative, do not ring */
-            if(delay < 0)
-            {
-                DEBUG_LOG("appScoFwdHandleOTARing delay is negative, don't ring.");
+            if(delay < 0)  {
+                DEBUG_LOG("appScoFwdCommandAtWcTime delay is negative, don't ring.");
                 return;
             }
 
-            DEBUG_LOGF("appScoFwdHandleOTARing sync_time: %u, delay: %u", sync_time, delay);
+            DEBUG_LOGF("appScoFwdCommandAtWcTime sync_time: %u, delay: %u", sync_time, delay);
+
+            ota_msg = malloc(sizeof(OTACMD_T));
+            ota_msg->param    = param;
+            ota_msg->command  = command;
 
             /* Wait for specified delay */
-            MessageSendLater(&theScoFwd->task, SFWD_INTERNAL_PLAY_TONE, new_msg, delay);
+            MessageCancelAll(&theScoFwd->task, SFWD_INTERNAL_OTA_COMMAND);
+            MessageSendLater(&theScoFwd->task, SFWD_INTERNAL_OTA_COMMAND, ota_msg, delay);
         }
         else
             Panic();
     }
-
 }
 
-void appScoFwdTone(uint32 time, uint8 tone)
+// event sync two erabuds
+// delay_us : locale device delay for play
+static void appScoFwdCommand(uint32 mtime, uint8 command, uint8 param, uint32 delay_us)
 {
-    BtAddrPrmPtr prm = &gBtAddrParam;
     scoFwdTaskData *theScoFwd = appGetScoFwd();
     rtime_t wallclock, sync_time;
     wallclock_state_t wc_state;
-    uint8 buff[4];
+    uint8 buff[5];
 
-
-    DEBUG_LOGF("appScoFwdRing, wc_sink %u", theScoFwd->wallclock_sink);
+    DEBUG_LOGF("appScoFwdCommand, wc_sink %u", theScoFwd->wallclock_sink);
 
     if (RtimeWallClockGetStateForSink(&wc_state, theScoFwd->wallclock_sink) &&
         RtimeLocalToWallClock24(&wc_state, VmGetTimerTime(), &wallclock))
     {
         DEBUG_LOGF("appScoFwdRing, wc_state %u", wc_state);
 
-        sync_time = rtime_add(wallclock, time * 1000);
+        sync_time = rtime_add(wallclock, mtime * 1000);
 
         sfwd_tx_help_write_ttp(buff,sync_time);
-        buff[3] = tone;
+        buff[3] = command;
+        buff[4] = param;
 
         /* Send the SCOFWD OTA message */
         SendOTAControlMessageWithPayload(SFWD_OTA_MSG_CON, buff, sizeof(buff));
 
+        sync_time += delay_us;
         /* Also, play the ring locally: for this we will use the same function that will
            be called on the peer to handle the msg SFWD_OTA_MSG_RING */
-        appScoFwdPlayToneAtWcTime(sync_time, tone);
-    }
-    else if(prm->single_era == TRUE) {
-        appUiPlayPrompt(tone);
+        appScoFwdCommandAtWcTime(sync_time, command, param);
     }
 }
 
-static void appScoFwdHandleOTATone(const uint8* msg, int msg_size)
+// recv from peer, do on timer
+static void appScoFwdHandleOTACommand(const uint8* msg, int msg_size)
 {
-    if(msg_size == 4)
-    {
-        rtime_t sync_time;
+    rtime_t sync_time;
 
+    if(5 == msg_size) {
         sfwd_rx_help_read_ttp(msg, &sync_time);
-        appScoFwdPlayToneAtWcTime(sync_time, msg[3]);
+        appScoFwdCommandAtWcTime(sync_time, msg[3], msg[4]);
+    }
+}
+
+// play tone sync time
+void appScoFwdTone(uint32 mtime, uint8 tone)
+{
+    appScoFwdCommand(mtime, OTACMD_PLAYTONE, tone, 8*1000);
+}
+static void appScoFwdHandlePlayTone(uint8 tone)
+{
+    appUiPlayPrompt(tone);
+}
+
+#ifdef CONFIG_STAROT_VOLSYNC
+// adjust volume sync time
+void appScoFwdSetVolume(uint32 mtime, uint8 volume)
+{
+    appScoFwdCommand(mtime, OTACMD_SETVOL, volume, 0);
+}
+static void appScoFwdHandleVolume(uint8 volume)
+{
+    appUiAvApplyVolume(volume);
+}
+#else
+static void appScoFwdHandleVolume(uint8 volume) { (void)volume;}
+#endif
+
+// recv from peer do it
+static void appScoFwdHandleCommand(OTACMD_T *ota_msg)
+{
+    if(!ota_msg)
+        return;
+
+    switch(ota_msg->command) {
+    case OTACMD_PLAYTONE:
+        appScoFwdHandlePlayTone(ota_msg->param);
+        break;
+    case OTACMD_SETVOL:
+        appScoFwdHandleVolume(ota_msg->param);
+        break;
     }
 }
 #endif
@@ -1020,7 +1060,7 @@ static void ProcessOTAControlMessage(uint8 ota_msg_id, const uint8* payload, int
 
 #ifdef CONFIG_STAROT
         case SFWD_OTA_MSG_CON:
-            appScoFwdHandleOTATone(payload, payload_size);
+            appScoFwdHandleOTACommand(payload, payload_size);
             break;
 #endif
 
@@ -2242,12 +2282,6 @@ static void appScoFwdHandleRoleNotify(SFWD_INTERNAL_ROLE_NOTIFY_T *role)
     }
 }
 
-#ifdef CONFIG_STAROT
-static void appScoFwdHandlePlayTone(OTATONE_T * tone){
-    appUiPlayPrompt(tone->tone);
-}
-#endif
-
 /*! \brief Message Handler
 
     This function is the main message handler for SCO forwarding, every
@@ -2390,9 +2424,9 @@ static void appScoFwdHandleMessage(Task task, MessageId id, Message message)
             break;
 
 #ifdef CONFIG_STAROT
-    	case SFWD_INTERNAL_PLAY_TONE:
-        	appScoFwdHandlePlayTone((OTATONE_T *)message);
-        	break;
+        case SFWD_INTERNAL_OTA_COMMAND:
+            appScoFwdHandleCommand((OTACMD_T *)message);
+            break;
 #endif
 
         /*----*/
