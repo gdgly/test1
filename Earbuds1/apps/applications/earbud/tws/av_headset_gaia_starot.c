@@ -378,7 +378,7 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
             appGetGaia()->needCycleSendAudio = 1;
             DEBUG_LOG("call GAIA_COMMAND_STAROT_START_SEND_TIMER, unit is : %d", gaiaStarotPrivateData.speedTestSendUnit);
-            MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 10);
+            MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 1);
         }
             break;
 
@@ -655,8 +655,8 @@ void starotGaiaParseMessageMoreSpace(void) {
     appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
 
     if (appGetGaia()->needCycleSendAudio > 0) {
-        //DEBUG_LOG("now send audio is : %d", appGetGaia()->nowSendAudioPhase);
-        MessageSend(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL);
+        DEBUG_LOG("now send audio is : %d MessageMoreSpace", appGetGaia()->nowSendAudioPhase);
+        MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 1);
     } else {
         /// 尝试使用messagemorespace这唯一的命令去让他发送消息
         starotNotifyAudioForward(FALSE, 0);
@@ -1478,14 +1478,16 @@ void starotGaiaParseTestCfm(const GAIA_SEND_PACKET_CFM_T *m) {
     if (FALSE == m->success) {
         if (gaiaStarotPrivateData.gaiaTransportType == gaia_transport_rfcomm) {
             appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_WAIT_MORE_SPACE;
+            DEBUG_LOG("now send audio is : %d failed", appGetGaia()->nowSendAudioPhase);
             //DEBUG_LOG("now send audio is : %d: %d", appGetGaia()->nowSendAudioPhase);
         } else {
             appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
-            //DEBUG_LOG("now send audio is : %d: %d", appGetGaia()->nowSendAudioPhase);
-            MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 1);
+            DEBUG_LOG("now send audio is : %d failed", appGetGaia()->nowSendAudioPhase);
+            MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 10);
         }
     } else {
-        MessageSend(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL);
+        DEBUG_LOG("now send audio is : %d success", appGetGaia()->nowSendAudioPhase);
+        MessageSendLater(&appGetGaia()->gaia_task, GAIA_STAROT_AUDIO_INTERVAL, NULL, 1);
         appGetGaia()->nowSendAudioPhase = GAIA_TRANSFORM_AUDIO_IDLE;
         //DEBUG_LOG("now send audio is : %d: %d", appGetGaia()->nowSendAudioPhase);
         gaiaStarotPrivateData.testSpeedIndex += 1;
