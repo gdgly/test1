@@ -191,6 +191,7 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
             appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
             DEBUG_LOG("focus stop ble for use volume adv code");
             GattManagerCancelWaitForRemoteClient();
+            MessageCancelAll(appGetUiTask(), APP_BLE_SCANABLE_TIMEOUT);
             MessageSendLater(appGetUiTask(), APP_BLE_SCANABLE_TIMEOUT, NULL, 30000);
             online_dbg_record(ONLINE_DEBUG_SPECIAL_VOL_IND);
         }
