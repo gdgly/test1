@@ -21,9 +21,11 @@ void max20340_notify_plc_in(void);
 void max20340_notify_plc_out(void);
 
 #define MESSAGE_MAX30240_SEND_LATER    2000    // (延时反馈数据)
+#ifdef MESSAGE_MAX30240_SEND_LATER
 static uint32 g_ms_senddata;                   // 数据必须在这个时间之前发送，否则对盒子来说已经超时，无意义
 static uint8 g_send_data[4];                   // 需要发送的数据
 void max20340_timer_send(int timeout);
+#endif
 
 typedef struct {
   uint16 uVersionLength;
@@ -708,10 +710,19 @@ static void recv_data_process_ear(bitserial_handle handle, uint8 *buf)
 }
 #endif
 
+#ifdef MAX20340_DEBUG_LOG_ERR_TIMES
+unsigned short data_err_num_ble=0;
+unsigned short data_right_num_ble=0;
+#endif
+
 void singlebus_itr_process(void)
 {
 #if TEST_ITR
     uint8 i;
+#endif
+#ifdef MAX20340_DEBUG_LOG_ERR_TIMES
+    static int err_times = 0;
+    static int right_times = 0;
 #endif
     uint8 value_a[0x13];
     bitserial_handle handle;
@@ -731,17 +742,20 @@ void singlebus_itr_process(void)
     if( (value_a[MX20340_REG_STA_IRQ]&0x1) ){
         if( ((value_a[MX20340_REG_STA1]&0x1c) == (5<<2)) ){
             //说明是插入动作,可能是芯片bug需要重写mask寄存器
+            online_dbg_record(ONLINE_DBG_INCASE_ITR);
             DEBUG_LOG("plc in 0x%x", value_a[MX20340_REG_PLC_IRQ]);
             if(0 == g_commuType){       // 非测试模式下去改变实际状态
                 max20340_notify_plc_in();
             }
         }else if( ((value_a[MX20340_REG_STA1]&0x1c) == (3<<2)) ){
             //说明是拔出动作,可能是芯片bug需要重写mask寄存器
+            online_dbg_record(ONLINE_DBG_OUTCASE_ITR);
             DEBUG_LOG("plc out 0x%x", value_a[MX20340_REG_PLC_IRQ]);
             if(0 == g_commuType) {       // 非测试模式下去改变实际状态
                 max20340_notify_plc_out();
             }
         }else{
+            online_dbg_record(ONLINE_DBG_ERR_STATUS_ITR);
             DEBUG_LOG("plc unknown in/out 0x%x", value_a[MX20340_REG_PLC_IRQ]);
         }
         //max20340WriteRegister(handle, MX20340_REG_STA_MASK, 0x2);
@@ -751,10 +765,23 @@ void singlebus_itr_process(void)
         //max20340WriteRegister(handle, MX20340_REG_PLC_MASK, 0xff);
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x08){//总线接收数据出错，不做回应，master会重发
         DEBUG_LOG("plcErr");
+#ifdef MAX20340_DEBUG_LOG_ERR_TIMES
+        err_times++;
+        data_err_num_ble = err_times;
+#endif
     }else if(value_a[MX20340_REG_PLC_IRQ] & 0x06){//总线接收到数据
 #ifdef MESSAGE_MAX30240_SEND_LATER
         max20340Disable(handle);
         handle = BITSERIAL_HANDLE_ERROR;
+#endif
+#ifdef MAX20340_DEBUG_LOG_ERR_TIMES
+        right_times++;
+        data_right_num_ble = right_times;
+        DEBUG_LOG("err num = %d, right num = %d", err_times, right_times);
+        if(right_times % 20 == 0){
+            online_dbg_record(ONLINE_DBG_20340_DATA_ERR_ITR);
+            online_dbg_record(ONLINE_DBG_20340_DATA_RIGHT_ITR);
+        }
 #endif
         if(appInitCompleted()){                    //没有初始化完成时，忽略接收到的数据处理
             recv_data_process_ear(handle, value_a);

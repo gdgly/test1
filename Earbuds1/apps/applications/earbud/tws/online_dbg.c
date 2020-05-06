@@ -101,9 +101,23 @@ static void wirteLog2File(online_dbg_t code)
     }
 }
 
-void online_dbg_record(online_dbg_t code) {
+#ifdef MAX20340_DEBUG_LOG_ERR_TIMES
+extern unsigned short data_err_num_ble;
+extern unsigned short data_right_num_ble;
+#endif
 
+void online_dbg_record(online_dbg_t code) {
     online_dbg_buf[record_idx++] = code;
+#ifdef MAX20340_DEBUG_LOG_ERR_TIMES
+    if(code == 0x36){
+        online_dbg_buf[record_idx++] = (data_err_num_ble >> 8) & 0xff;
+        online_dbg_buf[record_idx++] = (data_err_num_ble) & 0xff;
+    }
+    if(code == 0x37){
+        online_dbg_buf[record_idx++] = (data_right_num_ble >> 8) & 0xff;
+        online_dbg_buf[record_idx++] = (data_right_num_ble) & 0xff;
+    }
+#endif
     if (record_idx == trans_idx) trans_idx++;
 
     UartPuts2x("onLINE=", code, 0);
@@ -203,6 +217,21 @@ static void online_dbg_send_pkt(online_dbg_cmd cmd, uint8* data, uint16 length) 
 
     memcpy(packet.payload, data, length);
 
+//    if(cmd == 0x36 || cmd == 0x37){
+//        if(cmd == 0x36){
+//            packet.payload[10] = (data_err_num_ble >> 8) & 0xff;
+//            packet.payload[11] = (data_err_num_ble >> 8);
+//        }else{
+//            packet.payload[10] = (data_right_num_ble >> 8) & 0xff;
+//            packet.payload[11] = (data_right_num_ble >> 8);
+//        }
+//        packet.payload_len = length + 2;
+//        appGaiaSendPacket(GAIA_VENDOR_STAROT,
+//                          GAIA_COMMAND_STAROT_TEST_ONLINE_DBG, 0xfe, sizeof(packet), (uint8*)&packet);
+//    }else{
+//        appGaiaSendPacket(GAIA_VENDOR_STAROT,
+//                          GAIA_COMMAND_STAROT_TEST_ONLINE_DBG, 0xfe, sizeof(packet) - 2, (uint8*)&packet);
+//    }
     appGaiaSendPacket(GAIA_VENDOR_STAROT,
                       GAIA_COMMAND_STAROT_TEST_ONLINE_DBG, 0xfe, sizeof(packet), (uint8*)&packet);
 }

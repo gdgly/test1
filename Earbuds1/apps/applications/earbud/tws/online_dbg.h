@@ -216,6 +216,8 @@
 #define ONLINE_DBG_INCASE_ITR       (0x33)    /* in case itr */
 #define ONLINE_DBG_OUTCASE_ITR      (0x34)    /* out case itr */
 #define ONLINE_DBG_ERR_STATUS_ITR   (0x35)    /* inout case err itr */
+#define ONLINE_DBG_20340_DATA_ERR_ITR      (0x36)    /* 20340 data err num */
+#define ONLINE_DBG_20340_DATA_RIGHT_ITR   (0x37)    /* 20340 data right num */
 
 #define ONLINE_DEBUG_ACTIVE_DISCONNECT (0x3f)  /* active disconnect */
 #define ONLINE_DEBUG_HFP_CONNECT    (0x40)    /* hfp connect */
