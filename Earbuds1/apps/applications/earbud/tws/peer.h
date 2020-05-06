@@ -148,6 +148,7 @@ enum {
 
     AVRCP_PEER_CMD_SYNC_VERSION,
     AVRCP_PEER_CMD_SYNC_SN,
+    AVRCP_PEER_CMD_SYNC_8K,
     /// 在此次添加
     AVRCP_PEER_CMD_STAROT_END = 0X20,
 };
@@ -220,7 +221,15 @@ void appPeerSigTxSyncSNReq(Task task);
 bool appPeerSigTxSyncSNParse(uint8* payload);
 void appPeerSigTxSyncSNConfirm(Task task, peerSigStatus status);
 
+//////////////////////////////
+typedef struct {
+    uint16 set8k;
+    uint32 set8kTime;
+} Sync8kReq;
 
+void appPeerSigTx8kReq(Task task, Sync8kReq* sync8kReq);
+bool appPeerSigTx8kParse(uint8* payload);
+void appPeerSigTx8kConfirm(Task task, peerSigStatus status);
 // endregion
 
 #endif //EARBUDS1_PEER_H
