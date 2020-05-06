@@ -238,7 +238,7 @@ void box_send_test_cmd(uint8 *get_buf, uint8 *send_buf)
         return;
     }
 
-    if(get_buf[1] >= 0x6C && get_buf[1] <= 0x7F) {
+    if(get_buf[1] >= 0x6a && get_buf[1] <= 0x7F) {
         box_uc1460e_calc_cmd(get_buf, send_buf, Sn);
         return;
     }
@@ -412,6 +412,12 @@ static void box_uc1460e_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_
     FixPrmPtr prm = &gFixParam;
 
     switch(get_buf[1]) {
+    case 0x6A:
+        Ucs146e0_get_reg6(&(send_buf[2]));
+        break;
+    case 0x6B:
+        Ucs146e0_set_reg6(get_buf[2]);
+        break;
     case 0x6C:
         send_buf[2] = Ucs146e0_statcheck();
         break;

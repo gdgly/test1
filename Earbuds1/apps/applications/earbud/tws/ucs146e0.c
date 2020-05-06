@@ -56,7 +56,7 @@ static void Ucs146e0Disable(bitserial_handle handle)
 
 ucs146e0_str ucs146e0_init_array[] = {
     {0x03, 0x1c},
-    {0x06, 0x10},
+    {0x06, 0x30},
     {0x07, 0x04},
     {0x08, 0x04},
     {0x09, 0x07},
@@ -74,7 +74,7 @@ ucs146e0_str ucs146e0_init_array[] = {
 
 ucs146e0_str ucs146e0_get_auto_calvalue_init_array[] = {
     {0x03, 0x1c},
-    {0x06, 0x10},
+    {0x06, 0x30},
     {0x07, 0x04},
     {0x08, 0x04},
     {0x09, 0x07},
@@ -87,7 +87,7 @@ ucs146e0_str ucs146e0_get_auto_calvalue_init_array[] = {
 
 ucs146e0_str ucs146e0_cal_init_array[] = {
     {0x03, 0x1c},
-    {0x06, 0x10},
+    {0x06, 0x30},
     {0x07, 0x04},
     {0x08, 0x04},
     {0x09, 0x07},
@@ -261,6 +261,26 @@ int Ucs146e0Power(bool isOn)
     }
     Ucs146e0Disable(handle);
     DEBUG_LOG("Ucs146e0Power %d", isOn);
+    return ret;
+}
+
+int Ucs146e0_set_reg6(uint8 value)
+{
+    int ret;
+    bitserial_handle handle;
+    handle = Ucs146e0Enable();
+    ret = Ucs146e0WriteRegister(handle, 0x06, value);
+    Ucs146e0Disable(handle);
+    return ret;
+}
+
+int Ucs146e0_get_reg6(uint8 *value)
+{
+    int ret;
+    bitserial_handle handle;
+    handle = Ucs146e0Enable();
+    ret = Ucs146e0ReadRegister(handle, 0x06, value);
+    Ucs146e0Disable(handle);
     return ret;
 }
 

@@ -15,6 +15,8 @@ void Ucs146e0_init(void);
 int Ucs146e0_GetStatus(void);
 int Ucs146e0_statcheck(void);
 int Ucs146e0Power(bool isOn);
+int Ucs146e0_set_reg6(uint8 value);
+int Ucs146e0_get_reg6(uint8 *value);
 void Ucs146e0_get_crosstalk_init(void);//260ms后读取crosstalk值
 unsigned short Ucs146e0_get_crosstalk_calvalue(void);
 void Ucs146e0_get_ps_cal_init(unsigned short cal_value);//初始化完需200ms延时后读取ps值
