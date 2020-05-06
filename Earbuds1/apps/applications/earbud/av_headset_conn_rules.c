@@ -2831,6 +2831,10 @@ static ruleAction bleEnable(void) {
 
 static ruleAction bleDisable(void) {
 //    MessageCancelAll(appGetSmTask(), CONN_RULES_BLE_CONNECTION_UPDATE);
+    if (gattManagerDataIsCancelPending()) {
+        DEBUG_LOG("bleDisable gattManagerDataIsCancelPending is TRUE, so ignore");
+        return RULE_ACTION_IGNORE;
+    }
     bool st = FALSE;
     return RULE_ACTION_RUN_PARAM(st);
 }
