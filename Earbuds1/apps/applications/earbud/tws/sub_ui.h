@@ -139,6 +139,7 @@ typedef struct tagPROGRUNINFO {
     uint16         recStat:1;               // 当前是否正在录音
     uint16         apolloWakeup:1;          // 当前apollo是否启动0:未启动, 1:启动
     uint16         chargeStat:3;            // 当前充电状态 CHARGE_ST_XXX
+    uint16         set8kEnb:1;
 
     uint8          peerPlace:3;             // 对方耳机状态 Bit0:盒子中 Bit1：空中 Bit2：佩戴
     uint8          peerElectrity;           // 对方耳机电量 0...100    
@@ -161,7 +162,8 @@ typedef struct tagPROGRUNINFO {
     uint8          peerVer[DEV_HWSWVER_LEN];        // 对方耳机版本信息
     uint8          tempCurrentVer[DEV_SWVER_LEN];   // Gaia设置的临时当前耳机版本，当版本文件校验完毕之后更新系统的版本信息
     uint8          peerVerSyncStatus;               // 对方耳机版本信息同步状态
-    uint32         check_sum;                //盒子固件的校验吗
+    uint32         check_sum;                       // 盒子固件的校验吗
+    uint32         set8kModifyTime;                 // 设置8K修改时间
     bool           upgradeNeedReboot;               // 升级需要重启
     bool           canContinueUpgrade;              // 是否持续进入升级状态
     uint8          peerSnSyncStatus;                // SN同步状态

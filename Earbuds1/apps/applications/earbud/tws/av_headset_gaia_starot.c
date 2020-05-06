@@ -74,6 +74,8 @@ static void gaiaControlHfpMute(bool isMute);
 
 static void gaiaControlGetHfpMute(void);
 
+static void gaiaControlSet8k(GAIA_STAROT_IND_T *message);
+
 static void gaiaSetBondCode(GAIA_STAROT_IND_T *message);
 
 static void gaiaCheckBondCode(GAIA_STAROT_IND_T *message);
@@ -486,6 +488,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_CONTROL_GET_HFP_MUTE:
             gaiaControlGetHfpMute();
+            break;
+        case GAIA_COMMAND_STAROT_CONTROL_8K_ENB:
+            gaiaControlSet8k(message);
             break;
     }
     /// 助手52NN
@@ -1409,6 +1414,30 @@ static void gaiaControlGetHfpMute(void) {
         appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_CONTROL_GET_HFP_MUTE, GAIA_STATUS_SUCCESS, len, data);
         attrFree(head, data);
     }
+}
+
+static void gaiaControlSet8k(GAIA_STAROT_IND_T *message) {
+    Sync8kReq sync8kReq;
+    ProgRIPtr  progRun = appSubGetProgRun();
+    StarotAttr *pAttr = attrDecode(message->payload, message->payloadLen);
+    if (NULL == pAttr) {
+        return;
+    }
+    StarotAttr *head = pAttr;
+
+    while (NULL != pAttr) {
+        if (0X01 == pAttr->attr) {
+            progRun->set8kEnb =  pAttr->payload[0];
+        } else if (0X02 == pAttr->attr) {
+            memcpy((uint8*)(&(progRun->set8kModifyTime)), pAttr->payload, pAttr->len - 1);
+        }
+        pAttr = pAttr->next;
+    }
+    sync8kReq.set8k = progRun->set8kEnb;
+    sync8kReq.set8kTime = progRun->set8kModifyTime;
+    appPeerSigTx8kReq(appGetUiTask(), &sync8kReq);
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+    attrFree(head, NULL);
 }
 
 static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {

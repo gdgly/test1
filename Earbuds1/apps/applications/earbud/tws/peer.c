@@ -30,6 +30,10 @@ static const PeerUnityParseCenter peerUnityParseCenter[] = {
                 AVRCP_PEER_CMD_SYNC_SN, sizeof(SyncSnReq),
                 &appPeerSigTxSyncSNParse, &appPeerSigTxSyncSNConfirm
         },
+        {
+                AVRCP_PEER_CMD_SYNC_8K, sizeof(Sync8kReq),
+                &appPeerSigTx8kParse, &appPeerSigTx8kConfirm
+        },
         /// 在此之前添加新的数据
         {0XFFFF, 0X00, NULL, NULL}
 };
@@ -759,5 +763,24 @@ void appPeerSigTxSyncSNConfirm(Task task, peerSigStatus status) {
     }
 }
 
+//////////////////////////////
+void appPeerSigTx8kReq(Task task, Sync8kReq* sync8kReq) {
+    AVRCP_PEER_CMD_INTERNAL_UNITY_REQ* req =
+            PEER_MALLOC_UNITY_REQ(AVRCP_PEER_CMD_SYNC_8K, Sync8kReq, sync8kReq);
+    req->client_task = task;
+    PeerSendUnityReq(req);
+}
+
+bool appPeerSigTx8kParse(uint8* payload) {
+    ProgRIPtr  progRun = appSubGetProgRun();
+    Sync8kReq * sync8kReq = (Sync8kReq*)payload;
+    progRun->set8kEnb = sync8kReq->set8k;
+    progRun->set8kModifyTime = sync8kReq->set8kTime;
+    return TRUE;
+}
+
+void appPeerSigTx8kConfirm(Task task, peerSigStatus status) {
+    (void)task; (void)status;
+}
 
 // endregion
