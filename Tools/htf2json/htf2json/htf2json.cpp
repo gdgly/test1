@@ -30,7 +30,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	// write head
-	wrlen = sprintf_s(writebuf, "{\n  \"type\":\"нд╪Ч\",\n  \"info\":\n  [");
+	wrlen = sprintf_s(writebuf, "{\n  \"type\":\"dfile\",\n  \"info\":\n  [");
 	fwrite(writebuf, wrlen, 1, outfp);
 
 	// write item
