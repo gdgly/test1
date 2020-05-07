@@ -116,7 +116,7 @@ enum {CHARGE_ST_NONE=0, CHARGE_ST_CONNECT,
       CHARGE_ST_OK, CHARGE_ST_LOW,
       CHARGE_ST_FIN};
 typedef enum {POWER_MODE_IN_CASE=1, POWER_MODE_IN_CASE_OPEN,
-              POWER_MODE_OUT_CASE, POWER_MODE_IN_EAR}PowerSaveMode;    // powersave
+              POWER_MODE_OUT_CASE, POWER_MODE_IN_EAR, }PowerSaveMode;    // powersave
 
 enum {UI_CASE_CLOSE = 0, UI_CASE_OPEN = 1};
 // 系统运行中的一些动态数据

@@ -313,9 +313,7 @@ ruleEntry appConnRules[] =
 #endif
     RULE(RULE_EVENT_OUT_CASE,                   rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseAllowHandsetConnect,   CONN_RULES_ALLOW_HANDSET_CONNECT),
-#ifndef CONFIG_STAROT
     RULE(RULE_EVENT_OUT_CASE,                   ruleAutoHandsetPair,                CONN_RULES_HANDSET_PAIR),
-#endif
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseConnectPeer,           CONN_RULES_CONNECT_PEER),
     RULE_WITH_FLAGS(RULE_EVENT_OUT_CASE,        ruleOutOfCaseConnectHandset,        CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseAncTuning,             CONN_RULES_ANC_TUNING_STOP),
@@ -328,7 +326,7 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseAncTuning,                CONN_RULES_ANC_TUNING_START),
 #ifdef TWS_DEBUG
     RULE(RULE_EVENT_IN_CASE,                    ruleDisconnectGaia,                 CONN_RULES_DISCONNECT_GAIA),
-    RULE(RULE_EVENT_IN_CASE,                    ruleIdleHandsetPair,                CONN_RULES_HANDSET_PAIR),
+//    RULE(RULE_EVENT_IN_CASE,                    ruleIdleHandsetPair,                CONN_RULES_HANDSET_PAIR),
 #endif
 
     RULE(RULE_EVENT_OUT_EAR,                    rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
@@ -389,12 +387,12 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_HANDOVER_RECONNECT_AND_PLAY,ruleHandoverConnectHandsetAndPlay,  CONN_RULES_CONNECT_HANDSET),
 #ifdef TWS_DEBUG
     RULE(RULE_EVENT_CLEAR_PAIR_HEADSET,         ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
-    RULE(RULE_EVENT_CASE_OPEN,                  ruleIdleHandsetPair,                CONN_RULES_HANDSET_PAIR),
-    RULE(RULE_EVENT_CASE_OPEN,                  ruleCaseOpenEnterDfu,               CONN_RULES_ENTER_DFU),
+//    RULE(RULE_EVENT_CASE_OPEN,                  ruleIdleHandsetPair,                CONN_RULES_HANDSET_PAIR),
+//    RULE(RULE_EVENT_CASE_OPEN,                  ruleCaseOpenEnterDfu,               CONN_RULES_ENTER_DFU),
     /// 关闭充电盒时，触发的规则
 //    RULE(RULE_EVENT_CASE_CLOSE,                 ruleClearHandsetPair,               CONN_RULES_CLEAR_HANDSET_PAIR),
 //    RULE(RULE_EVENT_CASE_CLOSE,                 ruleCaseCloseNotAllowGaiaConnect,   CONN_RULES_REJECT_HANDSET_CONNECT), //盒盖关闭，不可连接
-    RULE(RULE_EVENT_CASE_CLOSE,                 ruleDisconnectHfpA2dpAvrcp,         CONN_RULES_DISCONNECT_HANDSET),
+//    RULE(RULE_EVENT_CASE_CLOSE,                 ruleDisconnectHfpA2dpAvrcp,         CONN_RULES_DISCONNECT_HANDSET),
 
    // RULE(RULE_EVENT_CASE_CLOSE,                 ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
 #endif

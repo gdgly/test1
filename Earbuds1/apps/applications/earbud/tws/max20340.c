@@ -2,6 +2,7 @@
 #ifdef HAVE_MAX20340
 
 #include "online_dbg.h"
+#include "sub_phy.h"
 
 #define CONFIG_CASE_IMAGE_FILE    /* 盒子固件使用文件保存 */
 
@@ -747,7 +748,8 @@ void singlebus_itr_process(void)
             DEBUG_LOG("plc in 0x%x", value_a[MX20340_REG_PLC_IRQ]);
             max20340_in_case_itr_status = TRUE;
             if(0 == g_commuType){       // 非测试模式下去改变实际状态
-                max20340_notify_plc_in();
+                subPhyExitAir();
+//                max20340_notify_plc_in();
             }
         }else if( ((value_a[MX20340_REG_STA1]&0x1c) == (3<<2)) ){
             //说明是拔出动作,可能是芯片bug需要重写mask寄存器
@@ -755,7 +757,8 @@ void singlebus_itr_process(void)
             DEBUG_LOG("plc out 0x%x", value_a[MX20340_REG_PLC_IRQ]);
             max20340_in_case_itr_status = FALSE;
             if(0 == g_commuType) {       // 非测试模式下去改变实际状态
-                max20340_notify_plc_out();
+                subPhyEnterAir();
+//                max20340_notify_plc_out();
             }
         }else{
             online_dbg_record(ONLINE_DBG_ERR_STATUS_ITR);
@@ -1180,32 +1183,31 @@ void max20340_notify_current_status(void) {
 
 void max20340_notify_plc_in(void) {
     DEBUG_LOG("max20340_notify_plc_in");
-    phyStateTaskData* phy_state = appGetPhyState();
-    MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT);
-    MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT, NULL, 50);
-    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
-    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
-    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_IN, NULL, 50);
-//    appChargeFromUi(TRUE);
+//    phyStateTaskData* phy_state = appGetPhyState();
+//    MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT);
+//    MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT, NULL, 50);
+//    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
+//    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
+//    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_IN, NULL, 50);
 }
 
 void max20340_notify_plc_out(void) {
 //    appChargeFromUi(FALSE);
     DEBUG_LOG("max20340_notify_plc_out");
-    if (FALSE == appGetCaseIsOpen()) {
-        if(_ear_en_dormant) {
-            _ear_en_dormant = 0;
-            MessageSendLater(appGetUiTask(), APP_UI_ENTER_DORMANT, NULL, D_SEC(1));
-        }
-        DEBUG_LOG("max20340_notify_plc_out, now case is close, so don't send message to application");
-        return;
-    }
-    phyStateTaskData* phy_state = appGetPhyState();
-    MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT);
-    MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT, NULL, 50);
-    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
-    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
-    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL, 50);
+//    if (FALSE == appGetCaseIsOpen()) {
+//        if(_ear_en_dormant) {
+//            _ear_en_dormant = 0;
+//            MessageSendLater(appGetUiTask(), APP_UI_ENTER_DORMANT, NULL, D_SEC(1));
+//        }
+//        DEBUG_LOG("max20340_notify_plc_out, now case is close, so don't send message to application");
+//        return;
+//    }
+//    phyStateTaskData* phy_state = appGetPhyState();
+//    MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT);
+//    MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT, NULL, 50);
+//    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
+//    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
+//    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL, 50);
 }
 
 #endif

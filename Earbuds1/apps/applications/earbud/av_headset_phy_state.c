@@ -57,7 +57,7 @@ static void appPhyStateEnterOutOfEar(void)
     DEBUG_LOG("appPhyStateEnterOutOfEar");
     appPhyStateMsgSendStateChangedInd(PHY_STATE_OUT_OF_EAR);
 #ifdef CONFIG_STAROT
-    appUiPowerSave(POWER_MODE_OUT_CASE);
+    appUiPowerSave(POWER_MODE_IN_CASE_OPEN);
 #endif
 }
 

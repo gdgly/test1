@@ -18,6 +18,7 @@
 #include "peer.h"
 #include "param.h"
 #include "online_dbg.h"
+#include "sub_phy.h"
 
 extern void appKymeraRecordStart(void);
 extern void appKymeraRecordStop(void);
@@ -739,8 +740,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CASE_OPEN:
         DEBUG_LOG("plc call case open");
         online_dbg_record(ONLINE_DBG_CASE_OPEN);
-        appConnRulesResetEvent(RULE_EVENT_CASE_OPEN);
-        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_OPEN);
+        subPhyExitCase();
+//        appConnRulesResetEvent(RULE_EVENT_CASE_OPEN);
+//        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_OPEN);
         break;
     case APP_CASE_CLOSE:
         DEBUG_LOG("plc call case close");
@@ -758,7 +760,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 #endif
         break;
     case APP_CASE_CLOSE_LATER:
-        /// focus (plc in / in case)
+        subPhyEnterCase();
+            /// focus (plc in / in case)
         appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
         break;
@@ -811,39 +814,17 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
         online_dbg_record(ONLINE_DBG_IN_CASE);
 #ifdef TWS_DEBUG
-       // if (appSmIsOutOfEar()) {
-//        phyStateTaskData* phy_state = appGetPhyState();
-//        MessageCancelAll(&phy_state->task, CHARGER_MESSAGE_ATTACHED);
-//        MessageSendLater(&phy_state->task, CHARGER_MESSAGE_ATTACHED, NULL, 50);
         if (appGaiaIsConnect()) {
             DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
             appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
         }
-//        gProgRunInfo.realInCase = TRUE;
-       // }
 #endif
-//        appUiPowerSave(POWER_MODE_IN_CASE);
     }
         break;
 
     case APP_ATTACH_PLC_OUT:  {
         DEBUG_LOG("parse APP_ATTACH_PLC_OUT event");
         online_dbg_record(ONLINE_DBG_OUT_CASE);
-#ifdef TWS_DEBUG
-       // if (appSmIsInCase()) {
-//        phyStateTaskData* phy_state = appGetPhyState();
-//        MessageCancelAll(&phy_state->task, CHARGER_MESSAGE_DETACHED);
-//        MessageSend(&phy_state->task, CHARGER_MESSAGE_DETACHED, NULL);
-//        gProgRunInfo.realInCase = FALSE;
-       // }
-#endif
-        /// 从充电盒中取出，默认充电盒之后是关闭的，放入的时候，会收到case状态，打开的，会使这个事件失效
-//        progRun->caseLidOpen = 0;
-//#ifdef DEVELOPE_BOARD
-//        appUiPowerSave(POWER_MODE_IN_EAR);
-//#else
-//        appUiPowerSave(POWER_MODE_OUT_CASE);
-//#endif
     }
         break;
 
@@ -1545,6 +1526,7 @@ void appUiPowerSaveSync(void)
         lis25Power(1);               // 骨麦
         apolloWakeupPower(0);        // APO2
         break;
+
     case POWER_MODE_IN_EAR:
         if(EM20168_GetStatus() == 0){
             EM20168Power(1);
