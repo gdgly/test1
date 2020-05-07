@@ -491,7 +491,8 @@ bool appProximityClientRegister(Task task)
             MessageSend(task, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY, NULL);
             break;
         case proximity_state_unknown:
-            MessageSend(task, PROXIMITY_MESSAGE_IN_PROXIMITY, NULL);
+            MessageSend(task, PROXIMITY_MESSAGE_NOT_IN_PROXIMITY, NULL);
+//            MessageSend(task, PROXIMITY_MESSAGE_IN_PROXIMITY, NULL);
             break;
         default:
             /* The client will be informed after the first interrupt */

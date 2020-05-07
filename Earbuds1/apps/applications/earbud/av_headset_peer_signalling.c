@@ -609,6 +609,8 @@ static void appPeerSigHandleInternalStartupRequest(PEER_SIG_INTERNAL_STARTUP_REQ
                appPeerSigGetState(),
                req->peer_addr.nap, req->peer_addr.uap, req->peer_addr.lap);
 
+    MessageCancelAll(appGetUiTask(), APP_PEER_CONNECT_FAIL_FLAG);
+
     switch (appPeerSigGetState())
     {
         case PEER_SIG_STATE_CONNECTING_ACL:
@@ -651,7 +653,6 @@ static void appPeerSigHandleInternalStartupRequest(PEER_SIG_INTERNAL_STARTUP_REQ
                     MessageSendConditionally(&peer_sig->task, PEER_SIG_INTERNAL_STARTUP_REQ, message, appConManagerCreateAcl(&req->peer_addr));
 
                     /* Wait in 'Connecting ACL' state for ACL to open */
-                    MessageCancelAll(appGetUiTask(), APP_PEER_CONNECT_FAIL_FLAG);
                     appPeerSigSetState(PEER_SIG_STATE_CONNECTING_ACL);
                     return;
                 }
