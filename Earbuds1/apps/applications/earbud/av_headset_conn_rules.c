@@ -309,7 +309,7 @@ ruleEntry appConnRules[] =
     /*! \{
         Rules that are run on physical state changes */
 #ifdef CONFIG_STAROT
-    RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
+//    RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
 #endif
     RULE(RULE_EVENT_OUT_CASE,                   rulePeerSync,                       CONN_RULES_SEND_PEER_SYNC),
     RULE(RULE_EVENT_OUT_CASE,                   ruleOutOfCaseAllowHandsetConnect,   CONN_RULES_ALLOW_HANDSET_CONNECT),
@@ -359,8 +359,8 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseScoTransferToHandset,     CONN_RULES_SCO_TRANSFER_TO_HANDSET),
 #ifdef CONFIG_STAROT
     // 考虑另一只耳机进出充电盒，对当前耳机dfu的影响
-    RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
-    RULE(RULE_EVENT_PEER_OUT_CASE,              ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
+//    RULE(RULE_EVENT_PEER_IN_CASE,               ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
+//    RULE(RULE_EVENT_PEER_OUT_CASE,              ruleOutOfCaseExitDfu,               CONN_RULES_EXIT_DFU),
 #endif
 
 #ifdef STAROT_NOT_RELEASE_HFP_AUDIO
@@ -370,7 +370,7 @@ ruleEntry appConnRules[] =
 
     RULE_WITH_FLAGS(RULE_EVENT_PEER_HANDSET_DISCONNECTED,  ruleSyncConnectHandset,  CONN_RULES_CONNECT_HANDSET, RULE_FLAG_PROGRESS_MATTERS),
 #ifdef CONFIG_STAROT
-    RULE(RULE_EVENT_PEER_HANDSET_DISCONNECTED,  ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
+//    RULE(RULE_EVENT_PEER_HANDSET_DISCONNECTED,  ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
 #endif
     RULE(RULE_EVENT_PEER_HANDSET_CONNECTED,     ruleBothConnectedDisconnect,        CONN_RULES_DISCONNECT_HANDSET),
 
@@ -515,8 +515,19 @@ static ruleAction ruleAutoHandsetPair(void)
 
     if (appPeerSyncIsPeerPairing())
     {
+#ifdef CONFIG_STAROT
+        if (appConfigIsLeft()) {
+            RULE_LOG("ruleAutoHandsetPair, complete, peer is already paired with handset");
+            return RULE_ACTION_DEFER;
+        } else {
+            RULE_LOG("ruleAutoHandsetPair, run, peer is already paired with handset, but we are right, "
+                     "still run, wait next sync kill peer pairing operation");
+            return RULE_ACTION_RUN;
+        }
+#else
         RULE_LOG("ruleAutoHandsetPair, defer, peer is already in pairing mode");
         return RULE_ACTION_DEFER;
+#endif
     }
 
     if (appSmIsPairing())
@@ -538,16 +549,17 @@ static ruleAction ruleAutoHandsetPair(void)
     }
     else
     {
-        /* Both out of case, neither pairing or paired.  Left wins, right loses */
+        /* Both out of case, neither pairing or paired.  Left wins, right loses . 修改:业务需要，右边优先级高于左边 */
         if (appConfigIsLeft())
         {
-            RULE_LOG("ruleAutoHandsetPair, run, no paired handset, we're out of case, peer is out of case, we're left earbud");
-            return RULE_ACTION_RUN;
+            RULE_LOG("ruleAutoHandsetPair, ignore, no paired handset, we're out of case, peer is out of case, but we're left earbud");
+            return RULE_ACTION_IGNORE;
         }
         else
         {
-            RULE_LOG("ruleAutoHandsetPair, ignore, no paired handset, we're out of case, peer is out of case, but we're right earbud");
-            return RULE_ACTION_IGNORE;
+            RULE_LOG("ruleAutoHandsetPair, run, no paired handset, we're out of case, peer is out of case, we're right earbud");
+            return RULE_ACTION_RUN;
+
         }
     }
 }
@@ -3478,12 +3490,10 @@ ruleAction ruleClearHandsetPair(void) {
 
     if (appSmIsPairing()) {
         if (appConfigIsLeft()) {
-            return RULE_ACTION_IGNORE;
+            /// 左右停止配对
+            return RULE_ACTION_RUN;
         } else {
-//            if (TRUE == appPeerSyncIsPeerPairing() || TRUE == appPeerSyncHasPeerHandsetPairing()) {
-//                /// 停止配对流程
-                return RULE_ACTION_RUN;
-//            }
+            return RULE_ACTION_IGNORE;
         }
     }
 

@@ -213,6 +213,8 @@
     <file path="../../tws/public.h"/>
     <file path="../../tws/rwfile.c"/>
     <file path="../../tws/rwfile.h"/>
+    <file path="../../tws/sub_phy.c"/>
+    <file path="../../tws/sub_phy.h"/>
     <file path="../../tws/sub_ui.c"/>
     <file path="../../tws/sub_ui.h"/>
     <file path="../../tws/sw_watchdog.c"/>

@@ -1397,15 +1397,15 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
     if(keyDown >= 0) {
         progRun->caseKeyDown = (1 == keyDown) ? 1 : 0;
         if (appConfigIsLeft()) {
-            /// 如果当前是左边耳机，发送配对信息
-            DEBUG_LOG("call left pair headset");
-            MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
-        } else {
             /// 如果当前是右边耳机，查看左耳机是否在，如果不在，执行配对
+            DEBUG_LOG("call right pair headset progRun->peerPlace=%d", progRun->peerPlace);
             if (progRun->peerPlace == 0) {
-                DEBUG_LOG("call right pair headset");
                 MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
             }
+        } else {
+            /// 如果当前是左边耳机，发送配对信息
+            DEBUG_LOG("call right headset");
+            MessageSend(&appGetUi()->task, APP_PAIR_HEADSET, 0);
         }
     }
 
