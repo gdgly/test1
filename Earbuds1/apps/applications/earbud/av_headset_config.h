@@ -493,7 +493,7 @@
 #define appConfigBatteryFullyCharged()      (4200)
 #define appConfigBatteryVoltageOk()         (3600)
 #define appConfigBatteryVoltageLow()        (3300)
-#define appConfigBatteryVoltageCritical()   (3000)
+#define appConfigBatteryVoltageCritical()   (3200)
 //!@}
 
 //!@{ @name Battery temperature limits in degrees Celsius.
