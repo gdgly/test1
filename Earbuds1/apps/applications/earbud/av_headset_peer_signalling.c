@@ -790,6 +790,38 @@ static bool appPeerSigHandlePairHandsetCommand(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T
     }
 }
 
+extern bool max20340_in_case_itr_status;
+static void appPeer_process_debug_sync_max20340(uint8* message)
+{
+    uint8 value=0; uint8 itr_status=0;
+    switch (message[1]){
+        case APPPEERSYNC_DEBUG_MSG_CMD_MAX20340_SYNC_START://开始同步指令，应该是从机收到此指令
+            max20340_read_sta1_reg(&value);
+            appPeerSyncSend_max20340_debug_return_reg_value(value, max20340_in_case_itr_status);
+            break;
+        case APPPEERSYNC_DEBUG_MSG_CMD_MAX20340_SYNC_RETURN_REG_VALUE://返回寄存器值，应该是主机收到此指令
+            max20340_read_sta1_reg(&value);
+            itr_status = max20340_in_case_itr_status; itr_status = itr_status<<1;
+            itr_status += message[3];
+            online_dbg_record_sync_20340_reg_value(value, message[2], itr_status);
+            break;
+        default:
+            DEBUG_LOG("appPeer_process_debug_sync_max20340 Unkcomand:%d", message[1]);
+            break;
+    }
+}
+
+static void appPeer_process_debug_sync_msg(uint8* message)
+{
+    switch (message[0]){
+        case APPPEERSYNC_DEBUG_MSG_CMD_MAX20340://20340 调试消息
+            appPeer_process_debug_sync_max20340(message);
+            break;
+        default:
+            DEBUG_LOG("appPeer_process_debug_sync_msg Unkcomand:%d", message[0]);
+            break;
+    }
+}
 /*! \brief Handle incoming message channel transmission.
  */
 static bool appPeerSigHandleMsgChannelRx(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind)
@@ -805,6 +837,10 @@ static bool appPeerSigHandleMsgChannelRx(AV_AVRCP_VENDOR_PASSTHROUGH_IND_T *ind)
 
         channel = appPeerSigReadUint32(&ind->payload[AVRCP_PEER_CMD_MSG_CHANNEL_ID_OFFSET]);
         msg_size = appPeerSigReadUint16(&ind->payload[AVRCP_PEER_CMD_MSG_CHANNEL_DATA_LENGTH_OFFSET]);
+
+        if(PEER_SIG_MSG_CHANNEL_PEER_OD_SYNC == channel){
+           appPeer_process_debug_sync_msg( &(ind->payload[AVRCP_PEER_CMD_MSG_CHANNEL_DATA_OFFSET]) );
+        }
 
         /* make sure the message contains the same amount of data that the length
          * field in the header specifies */

@@ -218,6 +218,7 @@
 #define ONLINE_DBG_ERR_STATUS_ITR   (0x35)    /* inout case err itr */
 #define ONLINE_DBG_20340_DATA_ERR_ITR      (0x36)    /* 20340 data err num */
 #define ONLINE_DBG_20340_DATA_RIGHT_ITR   (0x37)    /* 20340 data right num */
+#define ONLINE_DBG_20340_REG_VALUE   (0x38)    /* 20340 reg value */
 
 #define ONLINE_DEBUG_ACTIVE_DISCONNECT (0x3f)  /* active disconnect */
 #define ONLINE_DEBUG_HFP_CONNECT    (0x40)    /* hfp connect */
@@ -294,5 +295,6 @@ void online_dbg_record(online_dbg_t code);
 uint8 get_online_dbg_state(void);
 void online_dbg_handler(Task appTask, MessageId id, Message msg);
 void online_dbg_cmd_handler(online_dbg_cmd cmd);
+void online_dbg_record_sync_20340_reg_value(uint8 self_reg, uint8 other_reg, uint8 itr_status);
 
 #endif // ONLINE_DBG_H

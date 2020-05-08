@@ -578,6 +578,7 @@ static void box_tap_calc_cmd(uint8 *get_buf, uint8 *send_buf, uint8* static_buf)
 }
 
 #include "max20340.h"
+#include "online_dbg.h"
 // 手机下发命令
 // payload[3]:command, payload[2/1/0]:cmd param
 int16 gaiaTestProduct(uint8_t *payload)
@@ -660,6 +661,10 @@ int16 gaiaTestProduct(uint8_t *payload)
                 OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
             else if(3 == tmp2)       // enter dormant
                 MessageSendLater(appGetUiTask(), APP_UI_ENTER_DORMANT, NULL, D_SEC(1));
+            break;
+
+        case 0x14:       // power
+            appPeerSyncSend_max20340_debug_start();
             break;
 
         default:

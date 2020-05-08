@@ -133,6 +133,25 @@ void online_dbg_record(online_dbg_t code) {
 
 }
 
+void online_dbg_record_sync_20340_reg_value(uint8 self_reg, uint8 other_reg, uint8 itr_status) {
+    online_dbg_buf[record_idx++] = ONLINE_DBG_20340_REG_VALUE;
+    online_dbg_buf[record_idx++] = self_reg;
+    online_dbg_buf[record_idx++] = other_reg;
+    online_dbg_buf[record_idx++] = itr_status;
+    if (record_idx == trans_idx) trans_idx++;
+
+    UartPuts2x("onLINE=", ONLINE_DBG_20340_REG_VALUE, 0);
+    DEBUG_LOG("online dbg record :%02X", ONLINE_DBG_20340_REG_VALUE);
+
+    if ((ONLINE_DBG_STATE_RT_PACKET == online_dbg_state)
+            && (record_idx - trans_idx > SEND_PKT_LENGTH)) {
+        MessageSend(onlineDbgTask, ONLINE_DBG_MSG_TRANS_RT_ONLINE_DBG, NULL);
+    }
+
+    if (WRITE2LOGFILE)
+        wirteLog2File(ONLINE_DBG_20340_REG_VALUE);
+}
+
 void online_dbg_cmd_handler(online_dbg_cmd cmd) {
     if ((ONLINE_DBG_STATE_IDLE == online_dbg_state)
             || ((ONLINE_DBG_STATE_RT_PACKET == online_dbg_state) && (ONLINE_DBG_APP_REQ_RT_ONLINE_DBG_STOP == cmd))) {
