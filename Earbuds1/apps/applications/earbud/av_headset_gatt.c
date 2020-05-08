@@ -347,11 +347,11 @@ static void appGattHandleBattServerReadLevelInd(const GATT_BATTERY_SERVER_READ_L
 
     if (ind->battery_server == &instance->battery_server_left)
     {
-        battery_percent = appBatteryConvertLevelToPercentage(battery_level_left);
+        battery_percent = battery_level_left;
     }
     else
     {
-        battery_percent = appBatteryConvertLevelToPercentage(battery_level_right);
+        battery_percent = battery_level_right;
     }
 
     DEBUG_LOG("    Return: level=[%u]\n", battery_percent);
