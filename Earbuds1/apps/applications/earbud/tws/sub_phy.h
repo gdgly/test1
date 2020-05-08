@@ -2,6 +2,25 @@
 #ifndef APPS_SUB_PHY_H
 #define APPS_SUB_PHY_H
 
+enum subPhyPosition {
+    SUB_PHY_POSITION_CASE_CLOSE,
+    SUB_PHY_POSITION_CASE_OPEN,
+    SUB_PHY_POSITION_IN_AIR,
+    SUB_PHY_POSITION_IN_EAR
+}  ;
+
+typedef struct {
+    enum subPhyPosition  position;
+} subPhyTaskData;
+
+void subPhyTaskInit(void);
+
+subPhyTaskData* subPhyGetTaskData(void);
+
+bool subPhyIsCanNotifyCaseInfo(void);
+
+void subPhySetPosition( enum subPhyPosition pos);
+
 /*
  * fun: [关闭充电盒]，耳机进入in_case状态
  */

@@ -191,6 +191,10 @@ extern void qact_tune_for_mic(void);
 extern void batteryStatusNotifyInit(void);
 #endif
 
+#ifdef CONFIG_STAROT
+extern void subPhyTaskInit(void);
+#endif
+
 /*! \brief Table of initialisation functions */
 static const appInitTableEntry appInitTable[] =
 {
@@ -200,6 +204,9 @@ static const appInitTableEntry appInitTable[] =
     {appPioInit,            0, NULL},
     {appUiInit,             0, NULL},
     {appLicenseCheck,       0, NULL},
+#ifdef CONFIG_STAROT
+    {subPhyTaskInit, 0, NULL},
+#endif
 #ifdef INCLUDE_TEMPERATURE
     {appTemperatureInit,    TEMPERATURE_INIT_CFM, NULL},
 #endif

@@ -12,6 +12,7 @@
 #include "av_headset_log.h"
 
 #include <panic.h>
+#include <tws/sub_phy.h>
 
 /*! Message creation macro for phyiscal state module. */
 #define MAKE_PHYSTATE_MESSAGE(TYPE) TYPE##_T *message = PanicUnlessNew(TYPE##_T);
@@ -535,6 +536,7 @@ void appPhyStateInEarEvent(void)
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_IN_EAR_EVENT);
     MessageSend(&phy_state->task, PHY_STATE_INTERNAL_IN_EAR_EVENT, NULL);
+    subPhyEnterEar();
     appPhyStateClearLockBit(PHY_STATE_LOCK_EAR);
 }
 
@@ -546,6 +548,7 @@ void appPhyStateOutOfEarEvent(void)
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_EAR_EVENT);
     MessageSend(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_EAR_EVENT, NULL);
     appPhyStateClearLockBit(PHY_STATE_LOCK_EAR);
+    subPhyExitEar();
 }
 
 /*! \brief Handle notification that Earbud is now moving */
