@@ -1752,18 +1752,30 @@ bool appUICaseIsOpen(void) {
 }
 
 uint8 appUIGetCurrentPosition(void) {
-    phyState state = appPhyStateGetState();
+    enum subPhyPosition  state = subPhyGetVirtualPosition();
     switch(state) {
-        case PHY_STATE_IN_CASE:
+        case SUB_PHY_POSITION_IN_CASE_CLOSE:
+        case SUB_PHY_POSITION_IN_CASE_OPEN:
             return 0X01 << 2;
-        case PHY_STATE_OUT_OF_EAR:
-        case PHY_STATE_OUT_OF_EAR_AT_REST:
+        case SUB_PHY_POSITION_IN_AIR:
             return  0X01 << 1;
-        case PHY_STATE_IN_EAR:
+        case SUB_PHY_POSITION_IN_EAR:
             return  0X01 << 0;
         case PHY_STATE_UNKNOWN:
             return  0X00;
     }
+//    phyState state = appPhyStateGetState();
+//    switch(state) {
+//        case PHY_STATE_IN_CASE:
+//            return 0X01 << 2;
+//        case PHY_STATE_OUT_OF_EAR:
+//        case PHY_STATE_OUT_OF_EAR_AT_REST:
+//            return  0X01 << 1;
+//        case PHY_STATE_IN_EAR:
+//            return  0X01 << 0;
+//        case PHY_STATE_UNKNOWN:
+//            return  0X00;
+//    }
     return 0X00;
 }
 
@@ -1772,15 +1784,28 @@ uint8 appUIGetPeerPosition(void) {
         return 0X00;
     }
 
-    if(appPeerSyncIsPeerInCase() == TRUE)
-        return 0X01 << 2;
+    enum subPhyPosition  state = appPeerSyncGetPeerVirtualPosition();
+    switch(state) {
+        case SUB_PHY_POSITION_IN_CASE_CLOSE:
+        case SUB_PHY_POSITION_IN_CASE_OPEN:
+            return 0X01 << 2;
+        case SUB_PHY_POSITION_IN_AIR:
+            return  0X01 << 1;
+        case SUB_PHY_POSITION_IN_EAR:
+            return  0X01 << 0;
+        case PHY_STATE_UNKNOWN:
+            return  0X00;
+    }
 
-    if(appPeerSyncIsPeerInCase() == FALSE && appPeerSyncIsPeerInEar() == FALSE)
-        return 0X01 << 1;
-
-    if(appPeerSyncIsPeerInEar() == TRUE)
-        return  0X01 << 0;
-
+//    if(appPeerSyncIsPeerInCase() == TRUE)
+//        return 0X01 << 2;
+//
+//    if(appPeerSyncIsPeerInCase() == FALSE && appPeerSyncIsPeerInEar() == FALSE)
+//        return 0X01 << 1;
+//
+//    if(appPeerSyncIsPeerInEar() == TRUE)
+//        return  0X01 << 0;
+//
     return 0X00;
 }
 

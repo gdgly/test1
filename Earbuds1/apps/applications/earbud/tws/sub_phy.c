@@ -15,14 +15,19 @@ subPhyTaskData* subPhyGetTaskData(void) {
     return &theSubPhyTaskData;
 }
 
-void subPhySetPosition( enum subPhyPosition pos) {
+void subPhySetVirtualPosition(enum subPhyPosition pos) {
     subPhyTaskData* this = subPhyGetTaskData();
-    this->position = pos;
+    this->virtualPosition = pos;
 }
 
 bool subPhyIsCanNotifyCaseInfo(void) {
     subPhyTaskData* this = subPhyGetTaskData();
-    return (this->position == SUB_PHY_POSITION_CASE_CLOSE || this->position == SUB_PHY_POSITION_CASE_OPEN);
+    return (this->virtualPosition == SUB_PHY_POSITION_IN_CASE_CLOSE || this->virtualPosition == SUB_PHY_POSITION_IN_CASE_OPEN);
+}
+
+enum subPhyPosition subPhyGetVirtualPosition(void) {
+    subPhyTaskData* this = subPhyGetTaskData();
+    return this->virtualPosition;
 }
 
 void subPhyEnterCase(void) {
@@ -37,7 +42,7 @@ void subPhyEnterCase(void) {
 
     appUiPowerSave(POWER_MODE_IN_CASE);
 
-    subPhySetPosition(SUB_PHY_POSITION_CASE_CLOSE);
+    subPhySetVirtualPosition(SUB_PHY_POSITION_IN_CASE_CLOSE);
 }
 
 void subPhyExitCase(void) {
@@ -52,7 +57,7 @@ void subPhyExitCase(void) {
     MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL, 50);
 
     appUiPowerSave(POWER_MODE_IN_CASE_OPEN);
-    subPhySetPosition(SUB_PHY_POSITION_CASE_OPEN);
+    subPhySetVirtualPosition(SUB_PHY_POSITION_IN_CASE_OPEN);
 }
 
 void subPhyEnterAir(void) {
@@ -69,24 +74,31 @@ void subPhyEnterAir(void) {
     }
 
     appUiPowerSave(POWER_MODE_OUT_CASE);
-    subPhySetPosition(SUB_PHY_POSITION_IN_AIR);
+    subPhySetVirtualPosition(SUB_PHY_POSITION_IN_AIR);
+
+    appPeerSyncSend(FALSE);
+    MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
 
 void subPhyExitAir(void) {
     DEBUG_LOG("call subPhyExitAir");
     appUiPowerSave(POWER_MODE_IN_CASE_OPEN);
-    subPhySetPosition(SUB_PHY_POSITION_CASE_OPEN);
+    subPhySetVirtualPosition(SUB_PHY_POSITION_IN_CASE_OPEN);
+    appPeerSyncSend(FALSE);
+    MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
 }
 
 void subPhyEnterEar(void) {
     DEBUG_LOG("call subPhyEnterEar");
     appUiPowerSave(POWER_MODE_IN_EAR);
 
-    subPhySetPosition(SUB_PHY_POSITION_IN_EAR);
+    subPhySetVirtualPosition(SUB_PHY_POSITION_IN_EAR);
 }
 
 void subPhyExitEar(void) {
     DEBUG_LOG("call subPhyExitEar");
     appUiPowerSave(POWER_MODE_OUT_CASE);
-    subPhySetPosition(SUB_PHY_POSITION_IN_AIR);
+    subPhySetVirtualPosition(SUB_PHY_POSITION_IN_AIR);
 }
+
+

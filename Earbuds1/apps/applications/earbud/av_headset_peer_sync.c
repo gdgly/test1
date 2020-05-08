@@ -17,6 +17,7 @@
 
 #include <bdaddr.h>
 #include <panic.h>
+#include "tws/sub_phy.h"
 
 static uint16 appPeerSyncReadUint16(const uint8 *data);
 static uint24 appPeerSyncReadUint24(const uint8 *data);
@@ -48,7 +49,11 @@ static void appPeerSyncWriteUint24(uint8 *data, uint24 val);
 /*! Defines used to establish offsets of components in the peer sync message
  *  sent to the peer. */
 /*!@{ */
+#ifdef CONFIG_STAROT
+#define PEER_SYNC_MSG_SIZE                          20         /*!< Message length 保留4个，后期使用 */
+#else
 #define PEER_SYNC_MSG_SIZE                          15         /*!< Message length */
+#endif
 #define PEER_SYNC_MSG_BATT_OFFSET                   0
 #define PEER_SYNC_MSG_ADDR_TYPE_OFFSET              2
 #define PEER_SYNC_MSG_ADDR_OFFSET_LAP               3
@@ -59,6 +64,9 @@ static void appPeerSyncWriteUint24(uint8 *data, uint24 val);
 #define PEER_SYNC_MSG_STATE2_OFFSET                 12
 #define PEER_SYNC_MSG_TX_SEQNUM_OFFSET              13
 #define PEER_SYNC_MSG_RX_SEQNUM_OFFSET              14
+#ifdef CONFIG_STAROT
+#define PEER_SYNC_MSG_VIRTUAL_POSITION_OFFSET       15   /// 用于提供信息给APP，做位置、电量展示、升级位置判断
+#endif
 /*!@} */
 
 /*! Defines for boolean elements of the state components in the peer sync message. */
@@ -92,6 +100,9 @@ static void appPeerSyncWriteUint24(uint8 *data, uint24 val);
 #define PEER_SYNC_GET_TWS_VERSION(x)    (appPeerSyncReadUint16(&(x[PEER_SYNC_MSG_TWS_VERSION_OFFSET])))
 #define PEER_SYNC_GET_TX_SEQNUM(x)      (x[PEER_SYNC_MSG_TX_SEQNUM_OFFSET])
 #define PEER_SYNC_GET_RX_SEQNUM(x)      (x[PEER_SYNC_MSG_RX_SEQNUM_OFFSET])
+#ifdef CONFIG_STAROT
+#define PEER_SYNC_GET_VIRTUAL_POSITION(x)  (x[PEER_SYNC_MSG_VIRTUAL_POSITION_OFFSET])
+#endif
 /*!@} */
 
 /*! Macros to get components from a peer sync raw message. */
@@ -106,6 +117,9 @@ static void appPeerSyncWriteUint24(uint8 *data, uint24 val);
 #define PEER_SYNC_SET_TWS_VERSION(x,val)    (appPeerSyncWriteUint16(&(x[PEER_SYNC_MSG_TWS_VERSION_OFFSET]),val))
 #define PEER_SYNC_SET_TX_SEQNUM(x,seq)      (x[PEER_SYNC_MSG_TX_SEQNUM_OFFSET] = seq)
 #define PEER_SYNC_SET_RX_SEQNUM(x,seq)      (x[PEER_SYNC_MSG_RX_SEQNUM_OFFSET] = seq)
+#ifdef CONFIG_STAROT
+#define PEER_SYNC_SET_VIRTUAL_POSITION(x,val)      (x[PEER_SYNC_MSG_VIRTUAL_POSITION_OFFSET] = val)
+#endif endif
 /*!@} */
 
 /*! Macros to get boolean values from state and pairing components. */
@@ -401,6 +415,17 @@ static void appPeerSyncUpdateBleConnection(bool ble)
         appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
     }
 }
+#ifdef CONFIG_STAROT
+static void appPeerSyncUpdateVirtualPosition(uint8 position) {
+    DEBUG_LOG("appPeerSyncUpdateVirtualPosition");
+    peerSyncTaskData *ps = appGetPeerSync();
+    uint8 currentPeerVirtualPosition = ps->peer_virtual_position;
+    if (position != currentPeerVirtualPosition) {
+        MessageSend(appGetUiTask(), APP_NOTIFY_DEVICE_CON_POS, NULL);
+    }
+    ps->peer_virtual_position = position;
+}
+#endif
 /*
  *
  * Update the peer device ANC state based on receieved ANC state of peer device
@@ -611,6 +636,7 @@ void appPeerSyncSend(bool response)
         PEER_SYNC_SET_STATE2(message, state2);
         PEER_SYNC_SET_TX_SEQNUM(message, ps->peer_sync_tx_seqnum);
         PEER_SYNC_SET_RX_SEQNUM(message, ps->peer_sync_rx_seqnum);
+        PEER_SYNC_SET_VIRTUAL_POSITION(message, (uint8)subPhyGetVirtualPosition());
 
         /* dump contents to debug */
         appPeerSyncTxMsgDebug(message);
@@ -739,6 +765,7 @@ static void appPeerSyncHandlePeerSigMsgChannelTxInd(const PEER_SIG_MSG_CHANNEL_R
     ps->peer_sco_active          = PEER_SYNC_STATE_IS_SCO_ACTIVE(ind->msg);
     ps->peer_dfu_in_progress     = PEER_SYNC_STATE_IS_DFU_IN_PROGRESS(ind->msg);
 
+
     // 调整与appPeerSyncUpdate的先后关系，来了RX消息，就可以执行Update的规则
     /* RX sequence number from peer indicates it has seen our peer sync TX
      * this is a response sync matching the latest TX we have sent */
@@ -757,7 +784,9 @@ static void appPeerSyncHandlePeerSigMsgChannelTxInd(const PEER_SIG_MSG_CHANNEL_R
     appPeerSyncUpdateAdvertising(PEER_SYNC_STATE_IS_ADVERTISING(ind->msg));
     appPeerSyncUpdateBleConnection(PEER_SYNC_STATE_IS_BLE_CONNECTED(ind->msg));
     appPeerSyncUpdateAncState(PEER_SYNC_STATE_IS_ANC_ENABLED(ind->msg));
-
+#ifdef CONFIG_STAROT
+    appPeerSyncUpdateVirtualPosition(PEER_SYNC_GET_VIRTUAL_POSITION(ind->msg));
+#endif
 
     was_supported = appDeviceSetProfileConnectedAndSupportedFlagsFromPeer(
                         &ps->peer_handset_addr,
@@ -1069,3 +1098,13 @@ bool appPeerSyncPeerDfuInProgress(void)
     else
         return FALSE;
 }
+
+#ifdef CONFIG_STAROT
+uint8 appPeerSyncGetPeerVirtualPosition(void) {
+    peerSyncTaskData* ps = appGetPeerSync();
+    if (appDeviceIsPeerConnected())
+        return ps->peer_virtual_position;
+    else
+        return SUB_PHY_POSITION_NONE;
+}
+#endif

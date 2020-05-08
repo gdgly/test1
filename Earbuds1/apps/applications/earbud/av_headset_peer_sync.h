@@ -79,7 +79,9 @@ typedef struct
     bool peer_advertising:1;            /*!< The peer earbud is BLE advertising */
     bool peer_ble_connected:1;          /*!< The peer earbud has a BLE connection */
     bool peer_anc_enabled:1;            /*!< The peer earbud has ANC enabled */
-
+#ifdef CONFIG_STAROT
+    uint8 peer_virtual_position;          /*! 记录虚拟位置信息 */
+#endif
 } peerSyncTaskData;
 
 /*! Enumeration of messages which peer sync module can send. */
@@ -167,6 +169,9 @@ extern bool appPeerSyncIsPeerPairing(void);
     \return TRUE if paired, otherwise FALSE. */
 extern bool appPeerSyncHasPeerHandsetPairing(void);
 
+#ifdef CONFIG_STAROT
+extern uint8 appPeerSyncGetPeerVirtualPosition(void);
+#endif
 
 /*! \brief Query if the peer is BLE advertising.
 
