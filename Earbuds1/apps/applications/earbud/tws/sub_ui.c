@@ -762,8 +762,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CASE_CLOSE_LATER:
         subPhyEnterCase();
             /// focus (plc in / in case)
-        appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
-        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
+//        appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
+//        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
         break;
 
     case APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT:
@@ -1384,12 +1384,13 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
                 DEBUG_LOG("call case open");
                 MessageCancelAll(&appGetUi()->task, APP_CASE_OPEN);
                 MessageCancelAll(&appGetUi()->task, APP_CASE_CLOSE);
+                /// 充电盒打开，通知左右耳机，需要时间
                 MessageSendLater(&appGetUi()->task, APP_CASE_OPEN, NULL, 50);
             } else {
                 DEBUG_LOG("call case close");
                 MessageCancelAll(&appGetUi()->task, APP_CASE_OPEN);
                 MessageCancelAll(&appGetUi()->task, APP_CASE_CLOSE);
-                MessageSendLater(&appGetUi()->task, APP_CASE_CLOSE, NULL, 50);
+                MessageSendLater(&appGetUi()->task, APP_CASE_CLOSE, NULL, 1000);
             }
         }
     }

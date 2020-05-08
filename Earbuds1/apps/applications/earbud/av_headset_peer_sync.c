@@ -209,7 +209,7 @@ static void appPeerSyncUpdateA2dpConnected(bool connected)
     /* update the state with latest from peer */
     ps->peer_a2dp_connected = connected;
 
-#ifdef CONFIG_STAROT
+#ifndef CONFIG_STAROT
     if (current_a2dp_state != connected) {
         DEBUG_LOGF("appPeerSyncUpdateA2dpConnected Prev %u New %u", current_a2dp_state, connected);
         if (TRUE == connected) {
@@ -251,7 +251,7 @@ static void appPeerSyncUpdateAvrcpConnected(bool connected)
     bool current_avrcp_state = ps->peer_avrcp_connected;
 
     ps->peer_avrcp_connected = connected;
-#ifdef CONFIG_STAROT
+#ifndef CONFIG_STAROT
     if (current_avrcp_state != connected) {
         DEBUG_LOGF("appPeerSyncUpdateAvrcpConnected Prev %u New %u", current_avrcp_state, connected);
         if (TRUE == connected) {
@@ -296,7 +296,7 @@ static void appPeerSyncUpdateHfpConnected(bool connected)
      * may check this state */
     ps->peer_hfp_connected = connected;
 
-#ifdef CONFIG_STAROT
+#ifndef CONFIG_STAROT
     if (current_hfp_state != connected) {
         DEBUG_LOGF("appPeerSyncUpdateHfpConnected Prev %u New %u", current_hfp_state, connected);
         if (TRUE == connected) {

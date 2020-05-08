@@ -746,8 +746,18 @@ static ruleAction ruleConnectHandsetStandard(ruleConnectReason reason)
 
                 if (reason == RULE_CONNECT_OUT_OF_CASE /*|| reason == RULE_CONNECT_PEER_OUT_OF_CASE*/)
                 {
+#ifdef CONFIG_STAROT
+                    if (ParamUsingSingle()) {
+                        RULE_LOG("ruleConnectHandsetStandard, always sig mode, auto connect");
+                        return RULE_ACTION_RUN;
+                    } else {
+                        RULE_LOG("ruleConnectHandsetStandard, always right connect, auto connect");
+                        return appConfigIsLeft() ? RULE_ACTION_IGNORE : RULE_ACTION_RUN;
+                    }
+#else
                     RULE_LOG("ruleConnectHandsetStandard, calling ruleConnectBatteryVoltage() as standard handset and both out of case but peer not connected");
                     return ruleConnectBatteryVoltage(reason);
+#endif
                 }
                 else
                 {
