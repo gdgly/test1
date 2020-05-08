@@ -2260,4 +2260,16 @@ bool appUIPeerIsCharger(void) {
     return (ps->peer_battery_level & 0X8000) > 0;
 }
 
+bool appUITakeHaveMessage(Task task, uint16 uid) {
+    struct AppMessage **p = &vm_message_queue;
+
+    while(*p) {
+        struct AppMessage *a = *p;
+        if(a->task == task && a->id == id) {
+            return TRUE;
+        }
+        p = &(*p)->next;
+    }
+    return FALSE;
+}
 // endregion

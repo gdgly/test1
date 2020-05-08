@@ -11,6 +11,7 @@
 #include "rwfile.h"
 #include "online_dbg.h"
 #include <ps.h>
+#include "tws/sub_phy.h"
 
 uint16 bufferSendUnit = 120;
 const uint16 AndroidSendUnit = 120;
@@ -98,6 +99,8 @@ extern int16 gaiaTestProduct(uint8_t *payload);
 
 // region 升级
 
+static void appGaiaHandlerPrepareDfu(GAIA_STAROT_IND_T *message);
+static void appGaiaHandlerPeerPrepareDfuCfm(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerEnterDfu(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message);
 static void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message);
@@ -532,6 +535,12 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
 
     /// 升级
     switch (message->command) {
+        case GAIA_COMMAND_STAROT_UPGRADE_PREPARE_DFU:
+            appGaiaHandlerPrepareDfu(message);
+            break;
+        case STAROT_APP_NOTIFY_PEER_UPGRADE_PREPARE_CFM:
+            appGaiaHandlerPeerPrepareDfuCfm(message);
+            break;
         case GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU:
             appGaiaHandlerEnterDfu(message);
             break;
@@ -1749,12 +1758,21 @@ static bool appGaiaIsCanEnterDfu(void) {
             return FALSE;
         }
     } else {
-        if (!(appSmIsInCase() && appPeerSyncIsPeerInCase())) {
+//        if (!(appSmIsInCase() && appPeerSyncIsPeerInCase()))
+        if (!(subPhyVirtualStateIsCanConnectCase(subPhyGetVirtualPosition()) &&
+              subPhyVirtualStateIsCanConnectCase(appPeerSyncGetPeerVirtualPosition())))
+        {
             return FALSE;
         }
     }
 
     return TRUE;
+}
+
+void appGaiaHandlerPrepareDfu(GAIA_STAROT_IND_T *message) {
+    UNUSED(message);
+    /// 通知左右耳机，进行同步，如果在空中，等待进入case，断开连接，
+    appPeerSigTxUpgradePrepareReq(appGetUiTask());
 }
 
 /// 用户临时记录准备升级的版本，如果左右耳机都同意升级，则使用
@@ -1798,6 +1816,17 @@ static void appGaiaHandlerPeerEnterCfm(GAIA_STAROT_IND_T *message) {
     appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_UPGRADE_ENTER_DFU,
             (TRUE == st) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE, 0, NULL);
 }
+
+static void appGaiaHandlerPeerPrepareDfuCfm(GAIA_STAROT_IND_T *message) {
+    bool st = message->payload[0];
+    if (TRUE == st) {
+        /// 准备检查连接
+        appPeerSigPrepareEnterDfuDo();
+    }
+    appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_UPGRADE_PREPARE_DFU,
+                        (TRUE == st) ? GAIA_STATUS_SUCCESS : GAIA_STATUS_INCORRECT_STATE, 0, NULL);
+}
+
 
 void appGaiaHandlerExitDfu(GAIA_STAROT_IND_T *message) {
     DEBUG_LOG("appGaiaHandlerExitDfu");

@@ -74,6 +74,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT 2128 // 空中连接超时，佩戴上，需要出发连接手机
 #define APP_PAIR_HANDSET_SUCCESS_TIMEOUT 2129 // 蓝牙配对成功，运行连接，2020状态下，运行连接，并不断开
 
+#define APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT 2130  // gaia/peer -> ui 在这个时间内，可以进入DFU
+
 struct UI_APP_UPGRADE_COMMIT_STATUS_T {
     bool status;   // true:commit ;false:revert
 };
@@ -311,6 +313,7 @@ bool appUICurrentIsCharger(void);
  */
 bool appUIPeerIsCharger(void);
 
+bool appUITakeHaveMessage(Task task, uint16 uid);
 // endregion
 
 #endif // SUB_UI_H

@@ -22,7 +22,7 @@ void subPhySetVirtualPosition(enum subPhyPosition pos) {
 
 bool subPhyIsCanNotifyCaseInfo(void) {
     subPhyTaskData* this = subPhyGetTaskData();
-    return (this->virtualPosition == SUB_PHY_POSITION_IN_CASE_CLOSE || this->virtualPosition == SUB_PHY_POSITION_IN_CASE_OPEN);
+    return subPhyVirtualStateIsCanConnectCase(this->virtualPosition);
 }
 
 enum subPhyPosition subPhyGetVirtualPosition(void) {
@@ -99,6 +99,10 @@ void subPhyExitEar(void) {
     DEBUG_LOG("call subPhyExitEar");
     appUiPowerSave(POWER_MODE_OUT_CASE);
     subPhySetVirtualPosition(SUB_PHY_POSITION_IN_AIR);
+}
+
+bool subPhyVirtualStateIsCanConnectCase(uint8 status) {
+    return (status == SUB_PHY_POSITION_IN_CASE_CLOSE || status == SUB_PHY_POSITION_IN_CASE_OPEN);
 }
 
 

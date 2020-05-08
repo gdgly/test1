@@ -149,6 +149,8 @@ enum {
     AVRCP_PEER_CMD_SYNC_VERSION,
     AVRCP_PEER_CMD_SYNC_SN,
     AVRCP_PEER_CMD_SYNC_8K,
+    AVRCP_PEER_CMD_UPGRADE_PREPARE,  /// 准备升级
+
     /// 在此次添加
     AVRCP_PEER_CMD_STAROT_END = 0X20,
 };
@@ -172,6 +174,15 @@ void appPeerSigTxUpgradeCheckVersionConfirm(Task task, peerSigStatus status);
 void appPeerSigTxUpgradeEnterReq(Task task);
 bool appPeerSigTxUpgradeEnterParse(uint8* payload);
 void appPeerSigTxUpgradeEnterConfirm(Task task, peerSigStatus status);
+
+// endregion
+
+// region 通知Peer，app希望设备在断开经典蓝牙之后，进入DFU状态
+
+void appPeerSigTxUpgradePrepareReq(Task task);
+bool appPeerSigTxUpgradePrepareParse(uint8* payload);
+void appPeerSigTxUpgradePrepareConfirm(Task task, peerSigStatus status);
+void appPeerSigPrepareEnterDfuDo(void);
 
 // endregion
 

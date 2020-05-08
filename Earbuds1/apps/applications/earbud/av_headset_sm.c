@@ -1432,6 +1432,14 @@ static void appSmHandleConnRulesExitDfu(void)
 //    }
     appConnRulesSetRuleComplete(CONN_RULES_EXIT_DFU);
 }
+
+static void appSmHandleConnRulesDisconnectEnterDfu(void)
+{
+    DEBUG_LOG("appSmHandleConnRulesDisconnectEnterDfu");
+//    appSmInitiateLinkDisconnection(SM_DISCONNECT_ALL, 0, POST_DISCONNECT_ACTION_NONE);
+    appSmEnterDfuMode();
+    appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_ENTER_DFU);
+}
 #endif
 
 static void appSmHandleConnRulesAllowHandsetConnect(void)
@@ -2678,6 +2686,10 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 #ifdef CONFIG_STAROT
         case CONN_RULES_EXIT_DFU:
             appSmHandleConnRulesExitDfu();
+            break;
+
+        case CONN_RULES_DISCONNECT_ENTER_DFU:
+            appSmHandleConnRulesDisconnectEnterDfu();
             break;
 #endif
         case CONN_RULES_ALLOW_HANDSET_CONNECT:

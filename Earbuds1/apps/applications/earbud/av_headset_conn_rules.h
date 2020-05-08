@@ -124,6 +124,7 @@ enum    av_headset_conn_rules_messages
     /* 当充电盒关闭时，需要让设备断开hfp/a2dp/avrcp的连接，配对的时候，是连接的 */
     CONN_RULES_DISCONNECT_HFP_AD2P_AVRCP,
     CONN_RULES_CONNECT_IN_DFU,
+    CONN_RULES_DISCONNECT_ENTER_DFU,
     /*! Any rules with RULE_FLAG_PROGRESS_MATTERS are no longer in progress. */
     CONN_RULES_NOP,
 };
@@ -302,6 +303,7 @@ typedef enum
 #define RULE_EVENT_UPGRADE                       (1ULL << 58)    /*!<  */
 #define RULE_EVENT_HFP_REQUEST_SCO_AUDIO         (1ULL << 59)    /*!< HFP主动请求音频 */
 #define RULE_EVENT_SCO_FORCE_SELECT_MIC          (1ULL << 60)    /*!< 强制选择mic */
+#define RULE_EVENT_UPGRADE_PREPARE               (1ULL << 61)    /*!<  */
 
 #define RULE_EVENT_ALL_EVENTS_MASK               (0xFFFFFFFFFFFFFFFFULL)
 

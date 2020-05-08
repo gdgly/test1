@@ -18,6 +18,7 @@
 #include <panic.h>
 #include <system_clock.h>
 #include <upgrade.h>
+#include "tws/sub_phy.h"
 
 #pragma unitsuppress Unused
 
@@ -192,6 +193,7 @@ DEFINE_RULE(ruleAllowGaiaConnect);
 DEFINE_RULE(ruleAllRun);
 DEFINE_RULE(ruleNotifyStatus);
 DEFINE_RULE(ruleDisconnectHfpA2dpAvrcp);
+DEFINE_RULE(ruleUpgradePrepare);
 #endif
 DEFINE_RULE(ruleCheckGaiaIsNeedDisconnection);
 DEFINE_RULE(ruleDisconnectBTNeedEnterDfu);
@@ -269,9 +271,9 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_HANDSET_A2DP_DISCONNECTED,  ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
     RULE(RULE_EVENT_HANDSET_AVRCP_DISCONNECTED, ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
     RULE(RULE_EVENT_HANDSET_HFP_DISCONNECTED,   ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
-    RULE(RULE_EVENT_HANDSET_A2DP_DISCONNECTED,  ruleDisconnectBTNeedEnterDfu, CONN_RULES_ENTER_DFU),
-    RULE(RULE_EVENT_HANDSET_AVRCP_DISCONNECTED, ruleDisconnectBTNeedEnterDfu, CONN_RULES_ENTER_DFU),
-    RULE(RULE_EVENT_HANDSET_HFP_DISCONNECTED,   ruleDisconnectBTNeedEnterDfu, CONN_RULES_ENTER_DFU),
+//    RULE(RULE_EVENT_HANDSET_A2DP_DISCONNECTED,  ruleDisconnectBTNeedEnterDfu, CONN_RULES_ENTER_DFU),
+//    RULE(RULE_EVENT_HANDSET_AVRCP_DISCONNECTED, ruleDisconnectBTNeedEnterDfu, CONN_RULES_ENTER_DFU),
+//    RULE(RULE_EVENT_HANDSET_HFP_DISCONNECTED,   ruleDisconnectBTNeedEnterDfu, CONN_RULES_ENTER_DFU),
 #endif
 
     /*! \{
@@ -322,7 +324,8 @@ ruleEntry appConnRules[] =
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectHandset,        CONN_RULES_DISCONNECT_HANDSET),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseDisconnectPeer,           CONN_RULES_DISCONNECT_PEER),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseRejectHandsetConnect,     CONN_RULES_REJECT_HANDSET_CONNECT),
-    RULE(RULE_EVENT_IN_CASE,                    ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
+    /// 临时不使用
+    //RULE(RULE_EVENT_IN_CASE,                    ruleInCaseEnterDfu,                 CONN_RULES_ENTER_DFU),
     RULE(RULE_EVENT_IN_CASE,                    ruleInCaseAncTuning,                CONN_RULES_ANC_TUNING_START),
 #ifdef TWS_DEBUG
     RULE(RULE_EVENT_IN_CASE,                    ruleDisconnectGaia,                 CONN_RULES_DISCONNECT_GAIA),
@@ -398,6 +401,7 @@ ruleEntry appConnRules[] =
 #endif
     RULE(RULE_EVENT_CHECK_GAIA_CONNECTION,      ruleCheckGaiaIsNeedDisconnection,   CONN_RULES_DISCONNECT_GAIA),
     RULE(RULE_EVENT_UPGRADE,                    ruleAllowGaiaConnect,               CONN_RULES_ALLOW_HANDSET_CONNECT),
+    RULE(RULE_EVENT_UPGRADE_PREPARE,            ruleUpgradePrepare,                 CONN_RULES_DISCONNECT_ENTER_DFU),
 
     /// 通话处于active时，需要请求HFP音频 | 现在业务上电话全部转发到耳机，不在需要该规则
 //    RULE(RULE_EVENT_HFP_REQUEST_SCO_AUDIO,      ruleInEarScoTransferToEarbud,       CONN_RULES_SCO_TRANSFER_TO_EARBUD),
@@ -3739,6 +3743,31 @@ static ruleAction ruleDisconnectHfpA2dpAvrcp(void) {
         return RULE_ACTION_RUN;
     }
     return RULE_ACTION_COMPLETE;
+}
+
+static ruleAction ruleUpgradePrepare(void) {
+    DEBUG_LOG("ruleUpgradePrepare");
+
+    if (ParamUsingSingle()) {
+        if (subPhyVirtualStateIsCanConnectCase(subPhyGetVirtualPosition())) {
+            DEBUG_LOG("ruleUpgradePrepare sig mode, can connect case, so run");
+            return RULE_ACTION_RUN;
+        }
+    } else {
+        if (subPhyVirtualStateIsCanConnectCase(subPhyGetVirtualPosition()) &&
+              subPhyVirtualStateIsCanConnectCase(appPeerSyncGetPeerVirtualPosition()))  {
+            DEBUG_LOG("ruleUpgradePrepare double mode, all can connect case, so run");
+            return RULE_ACTION_RUN;
+        }
+    }
+    /// 查看是否有定时消息，用于判断是否发生超时
+    if (appUITakeHaveMessage(appGetUiTask(), APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT)) {
+        DEBUG_LOG("ruleUpgradePrepare have APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT, so defer");
+        return RULE_ACTION_DEFER;
+    } else {
+        DEBUG_LOG("ruleUpgradePrepare not have APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT, so defer");
+        return RULE_ACTION_IGNORE;
+    }
 }
 
 #ifdef STAROT_SOME_MIN_AFTER_IN_EAR_CONNECT_PHONE

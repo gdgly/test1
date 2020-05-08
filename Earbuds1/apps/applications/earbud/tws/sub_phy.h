@@ -18,10 +18,20 @@ void subPhyTaskInit(void);
 
 subPhyTaskData* subPhyGetTaskData(void);
 
+/*
+ * function: 是否可以广播有效的充电盒信息
+ *  依据：是否能和充电盒通讯
+ */
 bool subPhyIsCanNotifyCaseInfo(void);
 
+/*
+ * function: 获取虚拟位置
+ */
 enum subPhyPosition subPhyGetVirtualPosition(void);
 
+/*
+ * function: 设置虚拟位置
+ */
 void subPhySetVirtualPosition(enum subPhyPosition pos);
 
 /*
@@ -53,5 +63,11 @@ void subPhyEnterEar(void);
  * fun: 耳机从空中[放入充电盒]
  */
 void subPhyExitEar(void);
+
+// region 工具方法
+
+bool subPhyVirtualStateIsCanConnectCase(uint8 status);
+
+// endregion
 
 #endif //APPS_SUB_PHY_H

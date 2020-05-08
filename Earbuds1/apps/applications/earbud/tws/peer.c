@@ -34,6 +34,10 @@ static const PeerUnityParseCenter peerUnityParseCenter[] = {
                 AVRCP_PEER_CMD_SYNC_8K, sizeof(Sync8kReq),
                 &appPeerSigTx8kParse, &appPeerSigTx8kConfirm
         },
+        {
+                AVRCP_PEER_CMD_UPGRADE_PREPARE, 0,
+                appPeerSigTxUpgradePrepareParse, appPeerSigTxUpgradePrepareConfirm
+        },
         /// 在此之前添加新的数据
         {0XFFFF, 0X00, NULL, NULL}
 };
@@ -781,6 +785,49 @@ bool appPeerSigTx8kParse(uint8* payload) {
 
 void appPeerSigTx8kConfirm(Task task, peerSigStatus status) {
     (void)task; (void)status;
+}
+
+// endregion
+
+
+// region 通知Peer，app希望设备在断开经典蓝牙之后，进入DFU状态
+
+static void internalSendStarotAppPrepareDfuCfm(bool status) {
+    GAIA_STAROT_IND_T *starot = PanicUnlessNew(GAIA_STAROT_IND_T);
+    starot->command = STAROT_APP_NOTIFY_PEER_UPGRADE_PREPARE_CFM;
+    starot->payloadLen = 1;
+    starot->payload[0] = status;
+    MessageSend(appGetGaiaTask(), GAIA_STAROT_COMMAND_IND, starot);
+}
+
+void appPeerSigTxUpgradePrepareReq(Task task) {
+    if (ParamUsingSingle()) {
+        internalSendStarotAppPrepareDfuCfm(TRUE);
+        return;
+    } else {
+        AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *req = PEER_MALLOC_UNITY_REQ_NODATA(AVRCP_PEER_CMD_UPGRADE_PREPARE);
+        req->client_task = task;
+        PeerSendUnityReq(req);
+    }
+}
+
+bool appPeerSigTxUpgradePrepareParse(uint8* payload) {
+    UNUSED(payload);
+    DEBUG_LOG("parse appPeerSigTxUpgradePrepareParse");
+    /// 通过规则去处理
+    appPeerSigPrepareEnterDfuDo();
+    return TRUE;
+}
+
+void appPeerSigTxUpgradePrepareConfirm(Task task, peerSigStatus status) {
+    UNUSED(task);
+    DEBUG_LOG("confirm appPeerSigTxUpgradePrepareConfirm");
+    internalSendStarotAppPrepareDfuCfm(peerSigStatusSuccess == status ? TRUE : FALSE);
+}
+
+void appPeerSigPrepareEnterDfuDo(void) {
+    MessageSendLater(appGetUiTask(), APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT, NULL, D_SEC(300));
+    appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_UPGRADE_PREPARE);
 }
 
 // endregion
