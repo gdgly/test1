@@ -219,9 +219,11 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
                 else if (appDeviceIsPeer(bd_addr))
                 {
 #ifdef CONFIG_STAROT_VOLSYNC
-                    peer_vol = TRUE;
-                    appScoFwdSetVolume(150, volume);
-#else
+                    // 如果可以同步设置就跳过，否则还是使用原来的方式去设置
+                    if(appScoFwdSetVolume(150, volume) == 0)
+                        peer_vol = TRUE;
+                    else
+#endif
                     /* Send new volume to peer, which could be master or slave */
                     if (appDeviceIsHandsetAvrcpConnected())
                     {
@@ -233,7 +235,6 @@ void appAvVolumeSet(uint8 volume, avInstanceTaskData *theOtherInst)
                         DEBUG_LOGF("appAvVolumeSet, notify volume %u to master %p", volume, theInst);
                         appAvAvrcpVolumeNotification(theInst, volume);
                     }
-#endif
                 }
                 theInst->avrcp.volume = volume;
             }
