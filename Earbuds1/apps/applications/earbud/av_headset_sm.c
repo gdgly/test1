@@ -116,6 +116,11 @@ static appState appSmCalcCoreState(void)
 static void appSmSetCoreState(void)
 {
     appState state = appSmCalcCoreState();
+#ifdef CONFIG_STAROT
+    if (appUIGetCanEnterDfu() && ((state & APP_STATE_OUT_OF_CASE_IDLE) > 0)) {
+        state = APP_STATE_IN_CASE_DFU;
+    }
+#endif
     DEBUG_LOG("appSmCalcCoreState is %04X, appSetState is %04X\n", state, appGetState());
     if (state != appGetState())
         appSetState(state);
@@ -593,8 +598,8 @@ static void appEnterInCase(void)
 
     /* Run rules for in case event */
     appConnRulesResetEvent(RULE_EVENT_OUT_CASE);
-    appConnRulesResetEvent(RULE_EVENT_IN_CASE);
-    appConnRulesResetEvent(RULE_EVENT_PEER_HANDSET_DISCONNECTED);
+//    appConnRulesResetEvent(RULE_EVENT_IN_CASE);
+//    appConnRulesResetEvent(RULE_EVENT_PEER_HANDSET_DISCONNECTED);
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_IN_CASE);
 #ifdef CONFIG_STAROT
     /// 理由：从耳中取出耳机，5min之后，如果之前再播放音乐，会设置定时器
@@ -1437,6 +1442,8 @@ static void appSmHandleConnRulesDisconnectEnterDfu(void)
 {
     DEBUG_LOG("appSmHandleConnRulesDisconnectEnterDfu");
 //    appSmInitiateLinkDisconnection(SM_DISCONNECT_ALL, 0, POST_DISCONNECT_ACTION_NONE);
+    //注意：如果经典蓝牙是连接的，需要先断开。断开进入APP_STATE_XXXXXX_DISCONNECTING，在进入DFU模式
+    MessageCancelAll(appGetUiTask(), APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT);
     appSmEnterDfuMode();
     appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_ENTER_DFU);
 }

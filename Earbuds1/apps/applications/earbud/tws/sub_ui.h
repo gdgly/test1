@@ -169,6 +169,7 @@ typedef struct tagPROGRUNINFO {
     uint8          peerSnSyncStatus;                // SN同步状态
     uint8          peerSn[DEV_SN_LEN];              // 另一只耳机SN信息
     bool           needReset;                       // 是否需要重启
+    bool           canEnterDfu;                     // 是否可以进入DFU
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;
 void appSubUIInit(void);
@@ -286,6 +287,8 @@ void appUIConvertTempVersionToMemory(void);
 bool appUICanContinueUpgrade(void);
 /// 取消发送升级状态的定时器
 void appUICancelAllUpgradeTime(void);
+void appUISetCanEnterDfu(bool st);
+bool appUIGetCanEnterDfu(void);
 
 // region SN同步
 
@@ -313,7 +316,6 @@ bool appUICurrentIsCharger(void);
  */
 bool appUIPeerIsCharger(void);
 
-bool appUITakeHaveMessage(Task task, uint16 uid);
 // endregion
 
 #endif // SUB_UI_H

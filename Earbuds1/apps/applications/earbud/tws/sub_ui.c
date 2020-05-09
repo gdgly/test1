@@ -962,6 +962,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         }
         break;
 
+    case APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT:
+        DEBUG_LOG("parse APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT");
+        appUISetCanEnterDfu(FALSE);
+        break;
+
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
@@ -2162,7 +2167,15 @@ void appUICancelAllUpgradeTime(void) {
     MessageCancelAll(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE);
 }
 
+void appUISetCanEnterDfu(bool st) {
+    DEBUG_LOG("appUISetCanEnterDfu");
+    gProgRunInfo.canEnterDfu = st;
+}
 
+bool appUIGetCanEnterDfu(void) {
+    DEBUG_LOG("appUIGetCanEnterDfu");
+    return gProgRunInfo.canEnterDfu;
+}
 
 static void appUIUpgradeNotifyCommitStatusInit(UI_APP_UPGRADE_COMMIT_STATUS* message) {
     MessageSendLater(appGetUiTask(), APP_UPGRADE_NOTIFY_COMMIT_TIMEOUT_GRADE, NULL, D_SEC(5 * 60));
@@ -2260,16 +2273,4 @@ bool appUIPeerIsCharger(void) {
     return (ps->peer_battery_level & 0X8000) > 0;
 }
 
-bool appUITakeHaveMessage(Task task, uint16 uid) {
-    struct AppMessage **p = &vm_message_queue;
-
-    while(*p) {
-        struct AppMessage *a = *p;
-        if(a->task == task && a->id == id) {
-            return TRUE;
-        }
-        p = &(*p)->next;
-    }
-    return FALSE;
-}
 // endregion

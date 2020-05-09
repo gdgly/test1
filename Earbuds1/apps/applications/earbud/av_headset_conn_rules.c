@@ -589,7 +589,8 @@ static ruleAction rulePeerSync(void)
 //    }
 //#endif
 
-    if (appDeviceGetPeerBdAddr(NULL) && !appSmIsInDfuMode())
+//    if (appDeviceGetPeerBdAddr(NULL) && !appSmIsInDfuMode())
+    if (appDeviceGetPeerBdAddr(NULL))
     {
         RULE_LOGF("rulePeerSync, run (state x%x)",appGetState());
         return RULE_ACTION_RUN;
@@ -1810,13 +1811,14 @@ static bool handsetDisconnectAllowed(void)
 static ruleAction ruleInCaseDisconnectHandset(void)
 {
 #ifdef CONFIG_STAROT
-    bdaddr handsetAddr;
-    bool deviceIsConnect = appDeviceIsHandsetConnected();
-    bool linkIsConnect = appDeviceGetHandsetBdAddr(&handsetAddr) && appConManagerHaveAnyLink(&handsetAddr);
-    bool protocolIsConnect =(appDeviceIsHandsetA2dpConnected() ||
-            appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected());
-
-    if (appSmIsInCase() && (deviceIsConnect || linkIsConnect || protocolIsConnect))
+//    bdaddr handsetAddr;
+//    bool deviceIsConnect = appDeviceIsHandsetConnected();
+//    bool linkIsConnect = appDeviceGetHandsetBdAddr(&handsetAddr) && appConManagerHaveAnyLink(&handsetAddr);
+//    bool protocolIsConnect =(appDeviceIsHandsetA2dpConnected() ||
+//            appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected());
+//
+//    if (appSmIsInCase() && (deviceIsConnect || linkIsConnect || protocolIsConnect))
+    if ((appSmIsInCase() || (appUIGetCanEnterDfu() && subPhyIsCanNotifyCaseInfo())) && appDeviceIsHandsetConnected())
 #else
     if (appSmIsInCase() && handsetDisconnectAllowed())
 #endif
@@ -2053,9 +2055,14 @@ static ruleAction ruleBothConnectedDisconnect(void)
 */
 static ruleAction ruleInCaseDisconnectPeer(void)
 {
+#ifdef CONFIG_STAROT
+    if ((appSmIsInCase() || (appUIGetCanEnterDfu() && subPhyIsCanNotifyCaseInfo())) &&
+        (appDeviceIsPeerA2dpConnected() || appDeviceIsPeerAvrcpConnectedForAv() || appDeviceIsPeerScoFwdConnected()))
+#else
     if (appSmIsInCase() && (appDeviceIsPeerA2dpConnected() ||
                             appDeviceIsPeerAvrcpConnectedForAv() ||
                             appDeviceIsPeerScoFwdConnected()))
+#endif
     {
         if (appScoFwdIsSending())
         {
@@ -2801,26 +2808,26 @@ static ruleAction ruleHandoverConnectHandsetAndPlay(void)
 //    return RULE_ACTION_RUN_PARAM(connectable);
 //}
 
-static bool bleBattery(bool left) {
-    uint16 self_battery;
-    uint16 peer_battery;
-
-    appPeerSyncGetPeerBatteryLevel(&self_battery,&peer_battery);
-    if (self_battery < peer_battery)
-    {
-        DEBUG_LOG("ruleBleConnectionUpdate Peer (out of case) has stronger battery.");
-        return FALSE;
-    }
-    else if (self_battery == peer_battery)
-    {
-        if (!left)
-        {
-            DEBUG_LOG("ruleBleConnectionUpdate we have same battery, and are right handset. Don't do BLE.");
-            return FALSE;
-        }
-    }
-    return TRUE;
-}
+//static bool bleBattery(bool left) {
+//    uint16 self_battery;
+//    uint16 peer_battery;
+//
+//    appPeerSyncGetPeerBatteryLevel(&self_battery,&peer_battery);
+//    if (self_battery < peer_battery)
+//    {
+//        DEBUG_LOG("ruleBleConnectionUpdate Peer (out of case) has stronger battery.");
+//        return FALSE;
+//    }
+//    else if (self_battery == peer_battery)
+//    {
+//        if (left)
+//        {
+//            DEBUG_LOG("ruleBleConnectionUpdate we have same battery, and are left handset. Don't do BLE.");
+//            return FALSE;
+//        }
+//    }
+//    return TRUE;
+//}
 
 // region ble使能
 
@@ -2929,8 +2936,10 @@ static ruleAction ruleBleConnectionUpdate(void)
                 DEBUG_LOG("ruleBleConnectionUpdate peer sync ing, ignore the rules");
                 return RULE_ACTION_IGNORE;
             } else {
-                if (TRUE == appSmIsInCase()) { /// 当前耳机在充电盒中
-                    if (appPeerSyncIsPeerInCase() && (appGetCaseIsOpen() || appSmIsInDfuMode())) {
+                uint8 currentVP = subPhyGetVirtualPosition();
+                uint8 peerVP = appPeerSyncGetPeerVirtualPosition();
+                if (TRUE == subPhyVirtualStateIsCanConnectCase(currentVP)) { /// 当前耳机在充电盒中
+                    if (subPhyVirtualStateIsCanConnectCase(peerVP) && (appGetCaseIsOpen() || appSmIsInDfuMode())) {
                         //1.比较版本号
                         /// Peer ? 0 | Peer > Current 1 | Peer = Current 2 | Peer < Current 3
                         int st = SystemCheckMemoryVersion();
@@ -2947,14 +2956,14 @@ static ruleAction ruleBleConnectionUpdate(void)
                             return bleDisable();
                         }
 
-                        // 2.比较电量信息
+                        // 2.版本相同，右耳机优先
                         bool left = appConfigIsLeft();
-                        if (bleBattery(left)) {  /// 电量多
-                            DEBUG_LOG("ruleBleConnectionUpdate self battery more, ble adv enable");
-                            return bleEnable();
-                        } else { /// 电量少
-                            DEBUG_LOG("ruleBleConnectionUpdate self battery less, ble adv disable");
+                        if (left) {
+                            DEBUG_LOG("ruleBleConnectionUpdate left earbuds, ble adv disable");
                             return bleDisable();
+                        } else {
+                            DEBUG_LOG("ruleBleConnectionUpdate right earbuds, ble adv enable");
+                            return bleEnable();
                         }
                     } else {
                         DEBUG_LOG("ruleBleConnectionUpdate current in case, but appPeerSyncIsPeerInCase()[%d] && (appGetCaseIsOpen()[%d] || appSmIsInDfuMode()[%d]) is false, ble adv disable",
@@ -3748,6 +3757,11 @@ static ruleAction ruleDisconnectHfpA2dpAvrcp(void) {
 static ruleAction ruleUpgradePrepare(void) {
     DEBUG_LOG("ruleUpgradePrepare");
 
+    if (!appUIGetCanEnterDfu()) {
+        DEBUG_LOG("ruleUpgradePrepare appUIGetCanEnterDfu is false, so ignore");
+        return RULE_ACTION_IGNORE;
+    }
+
     if (ParamUsingSingle()) {
         if (subPhyVirtualStateIsCanConnectCase(subPhyGetVirtualPosition())) {
             DEBUG_LOG("ruleUpgradePrepare sig mode, can connect case, so run");
@@ -3760,14 +3774,9 @@ static ruleAction ruleUpgradePrepare(void) {
             return RULE_ACTION_RUN;
         }
     }
-    /// 查看是否有定时消息，用于判断是否发生超时
-    if (appUITakeHaveMessage(appGetUiTask(), APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT)) {
-        DEBUG_LOG("ruleUpgradePrepare have APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT, so defer");
-        return RULE_ACTION_DEFER;
-    } else {
-        DEBUG_LOG("ruleUpgradePrepare not have APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT, so defer");
-        return RULE_ACTION_IGNORE;
-    }
+
+    DEBUG_LOG("ruleUpgradePrepare appUIGetCanEnterDfu is true, so defer");
+    return RULE_ACTION_DEFER;
 }
 
 #ifdef STAROT_SOME_MIN_AFTER_IN_EAR_CONNECT_PHONE

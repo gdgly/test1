@@ -826,7 +826,9 @@ void appPeerSigTxUpgradePrepareConfirm(Task task, peerSigStatus status) {
 }
 
 void appPeerSigPrepareEnterDfuDo(void) {
+    appUISetCanEnterDfu(TRUE);
     MessageSendLater(appGetUiTask(), APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT, NULL, D_SEC(300));
+    appConnRulesResetEvent(RULE_EVENT_UPGRADE_PREPARE);
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_UPGRADE_PREPARE);
 }
 
