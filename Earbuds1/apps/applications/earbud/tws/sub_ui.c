@@ -2168,7 +2168,7 @@ void appUICancelAllUpgradeTime(void) {
 }
 
 void appUISetCanEnterDfu(bool st) {
-    DEBUG_LOG("appUISetCanEnterDfu");
+    DEBUG_LOG("appUISetCanEnterDfu st is %02d", st);
     gProgRunInfo.canEnterDfu = st;
 }
 

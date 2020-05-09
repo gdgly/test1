@@ -26,6 +26,7 @@
 #include <boot.h>
 #include <message.h>
 #include <tws/online_dbg.h>
+#include <tws/sub_phy.h>
 #include "tws/av_headset_gaia_starot.h"
 
 static void appSmHandleInternalDeleteHandsets(void);
@@ -116,14 +117,19 @@ static appState appSmCalcCoreState(void)
 static void appSmSetCoreState(void)
 {
     appState state = appSmCalcCoreState();
-#ifdef CONFIG_STAROT
-    if (appUIGetCanEnterDfu() && ((state & APP_STATE_OUT_OF_CASE_IDLE) > 0)) {
-        state = APP_STATE_IN_CASE_DFU;
-    }
-#endif
     DEBUG_LOG("appSmCalcCoreState is %04X, appSetState is %04X\n", state, appGetState());
     if (state != appGetState())
         appSetState(state);
+
+#ifdef CONFIG_STAROT
+    if (appUIGetCanEnterDfu() &&
+        subPhyVirtualStateIsCanConnectCase(subPhyGetVirtualPosition()) &&
+        ((state & APP_SUBSTATE_IDLE) > 0)) {
+        // 断开连接 incase dfu->incase disconnecting->outcase idel->incase dfu
+        DEBUG_LOG("appSmCalcCoreState need enter dfu");
+        appSmEnterDfuMode();
+    }
+#endif
 }
 
 /*! \brief Set the core app state for the first time. */
@@ -2825,7 +2831,8 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 #ifdef INCLUDE_DFU
         case SM_INTERNAL_ENTER_DFU_UI:
 #ifdef CONFIG_STAROT
-            appSmHandleEnterDfuWithTimeout(appUICanContinueUpgrade() ? 0 : appConfigDfuTimeoutAfterEnteringCaseMs());
+//            appSmHandleEnterDfuWithTimeout(appUICanContinueUpgrade() ? 0 : appConfigDfuTimeoutAfterEnteringCaseMs());
+            appSmHandleEnterDfuWithTimeout(0);
 #else
             appSmHandleEnterDfuWithTimeout(appConfigDfuTimeoutAfterEnteringCaseMs());
 #endif
@@ -2847,23 +2854,26 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
 
         case SM_INTERNAL_TIMEOUT_DFU_ENTRY:
             DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY");
-#ifdef CONFIG_STAROT
-            /// app_state_startup, 如果还有dfu，说明之前升级过，需要与app保持连接
-            /// case打开，并且与手机建立连接(hfp/a2dp/avrcp)则不用建立dfu模式
-            if (APP_STATE_STARTUP == appGetState() || (appGetCaseIsOpen() &&
-                !(appDeviceIsHandsetHfpConnected() ||
-                  appDeviceIsHandsetA2dpConnected() ||
-                  appDeviceIsHandsetAvrcpConnected()))) {
-                DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY cancel dfu timer");
-                MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY,
-                                 NULL, appConfigDfuTimeoutAfterEnteringCaseMs());
-            } else {
-                DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY end dfu");
-                appSmHandleDfuEnded(TRUE);
-            }
-#else
+            appUISetCanEnterDfu(FALSE);
             appSmHandleDfuEnded(TRUE);
-#endif
+//#ifndef CONFIG_STAROT
+//            /// app_state_startup, 如果还有dfu，说明之前升级过，需要与app保持连接
+//            /// case打开，并且与手机建立连接(hfp/a2dp/avrcp)则不用建立dfu模式
+//            if (APP_STATE_STARTUP == appGetState() || (appGetCaseIsOpen() &&
+//                !(appDeviceIsHandsetHfpConnected() ||
+//                  appDeviceIsHandsetA2dpConnected() ||
+//                  appDeviceIsHandsetAvrcpConnected()))) {
+//                DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY cancel dfu timer");
+//                MessageSendLater(appGetSmTask(), SM_INTERNAL_TIMEOUT_DFU_ENTRY,
+//                                 NULL, appConfigDfuTimeoutAfterEnteringCaseMs());
+//            } else {
+//                DEBUG_LOG("appSmHandleMessage SM_INTERNAL_TIMEOUT_DFU_ENTRY end dfu");
+//                appSmHandleDfuEnded(TRUE);
+//            }
+//#else
+//            appUISetCanEnterDfu(FALSE);
+//            appSmHandleDfuEnded(TRUE);
+//#endif
             break;
 
         case SM_INTERNAL_TIMEOUT_DFU_MODE_START:

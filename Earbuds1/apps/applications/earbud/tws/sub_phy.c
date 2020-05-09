@@ -2,6 +2,7 @@
 #include <av_headset.h>
 #include "tws/sub_phy.h"
 #include "logging.h"
+#include "tws/peer.h"
 
 
 
@@ -71,6 +72,14 @@ void subPhyEnterAir(void) {
 //        }
         DEBUG_LOG("subPhyEnterAir: now case is close, so don't send message to application");
         return;
+    }
+
+    if (appSmIsInDfuMode()) {
+        DEBUG_LOG("subPhyEnterAir current is in dfu, need exit dfu, to enter normal model");
+//        phyStateTaskData* phy_state = appGetPhyState();
+//        MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT);
+//        MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT, NULL, 50);
+        appPeerSigTxUpgradeExitReq(appGetGaiaTask());
     }
 
     appUiPowerSave(POWER_MODE_OUT_CASE);
