@@ -87,10 +87,10 @@ static void appGaiaNotifyGaiaConnected(void) {
 }
 
 
-static void appGaiaNotifyGaiaDisconnected(void) {
-    appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_DISCONNECTED);
-}
-
+//static void appGaiaNotifyGaiaDisconnected(void) {
+//    appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_DISCONNECTED);
+//}
+//
 
 static void appGaiaNotifyUpgradeActivity(void) {
     appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_UPGRADE_ACTIVITY);
@@ -99,11 +99,13 @@ static void appGaiaNotifyUpgradeActivity(void) {
 
 static void appGaiaNotifyUpgradeConnection(void) {
     appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_UPGRADE_CONNECTED);
+    subGaiaSetUpgradeGaiaTransform(TRUE);
 }
 
 
 static void appGaiaNotifyUpgradeDisconnection(void) {
     appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_UPGRADE_DISCONNECTED);
+    subGaiaSetUpgradeGaiaTransform(FALSE);
 }
 
 
@@ -164,6 +166,7 @@ static void appGaiaHandleConnectInd(const GAIA_CONNECT_IND_T *ind) {
     GaiaOnTransportConnect(transport);
 
     appGaiaNotifyGaiaConnected();
+    subGaiaSetUpgradeGaiaTransform(FALSE);
 
     /// 检查gaia连接规则，是否需要断开
     MessageSendLater(appGetUiTask(), APP_CHECK_GAIA_CONNECTION, NULL, D_SEC(5));
@@ -219,9 +222,7 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message) {
             DEBUG_LOG("appGaiaMessageHandler GAIA_DISCONNECT_IND");
             appGaiaHandleDisconnectInd((const GAIA_DISCONNECT_IND_T *) message);
 #ifdef TWS_DEBUG
-            appGaiaNotifyGaiaDisconnected();
-            starotGaiaReset();
-            subGaiaClearConnectUnlock();
+            starotGaiaDisconnect();
 #endif
             break;
 
@@ -229,9 +230,7 @@ static void appGaiaMessageHandler(Task task, MessageId id, Message message) {
             /* We probably want to take note of this to send an event to the state
                machine, but it is mainly upgrade we care about. Not gaia connections. */
 #ifdef TWS_DEBUG
-            appGaiaNotifyGaiaDisconnected();
-            starotGaiaReset();
-            subGaiaClearConnectUnlock();
+            starotGaiaDisconnect();
 #endif
             DEBUG_LOG("appGaiaMessageHandler GAIA_DISCONNECT_CFM");
             appSetGaiaTransport(NULL);

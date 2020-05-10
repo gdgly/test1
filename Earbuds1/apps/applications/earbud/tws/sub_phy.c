@@ -33,29 +33,30 @@ enum subPhyPosition subPhyGetVirtualPosition(void) {
 
 void subPhyEnterCase(void) {
     DEBUG_LOG("call subPhyEnterCase");
+    DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
+    online_dbg_record(ONLINE_DBG_IN_CASE);
 
     phyStateTaskData* phy_state = appGetPhyState();
-    MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT);
-    MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT, NULL, 50);
-    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
-    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
-    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_IN, NULL, 50);
+    MessageSend(&phy_state->task, PHY_STATE_INTERNAL_IN_CASE_EVENT, NULL);
+//    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
+//    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
+//    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_IN, NULL, 50);
 
     appUiPowerSave(POWER_MODE_IN_CASE);
-
     subPhySetVirtualPosition(SUB_PHY_POSITION_IN_CASE_CLOSE);
 }
 
 void subPhyExitCase(void) {
     DEBUG_LOG("call subPhyExitCase");
+    online_dbg_record(ONLINE_DBG_OUT_CASE);
 
     phyStateTaskData* phy_state = appGetPhyState();
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT);
     MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT, NULL, 50);
 
-    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
-    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
-    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL, 50);
+//    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
+//    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
+//    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL, 50);
 
     appUiPowerSave(POWER_MODE_IN_CASE_OPEN);
     subPhySetVirtualPosition(SUB_PHY_POSITION_IN_CASE_OPEN);

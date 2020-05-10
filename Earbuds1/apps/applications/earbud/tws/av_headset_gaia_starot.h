@@ -14,6 +14,7 @@ typedef struct {
     uint16 sampleRate;
     uint16 connectLock; // 0:无锁 1:加锁
     uint8 notifyData[5];  // 防止重复数据，直接避免传输
+    bool upgradeTransform;
 } subGaiaTaskData;
 
 void subGaiaTaskInit(void);
@@ -54,6 +55,22 @@ void subGaiaNotifyDataClear(void);
 void subGaiaNotifyDataRecord(uint8* data);
 
 // endregion
+
+/// region gaia升级进行中
+
+/*
+ * fun: 设置GAIA_UPGRADE_[CONNECT/DISCONNECT]_IND操作
+ *  TRUE:connect
+ *  FALSE:disconncet/connection disconnect
+ */
+void subGaiaSetUpgradeGaiaTransform(bool status);
+
+/*
+ * fun: 获取升级连接状态信息
+ */
+bool subGaiaGetUpgradeGaiaTransform(void);
+
+/// endregion
 
 #define CALL_IN_ACTIVE          (1 << 0)
 #define CALL_OUT_ACTIVE         (1 << 1)
@@ -276,6 +293,12 @@ typedef GAIA_STAROT_DIALOG_SOURCE GAIA_STAROT_DIALOG_SOURCE_T;
 /////////////////////////////////////////////初始化与销毁/////////////////////////////////////////
 void starotGaiaInit(void);
 void starotGaiaReset(void);
+/*
+ * gaia断开时，执行清理工作
+ *      状态清理
+ *      升级清理
+ */
+void starotGaiaDisconnect(void);
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message);

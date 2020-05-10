@@ -41,8 +41,8 @@ static uint8 appUIGetCurrentConnectStatusInfo(void);
 static uint8 appUIGetPeerConnectStatusInfo(void);
 static uint8 appUIGetCaseConnectStatusInfo(void);
 static void appNotifyPeerDeviceConfig(uint16 source);
-extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
-                              uint16 payload_length, uint8 *payload);
+//extern bool appGaiaSendPacket(uint16 vendor_id, uint16 command_id, uint16 status,
+//                              uint16 payload_length, uint8 *payload);
 static void subUiEarInOutHandle(ProgRIPtr progRun, bool isIn);
 static void appUIUpgradeApplyInd(void);
 static void appUICheckVersion(void);
@@ -747,24 +747,26 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_CASE_CLOSE:
         DEBUG_LOG("plc call case close");
         online_dbg_record(ONLINE_DBG_CASE_CLOSE);
-#ifdef TWS_DEBUG
-        if (appGaiaIsConnect() && !(appSmIsInDfuMode() && UpgradeInProgress())) {
-            DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
-            appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
-        }
-        ///  直接发送之后，又立即断开，导致数据没有发送出去，现在需要使用延迟发送
-        /// todo hjs 看看如果没有延迟，消息是否能发送出去
-        /// 设置规则去处理
-        MessageCancelAll(&appGetUi()->task, APP_CASE_CLOSE_LATER);
-        MessageSendLater(&appGetUi()->task, APP_CASE_CLOSE_LATER, NULL, 50);
-#endif
-        break;
-    case APP_CASE_CLOSE_LATER:
         subPhyEnterCase();
-            /// focus (plc in / in case)
-//        appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
-//        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
+
+//#ifdef TWS_DEBUG
+//        if (appGaiaIsConnect() && !(appSmIsInDfuMode() && UpgradeInProgress())) {
+//            DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
+//            appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
+//        }
+//        ///  直接发送之后，又立即断开，导致数据没有发送出去，现在需要使用延迟发送
+//        /// todo hjs 看看如果没有延迟，消息是否能发送出去
+//        /// 设置规则去处理
+//        MessageCancelAll(&appGetUi()->task, APP_CASE_CLOSE_LATER);
+//        MessageSendLater(&appGetUi()->task, APP_CASE_CLOSE_LATER, NULL, 50);
+//#endif
         break;
+//    case APP_CASE_CLOSE_LATER:  /// 已经没有人再使用
+//        subPhyEnterCase();
+//            /// focus (plc in / in case)
+////        appConnRulesResetEvent(RULE_EVENT_CASE_CLOSE);
+////        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_CASE_CLOSE);
+//        break;
 
     case APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT:
         DEBUG_LOG("appSubUiHandleMessage APP_HFP_CHANGE_AUDIO_DIRECT_TIMEOUT");
@@ -810,23 +812,23 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         subUiStarttAssistantSystem(TRUE);
         break;
 
-    case APP_ATTACH_PLC_IN: {
-        DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
-        online_dbg_record(ONLINE_DBG_IN_CASE);
-#ifdef TWS_DEBUG
-        if (appGaiaIsConnect()) {
-            DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
-            appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
-        }
-#endif
-    }
-        break;
+//    case APP_ATTACH_PLC_IN: {
+//        DEBUG_LOG("parse APP_ATTACH_PLC_IN event");
+//        online_dbg_record(ONLINE_DBG_IN_CASE);
+////#ifdef TWS_DEBUG
+////        if (appGaiaIsConnect()) {
+////            DEBUG_LOG("call appGaiaDisconnect and send GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT");
+////            appGaiaSendPacket(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_BASE_INFO_ACTIVE_DISCONNECT, 0xfe, 0, NULL);
+////        }
+////#endif
+//    }
+//        break;
 
-    case APP_ATTACH_PLC_OUT:  {
-        DEBUG_LOG("parse APP_ATTACH_PLC_OUT event");
-        online_dbg_record(ONLINE_DBG_OUT_CASE);
-    }
-        break;
+//    case APP_ATTACH_PLC_OUT:  {
+//        DEBUG_LOG("parse APP_ATTACH_PLC_OUT event");
+//        online_dbg_record(ONLINE_DBG_OUT_CASE);
+//    }
+//        break;
 
         // 入耳 出耳
     case APP_PSENSOR_INEAR:
@@ -965,6 +967,12 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
     case APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT:
         DEBUG_LOG("parse APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT");
         appUISetCanEnterDfu(FALSE);
+        break;
+
+    case APP_UPGRADE_ACCIDENT_DISCONNECT_TIMEOUT:
+        DEBUG_LOG("parse APP_UPGRADE_ACCIDENT_DISCONNECT_TIMEOUT");
+        appUISetCanEnterDfu(FALSE);
+        appPeerSigTxUpgradeExitReq(appGetGaiaTask());
         break;
 
     default:
@@ -2078,8 +2086,10 @@ static void appUIUpgradeApplyInd(void) {
         appPeerVersionSyncStatusSet(0);
         const int versionSame = 2;
         if (versionSame != SystemCheckMemoryVersion()) {
-            DEBUG_LOG("SystemCheckVersionWithPeer is not same, so need exit dfu mode");
-            appSmHandleDfuEnded(TRUE);
+            DEBUG_LOG("SystemCheckVersionWithPeer is not same, so disconnect gaia for other can connect gaia");
+            appGaiaDisconnect();
+            //DEBUG_LOG("SystemCheckVersionWithPeer is not same, so need exit dfu mode");
+            //appSmHandleDfuEnded(TRUE);
         } else {
             DEBUG_LOG("SystemCheckVersionWithPeer is same, now need think how reboot");
             /// 可以执行重启，添加定时器，在版本同步确认的时候，去重新启动
@@ -2155,6 +2165,8 @@ static void appUIUpgradeEnter(void) {
 void appUIUpgradeExit(void) {
     DEBUG_LOG("call appUIUpgradeExit");
     gProgRunInfo.canContinueUpgrade = FALSE;
+    appUISetCanEnterDfu(FALSE);
+
     appSmHandleDfuEnded(TRUE);
 }
 

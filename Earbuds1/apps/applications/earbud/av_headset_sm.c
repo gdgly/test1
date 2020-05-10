@@ -1219,15 +1219,18 @@ static void appSmHandlePhyStateChangedInd(smTaskData* sm, PHY_STATE_CHANGED_IND_
 
     DEBUG_LOGF("appSmHandlePhyStateChangedInd new phy state %d", ind->new_state);
 
+    sm->phy_state = ind->new_state;
 #ifdef CONFIG_STAROT
-    if (appSmIsInDfuMode() && (ind->new_state != PHY_STATE_IN_CASE))
-    {
+    // if (appSmIsInDfuMode() && (ind->new_state != PHY_STATE_IN_CASE)) {
+    //     DEBUG_LOGF("appSmHandlePhyStateChangedInd now in dfu, but ");
+    //     appSmHandleDfuEnded(TRUE);
+    // }
+
+    if (subGaiaGetUpgradeGaiaTransform() && !subPhyVirtualStateIsCanConnectCase(subPhyGetVirtualPosition())) {
+        DEBUG_LOG("appSmHandlePhyStateChangedInd now in dfu,  but can't attach case");
         appSmHandleDfuEnded(TRUE);
     }
 #endif
-
-    sm->phy_state = ind->new_state;
-
     switch (ind->new_state)
     {
         case PHY_STATE_IN_CASE:
@@ -2839,7 +2842,9 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             break;
 
         case SM_INTERNAL_ENTER_DFU_UPGRADED:
+            ////!!!! hjs
 #ifdef CONFIG_STAROT
+            appUISetCanEnterDfu(TRUE);
             MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, appConfigDfuTimeoutToStartAfterRestartMs());
 #endif
             appSmHandleEnterDfuWithTimeout(appConfigDfuTimeoutToStartAfterRestartMs());

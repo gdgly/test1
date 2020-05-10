@@ -857,6 +857,11 @@ static ruleAction ruleConnectHandset(ruleConnectReason reason,
 
     RULE_LOGF("ruleConnectHandset, reason %u", reason);
 
+    if (appUIGetCanEnterDfu()) {
+        RULE_LOG("ruleConnectHandset, ignore as in can enter dfu");
+        return RULE_ACTION_DEFER;
+    }
+
     /* Don't attempt to connect if we're in the case */
     if (appSmIsInCase())
     {
@@ -2966,8 +2971,9 @@ static ruleAction ruleBleConnectionUpdate(void)
                             return bleEnable();
                         }
                     } else {
-                        DEBUG_LOG("ruleBleConnectionUpdate current in case, but appPeerSyncIsPeerInCase()[%d] && (appGetCaseIsOpen()[%d] || appSmIsInDfuMode()[%d]) is false, ble adv disable",
-                                  appPeerSyncIsPeerInCase(), appGetCaseIsOpen(), appSmIsInDfuMode());
+                        DEBUG_LOG("ruleBleConnectionUpdate current in case, "
+                                  "currentVP[%d] peerVP[%d] appGetCaseIsOpen()[%d] appSmIsInDfuMode()[%d], ble adv disable",
+                                  currentVP, peerVP, appGetCaseIsOpen(), appSmIsInDfuMode());
                         return bleDisable();
                     }
                 } else {  /// 当前耳机在空中

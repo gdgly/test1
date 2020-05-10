@@ -585,7 +585,7 @@ static void box_get_ear_status(uint8 *get_buf, uint8 *send_buf)
 
     send_buf[1] = (status<<5) & 0xE0;
     send_buf[1] |= (1 == _case_need_upgrade) ? 0x08 : 0x00;         // 是否需要升级 BIT4
-    send_buf[1] |= (UpgradeInProgress() ? 0x04 : 0x00);             // 是否下在升级
+    send_buf[1] |= (appSmIsInDfuMode() ? 0x04 : 0x00);             // 是否下在升级
 
     //第二byte送回电量信息
     send_buf[2] = appUiGetPower();

@@ -47,9 +47,9 @@ static void appPhyStateEnterInCase(void)
 {
     DEBUG_LOG("appPhyStateEnterInCase");
     appPhyStateMsgSendStateChangedInd(PHY_STATE_IN_CASE);
-#ifdef CONFIG_STAROT
-    appUiPowerSave(POWER_MODE_IN_CASE);
-#endif
+//#ifdef CONFIG_STAROT
+//    appUiPowerSave(POWER_MODE_IN_CASE);
+//#endif
 }
 
 /*! \brief Perform actions on entering PHY_STATE_OUT_OF_EAR state. */
@@ -57,9 +57,9 @@ static void appPhyStateEnterOutOfEar(void)
 {
     DEBUG_LOG("appPhyStateEnterOutOfEar");
     appPhyStateMsgSendStateChangedInd(PHY_STATE_OUT_OF_EAR);
-#ifdef CONFIG_STAROT
-    appUiPowerSave(POWER_MODE_IN_CASE_OPEN);
-#endif
+//#ifdef CONFIG_STAROT
+//    appUiPowerSave(POWER_MODE_IN_CASE_OPEN);
+//#endif
 }
 
 /*! \brief Perform actions on entering PHY_STATE_IN_EAR state. */
@@ -67,9 +67,9 @@ static void appPhyStateEnterInEar(void)
 {
     DEBUG_LOG("appPhyStateEnterInEar");
     appPhyStateMsgSendStateChangedInd(PHY_STATE_IN_EAR);
-#ifdef CONFIG_STAROT
-    appUiPowerSave(POWER_MODE_IN_EAR);
-#endif
+//#ifdef CONFIG_STAROT
+//    appUiPowerSave(POWER_MODE_IN_EAR);
+//#endif
 }
 
 /*! \brief Perform actions on entering PHY_STATE_OUT_OF_EAR_AT_REST state. */

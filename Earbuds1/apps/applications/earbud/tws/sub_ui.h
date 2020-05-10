@@ -75,6 +75,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_PAIR_HANDSET_SUCCESS_TIMEOUT 2129 // 蓝牙配对成功，运行连接，2020状态下，运行连接，并不断开
 
 #define APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT 2130  // gaia/peer -> ui 在这个时间内，可以进入DFU
+#define APP_UPGRADE_ACCIDENT_DISCONNECT_TIMEOUT 2131 /// gaia -> ui 定时任务，意外断开连接
 
 struct UI_APP_UPGRADE_COMMIT_STATUS_T {
     bool status;   // true:commit ;false:revert

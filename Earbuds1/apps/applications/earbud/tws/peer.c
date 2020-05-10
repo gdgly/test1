@@ -827,6 +827,7 @@ void appPeerSigTxUpgradePrepareConfirm(Task task, peerSigStatus status) {
 
 void appPeerSigPrepareEnterDfuDo(void) {
     appUISetCanEnterDfu(TRUE);
+    /// 给用户5分钟时间，让用户把耳机放入充电盒
     MessageSendLater(appGetUiTask(), APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT, NULL, D_SEC(300));
     appConnRulesResetEvent(RULE_EVENT_UPGRADE_PREPARE);
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_UPGRADE_PREPARE);

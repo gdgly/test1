@@ -139,6 +139,24 @@ void starotGaiaReset(void) {
     subGaiaClearCurrentDialog();
 }
 
+void starotGaiaDisconnect(void) {
+    DEBUG_LOG("starotGaiaDisconnect");
+    appTaskListMessageSendId(appGetGaia()->client_list, APP_GAIA_DISCONNECTED);
+    starotGaiaReset();
+    subGaiaClearConnectUnlock();
+    // 判断是否在dfu模式中
+    //    是否等待重启
+    //       是 忽略，切换耳机升级
+    //       否 定时，退出dfu模式
+    if (appSmIsInDfuMode()) {
+        /// 不需要重启，说明在升级的前期阶段断开连接，需要定时，如果还没有连上，说明需要退出DFU模式
+        if (!gProgRunInfo.upgradeNeedReboot) {
+            MessageSendLater(appGetUiTask(), APP_UPGRADE_ACCIDENT_DISCONNECT_TIMEOUT, NULL, D_SEC(30));
+        }
+    }
+    subGaiaSetUpgradeGaiaTransform(FALSE);
+}
+
 /*
  * 删除日志文件
  */
@@ -1963,6 +1981,7 @@ void subGaiaSetConnectUnlock(void) {
     task->connectLock = SUB_GAIA_CONNECT_UNLOCK;
     advManagerStopSpecialVol();
     MessageCancelAll(appGetUiTask(), APP_BLE_SCANABLE_TIMEOUT);
+    MessageCancelAll(appGetUiTask(), APP_UPGRADE_ACCIDENT_DISCONNECT_TIMEOUT);
 }
 
 void subGaiaClearConnectUnlock(void) {
@@ -2007,6 +2026,20 @@ void subGaiaNotifyDataRecord(uint8* data) {
 }
 
 // endregion
+
+/// region gaia升级进行中
+
+void subGaiaSetUpgradeGaiaTransform(bool status) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    task->upgradeTransform = status;
+}
+
+bool subGaiaGetUpgradeGaiaTransform(void) {
+    subGaiaTaskData* task = subGaiaGetTaskData();
+    return task->upgradeTransform;
+}
+
+/// endregion
 
 // region 常用条件判断
 
