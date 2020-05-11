@@ -380,8 +380,8 @@ static void appEnterHandsetPairing(void)
     DEBUG_LOG("appEnterHandsetPairing");
 
     appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
-//                                   appConfigLinkPairingDisconnectionTimeoutTerminatingMs(),
-                                   0,
+                                  appConfigLinkPairingDisconnectionTimeoutTerminatingMs(),
+                                   // 0,
                                    POST_DISCONNECT_ACTION_HANDSET_PAIRING);
     appPeerSyncSend(FALSE);
 
@@ -2202,7 +2202,9 @@ static void appSmHandleHfpScoDisconnectedInd(void)
 static void appSmHandleInternalPairHandset(void)
 {
 #ifdef CONFIG_STAROT
-    if (appSmStateIsIdle(appGetState()) || (appSmIsInDfuMode() && !UpgradeInProgress()))
+    // if (appSmStateIsIdle(appGetState()) || (appSmIsInDfuMode() && !UpgradeInProgress()))
+    appState  state = appGetState();
+    if ((0 != ((state) & (APP_SUBSTATE_IDLE | APP_SUBSTATE_BUSY | APP_SUBSTATE_SOPORIFIC))) || (appSmIsInDfuMode() && !UpgradeInProgress()))
 #else
     if (appSmStateIsIdle(appGetState()))
 #endif
