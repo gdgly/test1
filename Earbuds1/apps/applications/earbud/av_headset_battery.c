@@ -118,68 +118,81 @@ static uint8 toPercentage(uint16 voltage)
     uint32 diff;
     chargerTaskData *theCharger = appGetCharger();
 
-    UserPrmPtr prm = GetUserParam();
+    if(appInitCompleted()== TRUE){//防止保存电量没读出来就对电量操作导致开始电量有问题
+        UserPrmPtr prm = GetUserParam();
 
-    g_last_percent = prm->electricQuantity;
-    if(theCharger->is_charging)
-    {
-        //充电
-        for(i = 0; i < VOL_CHARGE_LEN; i++) {
-            if(voltage <= vol_charge[i])
-                break;
-        }
+        g_last_percent = prm->electricQuantity;
 
-        if(i >= VOL_CHARGE_LEN)  {
-
-            if(g_last_percent < VOL_CHARGE_LEN*2)
-                g_last_percent = VOL_CHARGE_LEN*2;
-
-            if(g_charge_calc_ticks == 0) {
-                g_charge_calc_ticks = VmGetClock();
-                if(g_last_percent > VOL_CHARGE_LEN*2) {
-                    diff = (g_last_percent - VOL_CHARGE_LEN*2)/2 -1;
-                    diff = sec_charge[diff]*10000;
-                    g_charge_calc_ticks = VmGetClock() - diff;
-                }
-            }
-
-            diff = (VmGetClock()-g_charge_calc_ticks) / 10000;      // 单位换算为10SEC
-            for(i = 0; i < SEC_CHARGE_LEN; i++) {
-              if(diff < sec_charge[i])
-                break;
-            }
-
-                iPercent = VOL_CHARGE_LEN*2 + i*2;
-
+        if(theCharger->status == 6)//电池充电满的状态
+        {
+            iPercent = 100;
         }else{
-            iPercent = i*2;
-            g_charge_calc_ticks = 0;
-        }
-        if(iPercent < g_last_percent)
-            iPercent = g_last_percent;
 
-    }
-    else {
-        //放电
-        if(g_charge_calc_ticks)
-            g_charge_calc_ticks = 0;
-        for(i = 0; i < VOL_DISCHARGE; i++) {
-                if(voltage > vol_discharge[i])
+            if(theCharger->is_charging)
+            {
+                //充电
+                for(i = 0; i < VOL_CHARGE_LEN; i++) {
+                    if(voltage <= vol_charge[i])
                         break;
+                }
+
+                if(i >= VOL_CHARGE_LEN)  {
+
+                    if(g_last_percent < VOL_CHARGE_LEN*2)
+                        g_last_percent = VOL_CHARGE_LEN*2;
+
+                    if(g_charge_calc_ticks == 0) {
+                        g_charge_calc_ticks = VmGetClock();
+                        if(g_last_percent > VOL_CHARGE_LEN*2) {
+                            diff = (g_last_percent - VOL_CHARGE_LEN*2)/2 -1;
+                            diff = sec_charge[diff]*10000;
+                            g_charge_calc_ticks = VmGetClock() - diff;
+                        }
+                    }
+
+                    diff = (VmGetClock()-g_charge_calc_ticks) / 10000;      // 单位换算为10SEC
+                    for(i = 0; i < SEC_CHARGE_LEN; i++) {
+                      if(diff < sec_charge[i])
+                        break;
+                    }
+
+                        iPercent = VOL_CHARGE_LEN*2 + i*2;
+
+                }else{
+                    iPercent = i*2;
+                    g_charge_calc_ticks = 0;
+                }
+                if(iPercent < g_last_percent)
+                    iPercent = g_last_percent;
+
+                if(iPercent==100)
+                    iPercent == 99;
+
+            }
+            else {
+                //放电
+                if(g_charge_calc_ticks){
+                    g_charge_calc_ticks = 0;
+                }
+                for(i = 0; i < VOL_DISCHARGE; i++) {
+                        if(voltage > vol_discharge[i])
+                                break;
+                }
+                iPercent = 100 - i*2;
+
+                if(iPercent > g_last_percent)
+                    iPercent = g_last_percent;
+            }
         }
-        iPercent = 100 - i*2;
+        g_last_percent = iPercent;
 
-        if(iPercent == 100 && g_last_percent == 0)
-            g_last_percent = 100;
+        prm->electricQuantity = g_last_percent;
 
-        if(iPercent > g_last_percent)
-            iPercent = g_last_percent;
-   }
-    g_last_percent = iPercent;
-
-    prm->electricQuantity = g_last_percent;
-
-    return g_last_percent;
+        return g_last_percent;
+    }else
+    {
+        return 0;
+    }
 }
 #else
 static uint8 toPercentage(uint16 voltage)
