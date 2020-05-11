@@ -249,9 +249,9 @@ ruleEntry appConnRules[] =
 #ifdef TWS_DEBUG
     /// 如果真实的在盒子中，连上了，也要马上断开; todo 考虑影响范围
     // 如果auth完了，但是没有连接上，此时的异常的处理
-    RULE(RULE_EVENT_HANDSET_A2DP_CONNECTED,     ruleConnectBTHappenInDfu,    CONN_RULES_CONNECT_IN_DFU),
-    RULE(RULE_EVENT_HANDSET_AVRCP_CONNECTED,    ruleConnectBTHappenInDfu,    CONN_RULES_CONNECT_IN_DFU),
-    RULE(RULE_EVENT_HANDSET_HFP_CONNECTED,      ruleConnectBTHappenInDfu,    CONN_RULES_CONNECT_IN_DFU),
+    // RULE(RULE_EVENT_HANDSET_A2DP_CONNECTED,     ruleConnectBTHappenInDfu,    CONN_RULES_CONNECT_IN_DFU),
+    // RULE(RULE_EVENT_HANDSET_AVRCP_CONNECTED,    ruleConnectBTHappenInDfu,    CONN_RULES_CONNECT_IN_DFU),
+    // RULE(RULE_EVENT_HANDSET_HFP_CONNECTED,      ruleConnectBTHappenInDfu,    CONN_RULES_CONNECT_IN_DFU),
 
 //    RULE(RULE_EVENT_CHECK_NEED_DISCONNECT,    ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
 #endif
@@ -2106,12 +2106,12 @@ static ruleAction ruleInCaseEnterDfu(void)
     }
 
     /// 升级 重启 dfu -> startup -> incase -> dfu  在这里等着进入dfu状态
-    bool haveUpgradeRestartFlag = MessageCancelAll(appGetUiTask(), APP_UPGRADE_RESTART_FLAG) > 0;
-    if (haveUpgradeRestartFlag) {
-        MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, D_SEC(30));
-        RULE_LOG("ruleInCaseEnterDfu, have upgrade restart flag, so run");
-        return RULE_ACTION_RUN;
-    }
+    // bool haveUpgradeRestartFlag = MessageCancelAll(appGetUiTask(), APP_UPGRADE_RESTART_FLAG) > 0;
+    // if (haveUpgradeRestartFlag) {
+    //     MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, D_SEC(30));
+    //     RULE_LOG("ruleInCaseEnterDfu, have upgrade restart flag, so run");
+    //     return RULE_ACTION_RUN;
+    // }
 
     if (!appGetCaseIsOpen()) {
         /// 从dfu退出的时候，重新计算state，会发生重新incase规则

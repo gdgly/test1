@@ -171,6 +171,7 @@ typedef struct tagPROGRUNINFO {
     uint8          peerSn[DEV_SN_LEN];              // 另一只耳机SN信息
     bool           needReset;                       // 是否需要重启
     bool           canEnterDfu;                     // 是否可以进入DFU
+    bool           restartUpgradeFlag; // fuck,临时测试
 }ProgRunInfo, *ProgRIPtr;
 extern ProgRunInfo gProgRunInfo;
 void appSubUIInit(void);

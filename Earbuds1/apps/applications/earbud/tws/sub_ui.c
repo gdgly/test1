@@ -956,6 +956,11 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appPowerOffRequest();
         break;
 
+        case APP_UPGRADE_RESTART_FLAG:
+            gProgRunInfo.restartUpgradeFlag = FALSE;
+            appSetState(APP_STATE_STARTUP);
+            break;
+
     case APP_CHECK_GAIA_CONNECTION:
         if (subGaiaIsConnectLock()) {
             appGaiaDisconnect();

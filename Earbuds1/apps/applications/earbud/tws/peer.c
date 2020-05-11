@@ -663,7 +663,7 @@ static int canSendUpgradeCancelNotifyCommitStatusNum = 3;
 void appPeerSigTxUpgradeCancelNotifyCommitStatusReq(Task task) {
     DEBUG_LOG("appPeerSigTxUpgradeCancelNotifyCommitStatusReq");
     if (ParamUsingSingle()) {
-        appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm(peerSigStatusSuccess);
+        appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm(task, peerSigStatusSuccess);
     } else if (canSendUpgradeCancelNotifyCommitStatusNum > 0) {
         AVRCP_PEER_CMD_INTERNAL_UNITY_REQ *req =
                 PEER_MALLOC_UNITY_REQ_NODATA(AVRCP_PEER_CMD_UPGRADE_CANCEL_NOTIFY_COMMIT_STATUS);
@@ -677,9 +677,8 @@ bool appPeerSigTxUpgradeCancelNotifyCommitStatusParse(uint8* payload) {
     UNUSED(payload);
     DEBUG_LOG("parse appPeerSigTxUpgradeCancelNotifyCommitStatusParse");
     appUICancelAllUpgradeTime();
-    if (appSmIsInDfuMode()) {
-        appSmHandleDfuEnded(TRUE);
-    }
+    MessageCancelAll(appGetUiTask(), APP_UPGRADE_RESTART_FLAG);
+    MessageSend(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL);
     return TRUE;
 }
 
@@ -689,7 +688,10 @@ void appPeerSigTxUpgradeCancelNotifyCommitStatusConfirm(Task task, peerSigStatus
         /// 重新发送，尝试几次
         appPeerSigTxUpgradeCancelNotifyCommitStatusReq(task);
     } else {
+        MessageCancelAll(appGetUiTask(), APP_UPGRADE_RESTART_FLAG);
+        MessageSend(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL);
         if (appSmIsInDfuMode()) {
+            appUISetCanEnterDfu(FALSE);
             appSmHandleDfuEnded(TRUE);
         }
     }

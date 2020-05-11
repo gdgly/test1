@@ -50,7 +50,9 @@ void subPhyExitCase(void) {
     DEBUG_LOG("call subPhyExitCase");
     online_dbg_record(ONLINE_DBG_OUT_CASE);
 
+    /// 实际操作，用户打开充电盒，没有取出耳机
     phyStateTaskData* phy_state = appGetPhyState();
+    phy_state->in_proximity = FALSE;
     MessageCancelAll(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT);
     MessageSendLater(&phy_state->task, PHY_STATE_INTERNAL_OUT_OF_CASE_EVENT, NULL, 50);
 
@@ -60,6 +62,7 @@ void subPhyExitCase(void) {
 
     appUiPowerSave(POWER_MODE_IN_CASE_OPEN);
     subPhySetVirtualPosition(SUB_PHY_POSITION_IN_CASE_OPEN);
+
 }
 
 void subPhyEnterAir(void) {

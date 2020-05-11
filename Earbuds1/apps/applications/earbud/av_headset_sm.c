@@ -670,6 +670,9 @@ static void appEnterInEar(void)
 */
 void appSetState(appState new_state)
 {
+    online_dbg_record(0xFF);
+    online_dbg_record((new_state >> 8) & 0X00FF);
+    online_dbg_record(new_state & 0X00FF);
     appState previous_state = appGetSm()->state;
     DEBUG_LOGF("appSetState, state 0x%02x to 0x%02x", previous_state, new_state);
     UartPuts2x("SM state:", previous_state, new_state);
@@ -677,6 +680,10 @@ void appSetState(appState new_state)
     if (APP_STATE_FACTORY_RESET == previous_state) {
         /// reset factory耗时，在这个时间里，出入充电盒、接近光都没有禁用
         DEBUG_LOG("appSetState, previous_state is APP_STATE_FACTORY_RESET, so direct return");
+        return;
+    }
+    if (gProgRunInfo.restartUpgradeFlag == TRUE && previous_state == APP_STATE_IN_CASE_DFU) {
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
         return;
     }
 #endif
@@ -1127,27 +1134,29 @@ static void appSmHandlePairingHandsetPairConfirm(PAIRING_HANDSET_PAIR_CFM_T *cfm
 {
     UNUSED(cfm);
     DEBUG_LOGF("appSmHandlePairingHandsetPairConfirm, status %d", cfm->status);
-    if (pairingHandsetSuccess == cfm->status) {
-        /// 尝试连接手机，如果连接成功，会在连接成功的地方，校验是否可以连接
-        DEBUG_LOG("appSmHandlePairingHandsetPairConfirm pair success allow connect");
-        appConManagerAllowHandsetConnect(TRUE);
-        MessageSendLater(appGetUiTask(), APP_PAIR_HANDSET_SUCCESS_TIMEOUT, NULL, D_SEC(30));
-    }
+    // if (pairingHandsetSuccess == cfm->status) {
+    //     /// 尝试连接手机，如果连接成功，会在连接成功的地方，校验是否可以连接
+    //     DEBUG_LOG("appSmHandlePairingHandsetPairConfirm pair success allow connect");
+    //     appConManagerAllowHandsetConnect(TRUE);
+    //     MessageSendLater(appGetUiTask(), APP_PAIR_HANDSET_SUCCESS_TIMEOUT, NULL, D_SEC(30));
+    // }
 
     switch (appGetState())
     {
         case APP_STATE_HANDSET_PAIRING:
 #ifdef CONFIG_STAROT
-        {
-            appState state = appSmCalcCoreState();
-            if (pairingHandsetSuccess != cfm->status && (state & APP_STATE_IN_CASE) && appDeviceGetHandsetBdAddr(NULL)) {
-                DEBUG_LOG("appSmHandlePairingHandsetPairConfirm, not new connect, and now in case, before have pair, so can go dfu");
-                state = APP_STATE_IN_CASE_DFU;
-            }
-            DEBUG_LOG("appSmCalcCoreState is %04X, appSetState is %04X\n", state, appGetState());
-            if (state != appGetState())
-                appSetState(state);
-        }
+        // {
+        //     appState state = appSmCalcCoreState();
+        //     if (pairingHandsetSuccess != cfm->status && (state & APP_STATE_IN_CASE) && appDeviceGetHandsetBdAddr(NULL)) {
+        //         DEBUG_LOG("appSmHandlePairingHandsetPairConfirm, not new connect, and now in case, before have pair, so can go dfu");
+        //         state = APP_STATE_IN_CASE_DFU;
+        //     }
+        //     DEBUG_LOG("appSmCalcCoreState is %04X, appSetState is %04X\n", state, appGetState());
+        //     if (state != appGetState())
+        //         appSetState(state);
+        // }
+            appSmSetCoreState();
+
 #else
             appSmSetCoreState();
 #endif
@@ -1409,11 +1418,11 @@ static void appSmHandleConnRulesEnterDfu(void)
         return;
     }
 
-    if (!appGetCaseIsOpen() && MessageCancelAll(appGetUiTask(), APP_UPGRADE_RESTART_FLAG) <= 0) {
-        DEBUG_LOG("appSmHandleConnRulesEnterDfu now case is close, so ignore");
-        appConnRulesSetRuleComplete(CONN_RULES_ENTER_DFU);
-        return;
-    }
+    // if (!appGetCaseIsOpen() && MessageCancelAll(appGetUiTask(), APP_UPGRADE_RESTART_FLAG) <= 0) {
+    //     DEBUG_LOG("appSmHandleConnRulesEnterDfu now case is close, so ignore");
+    //     appConnRulesSetRuleComplete(CONN_RULES_ENTER_DFU);
+    //     return;
+    // }
 
     switch (appGetState())
     {
@@ -2844,17 +2853,17 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             break;
 
         case SM_INTERNAL_ENTER_DFU_UPGRADED:
-            ////!!!! hjs
 #ifdef CONFIG_STAROT
-            appUISetCanEnterDfu(TRUE);
-            MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, appConfigDfuTimeoutToStartAfterRestartMs());
+            gProgRunInfo.restartUpgradeFlag = TRUE;
+            MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, D_SEC(60));
 #endif
             appSmHandleEnterDfuWithTimeout(appConfigDfuTimeoutToStartAfterRestartMs());
             break;
 
         case SM_INTERNAL_ENTER_DFU_STARTUP:
 #ifdef CONFIG_STAROT
-            MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, appConfigDfuTimeoutToStartAfterRebootMs());
+            gProgRunInfo.restartUpgradeFlag = TRUE;
+            MessageSendLater(appGetUiTask(), APP_UPGRADE_RESTART_FLAG, NULL, D_SEC(60));
 #endif
             appSmHandleEnterDfuWithTimeout(appConfigDfuTimeoutToStartAfterRebootMs());
             break;
