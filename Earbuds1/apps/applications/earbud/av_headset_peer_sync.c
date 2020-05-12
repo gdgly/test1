@@ -642,6 +642,39 @@ void appPeerSyncSend(bool response)
     }
 }
 
+
+static void appPeerSyncSend_Debug_msg(uint8 *msg, uint8 len)
+{
+     peerSyncTaskData* ps = appGetPeerSync();
+     bdaddr peer_addr;
+     uint8 message[PEER_SYNC_MSG_SIZE];//={15,14,13,12,11,10,9,8,7,6,5,4,3,2,1};
+     memcpy(message, msg, len>PEER_SYNC_MSG_SIZE ? PEER_SYNC_MSG_SIZE : len);
+     if (appDeviceGetPeerBdAddr(&peer_addr)){
+         appPeerSigMsgChannelTxRequest(&ps->task, &peer_addr, PEER_SIG_MSG_CHANNEL_PEER_OD_SYNC,
+                                       message, PEER_SYNC_MSG_SIZE);
+         appConnRulesResetEvent(RULE_EVENT_PEER_SYNC_VALID);
+     }
+}
+
+void appPeerSyncSend_max20340_debug_start(void)
+{
+    uint8 message[PEER_SYNC_MSG_SIZE];
+    message[0] = APPPEERSYNC_DEBUG_MSG_CMD_MAX20340;
+    message[1] = APPPEERSYNC_DEBUG_MSG_CMD_MAX20340_SYNC_START;
+    appPeerSyncSend_Debug_msg(message, 2);
+}
+
+void appPeerSyncSend_max20340_debug_return_reg_value(uint8 reg_value, bool in_case_itr_status)
+{
+    uint8 message[PEER_SYNC_MSG_SIZE];
+    message[0] = APPPEERSYNC_DEBUG_MSG_CMD_MAX20340;
+    message[1] = APPPEERSYNC_DEBUG_MSG_CMD_MAX20340_SYNC_RETURN_REG_VALUE;
+    message[2] = reg_value;
+    message[3] = in_case_itr_status;
+    appPeerSyncSend_Debug_msg(message, 4);
+}
+
+
 /*! \brief Handle confirmation of peer sync transmission.
  */
 static void appPeerSyncHandlePeerSigMsgChannelTxCfm(const PEER_SIG_MSG_CHANNEL_TX_CFM_T *cfm)
@@ -883,7 +916,7 @@ void appPeerSyncGetPeerBatteryLevel(uint16 *battery_level, uint16 *peer_battery_
 #ifdef CONFIG_STAROT
     /// 添加充电状态在首位
     if (ParamUsingSingle())  {
-        *battery_level = appBatteryGetVoltage();
+        *battery_level = appBatteryGetPercent();
     } else {
         *battery_level = (ps->sync_battery_level & 0X7FFF);
     }

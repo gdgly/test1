@@ -772,10 +772,10 @@ void appPeerSigTx8kReq(Task task, Sync8kReq* sync8kReq) {
 }
 
 bool appPeerSigTx8kParse(uint8* payload) {
-    ProgRIPtr  progRun = appSubGetProgRun();
     Sync8kReq * sync8kReq = (Sync8kReq*)payload;
-    progRun->set8kEnb = sync8kReq->set8k;
-    progRun->set8kModifyTime = sync8kReq->set8kTime;
+    gUserParam.set8kEnb = sync8kReq->set8k;
+    gUserParam.set8kModifyTime = sync8kReq->set8kTime;
+    ParamSaveUserPrm(&gUserParam);
     return TRUE;
 }
 

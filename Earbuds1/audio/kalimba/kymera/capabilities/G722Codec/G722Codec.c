@@ -153,7 +153,7 @@ static void G722Codec_processing_encode(G722CODEC_OP_DATA *opx_data, unsigned oc
     short sample = 0;
 
 #ifdef TEST_NO_ENC
-    (void)i; (void)ptr; (void)outsize;
+    (void)i; (void)ptr; (void)outsize;(void)sample;
   #ifdef TEST_DAT_2BYTE
     ptr = (signed short *)opx_data->in_buffer;
     for(i = 0; i < octets; i++) {
@@ -168,44 +168,53 @@ static void G722Codec_processing_encode(G722CODEC_OP_DATA *opx_data, unsigned oc
   #endif
 
 #else
-    // 将每个SAMPLE为4个字节转换为2个字节
-    G722_DEBUG("G722Codec_process 5: data process");
     ptr = (signed short *)opx_data->in_buffer;
-    for(i = 0; i < octets; i++) {
-     //  ptr[i] = ptr[i*2];   // 在前端为模拟音频时我们是取 ptr[i*2]
-           ptr[i] = ptr[i*2+1]; // 在前端为SPLITER 时我们是取 ptr[i*2+1]
-    }
-    /* 判断是否需要将16k转换为8k数据 */
-    if (opx_data->resample_audforward == TRUE)
+#ifdef G722CODEC_CONTROL
+    if (opx_data->flag == 0)
+#endif
     {
-        for (i = 0;i < (octets/2); i++)
-        {
-            ptr[i] = ptr[2*i];
+        // 将每个SAMPLE为4个字节转换为2个字节
+        G722_DEBUG("G722Codec_process 5: data process");
+        for(i = 0; i < octets; i++) {
+         //  ptr[i] = ptr[i*2];   // 在前端为模拟音频时我们是取 ptr[i*2]
+               ptr[i] = ptr[i*2+1]; // 在前端为SPLITER 时我们是取 ptr[i*2+1]
         }
-        sample = (short)(opx_data->in_samples/2);
+
+        /* 判断是否需要将16k转换为8k数据 */
+        if (opx_data->resample_audforward == TRUE)
+        {
+            for (i = 0;i < (octets/2); i++)
+            {
+                ptr[i] = ptr[2*i];
+            }
+            sample = (short)(opx_data->in_samples/2);
+        }
+        else{
+            sample = opx_data->in_samples;
+        }
+
+        G722_DEBUG("G722Codec_process 6: acodec_encoder");
+
+        acodec_encoder(opx_data->g722Handle, (unsigned char*)opx_data->in_buffer, (short)(sample *G722_BYTE_PER_SAMPLE),
+                       (unsigned char*)opx_data->out_buffer, (unsigned short*)&outsize);
     }
-    else{
-        sample = opx_data->in_samples;
+#ifdef G722CODEC_CONTROL
+    if (opx_data->flag == 1)
+#endif
+    {
+        acodec_encoder(opx_data->g722Handle, (unsigned char*)opx_data->in_buffer, 0,
+                       (unsigned char*)opx_data->out_buffer, (unsigned short*)&outsize);
+        G722_DEBUG("G722Codec_process 7: output process");
+
+        /* 将每个SAMPLE为2个字节转换为4个字节 */
+        ptr = (signed short *)opx_data->out_buffer;
+        for(i = (signed short)(opx_data->out_samples-1); i >= 0; i--)
+            ptr[i*2] = ptr[i];
+
+        G722_DEBUG("G722Codec_process 8: cbuffer_write");
+
+        cbuffer_write(opx_data->op_buffer, (int*)opx_data->out_buffer, opx_data->out_samples);
     }
-   // G722_DEBUG1("encode intime=%d", time_get_time());
-
-    G722_DEBUG("G722Codec_process 6: acodec_encoder");
-
-    acodec_encoder(opx_data->g722Handle, (unsigned char*)opx_data->in_buffer, (short)(sample *G722_BYTE_PER_SAMPLE),
-                   (unsigned char*)opx_data->out_buffer, (unsigned short*)&outsize);
-
-    G722_DEBUG("G722Codec_process 7: output process");
-
-    // 将每个SAMPLE为2个字节转换为4个字节
-    ptr = (signed short *)opx_data->out_buffer;
-    for(i = (signed short)(opx_data->out_samples-1); i >= 0; i--)
-        ptr[i*2] = ptr[i];
-
-    G722_DEBUG("G722Codec_process 8: cbuffer_write");
-
-    cbuffer_write(opx_data->op_buffer, (int*)opx_data->out_buffer, opx_data->out_samples);
-
-  //  G722_DEBUG1("encode outtime=%d", time_get_time());
 #endif
 }
 
@@ -221,18 +230,19 @@ static void G722Codec_process_data(OPERATOR_DATA *op_data, TOUCHED_TERMINALS *to
     max_read = opx_data->in_samples - opx_data->rd_samples;
 
     in_data = cbuffer_calc_amount_data_in_words(opx_data->ip_buffer);
-    if(in_data < 1) return;
+    if (in_data < 1) return;
 
-    if(max_read > in_data)
+    if (max_read > in_data)
         max_read = in_data;
 
+    /* 处理的最大数据量 max_read */
     G722_DEBUG1("G722Codec_process 1: max_read: %d", max_read);
 
     G722Codec_metadata_read(opx_data, opx_data->ip_buffer, max_read);
 
     G722_DEBUG("G722Codec_process 2: G722Codec_metadata_read");
 
-    if(opx_data->disable_audforward) {
+    if (opx_data->disable_audforward) {
         opx_data->rd_samples = 0;
         touched->sources = TOUCHED_SOURCE_0;
         return;
@@ -245,10 +255,19 @@ static void G722Codec_process_data(OPERATOR_DATA *op_data, TOUCHED_TERMINALS *to
         return;
     }
 
-    if(opx_data->rd_samples >= opx_data->in_samples) {    // only support ==
+    if (opx_data->rd_samples >= opx_data->in_samples) {    // only support ==
         G722_DEBUG("G722Codec_process 4: G722Codec_processing_encode");
         G722Codec_processing_encode(opx_data, opx_data->in_samples);
-
+#ifdef G722CODEC_CONTROL
+        if (opx_data->flag == 0)
+        {
+            opx_data->flag = 1;
+            return;
+        }
+        else{
+            opx_data->flag = 0;
+        }
+#endif
         G722_DEBUG("G722Codec_process 9: G722Codec_metadata_write");
         G722Codec_metadata_write(opx_data, opx_data->op_buffer);
         opx_data->rd_samples = 0;
@@ -295,6 +314,7 @@ static void G722Codec_Init(G722CODEC_OP_DATA *opx_data)
     opx_data->in_buffer        = (unsigned *)xzpmalloc(opx_data->in_samples * 8);
     opx_data->out_buffer       = (unsigned *)xzpmalloc(opx_data->out_samples *4);
     opx_data->rd_samples       = 0;
+    opx_data->flag             = 0;
 }
 
 bool G722Codec_create(OPERATOR_DATA *op_data, void *message_data, unsigned *response_id, void **response_data)

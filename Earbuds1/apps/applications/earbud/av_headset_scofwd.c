@@ -833,6 +833,7 @@ static void appScoFwdHandleOTARing(const uint8* msg, int msg_size)
 }
 
 #ifdef CONFIG_STAROT
+#include "online_dbg.h"
 enum {OTACMD_PLAYTONE=0, OTACMD_SETVOL,
      OTACMD_LAST,};
 typedef struct{
@@ -841,7 +842,7 @@ typedef struct{
 } OTACMD_T;
 
 // recv from peer or locate set it
-static void appScoFwdCommandAtWcTime(rtime_t sync_time, uint8 command, uint8 param)
+static int16 appScoFwdCommandAtWcTime(rtime_t sync_time, uint8 command, uint8 param)
 {
     wallclock_state_t wc_state;
     scoFwdTaskData *theScoFwd = appGetScoFwd();
@@ -857,8 +858,11 @@ static void appScoFwdCommandAtWcTime(rtime_t sync_time, uint8 command, uint8 par
 
             /* If value is negative, do not ring */
             if(delay < 0)  {
-                DEBUG_LOG("appScoFwdCommandAtWcTime delay is negative, don't ring.");
-                return;
+                if(OTACMD_PLAYTONE == command) {
+                    DEBUG_LOG("appScoFwdCommandAtWcTime delay is negative, don't ring.");
+                    return 0;
+                }
+                else delay = 0;       // 同步音量调节，可以让它立即去调整
             }
 
             DEBUG_LOGF("appScoFwdCommandAtWcTime sync_time: %u, delay: %u", sync_time, delay);
@@ -873,12 +877,17 @@ static void appScoFwdCommandAtWcTime(rtime_t sync_time, uint8 command, uint8 par
         }
         else
             Panic();
+
+        return 0;
     }
+
+    online_dbg_record(ONLEIN_DBG_ERR_RTIMEWALLCLOCK);
+    return -1;
 }
 
 // event sync two erabuds
 // delay_us : locale device delay for play
-static void appScoFwdCommand(uint32 mtime, uint8 command, uint8 param, uint32 delay_us)
+static int16 appScoFwdCommand(uint32 mtime, uint8 command, uint8 param, uint32 delay_us)
 {
     scoFwdTaskData *theScoFwd = appGetScoFwd();
     rtime_t wallclock, sync_time;
@@ -904,8 +913,16 @@ static void appScoFwdCommand(uint32 mtime, uint8 command, uint8 param, uint32 de
         sync_time += delay_us;
         /* Also, play the ring locally: for this we will use the same function that will
            be called on the peer to handle the msg SFWD_OTA_MSG_RING */
-        appScoFwdCommandAtWcTime(sync_time, command, param);
+        return appScoFwdCommandAtWcTime(sync_time, command, param);
     }
+    else if(ParamUsingSingle() == TRUE){
+        if(OTACMD_PLAYTONE == command){
+            appUiPlayPrompt(param);
+        }
+    }
+
+    online_dbg_record(ONLEIN_DBG_ERR_RTIMEWALLCLOCK);
+    return -2;
 }
 
 // recv from peer, do on timer
@@ -931,9 +948,9 @@ static void appScoFwdHandlePlayTone(uint8 tone)
 
 #ifdef CONFIG_STAROT_VOLSYNC
 // adjust volume sync time
-void appScoFwdSetVolume(uint32 mtime, uint8 volume)
+int16 appScoFwdSetVolume(uint32 mtime, uint8 volume)
 {
-    appScoFwdCommand(mtime, OTACMD_SETVOL, volume, 0);
+    return appScoFwdCommand(mtime, OTACMD_SETVOL, volume, 0);
 }
 static void appScoFwdHandleVolume(uint8 volume)
 {

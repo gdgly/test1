@@ -73,11 +73,13 @@ typedef struct tagUSERPARAM {
     uint8          lKeyFunc, rKeyFunc;        // 耳机双击按键功能
     uint16         apolloEnable:1;            // 设置apollo是否使能0:不使能, 1:使能
     uint16         sensorEnable:1;            // 设置佩戴是否使能0:不使能, 1:使能
-    uint16         rev:6;                     // 保留
+    uint16         set8kEnb:1;                // 设置8K使能
+    uint16         rev:5;                     // 保留
     uint16         electricQuantity:8;        // 重启前电量
     uint16         assistantType;             // 1:App 2:System
     uint32         assistantModifyTime;       // 助手修改时间
     uint32         sensorModifyTime;          // 佩戴检测修改时间
+    uint32         set8kModifyTime;           // 设置8K修改时间
     uint8          caseSn[DEV_SN_LEN];        // 保存盒子的SN号用于显示
 
 }UserParam, *UserPrmPtr;

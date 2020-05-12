@@ -715,6 +715,7 @@ unsigned short data_err_num_ble=0;
 unsigned short data_right_num_ble=0;
 #endif
 
+bool max20340_in_case_itr_status = FALSE;
 void singlebus_itr_process(void)
 {
 #if TEST_ITR
@@ -744,6 +745,7 @@ void singlebus_itr_process(void)
             //说明是插入动作,可能是芯片bug需要重写mask寄存器
             online_dbg_record(ONLINE_DBG_INCASE_ITR);
             DEBUG_LOG("plc in 0x%x", value_a[MX20340_REG_PLC_IRQ]);
+            max20340_in_case_itr_status = TRUE;
             if(0 == g_commuType){       // 非测试模式下去改变实际状态
                 max20340_notify_plc_in();
             }
@@ -751,6 +753,7 @@ void singlebus_itr_process(void)
             //说明是拔出动作,可能是芯片bug需要重写mask寄存器
             online_dbg_record(ONLINE_DBG_OUTCASE_ITR);
             DEBUG_LOG("plc out 0x%x", value_a[MX20340_REG_PLC_IRQ]);
+            max20340_in_case_itr_status = FALSE;
             if(0 == g_commuType) {       // 非测试模式下去改变实际状态
                 max20340_notify_plc_out();
             }
@@ -1007,6 +1010,14 @@ int max20340_GetStatus(void)
     }
 }
 
+void max20340_read_sta1_reg(uint8* value)
+{
+    bitserial_handle handle;
+    handle = max20340Enable();
+    max20340ReadRegister(handle, MX20340_REG_STA1, value);
+    max20340Disable(handle);
+}
+
 // 系统重新启动之后，来检测一下PLC是否连接
 bool max20340_GetConnect(void)
 {
@@ -1112,6 +1123,10 @@ void max20340_init(void)
         DEBUG_LOG("max20340 reg 0x%x = 0x%x\n", max20340_init_array[i].reg, value);
     }
     max20340ReadRegister_withlen(handle, 0x0, value_a, 0x13);//read clear itr
+
+    if( (value_a[MX20340_REG_STA1]&0x1c) == (5<<2) ){//表示入耳，与手机联调时使用
+        max20340_in_case_itr_status = TRUE;
+    }
 
     psbfuncTask = PanicUnlessNew(singlebus_funcInfoTask);
     memset(psbfuncTask, 0, sizeof(singlebus_funcInfoTask));

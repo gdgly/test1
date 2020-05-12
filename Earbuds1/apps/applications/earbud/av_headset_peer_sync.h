@@ -12,6 +12,8 @@
 
 #include "av_headset_peer_signalling.h"
 
+void appPeerSyncSend_max20340_debug_return_reg_value(uint8 reg_value, bool in_case_itr_status);
+void appPeerSyncSend_max20340_debug_start(void);
 /*! \brief The state of synchronisation with the peer.
     @startuml
     participant Earbud1 as EB1

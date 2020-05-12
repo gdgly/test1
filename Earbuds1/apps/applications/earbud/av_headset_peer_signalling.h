@@ -14,6 +14,13 @@
 #include "av_headset_tasklist.h"
 #include "av_headset_phy_state.h"
 
+#include "tws/max20340.h"
+#include "tws/online_dbg.h"
+
+#define APPPEERSYNC_DEBUG_MSG_CMD_MAX20340  1
+#define APPPEERSYNC_DEBUG_MSG_CMD_MAX20340_SYNC_START  1
+#define APPPEERSYNC_DEBUG_MSG_CMD_MAX20340_SYNC_RETURN_REG_VALUE  2
+
 /*! Flag used on peer signalling states to indicate if the state represents 
     an activity that will finish. This is reflected in the lock member of 
     \ref peerSigTaskData. */
@@ -31,6 +38,7 @@ typedef enum
     /*! Channel ID for Peer Sync messages. */
     PEER_SIG_MSG_CHANNEL_PEER_SYNC = 1UL << 1,
 
+    PEER_SIG_MSG_CHANNEL_PEER_OD_SYNC = 1UL << 2,
     /*! Maximum channel ID */
     PEER_SIG_MSG_CHANNEL_MAX  = 1UL << 3,
     

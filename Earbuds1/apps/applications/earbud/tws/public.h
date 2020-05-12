@@ -341,7 +341,7 @@ extern uint8 g_appConfigSocMic1, g_appConfigSocMic2;
 //              software watchdog 开关
 // ================================================
 
-#define AUDIO_PARAM_TUNE
+// #define AUDIO_PARAM_TUNE
 
 // ================================================
 //              录音助手功能

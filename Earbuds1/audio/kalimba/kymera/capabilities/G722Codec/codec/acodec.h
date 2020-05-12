@@ -8,6 +8,10 @@
 #ifndef _ACODEC_H_H
 #define _ACODEC_H_H
 
+
+/* 控制是否缩短一次执行G722编码函数的时间 */
+#define G722CODEC_CONTROL
+
 int acodec_memsize(void);
 
 // 初始化解压缩库

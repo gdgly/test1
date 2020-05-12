@@ -1004,7 +1004,6 @@ void appSubUIInit(void)
 #ifdef TWS_DEBUG
     progRun->realInCase = TRUE;
     progRun->powerflag15 = TRUE;
-    progRun->set8kEnb = 0;
 #endif
     /* 获取底层的电量信息 */
     battery_from.task            = &appGetUi()->task;
@@ -1331,7 +1330,7 @@ void appUiNotifyAudioSampleRate(uint16 rate, uint16 mode)
         return;
     }
     MAKE_OBJECT(STAROT_DIALOG_SAMPLE_RATE_T);
-    if(gProgRunInfo.set8kEnb){
+    if(gUserParam.set8kEnb){
         message->rate= 8000;
     }
     else{

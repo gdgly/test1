@@ -60,6 +60,7 @@ typedef struct G722CODEC_OP_DATA{
 
     CPS_PARAM_DEF parms_def;
     void     *g722Handle;
+    unsigned flag;                /* 为了把编码的两个函数分开执行，这样g722编码函数一次执行不会占用太多时间 */
 } G722CODEC_OP_DATA;
 
 

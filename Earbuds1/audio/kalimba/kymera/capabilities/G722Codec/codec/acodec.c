@@ -104,6 +104,7 @@ typedef struct tagACODECHANDLER {
 #ifdef SUPPORT_ZERO_DATA_DETECT
     UWord16     dec_zero_cnt;   /*检测到两次0数据，将所有数据设置为0 */
 #endif
+    Word16 mag_shift;           /* 保存上一次的mag_shift */
 }AcodecHandler, *AcodecHPtr;
 
 
@@ -273,19 +274,22 @@ int acodec_decoder(void *handle, int dec8K, unsigned char *indata, unsigned shor
 
 int acodec_encoder(void *handle, unsigned char *indata, unsigned short insize, unsigned char *outdata, unsigned short *outsize)
 {
-        Word16 mag_shift;
         AcodecHPtr h = (AcodecHPtr)handle;
 
-	/* Convert input samples to rmlt coefs */
-        mag_shift = samples_to_rmlt_coefs((Word16*)indata, h->enc_old_frame,
-                h->mlt_coefs, MAX_SAMPLES_PER_FRAME);
-
-	/* Encode the mlt coefs. Note that encoder output stream is
-	 * 16 bit array, so we need to take care about endianness.
-	 */
-        (void)mag_shift;
-        encoder(MAX_SAMPLES_PER_FRAME, NUMBER_OF_REGIONS,// codec_data->number_of_regions
-                h->mlt_coefs, mag_shift, (Word16*)outdata);
+        if (insize != 0)
+        {
+            /* Convert input samples to rmlt coefs */
+            h->mag_shift = samples_to_rmlt_coefs((Word16*)indata, h->enc_old_frame,
+                                               h->mlt_coefs, MAX_SAMPLES_PER_FRAME);
+        }
+        else
+        {
+            /* Encode the mlt coefs. Note that encoder output stream is
+             * 16 bit array, so we need to take care about endianness.
+             */
+            encoder(MAX_SAMPLES_PER_FRAME, NUMBER_OF_REGIONS,// codec_data->number_of_regions
+                    h->mlt_coefs, h->mag_shift, (Word16*)outdata);
+        }
 
 	/* Encoder output are in native host byte order, while ITU says
 	 * it must be in network byte order (MSB first).
