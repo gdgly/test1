@@ -251,12 +251,14 @@ int Ucs146e0Power(bool isOn)
 {
     int ret;
     bitserial_handle handle;
+    proximityTaskData *prox = appGetProximity();
     handle = Ucs146e0Enable();
     if(isOn){
         ret = Ucs146e0WriteRegister(handle, 0x00, 0x46);
         _ucs146e0Runing = 1;
     }else{
         ret = Ucs146e0WriteRegister(handle, 0x00, 0);
+        prox->state->proximity = proximity_state_not_in_proximity;
         _ucs146e0Runing = 0;
     }
     Ucs146e0Disable(handle);
