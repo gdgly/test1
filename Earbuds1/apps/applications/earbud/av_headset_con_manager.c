@@ -559,8 +559,8 @@ static void appConManagerHandleClSmAuthoriseIndication(const CL_SM_AUTHORISE_IND
                 else if (appDeviceIsHandsetConnected() && BdaddrIsSame(&handset_bd_addr, &ind->bd_addr))
                 {
 #ifdef STAROT_EXT_CONNECT_TIMEOUT
-                    appConManagerRemoveNotExpect(&ind->bd_addr);
-                    appAvDisconnectNotExpect(&ind->bd_addr);
+                    // appConManagerRemoveNotExpect(&ind->bd_addr);
+                    // appAvDisconnectNotExpect(&ind->bd_addr);
 #endif
                     /* NB: appDeviceIsHandsetConnected() will be set on an ACL connection */
                     DEBUG_LOGF("appConManagerHandleClSmAuthoriseIndication peer_sync %d peer_handset %d peer_handset_tws %d",

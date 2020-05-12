@@ -95,6 +95,10 @@ void subPhyEnterAir(void) {
 
 void subPhyExitAir(void) {
     DEBUG_LOG("call subPhyExitAir");
+    if (FALSE == appGetCaseIsOpen()) {
+        DEBUG_LOG("subPhyExitAir: now case is close, so don't send message to application");
+        return;
+    }
     appUiPowerSave(POWER_MODE_IN_CASE_OPEN);
     subPhySetVirtualPosition(SUB_PHY_POSITION_IN_CASE_OPEN);
     appPeerSyncSend(FALSE);

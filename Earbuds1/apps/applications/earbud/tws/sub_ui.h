@@ -76,6 +76,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 
 #define APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT 2130  // gaia/peer -> ui 在这个时间内，可以进入DFU
 #define APP_UPGRADE_ACCIDENT_DISCONNECT_TIMEOUT 2131 /// gaia -> ui 定时任务，意外断开连接
+#define APP_RULES_TIMEOUT_FOR_CLEAR_DEFER     2132
+#define APP_CASE_CLOSE_DO_TIMEOUT 2133  /// 防止执行了close之后，马上执行open
 
 struct UI_APP_UPGRADE_COMMIT_STATUS_T {
     bool status;   // true:commit ;false:revert

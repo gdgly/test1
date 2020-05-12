@@ -748,6 +748,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("plc call case close");
         online_dbg_record(ONLINE_DBG_CASE_CLOSE);
         subPhyEnterCase();
+        MessageSendLater(appGetUiTask(), APP_CASE_CLOSE_DO_TIMEOUT, NULL, 100);
 
 //#ifdef TWS_DEBUG
 //        if (appGaiaIsConnect() && !(appSmIsInDfuMode() && UpgradeInProgress())) {
@@ -973,7 +974,9 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         DEBUG_LOG("parse APP_UPGRADE_CAN_ENTER_DFU_TIMEOUT");
         appUISetCanEnterDfu(FALSE);
         break;
-
+    case APP_RULES_TIMEOUT_FOR_CLEAR_DEFER:
+        appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
+        break;
     case APP_UPGRADE_ACCIDENT_DISCONNECT_TIMEOUT:
         DEBUG_LOG("parse APP_UPGRADE_ACCIDENT_DISCONNECT_TIMEOUT");
         appUISetCanEnterDfu(FALSE);
@@ -1403,7 +1406,11 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
                 MessageCancelAll(&appGetUi()->task, APP_CASE_OPEN);
                 MessageCancelAll(&appGetUi()->task, APP_CASE_CLOSE);
                 /// 充电盒打开，通知左右耳机，需要时间
-                MessageSendLater(&appGetUi()->task, APP_CASE_OPEN, NULL, 50);
+                if (MessageCancelAll(appGetUiTask(), APP_CASE_CLOSE_DO_TIMEOUT) > 0) {
+                    MessageSendLater(&appGetUi()->task, APP_CASE_OPEN, NULL, 150);
+                } else {
+                    MessageSendLater(&appGetUi()->task, APP_CASE_OPEN, NULL, 50);
+                }
             } else {
                 DEBUG_LOG("call case close");
                 MessageCancelAll(&appGetUi()->task, APP_CASE_OPEN);

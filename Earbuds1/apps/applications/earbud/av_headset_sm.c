@@ -571,7 +571,7 @@ static void appExitInCase(void)
 
     /* run rules for being taken out of the case */
     appConnRulesResetEvent(RULE_EVENT_IN_CASE);
-    appConnRulesResetEvent(RULE_EVENT_OUT_CASE);
+    // appConnRulesResetEvent(RULE_EVENT_OUT_CASE);
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_OUT_CASE);
 }
 

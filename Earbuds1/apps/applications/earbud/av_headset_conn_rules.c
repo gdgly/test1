@@ -846,10 +846,12 @@ static ruleAction ruleConnectHandsetStandard(ruleConnectReason reason)
 static ruleAction ruleConnectHandset(ruleConnectReason reason,
                                      rulePostHandsetConnectAction post_connect_action)
 {
-//    if (appConnRulesInProgress()) {
-//        RULE_LOG("ruleConnectHandset, now rule in progress so defer");
-//        return RULE_ACTION_DEFER;
-//    }
+   if (appConnRulesInProgress()) {
+       RULE_LOG("ruleConnectHandset, now rule in progress so defer");
+       MessageCancelAll(appGetUiTask(), APP_RULES_TIMEOUT_FOR_CLEAR_DEFER);
+       MessageSendLater(appGetUiTask(), APP_RULES_TIMEOUT_FOR_CLEAR_DEFER, NULL, 500);
+       return RULE_ACTION_DEFER;
+   }
 
     bdaddr handset_addr;
     connRulesTaskData *conn_rules = appGetConnRules();
@@ -2037,6 +2039,7 @@ static ruleAction ruleBothConnectedDisconnect(void)
             {
                 RULE_LOGF("ruleBothConnectedDisconnect, ignore, same score and we're right: this %u other %u",
                         this_earbud_score, other_earbud_score);
+                appPeerSyncSend(FALSE);
                 return RULE_ACTION_IGNORE;
             }
         }
