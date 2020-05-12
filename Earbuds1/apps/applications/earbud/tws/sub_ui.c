@@ -1482,15 +1482,15 @@ void appUiPowerSave(PowerSaveMode mode)           // 省电模式
     uint16 timeout;
     ProgRIPtr  progRun = appSubGetProgRun();
 
-    if(POWER_MODE_IN_CASE == mode || POWER_MODE_IN_CASE_OPEN == mode ) {
-        timeout = 2000;
-    }
-    else if(POWER_MODE_OUT_CASE == mode)
-        timeout = 1000;
-    else if(POWER_MODE_IN_EAR == mode)
+    /// 2000 1000 500 10
+    if (POWER_MODE_IN_CASE == mode || POWER_MODE_IN_CASE_OPEN == mode) {
+        timeout = 0; // 放入充电盒，马上发送
+    } else if (POWER_MODE_OUT_CASE == mode)
         timeout = 500;
+    else if (POWER_MODE_IN_EAR == mode)
+        timeout = 1000;
     else
-        timeout = 10;
+        timeout = 2000;
 
     //这个涵数就是为了延时，无论模式怎么变化
     progRun->iPowerSaveMode   = mode;

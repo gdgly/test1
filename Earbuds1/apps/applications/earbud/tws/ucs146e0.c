@@ -1,5 +1,6 @@
 #include "ucs146e0.h"
 #ifdef HAVE_UCS146E0
+#include "sub_phy.h"
 #include "online_dbg.h"
 static uint8  _ucs146e0Runing = 0;              // poweroff后，设置为 0, 启动运行为1
 static uint8  _ucs146e0StatInOut = 0xFF;           // 0xFF unknown, 0:in ear, 1:out ear
@@ -132,6 +133,7 @@ static void Ucs146e0_itr_read_reg(Task task, MessageId id, Message msg)
     Ucs146e0ReadRegister(handle, 2, &value);
     ear_status = value & 0x20;//obj位为1表示入耳中断，为0表示出耳中断
     Ucs146e0WriteRegister(handle, 2, 0);//clear itr
+    online_dbg_record(ONLINE_DBG_PLC_ACTIVE);
 
     if(0 == _ucs146e0Runing) {      // poweroff后，不向外发送消息
         DEBUG_LOG("ucs146e0_itr_read_reg but Poweroff");
@@ -140,7 +142,7 @@ static void Ucs146e0_itr_read_reg(Task task, MessageId id, Message msg)
     }
 
     if(ear_status &&
-            (prox->state->proximity != proximity_state_in_proximity) ){
+            (prox->state->proximity != proximity_state_in_proximity) && !subPhyCurrentVirtualStateIsCanConnectCase()){
         prox->state->proximity = proximity_state_in_proximity;
         if (NULL != prox->clients){
             DEBUG_LOG("in ear");
@@ -151,7 +153,7 @@ static void Ucs146e0_itr_read_reg(Task task, MessageId id, Message msg)
             MessageSend(appGetUiTask(), APP_PSENSOR_INEAR, NULL);
     }
     if((!ear_status) &&
-            (prox->state->proximity == proximity_state_in_proximity) ){
+            (prox->state->proximity == proximity_state_in_proximity) && !subPhyCurrentVirtualStateIsCanConnectCase()){
         prox->state->proximity = proximity_state_not_in_proximity;
         if (NULL != prox->clients){
             DEBUG_LOG("out ear");

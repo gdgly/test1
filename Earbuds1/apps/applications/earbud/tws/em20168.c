@@ -1,5 +1,7 @@
 #include "em20168.h"
 #include "online_dbg.h"
+#include "sub_phy.h"
+
 #ifdef HAVE_EM20168
 
 
@@ -197,6 +199,7 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     DEBUG_LOG("EM20168 reg = 0x%x", em20168_ps0_value);
 #endif
     EM20168WriteRegister(handle, 2, 0);
+    online_dbg_record(ONLINE_DBG_PLC_ACTIVE);
 
     if(0 == _em20168Runing) {      // poweroff后，不向外发送消息
         DEBUG_LOG("EM20168_itr_read_reg=%d but Poweroff", em20168_ps0_value);
@@ -205,7 +208,7 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
     }
 
     if(em20168_ps0_value >= high_value &&
-            (prox->state->proximity != proximity_state_in_proximity) ){
+            (prox->state->proximity != proximity_state_in_proximity) && !subPhyCurrentVirtualStateIsCanConnectCase()){
         prox->state->proximity = proximity_state_in_proximity;
         if (NULL != prox->clients){
             DEBUG_LOG("in ear");
@@ -216,7 +219,7 @@ void EM20168_itr_read_reg(Task task, MessageId id, Message msg)
             MessageSend(appGetUiTask(), APP_PSENSOR_INEAR, NULL);
     }
     if(em20168_ps0_value <= low_value &&
-            (prox->state->proximity == proximity_state_in_proximity) ){
+            (prox->state->proximity == proximity_state_in_proximity) && !subPhyCurrentVirtualStateIsCanConnectCase()){
         prox->state->proximity = proximity_state_not_in_proximity;
         if (NULL != prox->clients){
             DEBUG_LOG("out ear");

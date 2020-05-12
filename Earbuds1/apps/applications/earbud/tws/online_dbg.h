@@ -196,6 +196,7 @@
 #define ONLINE_DBG_PROX_USC_INIT_SUCC   (0x13)    /* proximity ucs146e0 init success */
 #define ONLINE_DBG_PROX_UCS_INIT_FAIL   (0x14)    /* proximity ucs146e0 init fail */
 #define ONLEIN_DBG_ERR_RTIMEWALLCLOCK   (0x15)    /* RtimeWallClockGetStateFor Sink Error */
+#define ONLINE_DBG_PLC_ACTIVE        (0x16)
 
 #define ONLINE_DBG_AVDTP_DISCOVER   (0x20)    /* avdtp discover */
 #define ONLINE_DBG_AVDTP_GET_CAPS   (0x21)    /* avdtp get capabilities */

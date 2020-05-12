@@ -68,6 +68,11 @@ void subPhyExitEar(void);
 
 bool subPhyVirtualStateIsCanConnectCase(uint8 status);
 
+/*
+ * 当前耳机，是否可以与充电盒通讯
+ */
+bool subPhyCurrentVirtualStateIsCanConnectCase(void);
+
 // endregion
 
 #endif //APPS_SUB_PHY_H

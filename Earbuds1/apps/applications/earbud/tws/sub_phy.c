@@ -122,4 +122,9 @@ bool subPhyVirtualStateIsCanConnectCase(uint8 status) {
     return (status == SUB_PHY_POSITION_IN_CASE_CLOSE || status == SUB_PHY_POSITION_IN_CASE_OPEN);
 }
 
+bool subPhyCurrentVirtualStateIsCanConnectCase(void) {
+    uint8 st = subPhyGetVirtualPosition();
+    return subPhyVirtualStateIsCanConnectCase(st);
+}
+
 
