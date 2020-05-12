@@ -553,17 +553,22 @@ static ruleAction ruleAutoHandsetPair(void)
     }
     else
     {
+        if (ParamUsingSingle())
+        {
+            RULE_LOG("ruleAutoHandsetPair, sig mode, auto pairing with handset");
+            return RULE_ACTION_RUN;
+        }
+
         /* Both out of case, neither pairing or paired.  Left wins, right loses . 修改:业务需要，右边优先级高于左边 */
         if (appConfigIsLeft())
         {
-            RULE_LOG("ruleAutoHandsetPair, ignore, no paired handset, we're out of case, peer is out of case, but we're left earbud");
-            return RULE_ACTION_IGNORE;
+            RULE_LOG("ruleAutoHandsetPair, run, no paired handset, we're out of case, peer is out of case, we're left earbud");
+            return RULE_ACTION_RUN;
         }
         else
         {
-            RULE_LOG("ruleAutoHandsetPair, run, no paired handset, we're out of case, peer is out of case, we're right earbud");
-            return RULE_ACTION_RUN;
-
+            RULE_LOG("ruleAutoHandsetPair, ignore, no paired handset, we're out of case, peer is out of case, but we're right earbud");
+            return RULE_ACTION_IGNORE;
         }
     }
 }
@@ -756,8 +761,8 @@ static ruleAction ruleConnectHandsetStandard(ruleConnectReason reason)
                         RULE_LOG("ruleConnectHandsetStandard, always sig mode, auto connect");
                         return RULE_ACTION_RUN;
                     } else {
-                        RULE_LOG("ruleConnectHandsetStandard, always right connect, auto connect");
-                        return appConfigIsLeft() ? RULE_ACTION_IGNORE : RULE_ACTION_RUN;
+                        RULE_LOG("ruleConnectHandsetStandard, always left connect, auto connect");
+                        return appConfigIsLeft() ? RULE_ACTION_RUN : RULE_ACTION_IGNORE;
                     }
 #else
                     RULE_LOG("ruleConnectHandsetStandard, calling ruleConnectBatteryVoltage() as standard handset and both out of case but peer not connected");

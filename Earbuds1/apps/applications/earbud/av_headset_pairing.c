@@ -1530,12 +1530,7 @@ static void appHandleInternalPeerPairRequest(pairingTaskData *thePairing, PAIR_R
 
             /* Reset SDP search attempts count */
             thePairing->sdp_search_attempts = 0;
-#ifdef CONFIG_STAROT
-            /// 修改理由：左右配对完毕之后，进入与手机配对模式，L先启动，再关闭，导致用户能看见一次L的蓝牙设备，主动配对无效，还是要找到R才能使用
-            if (!appConfigIsLeft())
-#else
             if (appConfigIsLeft())
-#endif
             {
                 /* Move to 'peer inquiry' state to start inquiry */
                 appPairingSetState(thePairing, PAIRING_STATE_PEER_INQUIRY);
