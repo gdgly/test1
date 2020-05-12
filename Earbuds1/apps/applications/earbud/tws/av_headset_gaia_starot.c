@@ -1772,7 +1772,7 @@ static bool appGaiaIsCanEnterDfu(void) {
 
     ///  任何一只耳机在空中，不允许升级
     if (ParamUsingSingle()) {
-        if (!appSmIsInCase()) {
+        if (!subPhyVirtualStateIsCanConnectCase(subPhyGetVirtualPosition())) {
             return FALSE;
         }
     } else {

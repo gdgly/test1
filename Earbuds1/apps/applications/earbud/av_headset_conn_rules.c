@@ -521,12 +521,12 @@ static ruleAction ruleAutoHandsetPair(void)
     {
 #ifdef CONFIG_STAROT
         if (appConfigIsLeft()) {
-            RULE_LOG("ruleAutoHandsetPair, complete, peer is already paired with handset");
-            return RULE_ACTION_DEFER;
-        } else {
-            RULE_LOG("ruleAutoHandsetPair, run, peer is already paired with handset, but we are right, "
+            RULE_LOG("ruleAutoHandsetPair, run, peer is already paired with handset, but we are left, "
                      "still run, wait next sync kill peer pairing operation");
             return RULE_ACTION_RUN;
+        } else {
+            RULE_LOG("ruleAutoHandsetPair, complete, peer is already paired with handset");
+            return RULE_ACTION_DEFER;
         }
 #else
         RULE_LOG("ruleAutoHandsetPair, defer, peer is already in pairing mode");
