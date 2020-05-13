@@ -325,6 +325,7 @@ void appSubUISetMicbias(int set)
 // 如果REC不是正在运行，直接退出
 static void appUiKymeraRecordStop(void)
 {
+    appSubGetProgRun()->recStat  = 0;
 #ifdef CONFIG_REC_ASSISTANT
     // 停止录音通道
     if (appKymeraRecordIsRun()) {
@@ -530,7 +531,6 @@ static void subUiGaiaMessage(ProgRIPtr progRun, Message message)
         break;
 
     case STAROT_AI_USER_STOP_RECORD:               ///设备停止录音
-        progRun->recStat  = 0;
         appUiKymeraRecordStop();
         break;
 
