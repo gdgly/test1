@@ -2972,11 +2972,11 @@ static ruleAction ruleBleConnectionUpdate(void)
                         // 2.版本相同，右耳机优先
                         bool left = appConfigIsLeft();
                         if (left) {
-                            DEBUG_LOG("ruleBleConnectionUpdate left earbuds, ble adv disable");
-                            return bleDisable();
-                        } else {
-                            DEBUG_LOG("ruleBleConnectionUpdate right earbuds, ble adv enable");
+                            DEBUG_LOG("ruleBleConnectionUpdate left earbuds, ble adv enable");
                             return bleEnable();
+                        } else {
+                            DEBUG_LOG("ruleBleConnectionUpdate right earbuds, ble adv disable");
+                            return bleDisable();
                         }
                     } else {
                         DEBUG_LOG("ruleBleConnectionUpdate current in case, "
