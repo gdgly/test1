@@ -453,7 +453,7 @@ do \
 #define appUiAvVolumeUp()                           /* 简短播放AV音量调高 */
 #define appUiAvVolumeLimit()                        /* 播放AV音量限制达到音质 */
 #define appUiAvRemoteControl()                      /* 播放AVRCP遥控音 */
-#define appUiAvPeerConnected(silent)                /* 播放AV连接指示 */
+#define appUiAvPeerConnected(silent)                appScoFwdTone(1000, PROMPT_CONNECTED) /* 播放AV连接指示 */
 #define appUiAvLinkLoss()                           appScoFwdTone(1000, PROMPT_DISCONNECTED) /* 播放AV连接丢失音调 */
 //关于SBC.或AAC的方面
 #define appUiAvStreamingActive()                    /* 显示AV流激活LED模式 */
@@ -479,12 +479,12 @@ do \
 #define appUiPairingStart()                         /* 播放配对起始音 */
 
 /*! \brief Show pairing active LED pattern and play prompt */
-#define appUiPairingActive(is_user_initiated) \
-do \
-{  \
-    appScoFwdTone(1000, PROMPT_PAIRING); \
-    appLedSetPattern(app_led_pattern_pairing, LED_PRI_MED); \
-} while(0)
+#define appUiPairingActive(is_user_initiated)
+//do \
+//{  \
+//    appScoFwdTone(400, PROMPT_PAIRING); \
+//    appLedSetPattern(app_led_pattern_pairing, LED_PRI_MED); \
+//} while(0)
 #define appUiPairingInactive(is_user_initiated)     /* 取消配对积极的LED模式*/
 #endif
 

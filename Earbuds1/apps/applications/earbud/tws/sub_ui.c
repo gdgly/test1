@@ -156,7 +156,7 @@ static void subUiVoiceTapWakeup(ProgRIPtr progRun, bool isTap)
         DBCLINK_LOG("wakeapp,isTap=%d gaia=%d peerGaia=%d", isTap, progRun->gaiaStat, progRun->peerGaiaStat);
 
         if(!appDeviceIsPeerAvrcpConnectedForAv() || !appPeerSyncIsComplete() || !appPeerSyncIsPeerHandsetAvrcpConnected()) {
-            appScoFwdTone(1000,PROMPT_PAIRING_FAILED);        // 没有与对方连接或对方没有连接手机,联接失败;
+//            appScoFwdTone(1000,PROMPT_PAIRING_FAILED);        // 没有与对方连接或对方没有连接手机,联接失败;
             return;
         }
 
@@ -855,7 +855,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
         DEBUG_LOG("progRun->bredrconnect =%d",progRun->bredrconnect);
 
-        if(appPeerSyncIsPeerInEar() != TRUE)
+        if((appPeerSyncIsPeerInEar() != TRUE) && (appDeviceIsHandsetA2dpConnected() || appPeerSyncIsPeerHandsetA2dpConnected()))
         {
             MessageCancelAll(&appGetUi()->task, APP_UI_HFP_DISCONN_TONE);
             MessageCancelAll(&appGetUi()->task, APP_CONNECTED_HOST);
@@ -933,10 +933,14 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case APP_CONNECTED_HOST:
         if(appDeviceIsHandsetConnected() && !appDeviceIsHandsetA2dpStreaming() && !appHfpIsCallActive()){
-            appScoFwdTone(1000, PROMPT_CONNECTED);
+            MessageCancelAll(appGetUiTask(), APP_UI_HFP_DISCONN_TONE);
+            MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
+            appScoFwdTone(400, PROMPT_CONNECTED);
         }
         if((TRUE == appPeerSyncIsPeerHandsetHfpConnected()) && !appPeerSyncIsPeerScoActive() && !appPeerSyncIsPeerHandsetA2dpStreaming()) {
-            appScoFwdTone(1000, PROMPT_CONNECTED);
+            MessageCancelAll(appGetUiTask(), APP_UI_HFP_DISCONN_TONE);
+            MessageCancelAll(appGetUiTask(), APP_CONNECTED_HOST);
+            appScoFwdTone(400, PROMPT_CONNECTED);
         }
         break;
     case APP_UI_HFP_DISCONN_TONE:
@@ -1301,7 +1305,6 @@ void appUiPairingComplete(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->handsetPair = 1;
-    appScoFwdTone(1000,PROMPT_PAIRING_SUCCESSFUL);
 }
 
 
@@ -1311,7 +1314,6 @@ void appUiPairingFailed(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->handsetPair = 2;
-    appScoFwdTone(1000,PROMPT_PAIRING_FAILED);
 }
 
 

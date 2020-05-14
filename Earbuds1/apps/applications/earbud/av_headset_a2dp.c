@@ -425,7 +425,8 @@ static void appA2dpEnterConnectedSignalling(avInstanceTaskData *theInst)
     }
     else
     {
-        appUiAvPeerConnected(theInst->a2dp.flags & A2DP_CONNECT_SILENT);
+        if(appDeviceIsHandsetConnected() && !appSmIsInEar())
+            appUiAvPeerConnected(theInst->a2dp.flags & A2DP_CONNECT_SILENT);
     }
     
     /* Clear silent flags */
