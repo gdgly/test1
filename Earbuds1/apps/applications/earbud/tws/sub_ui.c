@@ -1406,16 +1406,15 @@ void appUiCaseStatus(int16 lidOpen, int16 keyDown, int16 keyLong, int16 iElectri
                 MessageCancelAll(&appGetUi()->task, APP_CASE_OPEN);
                 MessageCancelAll(&appGetUi()->task, APP_CASE_CLOSE);
                 /// 充电盒打开，通知左右耳机，需要时间
-                if (MessageCancelAll(appGetUiTask(), APP_CASE_CLOSE_DO_TIMEOUT) > 0) {
-                    MessageSendLater(&appGetUi()->task, APP_CASE_OPEN, NULL, 150);
-                } else {
-                    MessageSendLater(&appGetUi()->task, APP_CASE_OPEN, NULL, 50);
-                }
+                uint16 delay = MessageCancelAll(appGetUiTask(), APP_CASE_CLOSE_DO_TIMEOUT) > 0 ? 100 : 0;
+                delay += (appConfigIsLeft() ? 0 : 200);
+                MessageSendLater(&appGetUi()->task, APP_CASE_OPEN, NULL, delay);
             } else {
                 DEBUG_LOG("call case close");
                 MessageCancelAll(&appGetUi()->task, APP_CASE_OPEN);
                 MessageCancelAll(&appGetUi()->task, APP_CASE_CLOSE);
-                MessageSendLater(&appGetUi()->task, APP_CASE_CLOSE, NULL, 1000);
+                // uint16 delay = appDeviceIsHandsetConnected() ? 1000 : 50;
+                MessageSendLater(&appGetUi()->task, APP_CASE_CLOSE, NULL, 50);
             }
         }
     }

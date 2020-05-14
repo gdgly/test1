@@ -794,11 +794,11 @@ void appSetState(appState new_state)
         appExitSubStateTerminating();
 
     /* if exiting the APP_STATE_IN_CASE parent state */
-#ifdef CONFIG_STAROT
-    if (appSmStateInCase(previous_state) && !appSmStateInCase(new_state) && ((APP_STATE_HANDSET_PAIRING & new_state) == 0))
-#else
+// #ifdef CONFIG_STAROT
+//     if (appSmStateInCase(previous_state) && !appSmStateInCase(new_state) && ((APP_STATE_HANDSET_PAIRING & new_state) == 0))
+// #else
     if (appSmStateInCase(previous_state) && !appSmStateInCase(new_state))
-#endif
+// #endif
     {
         appExitInCase();
     }
@@ -831,13 +831,12 @@ void appSetState(appState new_state)
     }
 
     /* if entering the APP_STATE_IN_CASE parent state */
-#ifdef TWS_DEBUG
-    /// 修改出发点：如果手机点击配对，是希望连接成功的。但是tws默认，pair完毕之后，就应该结束了，不让连接，导致手机上有额外的连接失败弹框
-    /// 现在让他连接成功，在连接成功之后，触发规则ruleRealInCaseDisconnect去处理
-    if (((APP_STATE_HANDSET_PAIRING & previous_state) == 0) && !appSmStateInCase(previous_state) && appSmStateInCase(new_state))
-#else
+// #ifdef TWS_DEBUG
+//     /// 修改出发点：如果手机点击配对，是希望连接成功的。但是tws默认，pair完毕之后，就应该结束了，不让连接，导致手机上有额外的连接失败弹框
+//     /// 现在让他连接成功，在连接成功之后，触发规则ruleRealInCaseDisconnect去处理
+//     if (((APP_STATE_HANDSET_PAIRING & previous_state) == 0) && !appSmStateInCase(previous_state) && appSmStateInCase(new_state))
+// #else
     if (!appSmStateInCase(previous_state) && appSmStateInCase(new_state))
-#endif
     {
         appEnterInCase();
     }
@@ -1775,10 +1774,13 @@ static void appSmHandleConnRulesHandsetDisconnect(CONN_RULES_DISCONNECT_HANDSET_
                                             : POST_DISCONNECT_ACTION_HANDOVER;
     }
     appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
-                                   appConfigLinkDisconnectionTimeoutTerminatingMs(),
+                                   200,
+                                   // appConfigLinkDisconnectionTimeoutTerminatingMs(),
                                    post_disconnect_action);
     appSetState(appSetSubState(APP_SUBSTATE_DISCONNECTING));
     appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_HANDSET);
+    /// 断开前，认为连接结束
+    appConnRulesSetRuleComplete(CONN_RULES_CONNECT_HANDSET);
 }
 
 

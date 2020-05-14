@@ -1837,8 +1837,21 @@ static ruleAction ruleInCaseDisconnectHandset(void)
     {
         RULE_LOG("ruleInCaseDisconnectHandset, run as in case and handset connected");
         // Try to handover the handset connection to the other earbud
+#ifdef CONFIG_STAROT
+        /// 可能影响断开重连的问题，后期再确认
+        if (appDeviceIsHandsetConnected()) {
+            RULE_LOG("ruleInCaseDisconnectHandset, don't connect handset, so don't need handover");
+            bool handover = FALSE;
+            return RULE_ACTION_RUN_PARAM(handover);
+        } else {
+            RULE_LOG("ruleInCaseDisconnectHandset, don't connect handset, so don't need handover");
+            bool handover = TRUE;
+            return RULE_ACTION_RUN_PARAM(handover);
+        }
+#else
         bool handover = TRUE;
         return RULE_ACTION_RUN_PARAM(handover);
+#endif
     }
     else
     {
