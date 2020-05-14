@@ -169,7 +169,7 @@ DEFINE_RULE(ruleScoForwardingControl);
 
 DEFINE_RULE(ruleBothConnectedDisconnect);
 DEFINE_RULE(ruleRealInCaseDisconnect);
-DEFINE_RULE(ruleConnectBTHappenInDfu);
+DEFINE_RULE(ruleConnectInCase);
 
 DEFINE_RULE(rulePairingConnectTwsPlusA2dp);
 DEFINE_RULE(rulePairingConnectTwsPlusHfp);
@@ -248,10 +248,9 @@ ruleEntry appConnRules[] =
 
 #ifdef TWS_DEBUG
     /// 如果真实的在盒子中，连上了，也要马上断开; todo 考虑影响范围
-    // 如果auth完了，但是没有连接上，此时的异常的处理
-    // RULE(RULE_EVENT_HANDSET_A2DP_CONNECTED,     ruleConnectBTHappenInDfu,    CONN_RULES_CONNECT_IN_DFU),
-    // RULE(RULE_EVENT_HANDSET_AVRCP_CONNECTED,    ruleConnectBTHappenInDfu,    CONN_RULES_CONNECT_IN_DFU),
-    // RULE(RULE_EVENT_HANDSET_HFP_CONNECTED,      ruleConnectBTHappenInDfu,    CONN_RULES_CONNECT_IN_DFU),
+    RULE(RULE_EVENT_HANDSET_A2DP_CONNECTED, ruleConnectInCase, CONN_RULES_CONNECT_IN_CASE),
+    RULE(RULE_EVENT_HANDSET_AVRCP_CONNECTED, ruleConnectInCase, CONN_RULES_CONNECT_IN_CASE),
+    RULE(RULE_EVENT_HANDSET_HFP_CONNECTED, ruleConnectInCase, CONN_RULES_CONNECT_IN_CASE),
 
 //    RULE(RULE_EVENT_CHECK_NEED_DISCONNECT,    ruleRealInCaseDisconnect,    CONN_RULES_DISCONNECT_HANDSET),
 #endif
@@ -851,12 +850,12 @@ static ruleAction ruleConnectHandsetStandard(ruleConnectReason reason)
 static ruleAction ruleConnectHandset(ruleConnectReason reason,
                                      rulePostHandsetConnectAction post_connect_action)
 {
-   if (appConnRulesInProgress()) {
-       RULE_LOG("ruleConnectHandset, now rule in progress so defer");
-       MessageCancelAll(appGetUiTask(), APP_RULES_TIMEOUT_FOR_CLEAR_DEFER);
-       MessageSendLater(appGetUiTask(), APP_RULES_TIMEOUT_FOR_CLEAR_DEFER, NULL, 500);
-       return RULE_ACTION_DEFER;
-   }
+   // if (appConnRulesInProgress()) {
+   //     RULE_LOG("ruleConnectHandset, now rule in progress so defer");
+   //     MessageCancelAll(appGetUiTask(), APP_RULES_TIMEOUT_FOR_CLEAR_DEFER);
+   //     MessageSendLater(appGetUiTask(), APP_RULES_TIMEOUT_FOR_CLEAR_DEFER, NULL, 500);
+   //     return RULE_ACTION_DEFER;
+   // }
 
     bdaddr handset_addr;
     connRulesTaskData *conn_rules = appGetConnRules();
@@ -1828,7 +1827,7 @@ static ruleAction ruleInCaseDisconnectHandset(void)
 //    bool linkIsConnect = appDeviceGetHandsetBdAddr(&handsetAddr) && appConManagerHaveAnyLink(&handsetAddr);
 //    bool protocolIsConnect =(appDeviceIsHandsetA2dpConnected() ||
 //            appDeviceIsHandsetAvrcpConnected() || appDeviceIsHandsetHfpConnected());
-//
+
 //    if (appSmIsInCase() && (deviceIsConnect || linkIsConnect || protocolIsConnect))
     if ((appSmIsInCase() || (appUIGetCanEnterDfu() && subPhyIsCanNotifyCaseInfo())) && appDeviceIsHandsetConnected())
 #else
@@ -1959,20 +1958,20 @@ static ruleAction rulePairingConnectTwsPlusHfp(void)
     return RULE_ACTION_RUN_PARAM(profiles);
 }
 
-static ruleAction ruleConnectBTHappenInDfu(void) {
-    DEBUG_LOG("ruleConnectBTHappenInDfu");
-    if (appSmIsInDfuMode() && appDeviceIsHandsetAvrcpConnected()
-       && appDeviceIsHandsetA2dpConnected() && appDeviceIsHandsetHfpConnected()) {
-        DEBUG_LOG("ruleConnectBTHappenInDfu in dfu mode, so need disconnect");
-        if (MessageCancelAll(appGetUiTask(), APP_PAIR_HANDSET_SUCCESS_TIMEOUT) > 0) {
-            DEBUG_LOG("ruleConnectBTHappenInDfu in dfu mode, but have APP_PAIR_HANDSET_SUCCESS_TIMEOUT flag");
-            return RULE_ACTION_IGNORE;
-        }
-        appConnRulesResetEvent(CONN_RULES_DISCONNECT_HANDSET);
-        return RULE_ACTION_RUN;
+static ruleAction ruleConnectInCase(void) {
+    DEBUG_LOG("ruleConnectInCase");
+    if (!appSmIsInCase()) {
+        DEBUG_LOG("ruleConnectInCase ignore:%04X", appGetState());
+        return RULE_ACTION_IGNORE;
     }
-    DEBUG_LOG("ruleConnectBTHappenInDfu ignore");
-    return RULE_ACTION_IGNORE;
+
+    DEBUG_LOG("ruleConnectInCase in case mode, so need disconnect");
+    if (MessageCancelAll(appGetUiTask(), APP_PAIR_HANDSET_SUCCESS_TIMEOUT) > 0) {
+        DEBUG_LOG("ruleConnectInCase in dfu mode, but have APP_PAIR_HANDSET_SUCCESS_TIMEOUT flag");
+        return RULE_ACTION_IGNORE;
+    }
+
+    return RULE_ACTION_RUN;
 }
 
 static ruleAction ruleRealInCaseDisconnect(void) {

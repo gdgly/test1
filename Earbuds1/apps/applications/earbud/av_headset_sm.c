@@ -1774,8 +1774,8 @@ static void appSmHandleConnRulesHandsetDisconnect(CONN_RULES_DISCONNECT_HANDSET_
                                             : POST_DISCONNECT_ACTION_HANDOVER;
     }
     appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
-                                   200,
-                                   // appConfigLinkDisconnectionTimeoutTerminatingMs(),
+                                   // 200,
+                                   appConfigLinkDisconnectionTimeoutTerminatingMs(),
                                    post_disconnect_action);
     appSetState(appSetSubState(APP_SUBSTATE_DISCONNECTING));
     appConnRulesSetRuleComplete(CONN_RULES_DISCONNECT_HANDSET);
@@ -1785,19 +1785,18 @@ static void appSmHandleConnRulesHandsetDisconnect(CONN_RULES_DISCONNECT_HANDSET_
 
 
 #ifdef CONFIG_STAROT
-static void appSmHandleConnRulesConnectInDfu(void)
+static void appSmHandleConnRulesConnectInCase(void)
 {
     appGattSetAdvertisingMode(APP_ADVERT_RATE_FAST);
     // 重新启动BLE广播，及时修正广播Feature
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_BLE_CONNECTABLE_CHANGE);
 
-    DEBUG_LOG("appSmHandleConnRulesConnectInDfu");
+    DEBUG_LOG("appSmHandleConnRulesConnectInCase");
     smPostDisconnectAction post_disconnect_action = POST_DISCONNECT_ACTION_NONE;
-    appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET,
-                                   appConfigLinkDisconnectionTimeoutTerminatingMs(),
+    appSmInitiateLinkDisconnection(SM_DISCONNECT_HANDSET, 500,
                                    post_disconnect_action);
     appSetState(appSetSubState(APP_SUBSTATE_DISCONNECTING));
-    appConnRulesSetRuleComplete(CONN_RULES_CONNECT_IN_DFU);
+    appConnRulesSetRuleComplete(CONN_RULES_CONNECT_IN_CASE);
 }
 #endif
 
@@ -2682,8 +2681,8 @@ void appSmHandleMessage(Task task, MessageId id, Message message)
             appSmHandleConnRulesHandsetDisconnect((CONN_RULES_DISCONNECT_HANDSET_T*)message);
             break;
 #ifdef CONFIG_STAROT
-        case CONN_RULES_CONNECT_IN_DFU:
-            appSmHandleConnRulesConnectInDfu();
+        case CONN_RULES_CONNECT_IN_CASE:
+            appSmHandleConnRulesConnectInCase();
             break;
 #endif
         case CONN_RULES_DISCONNECT_PEER:
