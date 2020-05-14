@@ -67,17 +67,6 @@ void subPhyExitCase(void) {
 
 void subPhyEnterAir(void) {
     DEBUG_LOG("call subPhyEnterAir");
-
-    if (FALSE == appGetCaseIsOpen()) {
-        // todo 临时注释，重新调试低功耗
-//        if(_ear_en_dormant) {
-//            _ear_en_dormant = 0;
-//            MessageSendLater(appGetUiTask(), APP_UI_ENTER_DORMANT, NULL, D_SEC(1));
-//        }
-        DEBUG_LOG("subPhyEnterAir: now case is close, so don't send message to application");
-        return;
-    }
-
     if (appSmIsInDfuMode()) {
         DEBUG_LOG("subPhyEnterAir current is in dfu, need exit dfu, to enter normal model");
 //        phyStateTaskData* phy_state = appGetPhyState();

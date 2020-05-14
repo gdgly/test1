@@ -757,6 +757,15 @@ void singlebus_itr_process(void)
             DEBUG_LOG("plc out 0x%x", value_a[MX20340_REG_PLC_IRQ]);
             max20340_in_case_itr_status = FALSE;
             if(0 == g_commuType) {       // 非测试模式下去改变实际状态
+                if (FALSE == appGetCaseIsOpen()) {
+                    // todo 临时注释，重新调试低功耗
+                    if (_ear_en_dormant) {
+                        _ear_en_dormant = 0;
+                        MessageSendLater(appGetUiTask(), APP_UI_ENTER_DORMANT, NULL, D_SEC(1));
+                    }
+                    DEBUG_LOG("plc out: now case is close, so don't send message to application");
+                    return;
+                }
                 subPhyEnterAir();
 //                max20340_notify_plc_out();
             }
