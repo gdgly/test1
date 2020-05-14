@@ -165,10 +165,10 @@ uint8 advManagerSelectFeature(void) {
     uint8 nowAdvFeature = 0XFF;
     if (appSmIsPairing()) {
         nowAdvFeature = ADV_FEATURE_PAIR;
-    } else if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
-        nowAdvFeature = ADV_FEATURE_GAIA;
     } else if (appSmIsInDfuMode()) {
         nowAdvFeature = ADV_FEATURE_UPGRADE;
+    } else if (appDeviceIsHandsetHfpConnected() || appDeviceIsHandsetA2dpConnected() || appDeviceIsHandsetAvrcpConnected()) {
+        nowAdvFeature = ADV_FEATURE_GAIA;
     }
     return nowAdvFeature;
 }

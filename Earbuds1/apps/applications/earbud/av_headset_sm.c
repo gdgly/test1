@@ -443,8 +443,8 @@ static void appExitInCaseDfu(void)
     DEBUG_LOG("appExitInCaseDfu");
     appSmCancelDfuTimers();
 
+    GattManagerCancelWaitForRemoteClient();
     appGattSetAdvertisingMode(APP_ADVERT_RATE_SLOW);
-
 }
 
 /*! \brief Enter
