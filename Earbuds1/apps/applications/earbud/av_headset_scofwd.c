@@ -1383,7 +1383,10 @@ static void appScoFwdExitConnectedActive(void)
     
     /* Set the SCO_INACTIVE event to run rules to check if we need
      * disconnect handset. */
+#ifndef CONFIG_STAROT
+    // 双耳使用时，SCO断开时不去查检是否在盒子中
     appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_SCO_INACTIVE);
+#endif
 }
 
 static void appScoFwdWallclockEnable(void)
