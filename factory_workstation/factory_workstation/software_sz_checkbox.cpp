@@ -389,6 +389,28 @@ int software_sz_checkbox::process_com()
 					pass_green_color = 1;
 					m_Epass.SetWindowTextA("PASS");
 					Invalidate();	
+				}else if( (general_option_instance.g_check_mes_type == 5) ){
+					mes_zhuoyi_dll mes_zhuoyi_dll_ins;
+					if( mes_zhuoyi_dll_ins.Check_Station(sn_no)==0 ){
+						AddEvent2List("mes Check_Station 通信成功！");
+					}else{
+						AddEvent2List("mes Check_Station 校验失败，sn不在此工站！");
+						pass_green_color = 0;
+						m_Epass.SetWindowTextA("FAIL");
+						Invalidate();
+					}
+					if( mes_zhuoyi_dll_ins.Pass_Station(1, sn_no)==0 ){
+						AddEvent2List("mes Pass_Station 通信成功！");
+						pass_green_color = 1;
+						m_Epass.SetWindowTextA("PASS");
+						Invalidate();
+					}else{
+						AddEvent2List("mes Pass_Station 通信失败！");
+						pass_green_color = 0;
+						m_Epass.SetWindowTextA("FAIL");
+						Invalidate();
+					}
+
 				}else{
 					AddEvent2List("不支持的mes类型，请重新配置");
 					pass_green_color = 0;

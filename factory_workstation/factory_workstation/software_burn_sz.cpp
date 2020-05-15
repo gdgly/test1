@@ -306,6 +306,28 @@ LRESULT software_burn_sz::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 						pass_green_color = 1;
 						m_Epass.SetWindowTextA("PASS");
 						Invalidate();
+					}else if( (general_option_instance.g_check_mes_type == 5) ){
+						mes_zhuoyi_dll mes_zhuoyi_dll_ins;
+						if( mes_zhuoyi_dll_ins.Check_Station(sn_no)==0 ){
+							AddEvent2List("mes Check_Station 通信成功！");
+						}else{
+							AddEvent2List("mes Check_Station 校验失败，sn不在此工站！");
+							pass_green_color = 0;
+							m_Epass.SetWindowTextA("FAIL");
+							Invalidate();
+						}
+						if( mes_zhuoyi_dll_ins.Pass_Station(1, sn_no)==0 ){
+							AddEvent2List("mes Pass_Station 通信成功！");
+							pass_green_color = 1;
+							m_Epass.SetWindowTextA("PASS");
+							Invalidate();
+						}else{
+							AddEvent2List("mes Pass_Station 通信失败！");
+							pass_green_color = 0;
+							m_Epass.SetWindowTextA("FAIL");
+							Invalidate();
+						}
+
 					}else{
 						AddEvent2List("不支持的mes类型，请重新配置！");
 						pass_green_color = 0;
@@ -587,7 +609,7 @@ void software_burn_sz::StartDevContrl()
 		CreateThread(0, 0, (LPTHREAD_START_ROUTINE)software_burn_sz::WorkerThreadProc, this, 0, NULL);
 	}
 }
-
+#include "mes_zhuoyi_dll.h"
 extern BOOL CheckSN(CString sn, CString sPrompt, UINT iStart, UINT count);
 extern BOOL CheckSNv2(CString sn, CString sPrompt, UINT iStart, UINT count);
 void software_burn_sz::OnEnChangeEdit2()
@@ -631,6 +653,14 @@ void software_burn_sz::OnEnChangeEdit2()
 			AddEvent2List(stmp);
 		}
 	}
+
+	//if(sText.GetLength() == 14){//v3
+	//	mes_zhuoyi_dll mes_zhuoyi_dll_ins;
+	//	CString ret;
+	//	mes_zhuoyi_dll_ins.Check_Station(sText);
+	//	ret = mes_zhuoyi_dll_ins.Get_Data(sText);
+	//	AddEvent2List(ret);
+	//}
 
 	// TODO:  在此添加控件通知处理程序代码
 }

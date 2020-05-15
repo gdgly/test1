@@ -150,6 +150,7 @@
     <ClInclude Include="libusb\win32\libusb_devlistener.h" />
     <ClInclude Include="libusb_legacy_protocol.h" />
     <ClInclude Include="menu_use_option_dlg.h" />
+    <ClInclude Include="mes_zhuoyi_dll.h" />
     <ClInclude Include="MyComm.h" />
     <ClInclude Include="MySqlite.h" />
     <ClInclude Include="page_by_dlg.h" />
@@ -230,6 +231,7 @@
     <ClCompile Include="libusb\win32\libusb_devlistener.cpp" />
     <ClCompile Include="libusb_legacy_protocol.cpp" />
     <ClCompile Include="menu_use_option_dlg.cpp" />
+    <ClCompile Include="mes_zhuoyi_dll.cpp" />
     <ClCompile Include="MyComm.cpp" />
     <ClCompile Include="MySqlite.cpp" />
     <ClCompile Include="NewParam.cpp" />

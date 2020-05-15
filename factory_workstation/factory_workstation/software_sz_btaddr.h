@@ -36,6 +36,9 @@ public:
 	LRESULT software_sz_btaddr::OnDevCtrlError(WPARAM wParam, LPARAM lParam);
 	LRESULT software_sz_btaddr::OnDevCtrlReport(WPARAM wParam, LPARAM lParam);
 
+	CString mac_addr_sav;
+	mes_zhuoyi_dll mes_zhuoyi_dll_ins;
+
 	int err_flag;
 	int pass_green_color;
 	CFile m_hLogFile;

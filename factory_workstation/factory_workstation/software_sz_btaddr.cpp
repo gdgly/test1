@@ -206,19 +206,33 @@ LRESULT software_sz_btaddr::OnDevCtrlReport(WPARAM wParam, LPARAM lParam)
 	case REPORT_END_ALL:
 		if(err_flag != 1){
 			if( (int)lParam==0 ){
-				if( (sText = mesInfo.sz_post_passfail(sn_no, 
-							general_option_instance.g_station_name,
-							btaddr_sz_option_instance.rl_flag, 1) ) == "OK"){
-					AddEvent2List("mes 通信成功！");
-					pass_green_color = 1;
-					m_Epass.SetWindowTextA("PASS");
-					Invalidate();
-				}else{
-					AddEvent2List("mes 通信失败！错误消息：");
-					AddEvent2List(sText);
-					pass_green_color = 0;
-					m_Epass.SetWindowTextA("FAIL");
-					Invalidate();
+				if(general_option_instance.g_check_mes_type == 3){
+					if( (sText = mesInfo.sz_post_passfail(sn_no, 
+								general_option_instance.g_station_name,
+								btaddr_sz_option_instance.rl_flag, 1) ) == "OK"){
+						AddEvent2List("mes 通信成功！");
+						pass_green_color = 1;
+						m_Epass.SetWindowTextA("PASS");
+						Invalidate();
+					}else{
+						AddEvent2List("mes 通信失败！错误消息：");
+						AddEvent2List(sText);
+						pass_green_color = 0;
+						m_Epass.SetWindowTextA("FAIL");
+						Invalidate();
+					}
+				}else if(general_option_instance.g_check_mes_type == 5){
+					if( mes_zhuoyi_dll_ins.Pass_Station_withmac(1, sn_no, mac_addr_sav)==0 ){
+						AddEvent2List("mes Pass_Station 通信成功！");
+						pass_green_color = 1;
+						m_Epass.SetWindowTextA("PASS");
+						Invalidate();
+					}else{
+						AddEvent2List("mes Pass_Station 通信失败！");
+						pass_green_color = 0;
+						m_Epass.SetWindowTextA("FAIL");
+						Invalidate();
+					}					
 				}
 			}else{
 				pass_green_color = 0;
@@ -281,14 +295,27 @@ int software_sz_btaddr::WorkerThreadProc(void *param)
 		p->AddEvent2List("未配置mes，请在通用配置中设置mes后使用");
 		return -1;
 	}
-	if(p->general_option_instance.g_check_mes_type != 3){
-		p->AddEvent2List("mes类型不正确，仅支持类型3");
+	if( (p->general_option_instance.g_check_mes_type != 3)  &&
+		(p->general_option_instance.g_check_mes_type != 5) ){
+		p->AddEvent2List("mes类型不正确，仅支持类型3或者5");
 		return -1;
 	}
 	((CButton*)p->GetDlgItem(IDC_BUTTON1))->EnableWindow(FALSE);
-	mesptr->clear_flag();
-	mac_addr = mesptr->sz_get_btaddr(p->sn_no, 
-		p->general_option_instance.g_station_name, p->btaddr_sz_option_instance.rl_flag, response);
+
+	if( p->general_option_instance.g_check_mes_type == 3 ){
+		mesptr->clear_flag();
+		mac_addr = mesptr->sz_get_btaddr(p->sn_no, 
+			p->general_option_instance.g_station_name, p->btaddr_sz_option_instance.rl_flag, response);
+	}else if(p->general_option_instance.g_check_mes_type == 5){
+		if( p->mes_zhuoyi_dll_ins.Check_Station(p->sn_no)==0 ){
+			p->AddEvent2List("mes Check_Station 通信成功！");
+		}else{
+			p->AddEvent2List("mes Check_Station 校验失败，sn不在此工站！");
+			goto err_out;
+		}
+		mac_addr = p->mes_zhuoyi_dll_ins.Get_Data(p->sn_no);
+		p->mac_addr_sav = mac_addr;
+	}
 
 	//if( (sText = mesptr->sz_post_passfail(p->sn_no,
 	//						p->general_option_instance.g_station_name,

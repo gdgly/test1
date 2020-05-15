@@ -125,6 +125,20 @@ BOOL general_option_dlg::OnInitDialog()
 	m_mes_type.AddString("2");
 	m_mes_type.AddString("3");
 	m_mes_type.AddString("4");
+	m_mes_type.AddString("5");
+
+	((CButton*)GetDlgItem(IDC_EDIT10))->EnableWindow(FALSE);
+	if(sText == "1"){
+		((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("hp");
+	}else if(sText == "2"){
+		((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("ch");
+	}else if(sText == "3"){
+		((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("lx");
+	}else if(sText == "4"){
+		((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("sn");
+	}else if(sText == "5"){
+		((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("zy");
+	}
 
 	comb_ttybaud.AddString("1000000");
 	comb_ttybaud.AddString("921600");
@@ -147,6 +161,11 @@ BOOL general_option_dlg::OnInitDialog()
 			((CButton*)GetDlgItem(IDC_EDIT9))->EnableWindow(TRUE);
 		}else{
 			((CButton*)GetDlgItem(IDC_EDIT9))->EnableWindow(FALSE);
+		}
+		if(sText == "5"){
+			((CButton*)GetDlgItem(IDC_EDIT2))->EnableWindow(FALSE);
+			((CButton*)GetDlgItem(IDC_EDIT1))->EnableWindow(FALSE);	
+			((CButton*)GetDlgItem(IDC_EDIT9))->EnableWindow(FALSE);	
 		}
 	}else{
 		((CButton*)GetDlgItem(IDC_COMBO9))->EnableWindow(FALSE);
@@ -177,6 +196,22 @@ void general_option_dlg::OnBnClickedCheck1()
 		}else{
 			((CButton*)GetDlgItem(IDC_EDIT9))->EnableWindow(FALSE);
 		}
+		if(sText == "5"){
+			((CButton*)GetDlgItem(IDC_EDIT2))->EnableWindow(FALSE);
+			((CButton*)GetDlgItem(IDC_EDIT1))->EnableWindow(FALSE);	
+			((CButton*)GetDlgItem(IDC_EDIT9))->EnableWindow(FALSE);	
+		}
+		if(sText == "1"){
+			((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("hp");
+		}else if(sText == "2"){
+			((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("ch");
+		}else if(sText == "3"){
+			((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("lx");
+		}else if(sText == "4"){
+			((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("sn");
+		}else if(sText == "5"){
+			((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("zy");
+		}
 	}else{
 		((CButton*)GetDlgItem(IDC_COMBO9))->EnableWindow(FALSE);
 		((CButton*)GetDlgItem(IDC_EDIT2))->EnableWindow(FALSE);
@@ -201,5 +236,21 @@ void general_option_dlg::OnCbnSelchangeCombo9()
 		((CButton*)GetDlgItem(IDC_EDIT9))->EnableWindow(TRUE);
 	}else{
 		((CButton*)GetDlgItem(IDC_EDIT9))->EnableWindow(FALSE);
+	}
+	if(sText == "5"){
+		((CButton*)GetDlgItem(IDC_EDIT2))->EnableWindow(FALSE);
+		((CButton*)GetDlgItem(IDC_EDIT1))->EnableWindow(FALSE);	
+		((CButton*)GetDlgItem(IDC_EDIT9))->EnableWindow(FALSE);	
+	}
+	if(sText == "1"){
+		((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("hp");
+	}else if(sText == "2"){
+		((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("ch");
+	}else if(sText == "3"){
+		((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("lx");
+	}else if(sText == "4"){
+		((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("sn");
+	}else if(sText == "5"){
+		((CButton*)GetDlgItem(IDC_EDIT10))->SetWindowTextA("zy");
 	}
 }
