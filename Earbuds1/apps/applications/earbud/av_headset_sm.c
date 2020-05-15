@@ -118,8 +118,6 @@ static void appSmSetCoreState(void)
 {
     appState state = appSmCalcCoreState();
     DEBUG_LOG("appSmCalcCoreState is %04X, appSetState is %04X\n", state, appGetState());
-    if (state != appGetState())
-        appSetState(state);
 
 #ifdef CONFIG_STAROT
     if (appUIGetCanEnterDfu() &&
@@ -128,6 +126,14 @@ static void appSmSetCoreState(void)
         // 断开连接 incase dfu->incase disconnecting->outcase idel->incase dfu
         DEBUG_LOG("appSmCalcCoreState need enter dfu");
         appSmEnterDfuMode();
+    } else {
+        if (state != appGetState()) {
+            appSetState(state);
+        }
+    }
+#else
+    if (state != appGetState()) {
+        appSetState(state);
     }
 #endif
 }
