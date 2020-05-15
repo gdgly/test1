@@ -1854,8 +1854,10 @@ static ruleAction ruleInCaseDisconnectHandset(void)
     }
     else
     {
-        RULE_LOG("ruleInCaseDisconnectHandset, ignore as not in case or handset not connected or master of active call forwarding");
-        return RULE_ACTION_IGNORE;
+        RULE_LOG("ruleInCaseDisconnectHandset, ignore as not in case or handset not connected or master of active call forwarding !!! temp change to disconnect focus");
+        bool handover = FALSE;
+        return RULE_ACTION_RUN_PARAM(handover);
+        // return RULE_ACTION_IGNORE;
     }
 }
 
