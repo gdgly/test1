@@ -1876,8 +1876,8 @@ void appUIGetPowerInfo(ProgRIPtr  progRun, uint8 *arr) {
         arr[1] = ((appUICurrentIsCharger() ? chargerFlag : 0X00)) | appBatteryGetPercent();
     }
 
-//    if (appPeerSyncIsPeerInCase() || appSmIsInCase())
-    if (subPhyIsCanNotifyCaseInfo()) {
+    if (subPhyIsCanNotifyCaseInfo() ||
+        (appDeviceIsPeerConnected() && subPhyVirtualStateIsCanConnectCase(appPeerSyncGetPeerVirtualPosition()))) {
         arr[2] = (uint8)progRun->caseElectrity | (progRun->caseUsb ? chargerFlag : 0X00); //盒子电量 充电，最高位为1
     } else {
         arr[2] = illegalBattery; /// 任何一只耳机再充电盒中，都可以读取充电盒状态数据
