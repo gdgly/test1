@@ -21,6 +21,10 @@ void max20340_chipstatus_timer_restart(int timeout);
 void max20340_notify_plc_in(void);
 void max20340_notify_plc_out(void);
 
+void max20340_notify_plc_in_ex(void);
+void max20340_notify_plc_out_ex(void);
+
+
 #define MESSAGE_MAX30240_SEND_LATER    2000    // (延时反馈数据)
 #ifdef MESSAGE_MAX30240_SEND_LATER
 static uint32 g_ms_senddata;                   // 数据必须在这个时间之前发送，否则对盒子来说已经超时，无意义
@@ -748,7 +752,7 @@ void singlebus_itr_process(void)
             DEBUG_LOG("plc in 0x%x", value_a[MX20340_REG_PLC_IRQ]);
             max20340_in_case_itr_status = TRUE;
             if(0 == g_commuType){       // 非测试模式下去改变实际状态
-                subPhyExitAir();
+                max20340_notify_plc_in_ex();
 //                max20340_notify_plc_in();
             }
         }else if( ((value_a[MX20340_REG_STA1]&0x1c) == (3<<2)) ){
@@ -756,17 +760,9 @@ void singlebus_itr_process(void)
             online_dbg_record(ONLINE_DBG_OUTCASE_ITR);
             DEBUG_LOG("plc out 0x%x", value_a[MX20340_REG_PLC_IRQ]);
             max20340_in_case_itr_status = FALSE;
+
             if(0 == g_commuType) {       // 非测试模式下去改变实际状态
-                if (FALSE == appGetCaseIsOpen()) {
-                    // todo 临时注释，重新调试低功耗
-                    if (_ear_en_dormant) {
-                        _ear_en_dormant = 0;
-                        MessageSendLater(appGetUiTask(), APP_UI_ENTER_DORMANT, NULL, D_SEC(1));
-                    }
-                    DEBUG_LOG("plc out: now case is close, so don't send message to application");
-                    return;
-                }
-                subPhyEnterAir();
+                max20340_notify_plc_out_ex();
 //                max20340_notify_plc_out();
             }
         }else{
@@ -1182,10 +1178,10 @@ void printfDebugInitMax20340(void) {
 
 void max20340_notify_current_status(void) {
     if (TRUE == max20340_GetConnect()) {
-        max20340_notify_plc_in();
+        max20340_notify_plc_in_ex();
         callPlcIn += 1;
     } else {
-        max20340_notify_plc_out();
+        max20340_notify_plc_out_ex();
         callPlcOut += 1;
     }
 }
@@ -1199,6 +1195,7 @@ void max20340_notify_plc_in(void) {
 //    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
 //    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_IN, NULL, 50);
 }
+
 
 void max20340_notify_plc_out(void) {
 //    appChargeFromUi(FALSE);
@@ -1217,6 +1214,25 @@ void max20340_notify_plc_out(void) {
 //    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_IN);
 //    MessageCancelAll(appGetUiTask(), APP_ATTACH_PLC_OUT);
 //    MessageSendLater(appGetUiTask(), APP_ATTACH_PLC_OUT, NULL, 50);
+}
+
+
+void max20340_notify_plc_in_ex(void) {
+    DEBUG_LOG("max20340_notify_plc_in_ex");
+    subPhyExitAir();
+}
+
+void max20340_notify_plc_out_ex(void) {
+    DEBUG_LOG("max20340_notify_plc_out_ex");
+    if (FALSE == appGetCaseIsOpen()) {
+        if(_ear_en_dormant) {
+            _ear_en_dormant = 0;
+            MessageSendLater(appGetUiTask(), APP_UI_ENTER_DORMANT, NULL, D_SEC(1));
+        }
+        DEBUG_LOG("max20340_notify_plc_out_ex, now case is close, so don't send message to application");
+        return;
+    }
+    subPhyEnterAir();
 }
 
 #endif
