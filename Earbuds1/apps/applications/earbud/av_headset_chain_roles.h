@@ -106,7 +106,8 @@ typedef enum chain_operator_roles
     OPR_CUSTOM_MIC_PASSTHROUGH,
 
     /*! Assistant eq */
-    OPR_MIC_PEQ,
+    OPR_MIC_PEQ,    
+    OPR_PEQ,
 #endif
 } chain_operator_role_t;
 

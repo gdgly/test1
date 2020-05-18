@@ -21,10 +21,17 @@
         <source name="OUT" terminal="0"/>
     </operator>
 
+    <operator name="OPR_PEQ" id="CAP_ID_PEQ">
+        <sink name="IN" terminal="0"/>
+        <source name="OUT" terminal="0"/>
+    </operator>
+
     <input sink="OPR_LATENCY_BUFFER.IN" role="EPR_SINK_MIXER_MAIN_IN"/>
     <input sink="OPR_VOLUME_CONTROL.AUX_IN" role="EPR_VOLUME_AUX"/>
     <connection source="OPR_LATENCY_BUFFER.OUT" sink="OPR_SOURCE_SYNC.IN"/>
-    <connection source="OPR_SOURCE_SYNC.OUT" sink="OPR_VOLUME_CONTROL.MAIN_IN"/>
+    <!--connection source="OPR_SOURCE_SYNC.OUT" sink="OPR_VOLUME_CONTROL.MAIN_IN"/-->
+    <connection source="OPR_SOURCE_SYNC.OUT" sink ="OPR_PEQ.IN"/>
+    <connection source="OPR_PEQ.OUT" sink="OPR_VOLUME_CONTROL.MAIN_IN"/>
     <output source="OPR_VOLUME_CONTROL.OUT" role="EPR_SOURCE_MIXER_OUT"/>
 
 </chain>

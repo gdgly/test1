@@ -351,6 +351,7 @@ void appKymeraConfigureOutputChainOperators(kymera_chain_handle_t chain,
 {
     Operator sync_op;
     Operator volume_op;
+    Operator peq_op;
 
     /* Configure operators */
     if (GET_OP_FROM_CHAIN(sync_op, chain, OPR_SOURCE_SYNC))
@@ -361,6 +362,12 @@ void appKymeraConfigureOutputChainOperators(kymera_chain_handle_t chain,
 
     volume_op = ChainGetOperatorByRole(chain, OPR_VOLUME_CONTROL);
     OperatorsStandardSetSampleRate(volume_op, sample_rate);
+
+    peq_op = ChainGetOperatorByRole(chain, OPR_PEQ);
+    if(peq_op!=INVALID_OPERATOR)  {
+        OperatorsStandardSetUCID(peq_op, 0x00);
+        OperatorsStandardSetSampleRate(peq_op, sample_rate);
+    }
 
     appKymeraSetVolume(chain, volume);
 
