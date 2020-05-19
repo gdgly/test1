@@ -298,5 +298,6 @@ uint8 get_online_dbg_state(void);
 void online_dbg_handler(Task appTask, MessageId id, Message msg);
 void online_dbg_cmd_handler(online_dbg_cmd cmd);
 void online_dbg_record_sync_20340_reg_value(uint8 self_reg, uint8 other_reg, uint8 itr_status);
+void online_dbg_print(void);
 
 #endif // ONLINE_DBG_H

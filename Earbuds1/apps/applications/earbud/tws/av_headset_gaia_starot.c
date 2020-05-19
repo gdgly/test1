@@ -155,6 +155,8 @@ void starotGaiaDisconnect(void) {
         }
     }
     subGaiaSetUpgradeGaiaTransform(FALSE);
+    /// gaia断开，停止记录上报
+    online_dbg_cmd_handler(ONLINE_DBG_APP_REQ_RT_ONLINE_DBG_STOP);
 }
 
 /*

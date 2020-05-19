@@ -254,3 +254,9 @@ static void online_dbg_send_pkt(online_dbg_cmd cmd, uint8* data, uint16 length) 
     appGaiaSendPacket(GAIA_VENDOR_STAROT,
                       GAIA_COMMAND_STAROT_TEST_ONLINE_DBG, 0xfe, sizeof(packet), (uint8*)&packet);
 }
+
+void online_dbg_print(void) {
+    for (uint8 i = trans_idx; i != record_idx; ++i) {
+        DEBUG_LOG("print dbg record : %02X", online_dbg_buf[i]);
+    }
+}

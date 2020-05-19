@@ -676,9 +676,9 @@ static void appEnterInEar(void)
 */
 void appSetState(appState new_state)
 {
-    online_dbg_record(0xFF);
-    online_dbg_record((new_state >> 8) & 0X00FF);
-    online_dbg_record(new_state & 0X00FF);
+    // online_dbg_record(0xFF);
+    // online_dbg_record((new_state >> 8) & 0X00FF);
+    // online_dbg_record(new_state & 0X00FF);
     appState previous_state = appGetSm()->state;
     DEBUG_LOGF("appSetState, state 0x%02x to 0x%02x", previous_state, new_state);
     UartPuts2x("SM state:", previous_state, new_state);
