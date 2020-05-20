@@ -16,6 +16,7 @@
 #include <boot.h>
 #include <feature.h>
 #include <panic.h>
+#include "tws/sub_phy.h"
 
 #ifdef GC_SECTIONS
 /* Move all functions in KEEP_PM section to ensure they are not removed during
@@ -1542,6 +1543,12 @@ extern void bdaddr2buffer(bdaddr *addr, uint8* addrbuf);
 extern void ParamPrintBlePair(void);
 
 void appTestPrintAllConnection(void) {
+    ProgRIPtr  progRun = appSubGetProgRun();
+
+    DEBUG_LOG("######################################################");
+    DEBUG_LOG("#case is open: %d", appUICaseIsOpen());
+    DEBUG_LOG("#virtual position: %d", subPhyGetVirtualPosition());
+    DEBUG_LOG("#power mode: %d", progRun->iPowerSaveMode);
     DEBUG_LOG("######################################################");
     DEBUG_LOG("#appGetState is :%04X", appGetState());
     DEBUG_LOG("#Handset is connect:%02X", appDeviceIsHandsetConnected());
