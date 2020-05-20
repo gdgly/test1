@@ -95,6 +95,8 @@ static void gaiaTestInEarReadValue(GAIA_STAROT_IND_T *message);
 
 static void gaiaAppTestPacketData(GAIA_STAROT_IND_T *mess);
 
+static void gaiaAppTestGetGaiaInfo(GAIA_STAROT_IND_T *mess);
+
 extern int16 gaiaTestProduct(uint8_t *payload);
 
 // region 升级
@@ -614,6 +616,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         case GAIA_COMMAND_STAROT_TEST_PACKET_DATA:
             gaiaAppTestPacketData(message);
         break;
+        case GAIA_COMMAND_STAROT_TEST_GAIA_PAIR_INFO:
+            gaiaAppTestGetGaiaInfo(message);
+            break;
     }
     return TRUE;
 }
@@ -1768,6 +1773,43 @@ static void gaiaAppTestPacketData(GAIA_STAROT_IND_T *mess)
         attrFree(head, data);
     }
     pfree(message);
+}
+
+static void gaiaAppTestGetGaiaInfo(GAIA_STAROT_IND_T *mess) {
+    StarotAttr *head = NULL;
+    BtAddrPrmPtr prm = &gBtAddrParam;
+
+    for(int i = 0; i < BLEPAIR_COUNT; i++) {
+        BlePairInfo* p = &(prm->ble_pair[i]);
+        DEBUG_LOG("ParamPrintBlePair  %d: mac[%02X:%02X:%02X:%02X:%02X:%02X] adv[%04X] bond[%08X] bleIsBond[%02X]",
+                  i, p->btAddr[0], p->btAddr[1],p->btAddr[2],p->btAddr[3],p->btAddr[4],p->btAddr[5],
+                  p->advCode, p->bondCode, p->bleIsBond);
+    }
+    {
+        StarotAttr * attr = attrMalloc(&head, 4);
+        attr->attr = 0X01;
+        attr->payload[0] = ((prm->timeModfy >> 24) & 0XFF);
+        attr->payload[1] = (prm->timeModfy >> 16) & 0XFF;
+        attr->payload[2] = (prm->timeModfy >> 8) & 0XFF;
+        attr->payload[3] = (prm->timeModfy) & 0XFF;
+    }
+    {
+        StarotAttr * attr = attrMalloc(&head, (6 + 2 + 4) * BLEPAIR_COUNT);
+        attr->attr = 0X02;
+        for (int i = 0; i < 4; ++i) {
+            BlePairInfo* p = &(prm->ble_pair[i]);
+            uint8* pos = attr->payload + (6 + 2 + 4) * i;
+            memcpy(pos + 0, p->btAddr, 6);
+            pos[6] = (p->advCode >> 8) & 0XFF;
+            pos[7] = (p->advCode) & 0XFF;
+
+            pos[8] = (p->bondCode >> 24) & 0XFF;
+            pos[9] = (p->bondCode >> 16) & 0XFF;
+            pos[10] = (p->bondCode >> 8) & 0XFF;
+            pos[11] = (p->bondCode) & 0XFF;
+        }
+    }
+    responseGaiaMessageWithAttrHelper(mess->command, GAIA_STATUS_SUCCESS, head);
 }
 
 // region 升级

@@ -230,6 +230,7 @@ enum {
     GAIA_COMMAND_STAROT_TEST_IN_EAR_RDVALUE = 0X5603,                         // 读取接近光在耳朵中的值
     GAIA_COMMAND_STAROT_TEST_PRODUCT = 0X5604,                                // 产测协议
     GAIA_COMMAND_STAROT_TEST_PACKET_DATA = 0X5605,                            // app下发数据
+    GAIA_COMMAND_STAROT_TEST_GAIA_PAIR_INFO = 0X5606,                         // 获取ble配对信息
 };
 
 /////////////////////////////固件升级和日志使用///////////////////////////////
