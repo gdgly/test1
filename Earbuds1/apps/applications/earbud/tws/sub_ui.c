@@ -648,6 +648,8 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 
     case INIT_CFM:
         DEBUG_LOG("appSubUiHandleMessage INIT_CFM start");    /* Get microphone sources */
+        UartPuts("INIT_CFM");
+
 #ifdef HAVE_MAX20340
         appUiPowerSave((TRUE==max20340_GetConnect()) ? POWER_MODE_IN_CASE : POWER_MODE_OUT_CASE);
         // 现在修改位置无效，处于dfu模式，不是core状态，会忽略，现在把dfu模式，添加到core中
