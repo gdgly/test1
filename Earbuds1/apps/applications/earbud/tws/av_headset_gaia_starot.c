@@ -606,8 +606,11 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
         	gaiaTestInEarReadValue(message);
         break;
         case GAIA_COMMAND_STAROT_TEST_PRODUCT:
-            gaiaTestProduct(message->payload);
-        break;
+        {
+            uint8 stat = gaiaTestProduct(message->payload);
+            appGaiaSendResponse(GAIA_VENDOR_STAROT, GAIA_COMMAND_STAROT_TEST_PRODUCT, GAIA_STATUS_SUCCESS, 1, &stat);
+            break;
+        }
         case GAIA_COMMAND_STAROT_TEST_PACKET_DATA:
             gaiaAppTestPacketData(message);
         break;

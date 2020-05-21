@@ -605,9 +605,15 @@ int16 gaiaTestProduct(uint8_t *payload)
             break;
 
         case 0x04:
-            if(1 == tmp2)       g_cvcMode = CVC_PROCESSING_MODE_PASS_THRU_LEFT;
-            else if(2 == tmp2)  g_cvcMode = CVC_PROCESSING_MODE_PASS_THRU_RIGHT;
-            else                g_cvcMode = CVC_PROCESSING_MODE_FULL;
+            if(1 == tmp2)
+                result = g_cvcMode = CVC_PROCESSING_MODE_PASS_THRU_LEFT;
+            else if(2 == tmp2)
+                result = g_cvcMode = CVC_PROCESSING_MODE_PASS_THRU_RIGHT;
+            else
+                 result = g_cvcMode = CVC_PROCESSING_MODE_FULL;
+            break;
+        case 0x05:
+            result = g_cvcMode;
             break;
 
         case 0x10:    // 开外设电源
@@ -652,6 +658,8 @@ int16 gaiaTestProduct(uint8_t *payload)
                 max20340_notify_plc_in();
                 appUiCaseStatus(0, -1, -1, -1, 0);
             }
+			else
+				result = -2;
             break;
 
         case 0x13:       // power
@@ -661,10 +669,20 @@ int16 gaiaTestProduct(uint8_t *payload)
                 OperatorFrameworkEnable(MAIN_PROCESSOR_OFF);
             else if(3 == tmp2)       // enter dormant
                 MessageSendLater(appGetUiTask(), APP_UI_ENTER_DORMANT, NULL, D_SEC(1));
+			else
+				result = -2;
             break;
 
         case 0x14:       // power
             appPeerSyncSend_max20340_debug_start();
+            break;
+
+        case 0x21:
+            appScoFwdTone(400, tmp2);
+            break;
+
+        case 0x22:
+            appPowerReboot();
             break;
 
         default:
