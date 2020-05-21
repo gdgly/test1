@@ -297,7 +297,7 @@ static void apollo_init_handler(MessageId id, Message msg)
 
                 if(!read_fw_version()) {
                     apollo_state = APOLLO_STATE_INIT_RD_FW_VER;
-                    wait_for_int_low(150);
+                    wait_for_int_low(300);
                 } else {
                     /* 老开发板如果没有连接apollo，读版本号时i2c操作会失败，当失败时也要发送结束消息，否则init过程无法走完. */
                     apollo_state = APOLLO_STATE_ERR;
