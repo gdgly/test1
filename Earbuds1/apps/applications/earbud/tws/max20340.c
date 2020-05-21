@@ -1218,11 +1218,13 @@ void max20340_notify_plc_out(void) {
 
 
 void max20340_notify_plc_in_ex(void) {
+    UartPuts("20340 in");
     DEBUG_LOG("max20340_notify_plc_in_ex");
     subPhyExitAir();
 }
 
 void max20340_notify_plc_out_ex(void) {
+    UartPuts("20340 out");
     DEBUG_LOG("max20340_notify_plc_out_ex");
     if (FALSE == appGetCaseIsOpen()) {
         if(_ear_en_dormant) {

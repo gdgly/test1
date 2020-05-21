@@ -335,9 +335,11 @@ static void appPhyStateHandleMessage(Task task, MessageId id, Message message)
 
         case CHARGER_MESSAGE_ATTACHED:
 #ifdef CONFIG_STAROT
+
             // 只有初始化的时候，才让你生效
             if (!appInitCompleted()) {
-                appPhyStateInCaseEvent();
+                appPhyStateClearLockBit(PHY_STATE_LOCK_CASE);
+                // appPhyStateInCaseEvent();
             }
 #else
             appPhyStateInCaseEvent();
@@ -470,6 +472,7 @@ void appPhyStateSetState(phyStateTaskData* phy_state, phyState new_state)
             break;
     }
 
+    UartPuts2x("Phy State:", new_state, phy_state->state);
     phy_state->state = new_state;
 
     switch (phy_state->state)
