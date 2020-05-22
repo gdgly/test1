@@ -142,6 +142,7 @@ typedef struct tagPROGRUNINFO {
     uint16         peerconnect:1;            // 与对方耳机建立连接0：disconect, 1:connect
     uint16         handsetPair:2;           // 与手机配对 0：unknown, 1:success 2: fail
     uint16         recStat:1;               // 当前是否正在录音
+    uint16         isMediaCall:1;           // 区分是否是媒体电话还是普通电话
     uint16         apolloWakeup:1;          // 当前apollo是否启动0:未启动, 1:启动
     uint16         chargeStat:3;            // 当前充电状态 CHARGE_ST_XXX
 

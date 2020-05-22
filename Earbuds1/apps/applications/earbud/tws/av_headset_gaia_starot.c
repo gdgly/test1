@@ -77,6 +77,8 @@ static void gaiaControlGetHfpMute(void);
 
 static void gaiaControlSet8k(GAIA_STAROT_IND_T *message);
 
+static void gaiaControlAppDownParam(GAIA_STAROT_IND_T *message);
+
 static void gaiaSetBondCode(GAIA_STAROT_IND_T *message);
 
 static void gaiaCheckBondCode(GAIA_STAROT_IND_T *message);
@@ -519,6 +521,9 @@ bool starotGaiaHandleCommand(GAIA_STAROT_IND_T *message) {
             break;
         case GAIA_COMMAND_STAROT_CONTROL_8K_ENB:
             gaiaControlSet8k(message);
+            break;
+        case GAIA_COMMAND_STAROT_CONTROL_APP_DOWN:
+            gaiaControlAppDownParam(message);
             break;
     }
     /// 助手52NN
@@ -1491,6 +1496,27 @@ static void gaiaControlSet8k(GAIA_STAROT_IND_T *message) {
     appPeerSigTx8kReq(appGetUiTask(), &sync8kReq);
     appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
     attrFree(head, NULL);
+}
+
+static void gaiaControlAppDownParam(GAIA_STAROT_IND_T *message) {
+    ProgRIPtr  progRun = appSubGetProgRun();
+    StarotAttr *pAttr = attrDecode(message->payload, message->payloadLen);
+    if (NULL == pAttr) {
+        return;
+    }
+
+    switch (pAttr->attr) {
+        case 0x01:
+            progRun->isMediaCall = 1;
+            appPeerSigTxDataCommandUi(PEERTX_CMD_IS_MEDIACALL, progRun->isMediaCall);
+            appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
+        break;
+
+        default:
+            appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_NOT_SUPPORTED, 0, NULL);
+        break;
+    }
+    pfree(pAttr);
 }
 
 static void gaiaSetBondCode(GAIA_STAROT_IND_T *message) {

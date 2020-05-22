@@ -235,23 +235,28 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
     /* 电话操作时的控制，不能自己定义 */
     if (appHfpIsCallActive()){                                      /* If voice call active, hangup */
         appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
-        appHfpCallHangup();
+        if(progRun->isMediaCall == 0)
+            appHfpCallHangup();
     }
     else if (appScoFwdIsReceiving() && !appScoFwdIsCallIncoming()){ /* Sco Forward can be streaming a ring tone */
         appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
-        appScoFwdCallHangup();
+        if(progRun->isMediaCall == 0)
+            appScoFwdCallHangup();
     }
     else if (appHfpIsCallOutgoing()){                               /* If outgoing voice call, hangup */
         appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
-        appHfpCallHangup();
+        if(progRun->isMediaCall == 0)
+            appHfpCallHangup();
     }
     else if (appHfpIsCallIncoming()){                               /* If incoming voice call, accept */
         appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
-        appHfpCallAccept();
+        if(progRun->isMediaCall == 0)
+            appHfpCallAccept();
     }
     else if (appScoFwdIsCallIncoming()){
         appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
-        appScoFwdCallAccept();
+        if(progRun->isMediaCall == 0)
+            appScoFwdCallAccept();
     }
     else {     /* 非通话状态时的按键处理 */
         handled = 0;   /* 设置为未处理 */
@@ -1013,6 +1018,7 @@ void appSubUIInit(void)
 #ifdef TWS_DEBUG
     progRun->realInCase = TRUE;
     progRun->powerflag15 = TRUE;
+    progRun->isMediaCall = 0;
 #endif
     /* 获取底层的电量信息 */
     progRun->iElectrity = prm->electricQuantity;
@@ -1221,6 +1227,7 @@ void appUiHfpCallIncomingInactive(int16 isEnd)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->dial_stat = DIAL_IN_INACTIVE;
+    progRun->isMediaCall = 0;
 
     MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
     message->command = DIAL_IN_INACTIVE;
@@ -1254,6 +1261,7 @@ void appUiHfpCallActive(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->dial_stat = DIAL_ACTIVE;
+    progRun->isMediaCall = 0;
 
     MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
     message->command = DIAL_ACTIVE;
@@ -1267,6 +1275,7 @@ void appUiHfpCallInactive(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->dial_stat = DIAL_INACTIVE;
+    progRun->isMediaCall = 0;
 
     MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
     message->command = DIAL_INACTIVE;
