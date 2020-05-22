@@ -619,6 +619,7 @@ static void appEnterInCase(void)
     MessageCancelAll(appGetSmTask(), SM_INTERNAL_TIMEOUT_IN_EAR_A2DP_START);
     DEBUG_LOG("appEnterInCase cancel APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT");
     MessageCancelAll(appGetUiTask(), APP_IN_AIR_AUTO_CONNECT_TIMEOUT_IN_EAR_CONNECT);
+    MessageCancelAll(appGetUiTask(), APP_A2DP_DISCONNECT_NOT_EXPECT);
 #endif
 }
 
@@ -1965,6 +1966,7 @@ static void appSmHandlePeerSigPairHandsetIndication(PEER_SIG_PAIR_HANDSET_IND_T 
 static void appSmHandlePeerSigConnectHandsetIndication(PEER_SIG_CONNECT_HANDSET_IND_T *ind)
 {
     /* Generate event that will run rules to connect to handset */
+    online_dbg_record(ONLINE_DEBUG_RECV_HANDOVER_CONNECT);
     connRulesEvents event = ind->play_media ? RULE_EVENT_HANDOVER_RECONNECT_AND_PLAY
                                             : RULE_EVENT_HANDOVER_RECONNECT;
     appConnRulesSetEvent(appGetSmTask(), event);
@@ -2015,6 +2017,11 @@ static void appSmHandleAvA2dpDisconnectedInd(const AV_A2DP_DISCONNECTED_IND_T *i
 //    }
 #endif
                 online_dbg_record(ONLINE_DEBUG_A2DP_DISCONNECT);
+
+                if (appDeviceIsHandset(&ind->bd_addr) && appDeviceIsHandsetHfpConnected()) {
+                    // 一般只会出现在频繁的连接手机时才会出现连接
+                    MessageSendLater(appGetUiTask(), APP_A2DP_DISCONNECT_NOT_EXPECT, NULL, 500);
+                }
 
                 /* If it was a normal disconnect and we're intentionally disconnecting
                    links, record that we're not connected with A2DP to handset */
@@ -2076,7 +2083,6 @@ static void appSmHandleAvAvrcpDisconnectedInd(const AV_AVRCP_DISCONNECTED_IND_T 
                 appConnRulesResetEvent(RULE_EVENT_HANDSET_AVRCP_CONNECTED);
                 appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDSET_AVRCP_DISCONNECTED);
                 online_dbg_record(ONLINE_DEBUG_AVRCP_DISCONNECT);
-
             }
 
             /* Check if disconnected from TWS+ device (handset or earbud) */
@@ -2161,6 +2167,7 @@ static void appSmHandleHfpDisconnectedInd(APP_HFP_DISCONNECTED_IND_T *ind)
                 appConnRulesResetEvent(RULE_EVENT_HANDSET_HFP_CONNECTED);
                 appConnRulesSetEvent(appGetSmTask(), RULE_EVENT_HANDSET_HFP_DISCONNECTED);
                 online_dbg_record(ONLINE_DEBUG_HFP_DISCONNECT);
+                MessageCancelAll(appGetUiTask(), APP_A2DP_DISCONNECT_NOT_EXPECT);
 
                 /* If it was a normal disconnect and we're intentionally disconnecting
                    links, record that we're not connected with HFP to handset */
@@ -2434,7 +2441,7 @@ static void appSmHandleInternalReboot(void)
 /*! \brief Handle indication all requested links are now disconnected. */
 static void appSmHandleInternalAllRequestedLinksDisconnected(SM_INTERNAL_LINK_DISCONNECTION_COMPLETE_T *msg)
 {
-    DEBUG_LOGF("appSmHandleInternalAllRequestedLinksDisconnected 0x%x", appGetState());
+    DEBUG_LOGF("appSmHandleInternalAllRequestedLinksDisconnected 0x%x action:%d", appGetState(), msg->post_disconnect_action);
     MessageCancelFirst(appGetSmTask(), SM_INTERNAL_TIMEOUT_LINK_DISCONNECTION);
     bool play_media = FALSE;
 
@@ -2448,6 +2455,7 @@ static void appSmHandleInternalAllRequestedLinksDisconnected(SM_INTERNAL_LINK_DI
             bdaddr peer_addr;
             if (appDeviceGetPeerBdAddr(&peer_addr))
             {
+                online_dbg_record(ONLINE_DEBUG_HANDOVER_PEER_CONNECT);
                 appPeerSigTxConnectHandsetRequest(appGetSmTask(), &peer_addr, play_media);
             }
         }

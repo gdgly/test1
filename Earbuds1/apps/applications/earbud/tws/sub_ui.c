@@ -990,6 +990,13 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appPeerSigTxUpgradeExitReq(appGetGaiaTask());
         break;
 
+    case APP_A2DP_DISCONNECT_NOT_EXPECT:
+        DEBUG_LOG("parse APP_A2DP_DISCONNECT_NOT_EXPECT");
+        if (appDeviceIsHandsetConnected() && !appSmIsInCase()) {
+            appAvConnectHandset(FALSE);
+        }
+        break;
+
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
