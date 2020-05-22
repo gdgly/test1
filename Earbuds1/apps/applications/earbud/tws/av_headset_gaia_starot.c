@@ -1508,7 +1508,6 @@ static void gaiaControlAppDownParam(GAIA_STAROT_IND_T *message) {
     switch (pAttr->attr) {
         case 0x01:
             progRun->isMediaCall = 1;
-            appPeerSigTxDataCommandUi(PEERTX_CMD_IS_MEDIACALL, progRun->isMediaCall);
             appGaiaSendResponse(GAIA_VENDOR_STAROT, message->command, GAIA_STATUS_SUCCESS, 0, NULL);
         break;
 

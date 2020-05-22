@@ -235,28 +235,23 @@ static void subUiDoubleClickAB(ProgRIPtr progRun, bool isLeft)
     /* 电话操作时的控制，不能自己定义 */
     if (appHfpIsCallActive()){                                      /* If voice call active, hangup */
         appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
-        if(progRun->isMediaCall == 0)
-            appHfpCallHangup();
+        appHfpCallHangup();
     }
     else if (appScoFwdIsReceiving() && !appScoFwdIsCallIncoming()){ /* Sco Forward can be streaming a ring tone */
         appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
-        if(progRun->isMediaCall == 0)
-            appScoFwdCallHangup();
+        appScoFwdCallHangup();
     }
     else if (appHfpIsCallOutgoing()){                               /* If outgoing voice call, hangup */
         appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
-        if(progRun->isMediaCall == 0)
-            appHfpCallHangup();
+        appHfpCallHangup();
     }
     else if (appHfpIsCallIncoming()){                               /* If incoming voice call, accept */
         appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
-        if(progRun->isMediaCall == 0)
-            appHfpCallAccept();
+        appHfpCallAccept();
     }
     else if (appScoFwdIsCallIncoming()){
         appUiPlayPrompt(PROMPT_DOUBLE_CLICK);
-        if(progRun->isMediaCall == 0)
-            appScoFwdCallAccept();
+        appScoFwdCallAccept();
     }
     else {     /* 非通话状态时的按键处理 */
         handled = 0;   /* 设置为未处理 */
