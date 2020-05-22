@@ -994,6 +994,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
 void appSubUIInit(void)
 {
     ProgRIPtr  progRun = appSubGetProgRun();
+    UserPrmPtr prm = GetUserParam();
     batteryRegistrationForm battery_from;
 
     memset(progRun, 0, sizeof(ProgRunInfo));
@@ -1014,6 +1015,7 @@ void appSubUIInit(void)
     progRun->powerflag15 = TRUE;
 #endif
     /* 获取底层的电量信息 */
+    progRun->iElectrity = prm->electricQuantity;
     battery_from.task            = &appGetUi()->task;
     battery_from.representation  = battery_level_repres_percent;
     battery_from.hysteresis      = 1;
