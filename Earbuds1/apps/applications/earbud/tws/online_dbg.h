@@ -222,6 +222,8 @@
 #define ONLINE_DBG_20340_DATA_RIGHT_ITR   (0x37)    /* 20340 data right num */
 #define ONLINE_DBG_20340_REG_VALUE   (0x38)    /* 20340 reg value */
 
+#define ONLINE_DEBUG_HANDOVER_PEER_CONNECT (0x3c)  /* 让另一只耳机连接handset */
+#define ONLINE_DEBUG_RECV_HANDOVER_CONNECT (0x3d)  /* 接收到让当前耳机连接handset的消息 */
 #define ONLINE_DEBUG_ACTIVE_DISCONNECT (0x3f)  /* active disconnect */
 #define ONLINE_DEBUG_HFP_CONNECT    (0x40)    /* hfp connect */
 #define ONLINE_DEBUG_HFP_DISCONNECT (0x41)    /* hfp disconnect */

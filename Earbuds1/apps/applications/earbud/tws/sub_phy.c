@@ -18,8 +18,9 @@ subPhyTaskData* subPhyGetTaskData(void) {
 
 void subPhySetVirtualPosition(enum subPhyPosition pos) {
     subPhyTaskData* this = subPhyGetTaskData();
+    DEBUG_LOG("subPhySetVirtualPosition before:%d new:%d", this->virtualPosition, pos);
+    UartPuts2x("VP state:", this->virtualPosition, pos);
     this->virtualPosition = pos;
-    UartPuts2x("VP state:", pos, 0);
 }
 
 bool subPhyIsCanNotifyCaseInfo(void) {

@@ -27,6 +27,7 @@ enum {PEERTX_CMD_SYNCGAIA=0,         /* 主副耳机发送gaia状态   [payload[
       PEERTX_CMD_SYNC_DOUBLE_CLICK,  /* 同步双击 */
       PEERTX_CMD_SYNC_CASEST,        /* 一只耳机在盒中，另外一只不在，可以做同步 */
       PEERTX_CMD_SENSOR_ENB,         /* 佩戴使能同步到对方耳机 */
+      PEERTX_CMD_IS_MEDIACALL,       /* 多媒体电话同步 */
 };
 void appPeerSigTxDataCommand(Task task, const bdaddr *peer_addr, uint8 command, uint16 size_payload, const uint8 *payload);
 void appPeerSigTxDataCommandExt(Task task,uint8 command, uint16 size_payload, const uint8 *payload);

@@ -78,6 +78,7 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message);
 #define APP_UPGRADE_ACCIDENT_DISCONNECT_TIMEOUT 2131 /// gaia -> ui 定时任务，意外断开连接
 #define APP_RULES_TIMEOUT_FOR_CLEAR_DEFER     2132
 #define APP_CASE_CLOSE_DO_TIMEOUT 2133  /// 防止执行了close之后，马上执行open
+#define APP_A2DP_DISCONNECT_NOT_EXPECT 2134  /// 防止a2dp意外断开
 
 struct UI_APP_UPGRADE_COMMIT_STATUS_T {
     bool status;   // true:commit ;false:revert
@@ -142,6 +143,7 @@ typedef struct tagPROGRUNINFO {
     uint16         peerconnect:1;            // 与对方耳机建立连接0：disconect, 1:connect
     uint16         handsetPair:2;           // 与手机配对 0：unknown, 1:success 2: fail
     uint16         recStat:1;               // 当前是否正在录音
+    uint16         isMediaCall:1;           // 区分是否是媒体电话还是普通电话
     uint16         apolloWakeup:1;          // 当前apollo是否启动0:未启动, 1:启动
     uint16         chargeStat:3;            // 当前充电状态 CHARGE_ST_XXX
 

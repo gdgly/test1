@@ -985,6 +985,13 @@ void appSubUiHandleMessage(Task task, MessageId id, Message message)
         appPeerSigTxUpgradeExitReq(appGetGaiaTask());
         break;
 
+    case APP_A2DP_DISCONNECT_NOT_EXPECT:
+        DEBUG_LOG("parse APP_A2DP_DISCONNECT_NOT_EXPECT");
+        if (appDeviceIsHandsetConnected() && !appSmIsInCase()) {
+            appAvConnectHandset(FALSE);
+        }
+        break;
+
     default:
         DEBUG_LOG("Unknown Message id=0x%x", id);
         break;
@@ -1012,6 +1019,7 @@ void appSubUIInit(void)
 #ifdef TWS_DEBUG
     progRun->realInCase = TRUE;
     progRun->powerflag15 = TRUE;
+    progRun->isMediaCall = 0;
 #endif
     /* 获取底层的电量信息 */
     battery_from.task            = &appGetUi()->task;
@@ -1219,6 +1227,7 @@ void appUiHfpCallIncomingInactive(int16 isEnd)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->dial_stat = DIAL_IN_INACTIVE;
+    progRun->isMediaCall = 0;
 
     MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
     message->command = DIAL_IN_INACTIVE;
@@ -1252,6 +1261,7 @@ void appUiHfpCallActive(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->dial_stat = DIAL_ACTIVE;
+    progRun->isMediaCall = 0;
 
     MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
     message->command = DIAL_ACTIVE;
@@ -1265,6 +1275,7 @@ void appUiHfpCallInactive(void)
     ProgRIPtr  progRun = appSubGetProgRun();
 
     progRun->dial_stat = DIAL_INACTIVE;
+    progRun->isMediaCall = 0;
 
     MAKE_CALL_2_GAIA_MESSAGE(CALL_INDICATOR);
     message->command = DIAL_INACTIVE;

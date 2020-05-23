@@ -194,6 +194,7 @@ enum {
     GAIA_COMMAND_STAROT_CONTROL_HFP_UNMUTE= 0X5407,                           // 非静音
     GAIA_COMMAND_STAROT_CONTROL_GET_HFP_MUTE= 0X5408,                         // 获取静音状态
     GAIA_COMMAND_STAROT_CONTROL_8K_ENB= 0X5409,                               // 8k是否使能
+    GAIA_COMMAND_STAROT_CONTROL_APP_DOWN= 0X540A,                             // app下发总命令
 };
 ///////////////////////////base info///////////////////////////////
 enum {

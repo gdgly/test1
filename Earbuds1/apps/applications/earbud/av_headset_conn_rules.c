@@ -926,6 +926,22 @@ static ruleAction ruleConnectHandset(ruleConnectReason reason,
             return RULE_ACTION_IGNORE;
         }
 
+        DEBUG_LOG("ruleConnectHandset !ParamUsingSingle() = %d", !ParamUsingSingle());
+        DEBUG_LOG("ruleConnectHandset appPeerSyncGetPeerVirtualPosition() = %d", appPeerSyncGetPeerVirtualPosition());
+        DEBUG_LOG("ruleConnectHandset !subPhyVirtualStateIsCanConnectCase(appPeerSyncGetPeerVirtualPosition()) = %d",
+                !subPhyVirtualStateIsCanConnectCase(appPeerSyncGetPeerVirtualPosition()));
+        DEBUG_LOG("ruleConnectHandset subPhyCurrentVirtualStateIsCanConnectCase() = %d", subPhyCurrentVirtualStateIsCanConnectCase());
+        if (!ParamUsingSingle() && !subPhyVirtualStateIsCanConnectCase(appPeerSyncGetPeerVirtualPosition()) &&
+            subPhyCurrentVirtualStateIsCanConnectCase()) {
+            RULE_LOG("ruleConnectHandset, ignore as peer out case but i real position is in case, handover to peer");
+            bdaddr peer_addr;
+            if (appDeviceGetPeerBdAddr(&peer_addr)) {
+                online_dbg_record(ONLINE_DEBUG_HANDOVER_PEER_CONNECT);
+                appPeerSigTxConnectHandsetRequest(appGetSmTask(), &peer_addr, FALSE);
+            }
+            return RULE_ACTION_IGNORE;
+        }
+
         /* Peer is not connected to handset, so we should connect to our handset if it's a TWS+ handset or
            it's a standard handset and our battery level is higer */
 

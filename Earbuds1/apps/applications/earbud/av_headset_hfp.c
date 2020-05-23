@@ -2511,6 +2511,7 @@ void appHfpCallVoiceDisable(void)
 void appHfpCallAccept(void)
 {
     DEBUG_LOG("appHfpCallAccept");
+    ProgRIPtr  progRun = appSubGetProgRun();
     
     switch (appHfpGetState())
     {
@@ -2532,7 +2533,8 @@ void appHfpCallAccept(void)
             appUiHfpAnswer();
 
             /* Send message into HFP state machine */
-            MessageSendConditionally(appGetHfpTask(), HFP_INTERNAL_HFP_CALL_ACCEPT_REQ,
+            if(progRun->isMediaCall == 0)
+                MessageSendConditionally(appGetHfpTask(), HFP_INTERNAL_HFP_CALL_ACCEPT_REQ,
                                      NULL, &appHfpGetLock());		
         }
         break;        
@@ -2589,6 +2591,7 @@ void appHfpCallReject(void)
 void appHfpCallHangup(void)
 {
     DEBUG_LOG("appHfpCallHangup");
+    ProgRIPtr  progRun = appSubGetProgRun();
 
     switch (appHfpGetState())
     {
@@ -2612,7 +2615,8 @@ void appHfpCallHangup(void)
             appUiHfpHangup();
 
             /* Send message into HFP state machine */
-            MessageSendConditionally(appGetHfpTask(), HFP_INTERNAL_HFP_CALL_HANGUP_REQ,
+            if(progRun->isMediaCall == 0)
+                MessageSendConditionally(appGetHfpTask(), HFP_INTERNAL_HFP_CALL_HANGUP_REQ,
                                      NULL, &appHfpGetLock());		
         }
         break;        
