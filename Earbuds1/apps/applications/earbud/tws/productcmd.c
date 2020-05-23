@@ -68,9 +68,11 @@ static uint8 ProductPlayAudio(uint8 audNo)
 // 然后测试设备就可以与析卡进行通信，并执行对应的测试
 // DUT模式也可以通过bluesuit\BlueTest3 界面控制进入
 //==================================================================================
+uint16 g_product_dut = 0;        // 处在DUT模式下，其它程序不要操作BT（当前60秒会停止广播）
 void ProductEnterDutMode(void)
 {
     ConnectionEnterDutMode();
+    g_product_dut = 1;
 }
 
 //==================================================================================
@@ -92,6 +94,7 @@ static uint8 g_cvcMode = CVC_PROCESSING_MODE_FULL;             // 默认一定�
 void ProductEnterReocrdMode(int16 isLeft)
 {
     g_cvcMode = (isLeft) ? CVC_PROCESSING_MODE_PASS_THRU_LEFT : CVC_PROCESSING_MODE_PASS_THRU_RIGHT;
+    appChangeCVCProcessMode();
 }
 
 #include <av_headset_kymera_private.h>
@@ -605,10 +608,14 @@ int16 gaiaTestProduct(uint8_t *payload)
             break;
 
         case 0x04:
-            if(1 == tmp2)
+            if(1 == tmp2) {
                 result = g_cvcMode = CVC_PROCESSING_MODE_PASS_THRU_LEFT;
-            else if(2 == tmp2)
+                appChangeCVCProcessMode();
+            }
+            else if(2 == tmp2) {
                 result = g_cvcMode = CVC_PROCESSING_MODE_PASS_THRU_RIGHT;
+                appChangeCVCProcessMode();
+            }
             else
                  result = g_cvcMode = CVC_PROCESSING_MODE_FULL;
             break;

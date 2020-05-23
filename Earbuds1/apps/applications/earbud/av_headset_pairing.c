@@ -2028,7 +2028,9 @@ static void appPairingFindHandsetsNeedingLinkKeyTx(void)
     }
 }
 
-
+#ifdef CONFIG_STAROT
+extern uint16 g_product_dut;
+#endif
 /*! \brief Message Handler
 
     This function is the main message handler for the pairing module.
@@ -2080,6 +2082,9 @@ static void appPairingHandleMessage(Task task, MessageId id, Message message)
             return;
 
         case PAIRING_INTERNAL_TIMEOUT_IND:
+#ifdef CONFIG_STAROT
+            if(g_product_dut) return;
+#endif
             appHandleInternalTimeoutIndications(thePairing);
             return;
 
