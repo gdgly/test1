@@ -213,6 +213,8 @@ int16 ParamLoadAll(void)
     else
         ret &= ~0x04;
 
+    gProgRunInfo.iElectrity = gUserParam.electricQuantity;
+
     return ret;
 }
 
